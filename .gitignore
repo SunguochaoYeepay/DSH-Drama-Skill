@@ -1,0 +1,45 @@
+# 依赖
+node_modules/
+
+# 产物：绝不入库（图片/视频/音频动辄 GB 级）
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.mp4
+*.mov
+*.mp3
+*.wav
+*.srt
+
+# 生成的数据目录
+story2video/
+projects/
+_archive/
+shots/
+assets/
+keyframes/
+clips/
+audio/
+pool/
+out/
+
+# 账本与运行态（含真实花费，但不含凭据）
+costs.json
+current.json
+.gen-result.json
+*.filter.txt
+_concat.txt
+
+# 凭据 —— **绝不入库**
+.env
+.env.*
+*.key
+*.pem
+
+# 编辑器 / 系统
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

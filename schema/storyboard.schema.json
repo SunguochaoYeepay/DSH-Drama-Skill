@@ -1,0 +1,631 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Storyboard",
+  "description": "故事 → 分镜 → 资产 → 关键帧 → 视频 的中间契约。核心设计：身份与造型分离 —— characters[] 是「谁」（脸，全片不变），identities[] 是「这一套造型」（服装，可多套）。镜头引用的是 identity，不是 character。",
+  "type": "object",
+  "required": [
+    "meta",
+    "story",
+    "characters",
+    "identities",
+    "scenes",
+    "shots"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "title",
+        "logline",
+        "language",
+        "aspect",
+        "style",
+        "total_duration_s",
+        "stage",
+        "approvals"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "project": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]+$",
+          "description": "剧目名：产出目录 story2video/projects/<project>/。一部剧一个目录；缺省用板子文件名。"
+        },
+        "logline": {
+          "type": "string",
+          "minLength": 6
+        },
+        "genre": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string",
+          "minLength": 2
+        },
+        "aspect": {
+          "enum": [
+            "16:9",
+            "9:16",
+            "1:1"
+          ]
+        },
+        "style": {
+          "enum": [
+            "realistic",
+            "anime",
+            "cyberpunk",
+            "healing",
+            "vintage"
+          ]
+        },
+        "style_prompt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "风格圣经（散文）：统辖场景图和所有镜头的色调、光比、质感。**不作用于角色肖像和道具图** —— 那两张要中性可复用。"
+        },
+        "music": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "画外配乐，写进 H3 的 non_diegetic_music 段；整片统一配乐才填"
+        },
+        "total_duration_s": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 900
+        },
+        "final_video": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "created_by": {
+          "type": "string"
+        },
+        "stage": {
+          "enum": [
+            "story",
+            "shots",
+            "assets",
+            "keyframes",
+            "rendering",
+            "done"
+          ],
+          "description": "当前停在哪个闸门：story=确认故事，shots=确认分镜表，assets=确认资产（肖像/身份图/场景/道具），keyframes=确认关键帧，rendering=可以出片，done=成片已合成"
+        },
+        "approvals": {
+          "type": "object",
+          "required": [
+            "story",
+            "shots",
+            "assets",
+            "keyframes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "story": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "at": {
+                  "type": "string"
+                },
+                "by": {
+                  "type": "string"
+                }
+              }
+            },
+            "shots": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "at": {
+                  "type": "string"
+                },
+                "by": {
+                  "type": "string"
+                }
+              }
+            },
+            "assets": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "at": {
+                  "type": "string"
+                },
+                "by": {
+                  "type": "string"
+                }
+              }
+            },
+            "keyframes": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "at": {
+                  "type": "string"
+                },
+                "by": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "story": {
+      "type": "object",
+      "description": "闸门 1 的产物：给人读的故事。",
+      "required": [
+        "synopsis",
+        "beats"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "原始素材原文（剧本/小说）。有它时编译分镜必须原样沿用里面的台词，一个字都不许改。"
+        },
+        "synopsis": {
+          "type": "string",
+          "minLength": 20
+        },
+        "beats": {
+          "type": "array",
+          "minItems": 2,
+          "description": "故事节拍。每条必须带 purpose（为什么存在）—— 它决定后面用什么镜头语言去拍，没有 purpose 的节拍只能配出一张插图。",
+          "items": {
+            "type": "object",
+            "required": [
+              "text",
+              "purpose"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 4,
+                "description": "发生了什么"
+              },
+              "purpose": {
+                "type": "string",
+                "minLength": 4,
+                "description": "为什么这一拍必须在片子里：推进剧情 / 建立人物 / 制造笑点 / 情绪落点 / 交代信息"
+              },
+              "emotion": {
+                "type": "string",
+                "description": "这一拍的情绪走向"
+              }
+            }
+          }
+        },
+        "tone": {
+          "type": "string"
+        },
+        "ending": {
+          "type": "string"
+        }
+      }
+    },
+    "characters": {
+      "type": "array",
+      "description": "**身份层**：一个角色在本片里只有一张脸。服装不在这里 —— 那是 identities[] 的事。",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "age_group",
+          "face_prompt"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "age_group": {
+            "enum": [
+              "child",
+              "youth",
+              "middle",
+              "elder"
+            ],
+            "description": "受控枚举，不是自由文本。含糊的年龄（「少女」「青年」）会被原样拼进提示词，等于把年龄交给模型抽签 —— 实测因此把成年角色画成幼儿园小孩。"
+          },
+          "face_prompt": {
+            "type": "string",
+            "minLength": 6,
+            "description": "**纯面部特征**：脸型、五官、发型、辨识特征（痣/疤）。禁止写服装、禁止写动作表情。这张脸喂给肖像生成，之后全片复用。"
+          },
+          "portrait": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "脸部锚点图：正面朝向、脸占画面 60-70%、纯灰底、素色上衣、禁服装细节。它是所有身份图的输入。"
+          },
+          "voice": {
+            "type": "string",
+            "description": "音色描述，供 TTS 复用"
+          },
+          "identities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "这个角色拥有的造型 id 列表，必须与 identities[] 双向一致"
+          }
+        }
+      }
+    },
+    "identities": {
+      "type": "array",
+      "description": "**造型层**：一个角色可以有多个身份（「战神时期」「皇后宫装」「皇后便装」）。镜头引用的是这一层。",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "character",
+          "name",
+          "appearance_details"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "约定形如 <角色id>_<形态>，如 xie_zhong_emperor"
+          },
+          "character": {
+            "type": "string",
+            "description": "引用 characters[].id"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "给人看的形态名，如「宫中常服」"
+          },
+          "appearance_details": {
+            "type": "string",
+            "minLength": 6,
+            "description": "**服装、配饰、发型造型**（不含动作和表情）。这一层才允许写衣服。"
+          },
+          "costume_image": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "服装参考图。生成身份图时，**脸取自 portrait，衣取自这一张** —— 服装参考优先于文字。"
+          },
+          "sheet": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "身份图：一次生成的 4 面板参考表（脸部特写 / 正面全身 / 约45°三分 / 背面）。镜头拿它锁身份。"
+          },
+          "reference_images": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "voice_ref": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "身份级参考音频。同一角色不同形态可以不同声线。"
+          }
+        }
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "environment"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "environment": {
+            "type": "string",
+            "minLength": 6,
+            "description": "同景镜头逐字一致，保证背景连贯"
+          },
+          "time_of_day": {
+            "enum": [
+              "无",
+              "清晨",
+              "上午",
+              "正午",
+              "午后",
+              "白天",
+              "黄昏",
+              "夜晚"
+            ],
+            "description": "受控词表（别名如卯时→清晨、亥时→夜晚在解析时归一）"
+          },
+          "scene_no": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "剧本里的场次号（1-2 里的 2），由场次正则解析得来。用来把 board.scenes 和剧本原文对上。"
+          },
+          "master": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "正面环境图（160-180°）。**禁人、禁临时道具** —— 它是这个场景的风格锚。"
+          },
+          "reverse_master": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "反向 180° 环境图。左右边缘必须与 master 的侧墙可缝合。"
+          },
+          "spatial_layout": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "俯视平面图，锁定空间结构"
+          }
+        }
+      }
+    },
+    "props": {
+      "type": "array",
+      "description": "道具资产：跨镜头出现的小物件。不做它的话，同一把剑在不同镜头里长得不一样。",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "minLength": 4
+          },
+          "owner": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "属于哪个角色（可选）"
+          },
+          "ref_image": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "三视图（正/侧/背），产品摄影白底，无手无人，禁止可读文字"
+          }
+        }
+      }
+    },
+    "shots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "scene",
+          "cast",
+          "duration_s",
+          "shot_size",
+          "lighting",
+          "camera",
+          "action",
+          "prompt",
+          "audio",
+          "dialogue",
+          "edit_note",
+          "transition"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^s[0-9]{2,}$"
+          },
+          "scene": {
+            "type": "string",
+            "description": "引用 scenes[].id"
+          },
+          "cast": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "**出场身份**（引用 identities[].id，不是 characters[].id）。空数组必须是真的没人 —— 「还没填」和「没人」不许混为一谈。"
+          },
+          "props": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "本镜出场道具，引用 props[].id"
+          },
+          "source_lines": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "这一镜是从剧本原文的哪几行来的（1-based 行号）。逐行模式专用：**每一句台词落在哪一镜必须可查**，否则「没丢台词」就只能靠人肉眼比对。"
+          },
+          "duration_s": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 15
+          },
+          "shot_size": {
+            "enum": [
+              "远景",
+              "全景",
+              "中景",
+              "近景",
+              "特写"
+            ]
+          },
+          "lighting": {
+            "type": "string",
+            "minLength": 2
+          },
+          "camera": {
+            "type": "string",
+            "minLength": 2,
+            "description": "运镜，写动词不写形容词：缓慢前推 / 环绕 / 低角度仰拍 / 手持跟随"
+          },
+          "action": {
+            "type": "string",
+            "minLength": 4
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 12,
+            "description": "画面提示词。出场人物必须以 {{identity_id}} 标记内联，道具用 [[prop_id]]。禁止「或者」「二选一」—— 含糊的画面没法渲染。"
+          },
+          "audio": {
+            "type": "string",
+            "description": "环境音/音效。必须是听得见的具体事件 —— H3 的输出电平跟着内容走：写「轻微的环境音」得到 -74 dB（等于静音），写「篮球重拍木地板」得到 -20 dB。"
+          },
+          "dialogue": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "character",
+                "text"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "character": {
+                  "type": "string",
+                  "description": "引用 identities[].id"
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "emotion": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "spoken",
+                    "voiceover"
+                  ],
+                  "description": "spoken=画内开口；voiceover=内心独白/旁白（OS）"
+                },
+                "audio": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "这句台词的配音文件。**先出配音、量出秒数、再定画面时长** —— 反过来做必然对不齐。"
+                }
+              }
+            }
+          },
+          "edit_note": {
+            "type": "string"
+          },
+          "transition": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "enum": [
+                  "cut",
+                  "last_frame_first",
+                  "dissolve"
+                ]
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          },
+          "first_frame": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "last_frame": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "clip": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
