@@ -275,8 +275,6 @@ node src/score.mjs <图片> --kind portrait --expect "圆脸杏眼，双螺髻"
 `{{identity_id}}` 和 `[[prop_id]]` 是**绑定标记** —— 渲染器会把它们展开成实际的造型/道具描述。
 标记写错（引用了不在 `cast` 里的造型）会直接校验失败。
 
-**最小可用示例**见 [`examples/`](examples/)（待补）。
-
 ---
 
 ## 配置
