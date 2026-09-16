@@ -113,6 +113,35 @@ if (!fs.existsSync(OUT)) {
   process.exit(1);
 }
 const d = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', OUT], { encoding: 'utf8' });
+void d;
+
+// ------------------------------------------------------------------ ⚠ 必须重编码
+//
+// **VSR 输出的是 `mpeg4`（MPEG-4 Part 2 / Simple Profile），不是 h264。**
+//
+// 那个编码很多播放器和浏览器**根本打不开**。我（AI）当时没查编码就把文件发给用户，
+// 用户直接回了一句「打不开」。**"文件存在、ffmpeg 能解码" ≠ "用户能播"。**
+//
+// 所以这里强制转 h264 + aac 44.1kHz + faststart（网页里也能边下边播）。
+const REENC = OUT.replace(/\.mp4$/i, '_h264.mp4');
+console.log('\n重编码 mpeg4 → h264（VSR 默认输出 mpeg4，多数播放器打不开）');
+const rr = spawnSync('ffmpeg', ['-y', '-v', 'error', '-i', OUT,
+  '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p',
+  '-c:a', 'aac', '-b:a', '192k', '-ar', '44100',
+  '-movflags', '+faststart', REENC,
+], { encoding: 'utf8' });
+if (!fs.existsSync(REENC)) {
+  console.error('✗ 重编码失败，保留 VSR 原始产物（mpeg4，可能打不开）');
+  console.error(String(rr.stderr || '').slice(0, 300));
+} else {
+  fs.unlinkSync(OUT);                       // 删掉那个打不开的，只留能播的
+  fs.renameSync(REENC, OUT);
+}
+
+const d2 = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', OUT], { encoding: 'utf8' });
+const codec = String(spawnSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0',
+  '-show_entries', 'stream=codec_name,profile', '-of', 'csv=p=0', OUT], { encoding: 'utf8' }).stdout || '').trim();
+
 console.log(`\n✓ ${OUT}`);
-console.log(`  ${Math.round(Number(String(d.stdout).trim()))} 秒  ${(fs.statSync(OUT).size / 1048576).toFixed(1)} MB`);
+console.log(`  ${Math.round(Number(String(d2.stdout).trim()))} 秒  ${(fs.statSync(OUT).size / 1048576).toFixed(1)} MB  编码 ${codec}`);
 console.log('  ⚠ 自己抽帧看一眼再信 —— 别只看"文件存在"');
