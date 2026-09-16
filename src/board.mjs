@@ -18,10 +18,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildBrief, readBrief, callDirector, validateDirection, collectDialogueLines, DIRECTOR_MODEL } from './director.mjs';
 import { parseScenes, sceneMenu } from './parse-scenes.mjs';
 import { compileLiteral } from './literal.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
+/** 工程根（导演简报在那儿）。 */
+const PROJECT_ROOT = path.resolve(HERE, '..');
 const ROOT = path.resolve(HERE, '..');
 const SCHEMA_PATH = path.join(ROOT, 'schema', 'storyboard.schema.json');
 const PROMPT_PATH = path.join(ROOT, 'prompts', 'story2board.md');
@@ -1085,6 +1088,59 @@ function die(msg) { process.stderr.write(msg + '\n'); process.exit(1); }
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const cmd = args._[0];
+
+  // ── 🎬 导演：让 AI 导演做镜头设计 ──────────────────────────────
+  //
+  // 这一步取代了原来"一行动作 = 一个镜头"的机械切分。
+  // 剧本里**只有台词**归代码（逐字搬），**镜头怎么排**归导演。
+  //
+  // 产出先过校验器（≤15s / 行号 / 人物引用 / **台词原文死线**），
+  // 通过了才写回板子。**不允许"差不多对"。**
+  if (cmd === 'direct') {
+    const file = args._[1];
+    if (!file) die('用法：direct <board.json> [--script story.md] [--model qwen3.8-max] [--dry-run]');
+    if (!fs.existsSync(file)) die(`找不到板子：${file}`);
+    const board = JSON.parse(fs.readFileSync(file, 'utf8'));
+
+    // 剧本：显式给 > 同目录 story.md
+    const scriptPath = typeof args.script === 'string' ? args.script : path.join(path.dirname(file), 'story.md');
+    if (!fs.existsSync(scriptPath)) die(`找不到剧本：${scriptPath}`);
+    const script = fs.readFileSync(scriptPath, 'utf8');
+
+    const prompt = buildBrief({ briefText: readBrief(PROJECT_ROOT), board, script });
+    console.log(`导演简报 ${prompt.length} 字　剧本 ${script.split(/\r?\n/).length} 行`);
+    const dlg = collectDialogueLines(board, script.split(/\r?\n/));
+    console.log(`台词 ${dlg.size} 句（第 ${[...dlg.keys()].join('、')} 行）—— 导演只能引用行号，不许写原文`);
+
+    if (args['dry-run']) {
+      const out = file.replace(/\.json$/, '.director-prompt.txt');
+      fs.writeFileSync(out, prompt);
+      console.log(`\n--dry-run：简报写到 ${out}（${prompt.length} 字），没调用模型`);
+      return;
+    }
+
+    console.log(`\n请导演（${args.model || DIRECTOR_MODEL}）…`);
+    const r = callDirector(prompt, { model: args.model });
+    if (!r.ok) die(`✗ 导演没交出东西：${r.error}`);
+    console.log(`  模型回复用了 ${r.seconds} 秒`);
+
+    const v = validateDirection(r.direction, { board, script });
+    const raw = file.replace(/\.json$/, '.direction.json');
+    fs.writeFileSync(raw, JSON.stringify(r.direction, null, 2) + '\n');
+    console.log(`  设计写到 ${path.basename(raw)}`);
+    console.log(`  单元 ${r.direction.units?.length || 0} 个，镜头 ${(r.direction.units || []).reduce((n, u) => n + (u.shots || []).length, 0)} 个`);
+
+    for (const w of v.warnings) console.log(`  ⚠ ${w}`);
+    for (const e of v.errors) console.log(`  ✗ ${e}`);
+    if (!v.ok) {
+      console.error(`\n✗ 校验不通过（${v.errors.length} 项）—— 设计没写回板子。`);
+      console.error('  改 BRIEF.md 或让导演重做，不要手改他的产出。');
+      process.exit(1);
+    }
+    console.log('\n✓ 校验通过。');
+    console.log('  下一步：把设计编译成分镜表（还没实现），或者先人工看一遍 .direction.json');
+    return;
+  }
 
   // ── 闸门 1：故事 ────────────────────────────────────────────────
   if (cmd === 'story') {

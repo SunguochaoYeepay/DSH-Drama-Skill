@@ -164,6 +164,59 @@ export function applyTransitions(board, opts = {}) {
   return { plan, changed };
 }
 
+/**
+ * 画幅判据 —— **拿产物去核对契约**。
+ *
+ * 来历：连续三层比例问题，全都是"没人核对产物"造成的：
+ *
+ *   ① `meta.aspect` 继承了 16:9，从没被当成一道题问过
+ *   ② 线上通道的 `size` 没传，静默走了默认 `'16:9'`，再被裁成竖屏（扔掉 68% 像素）
+ *   ③ H3 只能输出 32 的倍数，1080 不可达 → 实际 1088，而配置里做了两次缩放
+ *
+ * 三次都是**静默失败**：产出照旧，只是形状不对。而之所以一个都没被抓到，
+ * 是因为整套检查（闸门 / validate / 成本账本 / 审阅图）都在回答
+ * **"该不该继续"**，没有一条在回答 **"成品符不符合声明"**。
+ * 更糟的是 `normalizeSize` 用 `force_original_aspect_ratio=increase,crop=` ——
+ * 不匹配时不是报错，是**裁掉多余部分替它擦屁股**；审阅图又把所有图缩成同一尺寸，
+ * **正好把比例差抹平**。
+ *
+ * @param {string} aspect 形如 '9:16' / '16:9' / '1:1'
+ * @returns {number|null} 宽/高；解析不出来返回 null
+ */
+export function aspectRatioOf(aspect) {
+  const m = String(aspect || '').match(/^\s*(\d+(?:\.\d+)?)\s*[:/]\s*(\d+(?:\.\d+)?)\s*$/);
+  if (!m) return null;
+  const a = Number(m[1]);
+  const b = Number(m[2]);
+  return (a > 0 && b > 0) ? a / b : null;
+}
+
+/**
+ * 产物的实际宽高比是否匹配声明。
+ *
+ * **容差默认 2%** —— 这个数不是拍脑袋，是量出来的：
+ *
+ * | 来源 | 实际 | 比例 | 偏离 9:16 |
+ * |---|---|---|---|
+ * | 标准 | 1080×1920 | 0.5625 | 0.00% |
+ * | H3 的 32 倍数对齐 | 1088×1920 | 0.5667 | **0.74%** |
+ * | 线上 API 的 "9:16" | 1536×2688 | 0.5714 | **1.59%** |
+ * | 线上 API 的 "16:9"（错的那个） | 2688×1536 | 1.7500 | **211%** |
+ * | H3 节点默认（错的那个） | 864×480 | 1.8000 | **220%** |
+ *
+ * 所以 2% 能放过两个通道各自的取整约定，**同时把真正的比例错误（差两个数量级）拦死**。
+ *
+ * @returns {{ok:boolean, got:number, want:number, diff:number, why?:string}}
+ */
+export function aspectMatches(w, h, aspect, tol = 0.02) {
+  const want = aspectRatioOf(aspect);
+  if (!want) return { ok: false, got: 0, want: 0, diff: Infinity, why: `画幅 "${aspect}" 解析不出来` };
+  if (!w || !h) return { ok: false, got: 0, want, diff: Infinity, why: '量不到尺寸' };
+  const got = w / h;
+  const diff = Math.abs(got - want) / want;
+  return { ok: diff <= tol, got, want, diff, why: diff <= tol ? undefined : `实际 ${w}×${h}（比例 ${got.toFixed(4)}）≠ 声明 ${aspect}（${want.toFixed(4)}）` };
+}
+
 /** H3 的帧数必须落在 17k+5 网格上（这是引擎约束，不是我们挑的）。 */export function snapFrames(frames) {
   const k = Math.max(0, Math.round((frames - 5) / 17));
   return 17 * k + 5;

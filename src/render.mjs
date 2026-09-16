@@ -24,7 +24,7 @@ import { buildScorePrompt, scoreFile, pickBest, passes } from './score.mjs';
 import { review } from './review.mjs';
 import { ledger, summarize, formatSummary } from './cost.mjs';
 import { checkGate } from './board.mjs';
-import { speechSegments, durationForSpeech, emotionToProsody, estimateSpeechSeconds, flfPlan, buildTimeline, framesFor, applyTransitions } from './orchestrate.mjs';
+import { speechSegments, durationForSpeech, emotionToProsody, estimateSpeechSeconds, flfPlan, buildTimeline, framesFor, applyTransitions, aspectMatches, aspectRatioOf } from './orchestrate.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PY = process.env.AIH_PYTHON || 'E:\\AI-Image\\ComfyUI-aki-v1.4\\python\\python.exe';
@@ -87,12 +87,40 @@ let RESULT_FILE;
 let DIR;
 
 /** 把生成器刚吐出来的文件挪到规范路径（按 id 命名）。返回新的绝对路径。 */
-function place(file, dir, name) {
+/**
+ * 把生成器刚吐出来的文件挪到规范路径（按 id 命名）。返回新的绝对路径。
+ *
+ * **落位前先核对宽高比。** 这是补上"没人拿产物核对契约"那个洞：
+ * 三层比例问题（16:9 继承值、线上 size 没传、H3 的 32 倍数约束）
+ * 全都是静默失败 —— 产出照旧，只是形状不对，而没有任何一条检查在看形状。
+ *
+ * @param {string} [expectAspect] 期望画幅，如 '9:16'。**给了才查**（身份图是 16:9，和片子画幅不同）
+ * @returns {string|null} 落位后的绝对路径；**核对不通过返回 null**（调用方应当记失败）
+ */
+function place(file, dir, name, expectAspect) {
   if (!file || !fs.existsSync(file)) return null;
+  if (expectAspect) {
+    const wh = probeWxH(file);
+    const m = aspectMatches(wh.w, wh.h, expectAspect);
+    if (!m.ok) {
+      console.error(`      ✗ 画幅核对不过：${name} —— ${m.why}`);
+      console.error(`        （期望 ${expectAspect}；容差 2%。产物没落位。）`);
+      return null;
+    }
+  }
   fs.mkdirSync(dir, { recursive: true });
   const dest = path.join(dir, name + path.extname(file));
   try { fs.renameSync(file, dest); } catch { fs.copyFileSync(file, dest); fs.unlinkSync(file); }
   return dest;
+}
+
+/** 量一个媒体文件的宽高（ffprobe）。量不到返回 {w:0,h:0}。 */
+function probeWxH(file) {
+  const ffprobe = FFMPEG.replace(/ffmpeg\.exe$/i, 'ffprobe.exe');
+  const r = spawnSync(ffprobe, ['-v', 'error', '-select_streams', 'v:0',
+    '-show_entries', 'stream=width,height', '-of', 'csv=p=0', file], { encoding: 'utf8' });
+  const [w, h] = String(r.stdout || '').trim().split(',').map(Number);
+  return { w: Number.isFinite(w) ? w : 0, h: Number.isFinite(h) ? h : 0 };
 }
 
 const stage = (() => {
@@ -102,16 +130,24 @@ const stage = (() => {
 const force = argv.includes('--force');
 const noAssets = argv.includes('--no-assets');
 /**
- * 质量默认开。
+ * **默认 4 步（`--fast`）。25 步要显式加 `--hq`。**
  *
- * 复盘时发现的取舍错误：线上资产 2048-2688px 只花 1.3 元，而**观众真正看到的两层**
- * （关键帧、成片）被压到 1024×576 / 864×480，关键帧还只跑 4 步 Lightning。
- * 本地算力是免费但慢的 —— **恰恰应该在那儿换质量**。
+ * 规则来自这次踩的坑：我把 25 步设成了默认，理由是"本地算力免费、该换质量"。
+ * 结果是**每次试错都要等 25 步**，而 25 步和 4 步的差别**我一次都没对照过**
+ * —— 等于用"没验证过的质量"换"实实在在的时间"。
  *
- * 默认 HQ：关键帧关掉 `--fast` 走 20 步，片段上到实测可用的 1344×768。
- * 探构图、赶时间时才加 `--fast`。
+ * 现在的规矩：
+ *
+ *   1. **默认 4 步**，先把链路和效果验通（快 4-6 倍）
+ *   2. 看过了、确认没问题，**用户说了才**上 `--hq` 走 25 步
+ *   3. `--fast` 对视频不只是减步数 —— 它还挂 `M_H3_LORA_4STEP`
+ *      （`minimax_h3_fl2v_turbo_4step_v1.0_**768p**_comfyui_bf16`，
+ *      **名字里写着 768p**，而我们按 1080p 出图 —— 分辨率是否匹配未验证）
+ *
+ * `--hq` 只影响**采样步数**，不影响分辨率（两者曾经被绑在一起，加 `--fast`
+ * 省步数时分辨率一起掉回节点默认的 864×480，一整批尺寸不一致）。
  */
-const HQ = !argv.includes('--fast');
+const HQ = argv.includes('--hq');
 /** 反向场景图 + 俯视平面图：**默认不生成** —— 全工程没有任何东西消费它们。 */
 const sceneExtras = argv.includes('--with-scene-extras');
 const only = (() => {
@@ -153,6 +189,73 @@ DIR = {
 };
 RESULT_FILE = path.join(DIR.tmp, '.gen-result.json');
 for (const d of Object.values(DIR)) fs.mkdirSync(d, { recursive: true });
+
+// ------------------------------------------------------------------ 单实例锁
+//
+// **同一部剧只允许一个 render 进程。**
+//
+// 踩过的坑：同时跑了 3 个 `--stage clips`（外加 1 个 keyframes）——
+// 三个进程往同一个 `board.json` 里写、又抢着把生成结果 `place()` 成自己的镜号，
+// 结果**三个镜头全指向同一个 `undefined.mp4`**，分辨率也混成了 864×480 和 1088×1920。
+//
+// 所以进来先抢锁，抢不到就退出（`--force-lock` 可以强抢）。
+//
+// **锁必须用排他创建（`openSync(..., 'wx')`），不能用 `existsSync` + `writeFileSync`。**
+// 后者有 TOCTOU 窗口：两个进程可以同时通过"锁不存在"的检查，然后各写各的 ——
+// 实测就这么漏过一次，两个 clips 进程同时"拿到锁"，又开始互相覆盖。
+{
+  const lockPath = path.join(DIR.tmp, 'render.lock');
+  const me = `${process.pid} @ ${new Date().toISOString()}  ${argv.filter((a) => a.startsWith('--stage')).join(' ')}`;
+
+  /** 原子抢锁：已存在就抛 EEXIST。 */
+  const acquire = () => {
+    try {
+      const fd = fs.openSync(lockPath, 'wx');
+      fs.writeSync(fd, me);
+      fs.closeSync(fd);
+      return true;
+    } catch (e) {
+      if (e.code !== 'EEXIST') throw e;
+      return false;
+    }
+  };
+
+  /** 持有者还活着吗（`kill(pid, 0)` 只探测不发信号）。 */
+  const holderAlive = () => {
+    let holder = '';
+    try { holder = fs.readFileSync(lockPath, 'utf8').trim(); } catch { return { alive: true, holder: '' }; }
+    const pid = Number((holder.match(/^(\d+)/) || [])[1]);
+    if (!pid) return { alive: true, holder };
+    try { process.kill(pid, 0); return { alive: true, holder }; } catch { return { alive: false, holder, pid }; }
+  };
+
+  if (!acquire() && !argv.includes('--force-lock')) {
+    const { alive, holder, pid } = holderAlive();
+    if (alive) {
+      console.error('\n✗ 已有一个 render 在跑这一部剧：');
+      console.error(`   ${holder}`);
+      console.error('\n  并发跑会互相覆盖板子、抢着搬生成结果，产出会乱。');
+      console.error(`  确认那个进程已经死了，就删掉锁：${path.relative(WORKSPACE, lockPath)}`);
+      console.error('  或者用 --force-lock 强抢（确定它真的没在跑再用）。');
+      process.exit(4);
+    }
+    console.error(`⚠ 发现过期的锁（持有进程 ${pid} 已不在），覆盖它`);
+    try { fs.unlinkSync(lockPath); } catch { /* 已经没了 */ }
+    if (!acquire()) {
+      console.error('✗ 清掉陈锁后仍抢不到 —— 另一个进程刚好插进来，重跑一次。');
+      process.exit(4);
+    }
+  }
+
+  // **只删自己的锁**，免得把后来者的锁删了
+  const release = () => {
+    try { if (fs.readFileSync(lockPath, 'utf8').trim() === me) fs.unlinkSync(lockPath); } catch { /* 已被删 */ }
+  };
+  process.on('exit', release);
+  for (const sig of ['SIGINT', 'SIGTERM', 'SIGBREAK']) {
+    process.on(sig, () => { release(); process.exit(130); });
+  }
+}
 
 // 账本：每次线上调用当场记，跑完打一张表。
 // `--force` 的重出单独标一轮 —— **重出花掉的钱正是最该被看见的那部分**
@@ -331,7 +434,8 @@ async function doAssets() {
     }
 
     // 选中那张挪到规范路径：`assets/<kind>_<id>.png`（**按 id 命名，不是时间戳**）
-    const canonical = place(winner, DIR.assets, `${job.kind}_${job.id}_${job.slot}`);
+    const wantAspect = job.kind === 'portrait' ? '1:1' : (job.kind === 'sheet' ? '16:9' : ASPECT);
+    const canonical = place(winner, DIR.assets, `${job.kind}_${job.id}_${job.slot}`, wantAspect);
     if (!canonical) { failed++; console.error(`    ✗ ${job.id} 挪不进 ${path.basename(DIR.assets)}/`); continue; }
     try {
       job.target[job.slot] = toRelative(canonical);
@@ -359,30 +463,56 @@ async function doAssets() {
 /**
  * 输出画幅。**必须跟着 `meta.aspect` 走，不能写死横屏。**
  *
- * 短剧是竖屏（9:16），而我一开始沿用了迁移过来的 16:9，从头到尾没跟用户确认过。
- * 更糟的是归一化目标 9:16 只给了 `480:864`（0.41 MP）。
+ * ### 为什么工作尺寸不是 1080×1920
  *
- * H3 实测支持的竖屏：480×864 / 576×1024 / 640×1152 / 768×1344 / **1080×1920**；
- * **720×1280 被 patchify 拒绝**。横屏：1024×576 / 1152×648 / 1344×768，**1280×720 同样被拒**。
+ * **H3 只能输出 32 的倍数**（实测）：
  *
- * 两层通道要的参数**不一样**，别混：
- *   - 本地 comfyui：认 `ratio`（或 `width`/`height`）
- *   - 线上 bailian：**只认 `size`**（`1:1` / `16:9` / `9:16`…）
- * 曾经只传了 `ratio` 给线上，`size` 走了默认值 `'16:9'` ——
- * **14 张关键帧全按 16:9 生成、再被裁成竖屏，每张扔掉约 44% 画面。**
+ * ```
+ * 1088 / 32 = 34 ✓     1920 / 32 = 60 ✓
+ * 1080 / 32 = 33.75 ✗  ← 不是整数，H3 物理上做不出来
+ * ```
+ *
+ * 要 1080×1920，H3 给你 1088×1920。所以：
+ *
+ * ```js
+ * w, h     ← **工作尺寸**：H3 的原生尺寸，关键帧和片段都用它，中间不再缩放
+ * deliver  ← **交付尺寸**：标准 1080×1920，只在 assemble 缩一次
+ * ```
+ *
+ * 曾经工作尺寸写 1080，结果是**两次缩放**（关键帧 1080 → H3 拉成 1088 → 拼装压回 1080），
+ * 每次 0.79% —— 虽然看不见，但没必要做两次。
+ *
+ * 16:9（1344×768）和 1:1（1024×1024）本来就是 32 的倍数，工作尺寸 = 交付尺寸。
  */
 const ASPECT = board.meta.aspect || '9:16';
 const OUT_SIZE = {
-  '9:16': { w: 1080, h: 1920, ff: '1080:1920', online: '9:16', tile: [304, 540] },
-  '16:9': { w: 1344, h: 768, ff: '1344:768', online: '16:9', tile: [480, 270] },
-  '1:1': { w: 1024, h: 1024, ff: '1024:1024', online: '1:1', tile: [400, 400] },
-}[ASPECT] || { w: 1080, h: 1920, ff: '1080:1920', online: '9:16', tile: [304, 540] };
+  '9:16': { w: 1088, h: 1920, deliver: [1080, 1920], ff: '1088:1920', online: '9:16', tile: [304, 540] },
+  '16:9': { w: 1344, h: 768, deliver: [1344, 768], ff: '1344:768', online: '16:9', tile: [480, 270] },
+  '1:1': { w: 1024, h: 1024, deliver: [1024, 1024], ff: '1024:1024', online: '1:1', tile: [400, 400] },
+}[ASPECT] || { w: 1088, h: 1920, deliver: [1080, 1920], ff: '1088:1920', online: '9:16', tile: [304, 540] };
 
-/** 把线上产出缩回 board 声明的画幅，免得十几镜十几个尺寸。 */
+/**
+ * 把产出缩到工作尺寸。
+ *
+ * **先验，再缩；不匹配就喊出来，绝不静默裁。**
+ *
+ * 以前这里是 `force_original_aspect_ratio=increase,crop=...` —— 一个"强制适配"：
+ * 输入比例不对时它不是报错，而是**裁掉多余部分替它擦屁股**。
+ * 于是"线上按 16:9 生成、这里裁成竖屏"这件事一路无声无息（扔掉了 68% 像素）。
+ *
+ * 现在：比例不符就打印警告（`⚠ 画幅不符` 前缀，好 grep），然后**只做等比缩放**
+ * （`decrease`，不裁），把问题交给下游那个产物级比例断言去拦。
+ */
 function normalizeSize(file) {
+  const wh = probeWxH(file);
+  const m = aspectMatches(wh.w, wh.h, ASPECT);
+  if (!m.ok) {
+    console.error(`      ⚠ 画幅不符：${path.basename(file)} —— ${m.why}`);
+    console.error('        不裁，只等比缩放；下游的比例断言会把它拦下。');
+  }
   const out = file.replace(/\.png$/i, '_fit.png');
   const ok = runFfmpeg(['-y', '-i', file, '-vf',
-    `scale=${OUT_SIZE.ff}:force_original_aspect_ratio=increase,crop=${OUT_SIZE.ff}`,
+    `scale=${OUT_SIZE.ff}:force_original_aspect_ratio=decrease,setsar=1`,
     '-frames:v', '1', out]);
   if (!ok) console.error(`      尺寸归一化失败，保留原尺寸：${path.basename(file)}`);
   return ok ? out : file;
@@ -462,7 +592,7 @@ async function doKeyframes() {
     // 先归一化再落位，**最终名字就是 `s01.png`**
     // （顺序反了会出现 `s01_fit.png` —— normalizeSize 会加 `_fit` 后缀，等于双层命名）
     const staged = place(winner, DIR.tmp, `${shot.id}_raw`) || winner;
-    const fitted = place(normalizeSize(staged), DIR.keyframes, shot.id) || normalizeSize(staged);
+    const fitted = place(normalizeSize(staged), DIR.keyframes, shot.id, ASPECT) || normalizeSize(staged);
     shot.first_frame = toRelative(fitted);
     save();
     console.log(`    -> ${shot.first_frame}  (${Math.round((Date.now() - started) / 1000)}s)`);
@@ -740,8 +870,11 @@ function doClips() {
     const prompt = buildClipPrompt(board, shot);
     // 时长由配音反推过就用它；落到 17k+5 网格上，免得引擎拒
     const seconds = framesFor(Number(shot.duration_s) || 5) / 24;
-    // HQ：分辨率 2.5 倍、不省步数。成品该用这个；探构图时用默认的更省时间。
-    const sz = HQ ? ['--width', String(OUT_SIZE.w), '--height', String(OUT_SIZE.h)] : [];
+    // **分辨率跟着片子画幅走，与 `--fast` 无关。**
+    // 曾经把两件事绑在一起（`HQ ? [尺寸] : []`），结果加 `--fast` 省步数时
+    // **分辨率一起掉回节点默认的 864×480** —— 一整批片段尺寸不一致（踩过）。
+    // `--fast` 只该管采样步数。
+    const sz = ['--width', String(OUT_SIZE.w), '--height', String(OUT_SIZE.h)];
     const qf = HQ ? [] : ['--fast'];
 
     console.log(`[${index + 1}/${board.shots.length}] ${shot.id} 出片…（${item.mode}，${seconds.toFixed(2)}s）`);
@@ -768,7 +901,7 @@ function doClips() {
     // 光看文件名对不上镜号，只能翻板子。
     // 注意用 `shot.id`：片段任务对象（`flfPlan` 的产出）里字段叫 `shot_id`，**没有 `id`** ——
     // 写 `item.id` 会静默生成 `undefined.mp4`，然后每个镜头互相覆盖（踩过）。
-    const placed = place(produced, DIR.clips, shot.id);
+    const placed = place(produced, DIR.clips, shot.id, ASPECT);
     shot.clip = toRelative(placed || produced);
     save();
     console.log(`    -> ${shot.clip}  (${Math.round((Date.now() - started) / 1000)}s)`);
@@ -859,13 +992,15 @@ function doAssemble() {
     args.push('-c:a', 'aac', '-b:a', '192k', '-ar', '44100', '-ac', '2');
     // **用显式 `-t` 收尾，不用 `-shortest`**：`apad` 是无限音频流，配 `-shortest` 会死锁。
     args.push('-t', probeVideoDuration(toAbsolute(shot.clip)).toFixed(3));
-    if (cropCaption) {
-      // **H3 会把对白当字幕烧进画面**（实测：否定句"不出现字幕"没用，肯定句"画面干净"也没用，
-      // 而且字会写错——「你果然是个木头」糊成「你然是个头」）。
-      // 这是模型行为，压不住，只能在后期裁掉那一条。
-      // 裁掉底部再拉回原尺寸 —— 短剧在手机上看，这点纵向拉伸看不出来。
-      args.push('-vf', `crop=iw:ih*${(1 - CAPTION_BAND).toFixed(3)}:0:0,scale=${OUT_SIZE.w}:${OUT_SIZE.h}:flags=lanczos`);
-    }
+    // **每一镜都归一到「交付尺寸」**（9:16 时是 1080×1920，工作尺寸是 H3 原生的 1088×1920）。
+    //
+    // 为什么不是"只在裁字幕带时才缩放"：**H3 只能输出 32 的倍数** ——
+    // 要 1080×1920，它给 1088×1920（`gen.py --width` 的说明就写着"自动对齐到 16/32 倍数"）。
+    // 1088/1920 = 0.5667 而 9:16 = 0.5625，差 0.79%，肉眼看不出来，
+    // **但交付物该是标准尺寸** —— 声明了 9:16 就该输出 1080×1920。
+    const captionCrop = cropCaption ? `crop=iw:ih*${(1 - CAPTION_BAND).toFixed(3)}:0:0,` : '';
+    const [dw, dh] = OUT_SIZE.deliver;
+    args.push('-vf', `${captionCrop}scale=${dw}:${dh}:flags=lanczos`);
     args.push(part);
     if (!runFfmpeg(args)) {
       console.error(`  ${shot.id} 混音失败，退回无声画面`);
@@ -887,6 +1022,8 @@ function doAssemble() {
   const rv = review(toAbsolute(board.meta.final_video), {
     expectSeconds: tl.total_seconds,
     toleranceFrames: 3,
+    // **成片也要核对画幅** —— 三层比例问题一个都没被自检抓到，就是因为它没看形状
+    expectAspect: ASPECT,
     srt: tl.srt.trim() ? srtPath : null,
     expectSubtitles: tl.srt.trim() ? tl.srt.trim().split('\n\n').length : 0,
   });

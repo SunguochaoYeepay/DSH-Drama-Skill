@@ -1,14 +1,15 @@
 # DSH-Drama-Skill
 
-**把一段故事，变成一部能发出去的短剧。** 五条命令，四个确认点，剩下全自动。
+**把一段故事，变成一部能发出去的短剧。** 一个 AI 导演编排镜头，五条命令出片，四个确认点。
 
 [![Node](https://img.shields.io/badge/node-%E2%89%A520-brightgreen)](https://nodejs.org)
-[![Tests](https://img.shields.io/badge/tests-250%20passed-brightgreen)](#测试)
+[![Tests](https://img.shields.io/badge/tests-303%20passed-brightgreen)](#测试)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 ```
-剧本.md  ──▶  分镜表  ──▶  资产  ──▶  关键帧  ──▶  成片.mp4
-              (JSON)      (图)       (图)        1080×1920 · 带人声
+剧本.md ──▶ 🎬导演编排 ──▶ 分镜表 ──▶ 资产 ──▶ 关键帧 ──▶ 成片.mp4
+            镜头/景别/运镜    (JSON)     (图)     (图)      竖屏 · 带人声
+            切点/朝向
 ```
 
 ---
@@ -17,14 +18,59 @@
 
 AI 生视频工具很多，但**做一部完整的短剧**要处理的事它们不管：
 
+- **镜头怎么排** —— 什么时候切、什么时候让摄影机自己动、两人朝哪看
 - 台词要**一字不差**地念出来，不能改
-- 同一个角色在 14 个镜头里要**长得一样**、**穿得一样**
+- 同一个角色在十几个镜头里要**长得一样**、**穿得一样**
 - 换一套衣服不能把脸也换掉
 - 一镜 45 个字的台词要 12 秒，画面不能只给 5 秒
 - 镜与镜之间要接得上，不能全靠硬切
 - **花的是真钱** —— 哪一步错了，得在下游烧钱之前拦住
 
 这个工程把这些**写成可执行的契约和测试**，交给 AI 助手去执行。
+
+---
+
+## 🎬 导演：让 AI 排镜头，而不是让代码套公式
+
+**这是本工程跟"模板流水线"最大的区别。**
+
+切与不切是**判断**，不是公式：
+规则能说"只变距离就别切"，**说不出**「她说完那句话之后那半秒沉默，值得切到她脸上」。
+
+所以这里有一个**导演角色**（[`director/BRIEF.md`](director/BRIEF.md)）——
+一份**职业简报**，不是规则条文：他是谁、他的判断工具、这部片的技术事实、他的底线。
+
+```bash
+node src/board.mjs direct board.json          # 请导演（qwen3.8-max）
+node src/board.mjs direct board.json --dry-run  # 只看简报，0 成本
+```
+
+**他交出来的东西**：若干个**生成单元**（每个 ≤15 秒），每个单元里可以切多刀 ——
+
+```
+u1 (14.0s)  [Shot 1]          全景  缓慢前推   两人在林间走
+            [Shot 2] At 3.20s 近景  切         她道谢
+            [Shot 3] At 6.20s 近景  切         他推辞
+            [Shot 4] At 11.6s 特写  切         她委屈
+```
+
+**单元内是一次生成** —— 里面切多少刀，人物/光线/声音都是连续的。
+**接缝从 13 个降到 4 个，生成次数从 14 次降到 5 次。**
+
+### 职责边界
+
+| | 归谁 | 为什么 |
+|---|---|---|
+| **台词** | ❌ **代码** | **逐字保真，导演一个字都不许碰** |
+| 镜头划分 / 景别 / 运镜 / 构图 / 朝向 | ✅ 导演 | 这是创作判断 |
+| ≤15 秒 / 画幅 / 人物引用有效 | ❌ 校验器 | 硬约束，越界就拦 |
+
+**导演可以自由创作，但越界会被拦下。** 有一条是死线：
+**他的输出里出现任何一句台词原文 → 直接报错**（台词只能用行号引用）。
+
+> 实测：他排出的 17 个镜头里，180 度线是对的；
+> 我第一版校验器反而把他**对的**报了 5 次错 —— 对话戏的正反打本来就该
+> "她永远朝右、他永远朝左"。**是我的校验器错了。**
 
 ---
 
@@ -85,6 +131,43 @@ node src/render.mjs board.json --workspace "$AIH_WORKSPACE" --stage assemble
 
 ---
 
+## 工具：检查产物、看节奏、等就绪
+
+**都是踩坑踩出来的 —— 每次手动拼 ffmpeg 抽帧都会翻车，所以钉成了工具。**
+
+```bash
+node tools/inspect.mjs <video|image> [--aspect 9:16] [--first-last]
+```
+
+量尺寸 / 帧数 / 时长 / 响度 / 解码报错，抽帧拼图，退出码 0/1。
+
+```
+检查 s01.mp4
+────────────────────────────────────────
+  尺寸      1088×1920  @ 24fps
+  画幅      期望 9:16 → ✓ 通过（偏离 0.74%）
+  解码报错  0 行 ✓
+  响度      mean -16 dB / max -0.6 dB
+  抽帧      6/6 帧 ✓
+✓ 全部通过
+```
+
+```bash
+node tools/animatic.mjs board.json --direction board.direction.json
+```
+
+**把分镜按真实时长拼成能看的预览（0 成本）。**
+用户的话：「我不是导演，我不知道合不合理，**我只能看到片子才知道是不是太长了**。」
+—— 那就不该拿文字分镜表让人审批。**先给能看的东西，再谈生成。**
+
+```bash
+node tools/wait-ready.mjs            # 端口通 ≠ 就绪，等节点注册完
+node tools/fl2v-test.mjs <board> --first a.png --last b.png   # 验证首尾帧夹逼
+node tools/unit.mjs <board> --direction d.json --unit u1 --size 768x1344
+```
+
+---
+
 ## 命令
 
 ### `board.mjs` — 契约层
@@ -122,10 +205,14 @@ node src/render.mjs <board.json> --workspace <DIR> --stage <阶段> [选项]
 | `--shots s01,s05` | 只做指定镜头 |
 | `--force` | 重出已有的 |
 | `--only <id>` | 只重出指定资产 |
-| `--fast` | 快速档（4 步 / 864×480），探构图时用 |
+| `--hq` | 25 步（**默认是 4 步**，见「常见问题」） |
 | `--with-scene-extras` | 额外生成反向场景图与俯视平面图 |
 | `--crop-caption` | 裁掉画面底部 13%（**默认关**，见「常见问题」） |
 | `--skip-gate` | 跳过闸门检查（正式跑别用） |
+
+> **采样步数默认 4 步**（`--fast`），25 步要显式加 `--hq`。
+> 理由：4 步和 25 步的差别**没对照过**，不该拿"没验证过的质量"换"实实在在的时间"。
+> 看过了、确认没问题，再上 `--hq`。
 
 ---
 
@@ -328,19 +415,20 @@ $AIH_WORKSPACE/story2video/
 
 ## 测试
 
-**250 条断言，十套。** 其中两套是**负例驱动** —— 故意造坏东西，必须被拦下。
+**303 条断言，十一套。** 其中多套是**负例驱动** —— 故意造坏东西，必须被拦下。
 
 ```bash
 B=board.json
 node tests/contract.test.mjs   $B    #  9 项  契约能拒掉每一类错误
 node tests/assets.test.mjs     $B    # 59 项  配方可断言，出图前就知道对不对
-node tests/orchestrate.test.mjs $B   # 64 项  帧落网格、总长=各镜之和、字幕首尾相接
+node tests/orchestrate.test.mjs $B   # 82 项  帧落网格、总长=各镜之和、字幕首尾相接、**画幅核对**
 node tests/literal.test.mjs    $B    # 14 项  台词逐字保真
 node tests/scenes.test.mjs     $B    # 24 项  场次确定性解析
 node tests/compiler.test.mjs   $B    # 16 项  补强层不抹平真错误
 node tests/score.test.mjs      $B    # 36 项  脸和服装都得过线
 node tests/gate.test.mjs       $B    #  5 项  闸门只看用户的票
 node tests/cost.test.mjs             # 23 项  算钱算对
+node tests/director.test.mjs   $B    # 35 项  **导演可以自由创作，但越界会被拦下，台词碰不得**
 node tests/review.test.mjs film.mp4 $B   # 13 项  四种病都得拦下
 ```
 
@@ -373,8 +461,13 @@ EOF
 如果没统一 `-ar 44100` 就拼接，AAC 码流会坏掉 —— 播放器能读出时长，但听不到声音。
 
 **Q：画面里有字幕/文字？**
-H3 的视频里可能有。但先确认**不是剧本要求的**（片尾字幕卡本来就该有字）。
-真要裁，用 `--crop-caption`（默认关闭）。
+**H3 会不稳定地烧字幕** —— 同一个尺寸、同样的提示词，有的出有的不出（实测）。
+试过加 `on_screen_text: none`，**只对一部分有效，压不住**。
+裁切也不行（字幕在画面 74%–80%，裁掉 26% 会毁竖屏构图）。
+
+**正解：去字幕工具。** 首选
+[`YaoFANGUK/video-subtitle-remover`](https://github.com/YaoFANGUK/video-subtitle-remover)（12.9k stars，
+本地跑、无需 API、无损分辨率）。流程：**出片 → 去字幕 → 再放大到交付尺寸。**
 
 **Q：角色长得不对 / 像卡通人？**
 三个最可能的原因：`face_prompt` 没写族裔、`meta.style` 对应的风格锚点没生效、
@@ -398,19 +491,29 @@ H3 的视频里可能有。但先确认**不是剧本要求的**（片尾字幕�
 SKILL.md                       规则正本（给 AI 助手读）
 README.md                      你正在看的
 schema/storyboard.schema.json  分镜契约
+director/
+  BRIEF.md         🎬 **导演的职业简报** —— 身份 / 判断工具 / 底线
+  schema.md        他交什么格式
 src/
-  board.mjs        CLI 中枢：校验 / 批准 / 编译 / 出表
+  board.mjs        CLI 中枢：校验 / 批准 / 编译 / 出表 / **direct**
   render.mjs       渲染驱动：五阶段 + 闸门 + 审阅图
+  director.mjs     导演驱动 + 校验器（含台词死线）
   literal.mjs      纯代码编译（台词逐字保真）
   parse-script.mjs 剧本行分类器
   parse-scenes.mjs 场次确定性解析
   assets.mjs       资产配方 + 提示词构造（纯函数，可断言）
-  orchestrate.mjs  时间线 / 帧网格 / 转场 / 时长估算
+  orchestrate.mjs  时间线 / 帧网格 / 转场 / 时长估算 / **画幅核对**
   score.mjs        候选池逐维打分
   review.mjs       成片自检
   cost.mjs         成本账本
   providers/       通道路由（线上 bailian / 本地 comfyui）
-tests/             十套验收
+tools/
+  unit.mjs         生成单元 → H3 多镜提示词 → 出片
+  inspect.mjs      检查产物（规格 + 抽帧 + 首末帧）
+  animatic.mjs     动态分镜：0 成本把节奏变成能看的东西
+  wait-ready.mjs   等 ComfyUI 真的就绪（端口通 ≠ 就绪）
+  fl2v-test.mjs    验证首尾帧夹逼（尾帧是否真的落在指定位置）
+tests/             十一套验收，303 条断言
 prompts/           故事→分镜的提示词模板
 plugin/dsh-storyboard/   DSH 面板插件：分镜确认表 + 资产/关键帧审阅
 ```

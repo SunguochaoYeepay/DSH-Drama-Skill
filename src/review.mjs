@@ -120,6 +120,21 @@ export function review(file, opts = {}) {
   }
   info.size_mb = Number((fs.statSync(file).size / 1048576).toFixed(1));
 
+  // ⓪ **画幅必须匹配声明。**
+  //
+  // 这条是补的，而且是血债：三层比例问题（继承的 16:9、线上 size 没传、
+  // H3 的 32 倍数约束）**一个都没被任何检查抓到** —— 因为整套自检在看
+  // "能不能解码 / 有没有声音 / 时长对不对"，唯独没看"形状对不对"。
+  const v = probe(['-v', 'error', '-select_streams', 'v:0',
+    '-show_entries', 'stream=width,height', '-of', 'csv=p=0', file]).trim();
+  const [vw, vh] = v.split(',').map(Number);
+  info.video_size = [vw, vh];
+  if (opts.expectAspect) {
+    const m = aspectMatches(vw, vh, opts.expectAspect, opts.aspectTolerance ?? 0.02);
+    info.aspect = { got: m.got, want: m.want, diff: m.diff };
+    if (!m.ok) fails.push(`画幅不符：${m.why}`);
+  }
+
   // ① 完整解码 —— 最重要的一条
   const dec = decodeErrors(file);
   info.decode_errors = dec.count;

@@ -15,7 +15,7 @@
 import fs from 'node:fs';
 import {
   snapFrames, framesFor, speechSegments, durationForSpeech,
-  flfPlan, srtTime, buildTimeline, toSrt, resolveVoice, emotionToProsody, estimateSpeechSeconds,
+  flfPlan, srtTime, buildTimeline, toSrt, resolveVoice, emotionToProsody, estimateSpeechSeconds, aspectMatches, aspectRatioOf,
   planTransitions, applyTransitions,
 } from '../src/orchestrate.mjs';
 
@@ -147,6 +147,38 @@ check('估长和估短基本对称（没有系统性偏置）', (() => {
   return Math.abs(bias) < 0.5;
 })());
 console.log(`       平均误差 ${(sumErr / TEXTS.length).toFixed(2)}s　最大 ${maxErr.toFixed(2)}s`);
+
+console.log('\n画幅核对（拿产物核对契约）');
+// 三层比例问题全都是静默失败 —— 这个判据就是为了让它们不再静默。
+check('9:16 解析成 0.5625', Math.abs(aspectRatioOf('9:16') - 0.5625) < 1e-9);
+check('16:9 解析成 1.777…', Math.abs(aspectRatioOf('16:9') - 16 / 9) < 1e-9);
+check('1:1 解析成 1', aspectRatioOf('1:1') === 1);
+check('乱七八糟的字符串返回 null', aspectRatioOf('wide') === null);
+check('空值返回 null', aspectRatioOf('') === null);
+
+// **放行两个通道各自的取整约定**
+check('标准 1080×1920 通过', aspectMatches(1080, 1920, '9:16').ok);
+check('H3 的 32 倍数对齐 1088×1920 也通过（偏离 0.74%）', aspectMatches(1088, 1920, '9:16').ok,
+  JSON.stringify(aspectMatches(1088, 1920, '9:16')));
+check('线上 API 的 1536×2688 也通过（偏离 1.59%）', aspectMatches(1536, 2688, '9:16').ok,
+  JSON.stringify(aspectMatches(1536, 2688, '9:16')));
+
+// **但真正的比例错误必须拦死**
+check('**线上按 16:9 出的 2688×1536 被拦下**', !aspectMatches(2688, 1536, '9:16').ok);
+check('**H3 节点默认的 864×480 被拦下**', !aspectMatches(864, 480, '9:16').ok);
+check('**竖屏片子拿到横屏关键帧被拦下**', !aspectMatches(1024, 576, '9:16').ok);
+check('横屏片子拿到竖屏产物也拦下', !aspectMatches(1080, 1920, '16:9').ok);
+
+// 理由要说得出是什么错
+const badAspect = aspectMatches(864, 480, '9:16');
+check('拦下时给出可读的理由', typeof badAspect.why === 'string' && badAspect.why.includes('864'), badAspect.why);
+check('量不到尺寸时也判失败', !aspectMatches(0, 0, '9:16').ok);
+check('画幅字符串非法时判失败并说明', (() => { const r = aspectMatches(100, 100, 'wide'); return !r.ok && /解析不出来/.test(r.why); })());
+
+// 边界
+check('1:1 产物对 9:16 判定失败', !aspectMatches(2048, 2048, '9:16').ok);
+check('16:9 产物对 16:9 判定通过', aspectMatches(2688, 1536, '16:9').ok);
+check('容差可调：0.5% 时 H3 的 1088 就过不去', !aspectMatches(1088, 1920, '9:16', 0.005).ok);
 
 console.log('\n转场决策（不能整片都是硬切）');
 const trBoard = {
