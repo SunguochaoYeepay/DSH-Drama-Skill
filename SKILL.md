@@ -719,27 +719,63 @@ node tools/unit.mjs <board> --direction <dir> --unit u2 --fit 13.6
 
 ---
 
+## 去硬字幕：**后期做，别在生成端较劲**
+
+**✅ 已落实。** 工具：`tools/desub.mjs`。
+
+```bash
+node tools/desub.mjs <视频> [--out <路径>] [--top 0.71] [--bottom 0.87] [--mode sttn-det]
+```
+
+**实测**：768×1344 的 13.6 秒片段 **21 秒**；67 秒整片 **66 秒**。**无分辨率损失。**
+
+### 为什么必须后期做
+
+H3 **不稳定地烧字幕** —— 同尺寸、同提示词，u2/u3 稳定出，u1/u4/u5 稳定不出。
+**加 `on_screen_text: none` 只对一部分有效。**
+
+**裁切也不行**：字幕在画面高度约 **74%–80%**，裁掉要损失 26%，
+768×1344 → 768×994（比例 0.57 → 0.77），竖屏构图就废了。
+
+### 怎么做的
+
+`YaoFANGUK/video-subtitle-remover`（12.9k stars）的 Docker 镜像：
+
+```bash
+docker run --rm --gpus all -v "<项目目录>:/data" \
+  eritpchy/video-subtitle-remover:1.4.0-cuda12.6 \
+  python backend/main.py -i /data/in.mp4 -o /data/out.mp4 \
+  -c 950 1170 0 768 --inpaint-mode sttn-det
+```
+
+`-c ymin ymax xmin xmax` 是字幕带坐标（**我们量出来是画面高度的 71%–87%**）。
+算法：`sttn-det`（真人视频，快）/ `lama`（图片最好）/ `propainter`（运动剧烈）。
+
+### ⚠ Docker 的代理坑（这里卡了很久）
+
+**Docker Desktop 的代理配置可能是陈旧的。** 这台机器上它写着 `127.0.0.1:7890`，
+而 Clash 早换到 `52740` 了 → `docker pull` 直接失败：
+
+```
+failed to resolve reference ... connecting to 127.0.0.1:60999:
+No connection could be made because the target machine actively refused it
+```
+
+**修法**：
+
+1. **退出 Docker Desktop**（运行中改配置会被覆盖回去）
+2. 改 `%APPDATA%\Docker\settings-store.json` 里的
+   `OverrideProxyHTTP` / `OverrideProxyHTTPS` → 当前真实代理端口
+3. 重启 Docker Desktop
+
+**怎么找真实端口**：`HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings`
+的 `ProxyServer`（Clash 用的是随机端口），或者看代理软件的设置。
+
+---
+
 ## 下一轮开工前先看这四条（用户 2026-09-15 定的）
 
-### ① 去字幕：H3 会不稳定地烧字幕，用现成工具去
-
-**实测结论，不是猜测**：同一个尺寸、同样的提示词，有的出字幕有的不出。
-u2/u3 稳定出，u1/u4/u5 稳定不出。**加 `on_screen_text: none` 那句只对一部分有效，压不住。**
-
-**裁切不可行** —— 字幕在画面高度约 74%–80%，裁掉要损失 26%，
-768×1344 会变成 768×994（比例 0.57 → 0.77），竖屏构图就废了。
-
-**正解：现成的去字幕工具。**
-
-| 工具 | stars | 说明 |
-|---|---|---|
-| **`YaoFANGUK/video-subtitle-remover`** | **12,927** | **首选。**本地跑、无需 API、**无损分辨率**。中文社区公认 |
-| `YerongLi/video-subtitle-remover`（"with crop"） | 6 | 上述的衍生版，**带裁切** —— 字幕固定在底部时更省事 |
-| `daniabib/ComfyUI_ProPainter_Nodes` | 403 | 想在 ComfyUI 里做就用这个（ProPainter 视频修复） |
-| `smthemex/ComfyUI_DiffuEraser` | 279 | 扩散模型视频修复，质量更高更慢 |
-| `tenpel/ComfyUI-Bidirectional-SAM2-Inpaint` | 1 | **Qwen-VL 自动检测 + SAM2 追踪**，不用手画遮罩 |
-
-**流程上应该这样**：出片 → 去字幕 → 再放大到交付尺寸。**别在生成端跟它较劲。**
+### ① 去字幕 —— ✅ **已落实**（见上一节，`tools/desub.mjs`）
 
 ### ② 关键帧美感 —— 换「绘梦」的 image2 接口
 

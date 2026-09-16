@@ -164,7 +164,26 @@ node tools/animatic.mjs board.json --direction board.direction.json
 node tools/wait-ready.mjs            # 端口通 ≠ 就绪，等节点注册完
 node tools/fl2v-test.mjs <board> --first a.png --last b.png   # 验证首尾帧夹逼
 node tools/unit.mjs <board> --direction d.json --unit u1 --size 768x1344
+node tools/desub.mjs <视频>          # 去掉画面上的硬字幕（走 Docker 里的 VSR）
 ```
+
+### 去字幕
+
+**H3 会不稳定地烧字幕** —— 同尺寸、同提示词，有的片段有、有的没有，提示词压不住。
+裁切也不行（字幕在画面 74%–80%，裁掉 26% 会毁竖屏构图）。**所以放在后期。**
+
+```bash
+node tools/desub.mjs film.mp4
+# → film_nosub.mp4   无分辨率损失
+```
+
+底层是 [`YaoFANGUK/video-subtitle-remover`](https://github.com/YaoFANGUK/video-subtitle-remover)（12.9k stars）
+的 Docker 镜像。**实测：13.6 秒片段 21 秒跑完，67 秒整片 66 秒。**
+字幕带位置（画面高度的 71%–87%）是量出来的，写在工具默认值里。
+
+> ⚠ 拉镜像前先确认 **Docker Desktop 的代理配置不是陈旧的** ——
+> 我们这台机器上它写着 `127.0.0.1:7890`，而 Clash 早换端口了，`docker pull` 直接失败。
+> 改 `%APPDATA%\Docker\settings-store.json`（**先退出 Docker Desktop**，否则会被覆盖回去）。
 
 ---
 
@@ -465,9 +484,7 @@ EOF
 试过加 `on_screen_text: none`，**只对一部分有效，压不住**。
 裁切也不行（字幕在画面 74%–80%，裁掉 26% 会毁竖屏构图）。
 
-**正解：去字幕工具。** 首选
-[`YaoFANGUK/video-subtitle-remover`](https://github.com/YaoFANGUK/video-subtitle-remover)（12.9k stars，
-本地跑、无需 API、无损分辨率）。流程：**出片 → 去字幕 → 再放大到交付尺寸。**
+**正解：`node tools/desub.mjs <视频>`**（见「工具」一节）。流程：**出片 → 去字幕 → 再放大到交付尺寸。**
 
 **Q：角色长得不对 / 像卡通人？**
 三个最可能的原因：`face_prompt` 没写族裔、`meta.style` 对应的风格锚点没生效、
