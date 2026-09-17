@@ -23,11 +23,20 @@ export function compileDirectorExecution(shot, nameOf) {
     if (!emotion?.character || !emotion?.visible_behavior || !emotion?.gaze) {
       throw new Error(`emotion_analysis[${index}] 缺 character / visible_behavior / gaze`);
     }
-    const avoid = (emotion.avoid_symbols || []).filter(Boolean);
+    // avoid_symbols 是导演的负例分析，不能原样塞进生成提示词。仅把已知类别
+    // 编译成不复述禁词的正向边界；未知项保留在导演稿中供 QA / 人工审阅。
+    const boundaries = [];
+    for (const symbol of emotion.avoid_symbols || []) {
+      const value = String(symbol || '');
+      if (/笑|嘴角上扬|咧嘴/.test(value)) boundaries.push('嘴角形态服从上述可见表演，不额外改变情绪方向');
+      else if (/星星眼|爱心眼|瞳孔.*形/.test(value)) boundaries.push('眼睛保持自然解剖结构，瞳孔形态稳定');
+      else if (/崇拜|迷恋|花痴/.test(value)) boundaries.push('视线只执行上述注视目标与强度');
+      else if (/卖萌|歪头|撒娇/.test(value)) boundaries.push('头颈姿态只执行上述可见动作');
+    }
     directives.push({
       key: `emotion_analysis:${index}`,
       text: `${nameOf(emotion.character)}的可见表演：${emotion.visible_behavior}；视线：${emotion.gaze}`
-        + (avoid.length ? `；禁止表现为：${avoid.join('、')}` : ''),
+        + (boundaries.length ? `；表演边界：${[...new Set(boundaries)].join('；')}` : ''),
     });
   }
   const expected = (shot.looks_at || []).map((_, index) => `looks_at:${index}`);

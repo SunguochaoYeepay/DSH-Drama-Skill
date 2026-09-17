@@ -16,7 +16,7 @@
 
 生成计划带项目身份证，绑定剧目 ID、剧本、Storyboard、导演稿和计划内容哈希。换剧、修改源文件或拿历史计划直接运行都会被拒绝；新计划最低使用导演 v5 协议。
 
-完整执行规则见 [SKILL.md](SKILL.md)。
+完整执行规则见 [SKILL.md](SKILL.md)，工程行为变更见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 目录
 
@@ -24,9 +24,11 @@
 ai-images-harness/
 ├─ SKILL.md                  Skill 入口、状态机和阶段路由
 ├─ README.md                 工程说明
+├─ CHANGELOG.md              工程行为变更记录
 ├─ cli/                      可直接执行的命令
 ├─ src/                      业务逻辑和提供方适配
 ├─ references/               按阶段加载的规则和模型提示
+│  ├─ preflight.md           开工前清单（环境体检、预算、提示词自检）
 │  ├─ director/              导演 Brief 与输出结构
 │  ├─ prompts/               故事与 storyboard 提示模板
 │  └─ qa/                    视觉 QA Brief
@@ -167,6 +169,7 @@ $env:VERIFY_INSTALLED=1; node tests/integration/dsh-plugins.test.mjs   # 验已�
 
 | 内容 | 唯一所有者 |
 |---|---|
+| 开工前清单（环境体检、付费预算、提示词自检） | `references/preflight.md` |
 | 流程和人工闸门 | `references/workflow.md` |
 | 导演判断 | `references/director/brief.md` |
 | 导演输出格式 | `references/director/schema.md` |
@@ -174,6 +177,7 @@ $env:VERIFY_INSTALLED=1; node tests/integration/dsh-plugins.test.mjs   # 验已�
 | 资产和关键帧 | `references/assets-and-keyframes.md` |
 | H3 执行约束 | `references/video-h3.md` |
 | QA 与人工送审 | `references/qa-and-review.md` |
+| 故障排查 | `references/troubleshooting.md` |
 | 确定性实现 | `src/`、`cli/` 和 `tests/` |
 
 同一规则不要复制到多个文件。具体项目的临时实验结果不进入源码仓库，也不能追加到主 Skill。
@@ -187,7 +191,7 @@ $env:VERIFY_INSTALLED=1; node tests/integration/dsh-plugins.test.mjs   # 验已�
 
 模型凭据、项目媒体和运行缓存不得提交到仓库。
 
-本机工具路径可用环境变量覆盖：`AIH_PYTHON`、`AIH_GEN`、`AIH_POWERSHELL`、`AIH_BAILIAN_CLI`、`AIH_WINGET_PACKAGES` 和 `DRAMACLAW_ENV`。
+本机工具路径可用环境变量覆盖：`AIH_PYTHON`、`AIH_GEN`、`AIH_NODE`、`AIH_BAILIAN_ENTRY`、`AIH_WINGET_PACKAGES` 和 `DRAMACLAW_ENV`。
 
 ## License
 

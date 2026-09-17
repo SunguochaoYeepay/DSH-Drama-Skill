@@ -39,7 +39,8 @@ function run(args, label) {
 }
 
 for (const [index, unit] of plan.units.entries()) {
-  const ticket = reviews.approvals.clips[unit.id];
+  const entry = reviews.approvals.clips[unit.id];
+  const ticket = entry?.artifact_hash ? entry : entry?.final;
   const input = ticket?.artifacts?.[0];
   if (!input || !fs.existsSync(input)) throw new Error(`${unit.id}: 人工确认票没有可用视频`);
   const out = path.join(tmp, `${String(index + 1).padStart(3, '0')}_${unit.id}.mp4`);

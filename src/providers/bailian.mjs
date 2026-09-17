@@ -1,48 +1,33 @@
 /**
- * bailian.mjs — 线上生图：阿里百炼 `bl image`（Qwen-Image / Wan）。
+ * bailian.mjs — 线上生图：阿里百炼（Qwen-Image / Wan）。
  *
  * 为什么走它而不是绘梦：
  *   - **吃本地文件路径**，绘梦只吃公开 URL（要额外挂个图床）
  *   - 已经认证好了，多图合成 `--image` 可重复，`--n` 最多 6 张（正好当候选池）
  *
  * 两个必须处理的坑（都实测过）：
- *   1. `bl` 是 **PowerShell 脚本**，而且这台机器上的 "pwsh" 其实是 **Windows PowerShell 5.1**
- *      （`powershell.exe`）—— PS 7 没装。所以必须用 powershell.exe 全路径去调。
- *   2. **PS 5.1 会把参数里的 `"` 吃掉**。所以提示词一律**写进临时文件**、由脚本读进来，
- *      并且过一道净化把 `"` 换成全角 —— 绝不把提示词拼进命令行。
- *   3. `watermark` 默认 **true**，必须显式关掉，否则资产图上带水印。
+ *   1. **绝不要走 `bl.ps1`** —— 本机 PowerShell 起不了外部进程，会「exit 0 但没产出」。
+ *      调用统一交给 `src/bailian-cli.mjs`（直接 node 跑 CLI 入口，参数数组直传）。
+ *   2. `watermark` 默认 **true**，必须显式关掉，否则资产图上带水印。
+ *   3. `--timeout` 默认很短（实测第二张图就 "Request timed out"），必须显式给足。
  */
 
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
 import { ledger } from '../cost.mjs';
-import { BAILIAN_CLI, POWERSHELL } from '../runtime-paths.mjs';
+import { runBailian } from '../bailian-cli.mjs';
 
-const PS = POWERSHELL;
-const BL = BAILIAN_CLI;
-
-/** 命令行的第一守则：**永远不要把提示词拼进命令行**。 */
+/**
+ * 提示词归一化。
+ *
+ * 只做一件事：**把换行压成空格**（CLI 的 `--prompt` 是单行参数）。
+ * 原来还要把 `"` 换成全角 `”`，那是为了绕开 PS 5.1 吃引号 —— 现在参数数组直传、
+ * 不过 shell，**引号原样保留**，不再篡改用户的提示词。
+ */
 export function sanitize(text) {
   return String(text || '')
-    .replace(/"/g, '”')          // PS 5.1 会吃掉双引号
     .replace(/[\r\n]+/g, ' ')
     .trim();
-}
-
-function psRun(scriptBody, timeoutMs) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-'));
-  const script = path.join(dir, 'run.ps1');
-  fs.writeFileSync(script, ['$ErrorActionPreference = "Stop"', scriptBody].join('\n'), 'utf8');
-  try {
-    const r = spawnSync(PS, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', script], {
-      encoding: 'utf8', timeout: timeoutMs, maxBuffer: 32 * 1024 * 1024,
-    });
-    return { status: r.status, stdout: r.stdout || '', stderr: r.stderr || '', error: r.error };
-  } finally {
-    fs.rmSync(dir, { recursive: true, force: true });
-  }
 }
 
 /** 记录目录快照，跑完比对，靠"新出现的文件"认出产物 —— 不依赖 CLI 的 JSON 形状。 */
@@ -63,22 +48,21 @@ function newFiles(dir, before, prefix) {
 async function runBl({ verb, args, prompt, promptFlag, outDir, prefix, timeoutMs }) {
   fs.mkdirSync(outDir, { recursive: true });
   const before = snapshot(outDir);
-  const lines = [];
-  let promptFile = null;
 
-  if (prompt !== undefined) {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-p-'));
-    promptFile = path.join(dir, 'prompt.txt');
-    fs.writeFileSync(promptFile, sanitize(prompt), 'utf8');
-    lines.push(`$p = (Get-Content -Raw -Encoding UTF8 '${promptFile}').TrimEnd("\`r","\`n")`);
-  }
-  const argList = args.map((a) => `'${String(a).replace(/'/g, "''")}'`).join(' ');
-  const pf = promptFile ? ` --${promptFlag} $p` : '';
-  // `bl` 自己的默认超时很短（实测第二张图就 "Request timed out"），必须显式给足。
+  // 续时：CLI 自己的默认值不够用，且它的秒数要**小于**我们这边的 spawn 超时，
+  // 好让它有机会把超时原因打出来，而不是被我们直接砍掉。
   const seconds = Math.max(60, Math.round((timeoutMs || 600000) / 1000) - 30);
-  lines.push(`& '${BL}' image ${verb}${argList ? ' ' + argList : ''}${pf} --out-dir '${outDir}' --out-prefix '${prefix}' --watermark false --timeout ${seconds} --output json`);
+  const argv = ['image', verb, ...args];
+  if (prompt !== undefined) argv.push(`--${promptFlag}`, sanitize(prompt));
+  argv.push(
+    '--out-dir', outDir,
+    '--out-prefix', prefix,
+    '--watermark', 'false',
+    '--timeout', String(seconds),
+    '--output', 'json',
+  );
 
-  const r = psRun(lines.join('\n'), timeoutMs);
+  const r = runBailian(argv, { timeoutMs });
 
   // 产出认领，按可靠性依次退：
   //   1. stdout 里的 JSON `saved` —— **权威**。靠"新出现的文件"检测会在**覆盖已有文件**时失灵
@@ -103,7 +87,7 @@ async function runBl({ verb, args, prompt, promptFlag, outDir, prefix, timeoutMs
     files = await downloadAll(urls, outDir, prefix);
   }
 
-  return { files, urls, status: r.status, stdout: r.stdout, stderr: r.stderr, error: r.error };
+  return { files, urls, status: r.status, stdout: r.stdout, stderr: r.stderr, error: r.error, argv: r.argv };
 }
 
 /** 下载到本地。存 URL 是错的：签名链接会过期，明天这板子就全是死链。 */
@@ -128,10 +112,7 @@ export async function generate({ prompt, size = '16:9', n = 1, outDir, prefix = 
   if (model) args.push('--model', model);
   args.push('--size', size, '--n', String(n));
   if (seed !== undefined && seed !== null) args.push('--seed', String(seed));
-  if (negative) {
-    // negative 同样走文件太啰嗦，这里只做净化
-    args.push('--negative-prompt', sanitize(negative));
-  }
+  if (negative) args.push('--negative-prompt', sanitize(negative));
   const r = await runBl({ verb: 'generate', args, prompt, promptFlag: 'prompt', outDir, prefix, timeoutMs });
   // **不管成没成都要记** —— 失败的调用也可能计费，而且"失败了多少次"本身就是该看见的信息
   ledger.add({ provider: 'bailian', op: 'image.generate', model: model || 'qwen-image-3.0', units: n, ok: r.files.length > 0 });
@@ -161,34 +142,27 @@ export async function dryRun({ prompt, size = '16:9', n = 1, outDir, prefix = 'd
 /**
  * 配音。用 `bl speech synthesize`（cosyvoice-v3-flash）。
  *
- * 台词同样**写临时文件**再读进来 —— 理由和生图一样：PS 5.1 会吃掉参数里的引号，
- * 而台词里可能什么标点都有。
+ * 台词**直接进 argv** —— 参数数组直传，多少标点都不怕，不需要再走临时文件。
  */
 export async function speak({ text, out, voice, rate, pitch, instruction, format = 'mp3', timeoutMs = 300000 }) {
   fs.mkdirSync(path.dirname(out), { recursive: true });
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-t-'));
-  const textFile = path.join(dir, 'text.txt');
-  fs.writeFileSync(textFile, String(text || '').trim(), 'utf8');
-
-  const preamble = [`$t = (Get-Content -Raw -Encoding UTF8 '${textFile}').TrimEnd("\`r","\`n")`];
-  // 注意是 `--text $t`（内容）不是 `--text-file`（路径）——
-  // 读进变量再传，就绕开了 PS 5.1 吃引号的问题，和生图那边 `--prompt $p` 一个路子。
-  const args = ['--text $t', `--out '${out}'`, `--format ${format}`];
-  if (voice) args.push(`--voice '${String(voice).replace(/'/g, "''")}'`);
-  if (rate) args.push(`--rate ${Number(rate)}`);
-  if (pitch) args.push(`--pitch ${Number(pitch)}`);
+  const args = ['speech', 'synthesize', '--text', String(text || '').trim(), '--out', out, '--format', format];
+  if (voice) args.push('--voice', String(voice));
+  if (rate) args.push('--rate', String(Number(rate)));
+  if (pitch) args.push('--pitch', String(Number(pitch)));
   // 刻意**不传 `--instruction`**：实测 cosyvoice-v3-flash 不支持它（引擎报 428 InvalidParameter，
   // 那是 v3.5-flash 配克隆音色才有的功能）。情绪改由 rate/pitch 表达，见 orchestrate.emotionToProsody。
   if (instruction) process.stderr.write('（提示：当前音色模型不支持 --instruction，情绪已由 rate/pitch 表达）\n');
   const seconds = Math.max(60, Math.round((timeoutMs || 300000) / 1000) - 20);
-  const script = [...preamble, `& '${BL}' speech synthesize ${args.join(' ')} --timeout ${seconds} --output json`].join('\n');
-  const r = psRun(script, timeoutMs);
+  args.push('--timeout', String(seconds), '--output', 'json');
+
+  const r = runBailian(args, { timeoutMs });
   const ok = fs.existsSync(out) && fs.statSync(out).size > 0;
   ledger.add({
     provider: 'bailian', op: 'speech.synthesize', model: 'cosyvoice-v3-flash',
     chars: String(text || '').length, ok,
   });
-  return { ok, file: ok ? out : null, status: r.status, stdout: r.stdout, stderr: r.stderr };
+  return { ok, file: ok ? out : null, status: r.status, stdout: r.stdout, stderr: r.stderr, argv: r.argv };
 }
 
 export const name = 'bailian';

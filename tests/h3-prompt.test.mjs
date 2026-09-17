@@ -42,7 +42,12 @@ test('纯 I2V 使用 integrated 字段并保留首帧、台词和声音契约', 
   assert.doesNotMatch(prompt, /detailed_description:/);
   assert.match(prompt, /<d>\[Chinese\] 谁在外面？<\/d>/);
   assert.match(prompt, /\(S1\)/);
-  assert.match(prompt, /禁止表现为：微笑、星星眼/);
+  // 负例词不能原样进入提示词；已知类别应转换成正向表演边界。
+  assert.doesNotMatch(prompt, /禁止表现为/);
+  assert.doesNotMatch(prompt, /微笑/);
+  assert.doesNotMatch(prompt, /星星眼/);
+  assert.match(prompt, /眼睛保持自然解剖结构/);
+  assert.match(prompt, /嘴角形态服从上述可见表演/);
   const soundscape = prompt.split('overall_soundscape:')[1].split('\n')[0];
   assert.doesNotMatch(soundscape, /谁在外面/);
 });
@@ -68,4 +73,23 @@ test('画外音使用固定短语并要求嘴唇闭合', () => {
   const prompt = buildUnitPrompt(voiceover, { ...ctx, lineText, refs: [] });
   assert.match(prompt, /says in an off-screen voiceover:/);
   assert.match(prompt, /嘴唇始终完全闭合/);
+});
+
+// 实测来自 mosquito_tattoo/g001：action 里写「脸颊涨红」、导演约束里写「脸颊泛红」，
+// 两处都没被去夸张词表拦住，模型把末镜画成了两块腮红 + 亮红唇。
+test('「脸颊+红」必须换成不带颜色词的表演描述，且 action 与导演约束两条路径都要过', () => {
+  const flushed = structuredClone(unit);
+  flushed.shots[0].action = '阿宁猛地转身，眼睛瞪圆，脸颊涨红，张嘴说话';
+  flushed.shots[0].emotion_analysis[0].visible_behavior = '肩膀往内收，眼睛睁大，脸颊泛红，嘴张开';
+
+  const i2v = buildUnitPrompt(flushed, { ...ctx, refs: [] });
+  assert.doesNotMatch(i2v, /涨红|泛红/);
+  assert.match(i2v, /眼睛瞪圆，脸颊绷紧，张嘴说话/);
+  assert.match(i2v, /眼睛睁大，脸颊绷紧，嘴张开/);
+
+  const ref2v = buildUnitPrompt(flushed, { ...ctx, refs: [{ role: 'keyframe', file: 'k.png' }] });
+  assert.doesNotMatch(ref2v, /涨红|泛红/);
+  // 实验 B：retention 那段不得再出现任何「妆」词汇，否则等于给模型递词表。
+  assert.doesNotMatch(ref2v, /blush|rouge|lipstick|makeup|flush on the cheeks|redden the lips/i);
+  assert.match(ref2v, /Skin and lips must stay exactly as they are in the reference pictures/);
 });

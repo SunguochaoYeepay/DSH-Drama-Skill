@@ -29,7 +29,8 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { projectAssetFiles, unitAssets } from '../src/asset-resolver.mjs';
 import { requireApproval, writeReviewNote } from '../src/human-gates.mjs';
-import { COMFY_GEN, COMFY_PYTHON } from '../src/runtime-paths.mjs';
+import { COMFY_GEN, COMFY_PYTHON, NODE } from '../src/runtime-paths.mjs';
+import * as bailian from '../src/providers/bailian.mjs';
 import { bindHandoffKeyframe, requireHandoff } from '../src/continuity-handoff.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 
@@ -80,10 +81,14 @@ export const FRAMING = {
     en: 'full shot, complete body head-to-toe visible, environment around',
   },
   中景: {
+    // 竖幅双人中景本身可行；只有当人物间距、两侧留白、身体完整度和腰部下边界
+    // 同时被锁死时才可能互斥。允许侧边裁切是一种候选构图，不是普遍定律。
     rule: '【景别｜中景】**画面下边界严格切在人物的腰部**（腰带/腰线位置），'
       + '画面里只有**头顶到腰部**这一段。'
-      + '**绝不允许出现大腿或膝盖**（那就成了全景），**也绝不允许只到胸口**（那就成了近景）。',
-    en: 'medium shot, framed from head down to the waist ONLY',
+      + '**绝不允许出现大腿或膝盖**（那就成了全景），**也绝不允许只到胸口**（那就成了近景）。'
+      + '若人物间距和留白导致构图拥挤，可缩短人物间距、改为前后错位，或允许外侧肩臂轻微出画；'
+      + '不得为了保留所有横向留白而把下边界放到大腿。',
+    en: 'medium shot, framed from head down to the waist ONLY; subjects may be cropped at the left and right frame edges, but never extend below the waist',
   },
   近景: {
     rule: '【景别｜近景】**画面只取胸部以上** —— 下边界在**胸口到腰之间、明显高于腰线**。'
@@ -97,6 +102,12 @@ export const FRAMING = {
     en: 'extreme close-up, the face fills the entire frame, no shoulders visible',
   },
 };
+
+/**
+ * 紧景别遇到多人、宽间距和大量留白时更容易发生约束冲突。
+ * 允许侧边裁切只是兜底选项，优先由构图关系解决。
+ */
+const TIGHT_FRAMINGS = new Set(['中景', '近景', '特写']);
 
 const NO_TEXT = '【禁止】画面里**不许出现任何文字、字幕、水印、logo、边框、色卡**。';
 
@@ -164,7 +175,14 @@ function buildLocalPrompt(unit, shot, refs) {
     `请把参考图中的${names.join('和')}放进同一个镜头，整体风格严格遵循：${board.meta?.style_prompt || board.meta?.style || '项目既定视觉风格'}。${bindings.join('；')}。`,
     supporting.length
       ? `画面必须出现${names.join('和')}，还必须出现次要主体${supporting.join('；')}；不得漏掉动作起点中写明的任何主体，也不得增加其他角色。`
-      : names.length > 1 ? `画面必须同时出现且只出现${names.join('和')}两个人，两个人都必须清楚可见，不得漏掉任何一人。` : '',
+      : names.length > 1
+        ? `画面必须同时出现且只出现${names.join('和')}两个人，不得漏掉任何一人。`
+          // 紧景别多人构图可能拥挤，给模型一组有序的可行解，避免约束冲突时随机妥协。
+          + (TIGHT_FRAMINGS.has(shot.framing)
+            ? '两人的脸都必须清楚可辨；构图拥挤时，依次尝试缩短人物间距、前后错位、轻微侧边裁切，'
+              + '不要为了保留横向留白而放松景别。'
+            : '两个人都必须清楚可见。')
+        : '',
     `构图要求：${f.rule.replaceAll('**', '')}`,
     scaleRule,
     `画面起点：${unit.keyframe_start || shot.action}`,
@@ -278,33 +296,26 @@ for (const unit of dir.units) {
     fs.mkdirSync(requestOut, { recursive: true });
     const requestDir = path.join(requestOut, '_request');
     fs.mkdirSync(requestDir, { recursive: true });
-    const promptFile = path.join(requestDir, 'prompt.txt');
-    const scriptFile = path.join(requestDir, 'run.ps1');
-    fs.writeFileSync(promptFile, prompt, 'utf8');
-    const ps = (value) => `'${String(value).replaceAll("'", "''")}'`;
-    const blScript = path.join(process.env.APPDATA || '', 'npm', 'bl.ps1');
-    const imageArgs = refs.map((ref) => `--image ${ps(ref.file)}`).join(' ');
-    fs.writeFileSync(scriptFile, [
-      `$ErrorActionPreference = 'Stop'`,
-      `$prompt = Get-Content -Raw -Encoding UTF8 ${ps(promptFile)}`,
-      `& ${ps(blScript)} image edit ${imageArgs} --prompt $prompt --model ${ps(BAILIAN_MODEL)}`
-        + ` --size '1024*1792' --n 1 --watermark false --out-dir ${ps(requestOut)}`
-        + ` --out-prefix ${ps(unit.id)} --output json --timeout 300`,
-    ].join('\n'), 'utf8');
+    // 走 `providers/bailian.mjs`，它内部直连 CLI（**不是** `bl.ps1`，本机 PowerShell 起不了外部进程）。
+    // 这里不再自己拼 PS 脚本 —— 通道只该有一个所有者，否则两边会各自漂移。
     const started = Date.now();
-    r = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptFile], {
-      encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 360000,
+    const res = await bailian.edit({
+      images: refs.map((ref) => ref.file),
+      instruction: prompt,
+      size: '1024*1792',
+      n: 1,
+      outDir: requestOut,
+      prefix: unit.id,
+      model: BAILIAN_MODEL,
+      timeoutMs: 360000,
     });
     secs = String(Math.round((Date.now() - started) / 1000));
-    txt = String(r.stdout || '') + String(r.stderr || '') + String(r.error || '');
-    const produced = fs.readdirSync(requestOut)
-      .map((name) => path.join(requestOut, name))
-      .filter((file) => {
-        const stat = fs.statSync(file);
-        return stat.isFile() && /\.(?:png|jpe?g|webp)$/i.test(file) && stat.mtimeMs >= started - 1000;
-      })
-      .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)[0];
-    if (r.status === 0 && produced) {
+    txt = String(res.stdout || '') + String(res.stderr || '') + String(res.error || '');
+    // `_request/` 留档：这一镜当时到底发了什么。正文 + 实际 argv 各存一份。
+    fs.writeFileSync(path.join(requestDir, 'prompt.txt'), prompt, 'utf8');
+    fs.writeFileSync(path.join(requestDir, 'command.json'), JSON.stringify(res.argv, null, 2) + '\n', 'utf8');
+    const produced = res.files[0];
+    if (res.status === 0 && produced && fs.existsSync(produced)) {
       fs.copyFileSync(produced, out);
       got = true;
     }
@@ -313,13 +324,29 @@ for (const unit of dir.units) {
       '--model', 'image-2-official'];
     for (const ref of refs) a.push('--ref', ref.file);
     a.push('--out', out);
-    r = spawnSync('node', a, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 900000, cwd: ROOT });
+    r = spawnSync(NODE, a, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 900000, cwd: ROOT });
     txt = String(r.stdout || '') + String(r.stderr || '');
     got = /✓/.test(txt) && fs.existsSync(out);
     secs = (txt.match(/用时 (\d+) 秒/) || [])[1] || '?';
   }
   if (!got) failures++;
-  else if (handoff) bindHandoffKeyframe(PROJ, unit, out);
+  else {
+    // **计划槽位是契约，不是可选项。**
+    //
+    // `generation-plan.mjs` 给每个单元声明了 `unit.keyframe`，而下一环
+    // （`cli/unit.mjs`）和关键帧票据**都只认它**。通道目录各写各的
+    // （local → keyframes_local_v2、bailian → keyframes_bailian），
+    // 于是产物和票绑在通道目录、下一环去计划槽位取图 —— 两边永远对不上，
+    // 实测报「关键帧 产物已变化，旧确认自动失效」，这一环永远开不了。
+    //
+    // 所以：通道目录从今天起只是**草稿区**，生成成功后必须落到计划槽位。
+    const slot = unit.keyframe ? path.resolve(PROJ, unit.keyframe) : null;
+    if (slot && path.resolve(slot) !== path.resolve(out)) {
+      fs.mkdirSync(path.dirname(slot), { recursive: true });
+      fs.copyFileSync(out, slot);
+    }
+    if (handoff) bindHandoffKeyframe(PROJ, unit, out);
+  }
   console.log(`    ${got ? '✓' : '✗'} ${got ? `${(fs.statSync(out).size / 1048576).toFixed(2)} MB　${secs} 秒` : txt.slice(0, 200)}`);
 }
 if (failures) {

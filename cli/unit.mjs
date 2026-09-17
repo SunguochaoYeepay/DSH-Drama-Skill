@@ -22,7 +22,8 @@
  * 选项：
  *   --ws <dir>       工作区根
  *   --keyframe <png> 这一单元的首帧（不给就去找最接近的现有 keyframes/）
- *   --steps <n>      采样步数（默认 4）
+ *   --last-keyframe <png> 可选尾帧；FastH3 收到后走 fl2v，否则走 i2v
+ *   --steps <n>      旧兼容参数；4/8/其他映射 draft/balanced/final，优先使用 --profile
  *   --quality <档位> test=480x864（默认）/ final=768x1344
  *   --size <WxH>     手动覆盖 quality 对应的尺寸
  *   --dry-run        只打印提示词，不生成
@@ -61,7 +62,7 @@ const board = JSON.parse(fs.readFileSync(boardPath, 'utf8'));
 const dir = JSON.parse(fs.readFileSync(dirPath, 'utf8'));
 const WS = flag('ws', null) || path.resolve(path.dirname(boardPath), '..', '..', '..');
 const DRY = Boolean(flag('dry-run', false));
-const STEPS = Number(flag('steps', 4)) || 4;
+const EXPLICIT_STEPS = argv.includes('--steps') ? Number(flag('steps', 0)) : null;
 /**
  * **尺寸跟着官方文档走，不要自己扫。**
  *
@@ -76,6 +77,7 @@ const STEPS = Number(flag('steps', 4)) || 4;
  * `--size 768x1344` 可以换到那个 LoRA 的原生 768p（验证通过之后再说）。
  */
 const QUALITY = String(flag('quality', 'test')).toLowerCase();
+const CLIP_VARIANT = QUALITY === 'test' ? 'preview' : 'final';
 const QUALITY_SIZES = { test: '480x864', final: '768x1344' };
 if (!QUALITY_SIZES[QUALITY]) {
   throw new Error(`--quality 只能是 ${Object.keys(QUALITY_SIZES).join(' / ')}，收到 ${QUALITY}`);
@@ -98,16 +100,25 @@ const keyframes = (dir.units || []).map((u) => {
   return u.keyframe && path.resolve(projectDir, u.keyframe);
 }).filter((f) => f && fs.existsSync(f));
 requireApproval(projectDir, 'keyframes', keyframes, { skip: skipGate });
+if (CLIP_VARIANT === 'final') {
+  const previewResult = path.join(projectDir, 'units', `${unit.id}.preview.result.json`);
+  if (!fs.existsSync(previewResult)) throw new Error(`${unit.id}: 正式生成前必须先完成预览档生成与人工确认`);
+  const previewData = JSON.parse(fs.readFileSync(previewResult, 'utf8'));
+  const previewFiles = (previewData.files || [])
+    .map((file) => typeof file === 'string' ? file : file?.local_path || file?.localPath || file?.path)
+    .filter((file) => file && fs.existsSync(file));
+  requireApproval(projectDir, 'clip', previewFiles, { id: unit.id, variant: 'preview', skip: skipGate });
+}
 const unitIndex = (dir.units || []).findIndex((u) => u.id === unitId);
 if (unitIndex > 0) {
   const previous = dir.units[unitIndex - 1];
-  const previousResult = path.join(projectDir, 'units', `${previous.id}.result.json`);
-  if (!fs.existsSync(previousResult)) throw new Error(`上一段 ${previous.id} 尚未生成，必须逐段生成、逐段审阅`);
+  const previousResult = path.join(projectDir, 'units', `${previous.id}.final.result.json`);
+  if (!fs.existsSync(previousResult)) throw new Error(`上一段 ${previous.id} 正式档尚未生成，必须先完成预览与正式审阅`);
   const previousData = JSON.parse(fs.readFileSync(previousResult, 'utf8'));
   const previousFiles = (previousData.files || [])
     .map((file) => typeof file === 'string' ? file : file?.local_path || file?.localPath || file?.path)
     .filter((file) => file && fs.existsSync(file));
-  requireApproval(projectDir, 'clip', previousFiles, { id: previous.id, skip: skipGate });
+  requireApproval(projectDir, 'clip', previousFiles, { id: previous.id, variant: 'final', skip: skipGate });
 }
 
 // ---------------------------------------------------------------- 台词原文（代码搬）
@@ -161,6 +172,9 @@ function pickKeyframe() {
   return first ? path.resolve(WS, first.first_frame) : null;
 }
 const keyframe = pickKeyframe();
+const lastKeyframeArg = flag('last-keyframe', null);
+const lastKeyframe = lastKeyframeArg ? path.resolve(WS, String(lastKeyframeArg)) : null;
+if (lastKeyframe && !fs.existsSync(lastKeyframe)) throw new Error(`尾帧不存在：${lastKeyframe}`);
 if (continuityHandoff && path.resolve(keyframe || '') !== path.resolve(continuityHandoff.keyframe)) {
   throw new Error(`${unit.id}: 实际使用的关键帧与连续性交接凭证不一致`);
 }
@@ -213,19 +227,24 @@ const scene = resolvedUnitAssets.scene;
 const hasFirstFrame = Boolean(keyframe);
 
 /**
- * FastVideo FastH3 的蒸馏权重只支持 t2va / fl2va，不支持 Ref2VA。
- * 因此 fast 档必须走单首帧 i2v；其余档位才使用多参考图 r2v。
+ * FastVideo FastH3 支持单首帧 i2v 和单首尾帧 fl2v，不支持 Ref2VA。
+ * 因此 fast 档按是否提供 --last-keyframe 选择 i2v/fl2v；其余档位才使用多参考图 r2v。
  */
 const PROFILE = (() => {
   const i = argv.indexOf('--profile');
   if (i >= 0) return argv[i + 1];
-  return STEPS === 4 ? 'draft' : STEPS === 8 ? 'balanced' : 'final';
+  // 正式默认就是 FastVideo FastH3。`--steps` 只保留旧命令兼容：明确传入时
+  // 才映射基础 H3 档位，不能让内部的默认步数把模式静默降成 r2v。
+  if (EXPLICIT_STEPS !== null) {
+    return EXPLICIT_STEPS === 4 ? 'draft' : EXPLICIT_STEPS === 8 ? 'balanced' : 'final';
+  }
+  return 'fast';
 })();
 const KNOWN_PROFILES = ['draft', 'balanced', 'final', 'fast'];
 if (!KNOWN_PROFILES.includes(PROFILE)) {
   throw new Error(`--profile 只能是 ${KNOWN_PROFILES.join(' / ')}，收到 ${PROFILE}`);
 }
-const MODE = PROFILE === 'fast' ? 'i2v' : 'r2v';
+const MODE = PROFILE === 'fast' ? (lastKeyframe ? 'fl2v' : 'i2v') : 'r2v';
 const promptRefs = MODE === 'r2v' ? refs : [];
 
 /**
@@ -282,19 +301,16 @@ if (!keyframe) { console.error('没有首帧，这个单元的连续性没保证
 
 const outDir = path.join(path.dirname(boardPath), 'units');
 fs.mkdirSync(outDir, { recursive: true });
-const resultFile = path.join(outDir, `${unit.id}.result.json`);
+const resultFile = path.join(outDir, `${unit.id}.${CLIP_VARIANT}.result.json`);
 
 // **提示词写文件再传路径** —— 这台机器 PS 5.1 会吃命令行里的引号
 const pf = path.join(outDir, `.${unit.id}.prompt.txt`);
 fs.writeFileSync(pf, prompt, 'utf8');
-const tf = path.join(outDir, `.${unit.id}.prompt.txt`);
-fs.writeFileSync(tf, prompt, 'utf8');
-void tf;   // 留一份到磁盘方便排查（gen.py 没有 --prompt-file）
 
 console.log(`\n出片（${PROFILE} / ${MODE} / ${QUALITY}，${seconds.toFixed(2)}s → ${Math.round(seconds * 24)} 帧）…`);
 // **提示词直接进 argv** —— spawnSync 使用参数数组且不经过 shell，
 // 所以换行、引号、中文都不会被 shell 吃掉。
-// fast 档严格照官方 FastVideo FastH3 模板走单首帧 i2v；模型没有蒸馏 Ref2VA。
+// fast 档严格照 FastVideo FastH3 模板走单首帧 i2v 或单首尾帧 fl2v；不支持 Ref2VA。
 // 其他档位使用基础 H3 Ref2VA，以人物资产换取更强的身份约束。
 //
 // 用户 2026-09-16 定的：
@@ -313,6 +329,8 @@ const args = [GEN, MODE,
   '--out-dir', outDir, '--result-file', resultFile, '--no-shell'];
 if (MODE === 'i2v') {
   args.push('--image', keyframe);
+} else if (MODE === 'fl2v') {
+  args.push('--image', keyframe, '--last-image', lastKeyframe);
 } else {
   for (const ref of refs) args.push('--image', ref.file);
   if (!refs.length) args.push('--image', keyframe);
@@ -369,7 +387,7 @@ try {
       `# 视频片段 ${unit.id} 人工审阅`, '',
       '机器技术检查通过后，请完整观看并检查：人物一致性、动作是否飞掉、台词是否说完、切镜是否自然、画面是否出现错误文字。', '',
       `视频：${f}`, `八帧总览：${sheet}`, '',
-      `确认命令：node cli/review-gate.mjs approve --project "${projectDir}" --stage clip --id ${unit.id} --artifacts "${f}"`,
+      `确认命令：node cli/review-gate.mjs approve --project "${projectDir}" --stage clip --id ${unit.id} --variant ${CLIP_VARIANT} --artifacts "${f}"`,
     ]);
     console.log(`等待人工审阅：${note}`);
   }

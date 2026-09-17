@@ -40,17 +40,12 @@
  */
 
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
-import { POWERSHELL } from './runtime-paths.mjs';
+import { runBailian } from './bailian-cli.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
-
-/** 这台机器上的 `pwsh` 其实是 Windows PowerShell 5.1（PS 7 没装）。 */
-const PS = POWERSHELL;
 
 /** 每个阶段，质检该盯什么。**这些不是全部**，是"最容易在这里出错的"。 */
 export const STAGE_FOCUS = {
@@ -97,10 +92,12 @@ export const STAGE_CONTEXT = {
 /**
  * 让视觉模型看一张图/一段视频，返回它的描述。
  *
- * **必须走「写脚本 → PowerShell 读变量 → 用变量传参」这条老路。**
- * 这台机器上的 `pwsh` 其实是 **Windows PowerShell 5.1**，它**会吃掉命令行参数
- * 里的引号** —— 中文长提示词直接拼进命令行必然烂掉。
- * `bailian.mjs` 早就踩过这个坑，这里照它的做法。
+ * 提示词**按参数数组直传**（`src/bailian-cli.mjs`），不拼命令行、不过临时脚本 ——
+ * 中文长提示词、换行、引号都原样送达。
+ *
+ * 早先这里走的是「写 .ps1 → PowerShell 读变量 → 用变量传参」，为了绕开
+ * PS 5.1 吃引号。**后来实测发现本机 PowerShell 根本起不了外部进程**，
+ * 那条链是「exit 0 但没产出」—— 于是整条 PS 路都被拔掉了。
  *
  * 视觉能力：`bl vision describe`（Qwen-VL，**图和视频都支持**，**没有** `--prompt-file`）。
  */
@@ -120,26 +117,14 @@ export function look(file, { focus = [], extra = '', model = 'qwen3-vl-plus' } =
   if (extra) lines.push('', `额外关注：${extra}`);
   lines.push('', '最后用一行给出结论，格式：`结论：通过` 或 `结论：有问题 —— <一句话>`。');
 
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qa-'));
-  const promptFile = path.join(dir, 'prompt.txt');
-  const scriptFile = path.join(dir, 'run.ps1');
-  fs.writeFileSync(promptFile, lines.join('\n'), 'utf8');
-
-  // **读进变量、用变量传** —— 绝不把文本拼进命令行
-  const script = [
-    `$ErrorActionPreference = 'Continue'`,
-    `$p = (Get-Content -Raw -Encoding UTF8 '${promptFile}').TrimEnd("\`r","\`n")`,
-    `bl vision describe ${isVideo ? '--video' : '--image'} '${path.resolve(file)}' --prompt $p --model ${model} --timeout 180`,
-  ].join('\n');
-  fs.writeFileSync(scriptFile, script, 'utf8');
-
-  const r = spawnSync(PS, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptFile], {
-    encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: 300000,
-  });
-  try { fs.rmSync(dir, { recursive: true, force: true }); } catch { /* 无所谓 */ }
+  // 参数数组直传 CLI（见 src/bailian-cli.mjs）——不再拼 PS 脚本、不再过临时文件
+  const r = runBailian([
+    'vision', 'describe', isVideo ? '--video' : '--image', path.resolve(file),
+    '--prompt', lines.join('\n'), '--model', model, '--timeout', '180',
+  ], { timeoutMs: 300000 });
 
   const out = String(r.stdout || '').trim();
-  if (r.status !== 0 && !out) return { ok: false, text: String(r.stderr || '').slice(0, 400) };
+  if (r.status !== 0 && !out) return { ok: false, text: String(r.stderr || r.error || '').slice(0, 400) };
   return { ok: true, text: out };
 }
 

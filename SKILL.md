@@ -21,9 +21,10 @@ metadata:
   -> 去除错误硬字幕
   -> 合成
   -> 最终审阅
+  -> 知识回流（最终确认之后必须做，不执行不算收工）
 ```
 
-每个箭头都是闸门，不能因为文件已经生成或机器 QA 通过而跳过。
+每个箭头都是闸门，不能因为文件已经生成或机器 QA 通过而跳过。**最后一个箭头同样是闸门：`final` 票记录之后，必须先完成知识回流，这一轮才算结束。**
 
 ## 立项必问
 
@@ -57,7 +58,7 @@ metadata:
 2. 剧本生成后，展示完整剧本和结构检查结果。
 3. 资源生成后，展示角色肖像、身份图、场景和道具总览。
 4. 关键帧生成后，展示编号总览和每张原图。
-5. 每段视频生成后，展示完整视频、首尾帧和多帧总览；该段确认后才生成下一段。
+5. 每段视频分两轮：先跑快档预览并展示完整视频和多帧总览，确认后再跑正式规格、再展示、再确认。该段两次确认都拿到，才生成下一段。
 6. 合成后展示成片和接缝检查结果，等待最终确认。
 
 确认记录位于项目目录的 `review.approvals.json`，票据绑定产物哈希。重新生成、覆盖或修改产物后，旧票自动失效。
@@ -70,11 +71,13 @@ metadata:
 
 | 当前任务 | 必读资料 |
 |---|---|
+| **新建项目或开始新一轮生成之前（开工前）** | `references/preflight.md` |
 | 新建项目、判断当前进度、恢复中断任务 | `references/workflow.md` |
 | 生成或修改导演方案、决定视频单元边界 | `references/directing.md` |
 | 生成角色/场景/道具资产或关键帧 | `references/assets-and-keyframes.md` |
 | 生成 FastH3/H3 视频、选择时长和规格 | `references/video-h3.md` |
 | 机器检查、人工送审、合成与终审 | `references/qa-and-review.md` |
+| **`final` 票已记录，准备收工** | `references/workflow.md` 的「收工与知识回流」 |
 | ComfyUI、音频、字幕、尺寸或进程异常 | `references/troubleshooting.md` |
 
 只读当前任务需要的资料。例如审阅一张关键帧不需要加载 H3 参数和历史故障记录。
@@ -89,6 +92,7 @@ metadata:
 - 视频逐段串行生成、逐段检查、逐段人工确认，禁止并发批跑。
 - 台词必须有足够时长说完。时长由台词/音频和动作需求反推，不得裁断句尾。
 - H3 暂时是既定视频模型；模型成本较高，先用测试规格验证节奏，再决定是否跑正式规格。
+- 视频生成是抽卡，重复生成不可避免。用快档反复抽、确认之后才跑正式规格；不要把重跑当异常，也不要为省一轮而跳过确认。
 - 机器报告、缩略图和评分不能替代人观看原图、完整视频和实听音轨。
 - 不把带过期时间的远程 URL 写进项目契约；产物必须落到本地稳定路径。
 - 真实项目和生成媒体必须在仓库外；确定性测试只使用仓库内 `tests/fixtures/` 的最小夹具，不依赖某个用户项目。
@@ -132,7 +136,8 @@ node cli/assemble-units.mjs <render.plan.json> --out <out/final.mp4>
 node cli/review-gate.mjs approve --project <项目目录> --stage direction --artifacts <direction.json>
 node cli/review-gate.mjs approve --project <项目目录> --stage assets
 node cli/review-gate.mjs approve --project <项目目录> --stage keyframes --artifacts <图片列表>
-node cli/review-gate.mjs approve --project <项目目录> --stage clip --id g001 --artifacts <g001.mp4>
+node cli/review-gate.mjs approve --project <项目目录> --stage clip --id g001 --variant preview --artifacts <g001.preview.mp4>
+node cli/review-gate.mjs approve --project <项目目录> --stage clip --id g001 --variant final --artifacts <g001.final.mp4>
 node cli/review-gate.mjs ready-assemble --project <项目目录> --plan <render.plan.json>
 ```
 

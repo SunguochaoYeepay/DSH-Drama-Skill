@@ -20,5 +20,11 @@ const emotion = compileDirectorExecution({
   }],
 }, nameOf);
 assert.match(emotion[0].text, /耳朵后压/);
-assert.match(emotion[0].text, /禁止表现为：星星眼、微笑/);
-console.log('director execution: 9/9 passed');
+assert.match(emotion[0].text, /视线：抬头紧盯橘猫/);
+// 负例词不原样进入提示词；已知类别编译成不复述禁词的正向边界。
+assert.doesNotMatch(emotion[0].text, /禁止表现为/);
+assert.doesNotMatch(emotion[0].text, /星星眼/);
+assert.doesNotMatch(emotion[0].text, /微笑/);
+assert.match(emotion[0].text, /眼睛保持自然解剖结构/);
+assert.match(emotion[0].text, /嘴角形态服从上述可见表演/);
+console.log('director execution: 13/13 passed');

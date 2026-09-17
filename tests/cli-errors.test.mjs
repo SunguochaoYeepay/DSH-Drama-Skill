@@ -44,4 +44,9 @@ const assetApprove = spawnSync(process.execPath, [path.join(root, 'cli', 'review
 assert.equal(assetApprove.status, 0, assetApprove.stderr);
 assert.match(assetApprove.stdout, /人工确认已记录：assets/);
 
-console.log('cli errors: 6/6 passed');
+// 默认视频档必须真的是 FastVideo FastH3 单首帧，不能因内部步数默认值退化成 r2v。
+const unitSource = fs.readFileSync(path.join(root, 'cli', 'unit.mjs'), 'utf8');
+assert.match(unitSource, /return 'fast';/);
+assert.doesNotMatch(unitSource, /const STEPS = Number\(flag\('steps', 4\)\)/);
+
+console.log('cli errors: 8/8 passed');

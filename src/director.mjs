@@ -33,7 +33,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { runBailian } from './bailian-cli.mjs';
 import { estimateSpeechSeconds } from './orchestrate.mjs';
 
 /** 生成单元的上限（H3 的硬约束）。 */
@@ -138,6 +138,23 @@ export function validateDirection(dir, ctx = {}) {
         if (unit.keyframe_cast.length > 2) errors.push(`${at}: keyframe_cast 最多 2 名角色（本地 Qwen 还需要 1 个场景参考位）`);
         for (const id of unit.keyframe_cast) {
           if (!unitCast.has(id)) errors.push(`${at}: keyframe_cast 里的 "${id}" 不在本单元 on_screen 中`);
+        }
+        // 名字搜索只能发现一部分可疑遗漏：别名、代词、同名普通词都会造成漏报或误报。
+        // 因此这里只给 warning，不能把字符串命中冒充完整的首帧人物结构证明。
+        if (typeof unit.keyframe_start === 'string') {
+          const anchoredCharacters = new Set(unit.keyframe_cast.map((id) => {
+            const identity = (board.identities || []).find((x) => x.id === id);
+            return identity ? identity.character : id;
+          }));
+          for (const character of board.characters || []) {
+            if (anchoredCharacters.has(character.id)) continue;
+            const name = String(character.name || '').trim();
+            if (name && unit.keyframe_start.includes(name)) {
+              warnings.push(`${at}: keyframe_start 可能出现了未被锚定的角色「${name}」——`
+                + `他会被模型画进来却没有参考图，服装只能由模型自己编。`
+                + `要么把该角色的造型加进 keyframe_cast，要么把他从首帧描述里删掉。`);
+            }
+          }
         }
       }
     }
@@ -593,10 +610,17 @@ export const DIRECTOR_MODEL = process.env.AIH_DIRECTOR_MODEL || 'qwen3.8-max';
  * 而且这台机器的 PowerShell 5.1 **会吃掉命令行参数里的引号**，
  * 所以一律"写临时文件 → 传文件路径"，绝不把长文本拼进命令行。
  *
+ * **必须经 `runBailian()` 直连，不能 `spawn('bl', …, { shell: true })`。**
+ * PATH 上的 `bl` 是 `%APPDATA%\npm\bl.ps1`（PowerShell 包装器），而本机 PowerShell
+ * 起不了外部进程 —— 走它会退化成「静默无产出」，实测表现为等满超时、
+ * 错误信息只有「bl 退出码 null」、stderr 为空。图片通道早已改用 `runBailian`，
+ * 导演通道曾漏改（详见 `references/troubleshooting.md` 的「CLI 通道调用失败」）。
+ *
  * @returns {{ok:boolean, direction?:object, raw:string, error?:string, seconds:number}}
  */
 export function callDirector(prompt, opts = {}) {
-  const spawn = opts.spawn || spawnSync;
+  // 注入点保留：测试可以传一个假的 run 来断言参数拼装，不必真调线上。
+  const run = opts.run || runBailian;
   const model = opts.model || DIRECTOR_MODEL;
   const timeoutMs = opts.timeoutMs || 600000;
   const tmp = opts.tmpDir || os.tmpdir();
@@ -617,7 +641,7 @@ export function callDirector(prompt, opts = {}) {
   // 镜头设计要的是判断，不是长推理链；需要时用 --thinking 显式打开。
   if (opts.thinking === true) args.push('--enable-thinking');
 
-  const r = spawn('bl', args, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: timeoutMs, shell: true });
+  const r = run(args, { timeoutMs });
   try { fs.unlinkSync(msgFile); } catch { /* 无所谓 */ }
 
   const seconds = Math.round((Date.now() - started) / 1000);
@@ -625,7 +649,10 @@ export function callDirector(prompt, opts = {}) {
   const stderr = String(r.stderr || '');
 
   if (r.status !== 0 && !stdout.trim()) {
-    return { ok: false, raw: stdout, error: `bl 退出码 ${r.status}：${stderr.slice(0, 300)}`, seconds };
+    // `status` 为 null 是 spawn 层失败（起不来 / 超时），`error` 里有真正原因，
+    // 不能只报「退出码 null」——那会把人引向"模型没回答"，而实际是进程根本没起来。
+    const why = r.error ? `（${r.error.code || 'spawn 失败'}：${String(r.error.message || r.error).slice(0, 160)}）` : '';
+    return { ok: false, raw: stdout, error: `bl 退出码 ${r.status}${why}：${stderr.slice(0, 300)}`, seconds };
   }
 
   // `--output json` 的响应体结构可能变，所以**层层剥**：先找 choices/message，再找里面第一段 JSON

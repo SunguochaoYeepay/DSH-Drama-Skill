@@ -22,9 +22,51 @@
 - 工作流参数必须同时传到外层工具和 ComfyUI 节点，避免命令显示一个尺寸、节点实际使用另一个尺寸。
 - 性能突然从约百秒变成数百秒时，先核对是否误用基础 H3、错误 profile、错误分辨率或稀疏注意力没有启用。
 
+## CLI 通道调用失败
+
+> 🔁 **已复发 2 次（最近：beach_mosquito 2026-09-17）｜已由代码兜底**：`src/bailian-cli.mjs` 早已记录「本机 PowerShell 起不了外部进程」，
+> 图片通道据此改用了 `runBailian()`，但**导演通道（`src/director.mjs`）仍走 `spawn('bl', …, { shell: true })`** ——
+> 同一类故障在另一个通道里原样重犯，实测表现为等满 600s 超时、错误信息只有「bl 退出码 null」。
+> **处置已完成**：导演通道已切到 `runBailian()`，spawn 层失败时错误信息会带出 `error.code`；
+> 离线断言见 `.tmp` 之外的 `tests/`（`callDirector` 的注入点 + 错误信息）。
+> 教训保留：**新增任何调用 `bl` 的通道，必须走直连而不是 PowerShell 包装器。**
+
+**先记住这条：本机 PowerShell 起不了外部进程。** `powershell -Command "& 'node.exe' --version"` 会静默返回、stdout 为空、退出码 0 ——
+所以任何经 `bl.ps1` 的调用都会退化成**「exit 0 但什么都没产出」**，这是最难查的一类故障。
+
+因此：**调用百炼 CLI 一律走 `src/bailian-cli.mjs` 的 `runBailian()`**（node 直执行 CLI 入口、argv 逐项直传），
+不要 `spawn('bl', …, { shell: true })`。
+
+### 症状 → 定位
+
+| 症状 | 优先检查 |
+|---|---|
+| 命令不报错、退出码 0，但没有任何产物 | 是否经了 `bl.ps1`（PowerShell 包装器） |
+| 等满超时才失败，错误信息是「bl 退出码 null」，stderr 为空 | 同上；`shell: true` 启动了 PowerShell 但子进程没起来 |
+| 图片通道能跑、导演通道不能跑 | 两个通道的调用方式不一致 —— 图片走 `runBailian`，导演曾走 `spawn('bl', {shell:true})` |
+
+### 票据「产物已变化」但文件没动
+
+先按**入口实际会校验的产物清单**重签，不要按自己以为的清单签。两个入口口径不同：
+
+| 入口 | 它校验的导演票绑定对象 |
+|---|---|
+| `cli/compile-units.mjs` | `board.direction.json`（编译源文件） |
+| `cli/keyframes.mjs` / `cli/unit.mjs` | 各自传入的 `--direction` 指向的执行计划 |
+
+票据槽只有一个，所以改过导演稿之后必须重签；重签后如果又需要重新编译，会出现互相踩的死锁 ——
+此时对**无成本**的编译步骤显式加 `--skip-gate`（闸门此前已人工确认过），不要手改计划文件。
+
+`cli/keyframes.mjs` 写死计划里的关键帧路径是 `keyframes_render/`，而 `--provider bailian` 实际产出到
+`keyframes_bailian/`。两者不一致时，`cli/unit.mjs` 会拿**同名的旧残留文件**去验票，表现为「产物已变化」。
+处理方式：清掉 `keyframes_render/` 里的过期残留，把票绑到本次真实产出的那一份。
+连续承接单元（`continuity.mode = continue_previous`）的关键帧路径取自交接记录，不是计划 —— 签票前按实际清单核一遍。
+
 ## 进程与日志
 
 - PowerShell 管道使用 `Select-Object -First` 可能提前终止上游进程，不能用它判断长任务真实退出原因。
+- PowerShell 按本地代码页（GBK）解读 UTF-8 文件，中文会显示成乱码；`Set-Content -Encoding ascii` 会把中文写成 `?`。
+  **需要读写中文的编排一律放在 Node 里**（Node 永远按 UTF-8 读文件），不要用 PowerShell 拼脚本或重定向输出。
 - 不要只凭一个目录快照判断是否生成成功；覆盖同名文件时应读取工具返回的实际产物路径和修改时间。
 - 停止任务前确认具体进程，避免影响用户已经启动的其他 ComfyUI 工作。
 

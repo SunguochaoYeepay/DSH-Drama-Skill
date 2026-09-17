@@ -396,6 +396,43 @@ console.log('\n场景与道具引用');
     validateDirection(make({ scene: 'hall', props: ['key'] }), ctx).errors.join(' | '));
 }
 
+console.log('\n首帧锚定一致性');
+{
+  // 来历：`keyframe_cast` 决定**给谁传参考图**，`keyframe_start` 决定**画面里有谁**。
+  // 两者不一致时，模型会照文字把没有参考图的人画进来，而他的服装只能由模型自己编 ——
+  // 实拍项目里出过白背心、白裙、灰 T 恤，并一路带进视频（规则写在
+  // references/assets-and-keyframes.md；这里让代码兜住它）。
+  const named = (id, name) => ({ id, character: `ch_${id}`, palette: 'x', name });
+  const ctx = {
+    board: {
+      identities: [named('id_anchor', '苏晚'), named('id_other', '陆晨')],
+      characters: [{ id: 'ch_id_anchor', name: '苏晚' }, { id: 'ch_id_other', name: '陆晨' }],
+      scenes: [], props: [], shots: [],
+    },
+    script: '',
+  };
+  const build = (keyframeStart, cast) => asCurrent({ units: [{
+    id: 'u1', keyframe_start: keyframeStart, keyframe_cast: cast,
+    shots: [{
+      n: 1, at: 0, duration_s: 4, framing: '中景', camera: '固定',
+      on_screen: ['id_anchor', 'id_other'], action: '两人站着',
+      lines: [],
+    }],
+  }] });
+  const run = (kf, cast) => validateDirection(build(kf, cast), ctx);
+
+  const leaking = run('0秒时苏晚站在水线边，陆晨在她斜后方半步', ['id_anchor']);
+  check('首帧名字扫描只是启发式 warning，不冒充结构化拒绝', leaking.ok, JSON.stringify(leaking));
+  check('  warning 里点名是哪个角色', leaking.warnings.some((e) => /陆晨/.test(e)), JSON.stringify(leaking.warnings));
+  check('  warning 里说清后果（没参考图 / 服装自己编）', leaking.warnings.some((e) => /参考图/.test(e)), JSON.stringify(leaking.warnings));
+
+  const bothAnchored = run('0秒时苏晚与陆晨面对面站着', ['id_anchor', 'id_other']);
+  check('首帧提到的人都在 keyframe_cast → 通过', bothAnchored.ok, JSON.stringify(bothAnchored.errors));
+
+  const singleOnly = run('0秒时苏晚独自站在水线边', ['id_anchor']);
+  check('首帧只提到被锚定的人 → 通过', singleOnly.ok, JSON.stringify(singleOnly.errors));
+}
+
 console.log('\n' + '─'.repeat(56));
 if (failures.length) {
   console.log(`通过 ${passed} 项，失败 ${failures.length} 项：`);

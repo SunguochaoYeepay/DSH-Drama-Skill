@@ -17,6 +17,9 @@ const FRAMING_EN = {
 
 const DEACT = [
   [/脸颊红意更重|脸颊绯红|双颊绯红|满脸通红/g, '双颊有一层很淡的自然红晕（不是腮红、不是妆容）'],
+  // 模型会把「脸颊+红」直接画成两块腮红（实测：g001 末镜）。这里一律换成不带颜色词的生理表演，
+  // 让血色的指令彻底消失，妆容归 retention_analysis 里的否定句管。
+  [/[双两]?脸?颊[^，；。]{0,3}(涨红|泛红|通红|绯红|红晕|微红)|脸红/g, '脸颊绷紧'],
   [/耳尖泛红|耳尖瞬间通红|耳尖通红/g, '耳廓边缘略有一点淡红'],
   [/瞳孔骤缩|瞳孔骤然一缩/g, '双眼微微睁大'],
   [/眼神由慌乱转为认真/g, '视线从游移变为稳定'],
@@ -64,12 +67,17 @@ export function buildUnitPrompt(unit, ctx) {
       return `${tag} is ${who}'s costume reference — the cut, layers, colour and sash must match it exactly.`;
     });
     parts.push(`subject_definitions: ${definitions.join(' ')}`);
-    parts.push('summary: ' + (unit.shots.map((shot) => String(shot.action || '').trim()).filter(Boolean).join(' ') || 'A continuous multi-shot scene.'));
+    // summary 也是逐字取 shot.action，同样要过去夸张词表（漏了它等于没堵）。
+    const summary = unit.shots.map((shot) => String(shot.action || '').trim()).filter(Boolean).join(' ');
+    parts.push('summary: ' + (summary ? replaceAll(summary, DEACT) : 'A continuous multi-shot scene.'));
     parts.push('retention_analysis: '
       + 'Preserve every subject\'s facial structure, eyebrow shape, eye shape, lip shape and skin tone exactly as in the reference pictures. '
       + '**Do not change anyone\'s hairstyle, and do not add or remove hair ornaments or ribbons.** '
-      + 'Skin must stay natural and bare: a faint real flush on the cheeks is allowed, '
-      + '**but never render it as blush, rouge, lipstick or any other makeup, and never darken or redden the lips.** '
+      // 实验 B：原来这里写的是「a faint real flush on the cheeks is allowed, but never render it as
+      // blush, rouge, lipstick or any other makeup, and never darken or redden the lips」。
+      // 本意是否定，实测却压不住腮红 —— 反倒像是递了一份「妆」的词表给模型。
+      // 现改为纯正向的复现约束，整段不含任何妆/色词汇。
+      + 'Skin and lips must stay exactly as they are in the reference pictures — nothing added, nothing removed. '
       + 'Keep each character\'s costume identical to its reference. '
       + 'Do not merge subjects, do not introduce anyone who is not listed above, and do not create a slideshow.');
   } else if (ctx.hasFirstFrame) {
@@ -102,7 +110,8 @@ export function buildUnitPrompt(unit, ctx) {
       .map(([id, facing]) => `${(shot.on_screen || []).length === 1 ? '' : `${nameOf(id)} `}${FACING_PHRASE[facing] || ''}`.trim())
       .filter(Boolean)
       .join('，');
-    const directives = compileDirectorExecution(shot, nameOf).map((item) => item.text).join('；');
+    // 导演执行约束同样要过去夸张词表：visible_behavior 里的「脸颊泛红」以前是直接进提示词的。
+    const directives = replaceAll(compileDirectorExecution(shot, nameOf).map((item) => item.text).join('；'), DEACT);
     const camera = shot.camera && !/^固定/.test(shot.camera) ? `，摄影机${clean(shot.camera)}` : '';
     const segment = [];
     segment.push(index > 0
