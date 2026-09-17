@@ -92,6 +92,12 @@ expectRejected(
 );
 
 expectRejected(
+  '剧名只写英文项目代号',
+  (b) => { b.meta.title = 'cat_mouse'; },
+  '中文剧名',
+);
+
+expectRejected(
   '闸门顺序被跳着批',
   (b) => {
     b.meta.approvals = { story: { at: 'x', by: 'u' }, shots: null, assets: { at: 'x', by: 'u' }, keyframes: null };

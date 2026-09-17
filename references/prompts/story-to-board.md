@@ -15,6 +15,7 @@ shots[].cast  = 引用【造型 id】，不是角色 id。
 
 1. 只输出 JSON，第一个字符 `{`，最后一个字符 `}`。顶层七个键：`meta` / `story` / `characters` / `identities` / `scenes` / `props` / `shots`。
 2. `story` 原样带过来，一个字都不许改（它已经确认过了）。`meta` 里除 `stage` 和 `approvals` 外沿用输入值。
+   `meta.title` 必须保留为给人看的中文剧名，至少包含一个汉字；英文目录名只属于 `meta.project`。
    `meta.stage` 固定填 `"shots"`；`meta.approvals` 里的 `story` 保留输入值，其余三个填 `null`。
 3. **`characters[]` 只写脸**：`face_prompt` 是**纯面部特征**（脸型、五官、发型、痣/疤），**禁止写服装**，**禁止写动作表情**。
 4. **`age_group` 是受控枚举**，只能填 `child` / `youth` / `middle` / `elder`。

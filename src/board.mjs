@@ -169,6 +169,11 @@ function validateSemantics(b) {
   const errors = [];
   const warnings = [];
 
+  const title = String(b.meta?.title || '').trim();
+  if (!/[\u3400-\u9fff]/u.test(title)) {
+    errors.push('meta.title 必须是给人看的中文剧名（至少包含一个汉字）；英文目录名请放在 meta.project');
+  }
+
   const charIds = new Set((b.characters || []).map((c) => c.id));
   const identIds = new Set((b.identities || []).map((x) => x.id));
   const propIds = new Set((b.props || []).map((p) => p.id));

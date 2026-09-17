@@ -37,7 +37,9 @@ const WORKSPACE_PLUGIN_DIR = path.resolve(
 /** 每个包各自的期望值。 */
 const EXPECT = {
   'dsh-storyboard': {
-    clientServices: ['slots', 'sidebarRightTabs', 'remote', 'remote.workspaceFiles'],
+    // 面板要列工作区外的剧目（真实项目按 README 规定在仓库外），
+    // 而 workspaceFiles.list 只在工作区根内可用 —— 列剧目目录走 directoryPicker。
+    clientServices: ['slots', 'sidebarRightTabs', 'remote', 'remote.workspaceFiles', 'remote.directoryPicker'],
     tabTypes: 1,
     slotKeys: ['sidebar.right.pane.tab', 'conversation.session.header.actions'],
     documentDefinitions: 0,
@@ -341,21 +343,37 @@ for (const name of targets) {
       const rows = findTags(tree, 'tr');
       check(`表格 ${probe.board.shots.length} 行镜头 + 1 行表头`, rows.length === probe.board.shots.length + 1, `实际 ${rows.length}`);
       const headers = rows.length ? findTags(rows[0], 'th') : [];
-      check('表头 10 列', headers.length === 10, `实际 ${headers.length}`);
+      // 6 列 = 镜号 / 时长 / 画面描述 / 单元 / 关键帧 / 视频片段。
+      // 已移除：「景别 光影氛围 对白/旁白 音效 运镜 最终剪辑提示」（挤在 12 列里读不动，改到细节区）
+      // 和「状态」（右边的缩略图就是状态，有图即已生成）。
+      check('表头 6 列', headers.length === 6, `实际 ${headers.length}`);
+      const headText = headers.map((h) => collectText(h).join('')).join('|');
+      check('表头含「单元」「关键帧」「视频片段」且无「状态」',
+        /单元/.test(headText) && /关键帧/.test(headText) && /视频片段/.test(headText) && !/状态/.test(headText), headText);
 
       const texts = collectText(tree);
       check('标题来自文件内容', texts.some((t) => t.indexOf(probe.board.meta.title) >= 0), probe.board.meta.title);
       check('第一镜 id 出现在表里', texts.indexOf('s01') >= 0);
       check('第一镜时长出现在表里', texts.indexOf('5s') >= 0);
-      check('闸门状态取自 approvals', texts.some((t) => t.indexOf('① 故事') === 0 && t.indexOf('✅') > 0), '① 故事 ✅');
+      // 闸门显示**只认现行票模型**：`board.meta.approvals` 那一行（①故事…⑤出片）已按要求去掉，
+      // 因为它与 `review.approvals.json` 的票据行重复，而且那是旧票模型。
+      // 这里钉住两件事：旧行不再出现，现行票据的四个阶段名在。
+      check('板子旧闸门行已移除', !texts.some((t) => t.indexOf('① 故事') === 0), '不应出现 ① 故事');
+      check('现行票据阶段名在', ['导演方案', '资源', '关键帧', '最终成片'].every((n) => texts.some((t) => t.indexOf(n) === 0)),
+        texts.filter((t) => ['导演方案', '资源', '关键帧', '最终成片'].some((n) => t.indexOf(n) === 0)).join(','));
 
       // 目录扫描 + 文件选择器
       check('调用了 workspaceFiles.list', listCalls.length > 0, listCalls.map((c) => c.path).join(', '));
       const selects = findTags(tree, 'select');
-      check('渲染出了文件选择器', selects.length === 1, `实际 ${selects.length}`);
+      // 两个下拉：**第一个是文件选择器**（工作区内的板子，走 workspaceFiles），
+      // 第二个是剧目下拉（仓库外的真实项目，走 directoryPicker + 绝对路径）。
+      // 这里钉住的是**文件选择器**的契约没被新功能改坏。
+      check('渲染出两个下拉（文件选择器 + 剧目下拉）', selects.length === 2, `实际 ${selects.length}`);
       const options = selects.length ? findTags(selects[0], 'option') : [];
-      check('选项来自项目根目录扫描（2 个 JSON）', options.length === 2, `实际 ${options.length}`);
+      check('文件选择器的选项来自项目根目录扫描（2 个 JSON）', options.length === 2, `实际 ${options.length}`);
       check('默认选中的是探针路径', selects.length > 0 && selects[0].props.value === probe.expectPath, selects.length ? String(selects[0].props.value) : '');
+      const projectOptions = selects.length > 1 ? findTags(selects[1], 'option') : [];
+      check('剧目下拉有"未选择"占位项', projectOptions.length >= 1, `实际 ${projectOptions.length}`);
 
       // 换一个文件后必须重新读，而且读的是新路径
       const other = 'other.json';
