@@ -48,5 +48,8 @@ assert.match(assetApprove.stdout, /人工确认已记录：assets/);
 const unitSource = fs.readFileSync(path.join(root, 'cli', 'unit.mjs'), 'utf8');
 assert.match(unitSource, /return 'fast';/);
 assert.doesNotMatch(unitSource, /const STEPS = Number\(flag\('steps', 4\)\)/);
+assert.match(unitSource, /const VIDEO_TIMEOUT_SECONDS = 10 \* 60;/);
+assert.match(unitSource, /'--timeout', String\(VIDEO_TIMEOUT_SECONDS\)/);
+assert.doesNotMatch(unitSource, /timeout: 1800000/);
 
-console.log('cli errors: 8/8 passed');
+console.log('cli errors: 11/11 passed');

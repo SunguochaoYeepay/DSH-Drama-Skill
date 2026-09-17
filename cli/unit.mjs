@@ -79,6 +79,7 @@ const EXPLICIT_STEPS = argv.includes('--steps') ? Number(flag('steps', 0)) : nul
 const QUALITY = String(flag('quality', 'test')).toLowerCase();
 const CLIP_VARIANT = QUALITY === 'test' ? 'preview' : 'final';
 const QUALITY_SIZES = { test: '480x864', final: '768x1344' };
+const VIDEO_TIMEOUT_SECONDS = 10 * 60;
 if (!QUALITY_SIZES[QUALITY]) {
   throw new Error(`--quality 只能是 ${Object.keys(QUALITY_SIZES).join(' / ')}，收到 ${QUALITY}`);
 }
@@ -326,7 +327,8 @@ const args = [GEN, MODE,
   '--prompt', prompt,
   '--duration', seconds.toFixed(3),
   '--width', String(W), '--height', String(H),
-  '--out-dir', outDir, '--result-file', resultFile, '--no-shell'];
+  '--out-dir', outDir, '--result-file', resultFile, '--no-shell',
+  '--timeout', String(VIDEO_TIMEOUT_SECONDS)];
 if (MODE === 'i2v') {
   args.push('--image', keyframe);
 } else if (MODE === 'fl2v') {
@@ -359,17 +361,45 @@ args.push('--profile', PROFILE);
 if (DRY || flag('show-args', false)) console.log('  最终 argv: ' + args.map((a) => a.length > 40 ? a.slice(0, 37) + '…' : a).join(' '));
 console.log(`  尺寸 ${W}×${H}${W === 1088 ? '  ⚠ 这是 2.09MP，官方参考是 0.41MP' : ''}`);
 
-const r = spawnSync(PY, args, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 1800000 });
+const startedAt = Date.now();
+// gen.py 负责在 10 分钟时写出可读的超时结果；外层多留 30 秒做异常兜底。
+const r = spawnSync(PY, args, {
+  encoding: 'utf8',
+  maxBuffer: 32 * 1024 * 1024,
+  timeout: (VIDEO_TIMEOUT_SECONDS + 30) * 1000,
+});
 if (r.stdout) process.stdout.write(r.stdout);
 if (r.stderr && r.status !== 0) process.stderr.write(String(r.stderr).slice(0, 800));
 
+async function interruptComfy() {
+  const base = (process.env.COMFYUI_URL || 'http://127.0.0.1:8188').replace(/\/+$/, '');
+  try {
+    await fetch(`${base}/interrupt`, { method: 'POST', signal: AbortSignal.timeout(5000) });
+  } catch (error) {
+    console.error(`\n⚠ 超时后未能通知 ComfyUI 中断：${error.message}`);
+  }
+}
+
+if (r.error?.code === 'ETIMEDOUT') {
+  await interruptComfy();
+  console.error('\n✗ 视频生成超过 10 分钟，已中断。');
+  process.exit(1);
+}
+
 let ok = false;
 try {
+  if (fs.statSync(resultFile).mtimeMs < startedAt) {
+    throw new Error('结果文件来自本轮启动之前');
+  }
   const res = JSON.parse(fs.readFileSync(resultFile, 'utf8'));
   ok = Boolean(res.ok);
   const rawFile = res.files && res.files[0];
   const f = typeof rawFile === 'string' ? rawFile : rawFile?.local_path || rawFile?.localPath || rawFile?.path;
   console.log(`\n${ok ? '✓' : '✗'} ${ok ? f : res.error}`);
+  if (!ok && /TimeoutError|等待超时/.test(String(res.error || ''))) {
+    await interruptComfy();
+    console.error('视频生成达到 10 分钟上限，已通知 ComfyUI 中断。');
+  }
   if (ok && f) {
     const sheet = path.join(outDir, `${unit.id}_review_frames.png`);
     const inspected = spawnSync(process.execPath, [path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/(?:[A-Za-z]:)/, (m) => m.slice(1))), 'inspect.mjs'), f,
@@ -391,5 +421,5 @@ try {
     ]);
     console.log(`等待人工审阅：${note}`);
   }
-} catch { console.log(`\n✗ 没拿到结果文件（退出码 ${r.status}）`); }
+} catch (error) { console.log(`\n✗ 没拿到本轮结果文件（退出码 ${r.status}）：${error.message}`); }
 process.exit(ok ? 0 : 1);

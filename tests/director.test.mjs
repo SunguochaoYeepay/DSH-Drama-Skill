@@ -396,12 +396,15 @@ console.log('\n场景与道具引用');
     validateDirection(make({ scene: 'hall', props: ['key'] }), ctx).errors.join(' | '));
 }
 
-console.log('\n首帧锚定一致性');
+console.log('\n首帧锚定一致性（启发式）');
 {
   // 来历：`keyframe_cast` 决定**给谁传参考图**，`keyframe_start` 决定**画面里有谁**。
   // 两者不一致时，模型会照文字把没有参考图的人画进来，而他的服装只能由模型自己编 ——
-  // 实拍项目里出过白背心、白裙、灰 T 恤，并一路带进视频（规则写在
-  // references/assets-and-keyframes.md；这里让代码兜住它）。
+  // 实拍项目里出过白背心、白裙、灰 T 恤，并一路带进视频（规则写在 references/assets-and-keyframes.md）。
+  //
+  // **代码只给提示，不给强证明。** 名字子串搜索证不了完整人物集合：
+  // 首帧里可能用代称（"她 / 那个男人"）而不出现角色名，也可能因名字互为子串而误报。
+  // 所以这里是 warning，不是拒收；warning 出来要人工看一眼首帧描述。
   const named = (id, name) => ({ id, character: `ch_${id}`, palette: 'x', name });
   const ctx = {
     board: {
@@ -431,6 +434,12 @@ console.log('\n首帧锚定一致性');
 
   const singleOnly = run('0秒时苏晚独自站在水线边', ['id_anchor']);
   check('首帧只提到被锚定的人 → 通过', singleOnly.ok, JSON.stringify(singleOnly.errors));
+
+  // 关键：它**证明不了**完整集合 —— 首帧用代称时搜不到，不会有任何提示。
+  // 这条断言存在的意义是防止有人把 warning 误当成验收。
+  const pronoun = run('0秒时她独自站在水线边，身后那个男人正在靠近', ['id_anchor']);
+  check('首帧只写代称、不写角色名 → 搜不到，**不产生任何提示**（故不能当验收）',
+    pronoun.warnings.every((w) => !/未被锚定/.test(w)), JSON.stringify(pronoun.warnings));
 }
 
 console.log('\n' + '─'.repeat(56));
