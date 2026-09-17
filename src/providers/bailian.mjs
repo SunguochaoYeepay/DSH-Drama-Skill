@@ -18,9 +18,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { ledger } from '../cost.mjs';
+import { BAILIAN_CLI, POWERSHELL } from '../runtime-paths.mjs';
 
-const PS = 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe';
-const BL = 'C:\\Users\\Administrator\\AppData\\Roaming\\npm\\bl.ps1';
+const PS = POWERSHELL;
+const BL = BAILIAN_CLI;
 
 /** 命令行的第一守则：**永远不要把提示词拼进命令行**。 */
 export function sanitize(text) {

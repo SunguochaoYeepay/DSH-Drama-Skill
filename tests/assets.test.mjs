@@ -18,8 +18,9 @@ import fs from 'node:fs';
 import {
   assetPlan, portraitPrompt, sheetInstruction, sheetRefs,
   masterPrompt, propPrompt, keyframeRefs, keyframeInstruction,
-  shotPrompt, expandMarkers, h3Prompt, speakerIds,
+  shotPrompt, expandMarkers, styleAnchor, isHuman,
 } from '../src/assets.mjs';
+import { FIXTURE, fixtureOrArg } from './fixtures/index.mjs';
 
 let passed = 0;
 const failures = [];
@@ -28,12 +29,34 @@ function check(label, ok, detail = '') {
   else { failures.push(label); console.log(`FAIL   ${label}${detail ? '  → ' + detail : ''}`); }
 }
 
-const file = process.argv[2] || 'E:/AI-Tool/DeepSeek/story2video/examples/dashixiong.literal.json';
+// 默认用**仓库内夹具**（随代码保存），命令行可覆盖成真实剧目的板子。
+const file = fixtureOrArg(process.argv, 2, FIXTURE.board);
 const board = JSON.parse(fs.readFileSync(file, 'utf8'));
 
 // 放一个有辨识度的标记进风格圣经，用来看它有没有污染到不该去的地方
 const STYLE_MARK = '【风格圣经标记】';
 board.meta.style_prompt = `${STYLE_MARK}古风仙侠，青绿与暖阳金`;
+
+/**
+ * 灌入**确定性的合成资产路径**，专供"参考图从哪来"这一类断言。
+ *
+ * 参考图是从板子上的资产槽位解析的（`characters[].portrait` / `identities[].sheet` /
+ * `scenes[].master` / `props[].ref_image`），而夹具是"配方层"的板子，
+ * 这些槽位全是 `null`（真实流程在资产生成后回填）。
+ *
+ * 直接拿夹具跑，`keyframeRefs` 会解析出**空参考图集** —— 断言就退化成空转。
+ * 原先这两条写成 `refs.length === 0 || …`，等于把空转兜住了：
+ * **"紧景别用肖像、宽景别用身份图"这条规则从来没被验过。**
+ *
+ * 所以这里显式灌入路径。它们是**字符串**，不需要真实存在（解析只做匹配），
+ * 但能让断言真的区分"紧景别拿到肖像"和"宽景别拿到身份图"。
+ */
+const ASSET = (kind, id) => `projects/demo/assets/${kind}_${id}.png`;
+const refBoard = structuredClone(board);
+for (const c of refBoard.characters) c.portrait = ASSET('portrait', c.id);
+for (const x of refBoard.identities) x.sheet = ASSET('sheet', x.id);
+for (const s of refBoard.scenes) s.master = ASSET('scene', s.id);
+for (const p of refBoard.props || []) p.ref_image = ASSET('prop', p.id);
 
 console.log('\n资产配方');
 console.log(`  板子：${board.characters.length} 角色 / ${board.identities.length} 造型 / ${board.scenes.length} 场景 / ${(board.props || []).length} 道具`);
@@ -67,15 +90,25 @@ const probeBoard = structuredClone(board);
 probeBoard.identities = probeBoard.identities.map((x) => ({ ...x, appearance_details: `【服装标记】${x.appearance_details}` }));
 for (const c of board.characters) {
   const p = portraitPrompt(board, c);
-  check(`${c.id}：含年龄`, p.includes(c.age_group) || /儿童|青年|中年|老年/.test(p));
+  const human = isHuman(c);
+  // 族裔锚点 / 人类年龄档 / 素色上衣 —— 这三条**只对人类成立**。
+  // 非人类卡司（猫/狗…）注入它们会把角色推向拟人化，所以反过来断言"不许出现"。
+  if (human) {
+    check(`${c.id}：含年龄`, p.includes(c.age_group) || /儿童|青年|中年|老年/.test(p));
+    check(`${c.id}：**带族裔锚点**（没有它，模型会默认画成白人）`, /东亚|East Asian/.test(p), p.slice(0, 60));
+    check(`${c.id}：明确禁服装细节`, /服装细节/.test(p));
+  } else {
+    check(`${c.id}：非人类**不带人类年龄档**`, !/儿童|青年|中年|老年/.test(p), p.slice(0, 60));
+    check(`${c.id}：非人类**不带族裔锚点**（否则猫会被画成东亚人/拟人化）`, !/东亚|East Asian/.test(p), p.slice(0, 60));
+    check(`${c.id}：非人类**点明四足、不穿衣、不拟人化**`,
+      /四足动物/.test(p) && /不穿任何衣物/.test(p) && /不拟人化/.test(p), p.slice(0, 80));
+  }
   check(`${c.id}：含脸部描述`, p.includes(c.face_prompt.slice(0, 8)));
   check(`${c.id}：正面 + 脸占 60-70% + 灰底`, /正面朝向/.test(p) && /60-70%/.test(p) && /灰底/.test(p));
   check(`${c.id}：**不带风格圣经**（否则会被成片色调拖走）`, !p.includes(STYLE_MARK), p.slice(0, 60));
   const pc = probeBoard.characters.find((x) => x.id === c.id);
   const pp = portraitPrompt(probeBoard, pc);
   check(`${c.id}：**服装描述不漏进肖像**（服装属于造型层）`, !pp.includes('【服装标记】'), pp.slice(0, 80));
-  check(`\${c.id}：明确禁服装细节`, /服装细节/.test(p));
-  check(`${c.id}：**带族裔锚点**（没有它，模型会默认画成白人）`, /东亚|East Asian/.test(p), p.slice(0, 60));
 }
 
 // ---------- 三、身份图：4 面板 + 以肖像为参考 ----------
@@ -87,10 +120,27 @@ for (const x of board.identities) {
   check(`${x.id}：声明"参考图只锁脸、衣着听文字"（否则会继承肖像那件素色上衣）`, /参考图只用于锁定长相/.test(ins));
   check(`${x.id}：带该造型的服装描述`, ins.includes(x.appearance_details.slice(0, 6)));
   check(`${x.id}：**禁止把文字烧进画面**（烧进去会污染关键帧）`, /不许出现任何文字/.test(ins));
-  check(`${x.id}：身份图也带风格锚点`, /写实实拍|2D 赛璐璐/.test(ins));
-  const refs = sheetRefs(board, x);
-  // 注意：这一步在真实流程里要等肖像出完才有值；配方层只保证"参考图取自角色肖像槽位"
-  check(`${x.id}：参考图取自角色的肖像槽位`, refs.length === 0 || /portrait/.test(refs[0]), refs[0] || '(肖像还没出)');
+  // 断言"带锚点"这件事本身，而不是锚点的具体措辞 ——
+  // 原先写死 /写实实拍|2D 赛璐璐/，等于给 style 枚举加一个值就红一次。
+  check(`${x.id}：身份图也带风格锚点`, ins.includes(styleAnchor(board)));
+  // ---- 版面规则：**模型不会替你守版面，必须显式写死** ----
+  // 来历：第一版只写了"4 个面板分别是什么"，没写怎么排 ——
+  // 画幅用了 1:1 排不下，排成"上二下一大"，背景一格白一格灰。
+  check(`${x.id}：**指定 16:9 横构图**（1:1 排不下 4 格）`, /16:9/.test(ins));
+  check(`${x.id}：**指定只有一行、不许换行/2×2/上下堆叠**`,
+    /只有一行/.test(ins) && /2×2/.test(ins) && /上下堆叠/.test(ins));
+  check(`${x.id}：**四格等宽等高**`, /宽度完全相同/.test(ins) && /高度完全相同/.test(ins));
+  check(`${x.id}：**人物在格内水平居中、脚踩同一水平线**`, /水平居中/.test(ins) && /同一条水平线/.test(ins));
+  check(`${x.id}：**脚底和头顶都在格内、不裁切**`, /不裁切/.test(ins));
+  check(`${x.id}：**四格背景统一**`, /四格背景统一/.test(ins));
+  check(`${x.id}：Panel1 是 Panel2 头部的放大`, /Panel1 必须是 Panel2 头部的放大/.test(ins));
+  check(`${x.id}：禁色标/边框/水印`, /色标/.test(ins) && /边框或水印/.test(ins));
+  const refs = sheetRefs(refBoard, x);
+  // 身份图的参考图必须取**该角色的肖像槽位**。
+  // 这里原来写的是 `refs.length === 0 || /portrait/.test(refs[0])` —— 空参考图集直接算过。
+  // 灌了资产路径之后就是硬判据：取不到肖像 = 身份图会脱离脸部锚点。
+  check(`${x.id}：参考图取自角色的肖像槽位（取不到 = 身份图会脱离脸部锚点）`,
+    refs.length > 0 && /portrait/.test(refs[0]), refs[0] || '(没解析出肖像)');
 }
 
 // ---------- 四、场景：带风格圣经 + 禁人 ----------
@@ -98,7 +148,20 @@ console.log('\n场景');
 for (const s of board.scenes) {
   const p = masterPrompt(board, s);
   check(`${s.id}：主图**带**风格圣经`, p.includes(STYLE_MARK));
-  check(`${s.id}：主图明确禁人`, /没有任何人/.test(p));
+  check(`${s.id}：主图明确禁人`, /没有人物|没有任何人/.test(p));
+  // 实测：只写「没有任何人」时，猫片的场景主图正中是一只腾空跳起的橘猫；扩成
+  // 「没有任何动物」后本地 Qwen 仍把猫画成主体。场景主图是空镜、要喂给全部关键帧，
+  // 所以**卡司的每一个类别都必须被显式禁掉**，且要有正向的画面定义托底。
+  check(`${s.id}：主图**也禁掉动物/宠物**（"人"这个字管不住一只猫）`,
+    /没有动物/.test(p) && /没有宠物/.test(p));
+  // 正向的画面定义要托底，但**场景类型不许写死在配方里** —— 上一版是
+  // 「纯室内环境空镜：画面里只有房间本身 —— 家具、地面、灯光与陈设」，
+  // 那是从一部室内猫片提炼的规则。户外场景（海滨栈道）拿到的是
+  // 「午后海滨木栈道、海面泛白反光…纯室内环境空镜：画面里只有房间本身」，
+  // 自相矛盾（干跑实测暴露）。场景类型归 `scene.environment` 拥有。
+  check(`${s.id}：主图有**正向**的画面定义（全靠否定式压不住）`, /纯环境空镜/.test(p));
+  check(`${s.id}：主图**不写死场景类型**（室内/户外由 scene.environment 拥有）`,
+    !/纯室内|室内环境空镜|房间本身/.test(p));
   check(`${s.id}：主图禁临时道具（否则它就不是"这个地方"了）`, /临时道具/.test(p));
   for (const c of board.characters) {
     if (p.includes(c.name)) { check(`${s.id}：主图里不该出现角色名 ${c.name}`, false, p); }
@@ -114,13 +177,39 @@ for (const pr of board.props || []) {
   check(`${pr.id}：无人、禁可读文字`, /没有任何人物/.test(p) && /可读文字/.test(p));
 }
 
-// ---------- 六、关键帧：用身份图 + 标记展开 ----------
+// ---------- 六、关键帧：参考图按景别选（肖像 / 身份图）+ 标记展开 ----------
 console.log('\n关键帧');
-const shot = board.shots.find((s) => (s.cast || []).length && (s.dialogue || []).length) || board.shots[1];
-const { refs, series } = keyframeRefs(board, shot);
-check(`关键帧参考图用了**身份图**（不是肖像）`,
-  refs.length === 0 || refs.every((r) => !/portrait/.test(r)),
-  refs.join(' | '));
+const shot = refBoard.shots.find((s) => (s.cast || []).length && (s.dialogue || []).length) || refBoard.shots[1];
+const { refs, series } = keyframeRefs(refBoard, shot);
+// 参考图要**跟着景别走**：紧的用肖像（脸部锚点，天然偏紧），宽的用身份图（全身 4 面板）。
+// 原先这里写死「必须不是肖像」—— 那条断言把"参考图只能是全身图"钉成了规范，
+// 而实测恰恰是全身参考图让每一镜都出成全身，景别的文字约束压不住。
+//
+// 注意这里是**硬判据**：`refs.length === 0` 不再算通过。
+// 空参考图集只能说明"夹具没灌资产路径 / 解析坏了"，那是失败，不是"没得验"。
+const TIGHT = ['特写', '近景', '中景'];
+const isTight = TIGHT.includes(shot.shot_size);
+check(`参考图解析得出来（${shot.id} ${shot.shot_size}）`, refs.length > 0,
+  `${shot.shot_size} → ${refs.join(' | ') || '(空)'}`);
+check(`关键帧参考图跟着景别走（${shot.id} ${shot.shot_size}）`,
+  isTight ? refs.some((r) => /portrait/.test(r)) : refs.every((r) => !/portrait/.test(r)),
+  `${shot.shot_size} → ${refs.join(' | ')}`);
+const tightShot = refBoard.shots.find((s) => TIGHT.includes(s.shot_size) && (s.cast || []).length);
+const wideShot = refBoard.shots.find((s) => !TIGHT.includes(s.shot_size) && (s.cast || []).length);
+// 夹具必须同时含紧景别和宽景别的镜头 —— 缺一个，"按景别选图"这条就只剩一半被验到。
+check('夹具里紧景别与宽景别的镜头都在（缺一个这条规则就只验一半）',
+  Boolean(tightShot) && Boolean(wideShot),
+  `紧=${tightShot ? tightShot.id : '无'} 宽=${wideShot ? wideShot.id : '无'}`);
+if (tightShot) {
+  const t = keyframeRefs(refBoard, tightShot);
+  check(`${tightShot.id}（${tightShot.shot_size}）改用**肖像**当身份参考`,
+    t.refs.length > 0 && t.refs.some((r) => /portrait/.test(r)), t.refs.join(' | ') || '(空)');
+}
+if (wideShot) {
+  const w = keyframeRefs(refBoard, wideShot);
+  check(`${wideShot.id}（${wideShot.shot_size}）仍用**身份图**（全身镜要全身锚）`,
+    w.refs.length > 0 && w.refs.every((r) => !/portrait/.test(r)), w.refs.join(' | ') || '(空)');
+}
 check(`参考图不超过 3 张（Qwen-Image-Edit 上限）`, refs.length <= 3, String(refs.length));
 
 const ins = keyframeInstruction(board, shot, series);
@@ -139,61 +228,6 @@ const fake = { identities: [{ id: 'a_b', character: 'a', appearance_details: '�
 check('{{id}} → 名字+服装', expandMarkers(fake, { prompt: '{{a_b}}站着' }).includes('甲，红袍'));
 check('[[id]] → 道具描述', expandMarkers(fake, { prompt: '握着[[p1]]' }).includes('青铜剑'));
 check('未知 id 不炸', expandMarkers(fake, { prompt: '{{nobody}}' }) === 'nobody');
-
-console.log('\nH3 官方提示词格式');
-{
-  const withDialogue = board.shots.filter((s) => (s.dialogue || []).length);
-  const spoken = withDialogue.find((s) => (s.dialogue || [])[0].kind !== 'voiceover');
-  const vo = withDialogue.find((s) => (s.dialogue || [])[0].kind === 'voiceover');
-  const silent = board.shots.find((s) => !(s.dialogue || []).length);
-  const p = h3Prompt(board, spoken);
-
-  // ① I2VA 对齐指令 —— 官方固定句式，缺了首帧锁不牢
-  check('**带 I2VA 对齐指令**（官方固定句式）',
-    /^For the target video, at 0\.00 seconds into the target video, <Picture 1> \(from \[Shot 1\]\) is fully referenced\./.test(p),
-    p.split('\n')[0].slice(0, 70));
-
-  // ② 台词必须包在 <d>[语言] …</d> 里 —— **这是字幕 bug 的正主**
-  check('**台词包在 `<d>[Chinese] …</d>` 里**（没有它模型会把对白画成画面文字）',
-    /<d>\[Chinese\] .+<\/d>/.test(p), (p.match(/<d>.{0,40}/) || ['（没找到 <d>）'])[0]);
-  check('台词逐字保留（不翻译不改写）', spoken.dialogue.some((d) => p.includes(d.text)));
-
-  // ③ 台词**不能**出现在 overall_soundscape 里 —— 官方明令禁止
-  const soundscape = p.split('overall_soundscape:')[1].split('\n')[0];
-  check('**overall_soundscape 里没有台词**（官方禁止重复）',
-    spoken.dialogue.every((d) => !soundscape.includes(d.text.slice(0, 8))),
-    soundscape.trim().slice(0, 50));
-
-  // ④ 说话者有稳定 ID
-  check('**说话者带稳定 ID `(S1)`/`(S2)`**', /\(S\d\)/.test(p), (p.match(/\(S\d\)/) || [''])[0]);
-  check('同一角色的 ID 跨镜头不变', (() => {
-    const a = (h3Prompt(board, spoken).match(/\(S\d\)/) || [])[0];
-    const same = withDialogue.filter((s) => s.dialogue[0].character === spoken.dialogue[0].character)
-      .map((s) => (h3Prompt(board, s).match(/\(S\d\)/) || [])[0]);
-    return a && same.every((x) => x === a);
-  })(), JSON.stringify([...speakerIds(board)]));
-
-  // ⑤ 画外音用官方固定短语 + "嘴唇不动"
-  if (vo) {
-    const vp = h3Prompt(board, vo);
-    check('**画外音用官方固定短语** says in an off-screen voiceover',
-      /says in an off-screen voiceover:/.test(vp));
-    check('画外音紧跟一句"嘴唇不动"', /嘴唇始终完全闭合|lips remain/.test(vp));
-  }
-
-  // ⑥ 屏上文字是"显式声明制" —— 不写就不会有，所以绝不能写否定句
-  check('**不写"不要出现字幕"这类否定句**（实测反而更容易画出来）',
-    !/不要.{0,4}字幕|不出现.{0,4}文字|画面干净/.test(p));
-
-  // ⑦ 三段字段齐全，顺序固定
-  const order = ['integrated_multimodal_description:', 'overall_soundscape:', 'non_diegetic_music:']
-    .map((m) => p.indexOf(m));
-  check('三段字段齐全且顺序正确', order.every((i) => i >= 0) && order[0] < order[1] && order[1] < order[2], JSON.stringify(order));
-  check('没有台词时也不编台词', (() => {
-    const sp = h3Prompt(board, silent);
-    return !/<d>/.test(sp) && /overall_soundscape:/.test(sp);
-  })());
-}
 
 console.log('\n' + '─'.repeat(56));
 if (failures.length) {

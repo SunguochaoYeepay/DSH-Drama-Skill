@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "units": [
+    {
+      "id": "g003",
+      "shots": [
+        {
+          "n": 1,
+          "on_screen": ["silver_cat_home"],
+          "emotion_analysis": [
+            {
+              "character": "silver_cat_home",
+              "cause": "看见老鼠",
+              "internal_state": "惊慌",
+              "visible_behavior": "身体后缩，耳朵压低",
+              "gaze": "盯着地面",
+              "avoid_symbols": ["夸张红脸"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "g005",
+      "shots": [
+        {
+          "n": 1,
+          "on_screen": ["orange_cat_home"],
+          "emotion_analysis": [
+            {
+              "character": "orange_cat_home",
+              "cause": "危机解除",
+              "internal_state": "平静",
+              "visible_behavior": "慢慢坐回沙发",
+              "gaze": "看向伴侣",
+              "avoid_symbols": ["得意大笑"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "provenance": {
+    "contract": 1,
+    "direction_version": 4,
+    "legacy_migration": true,
+    "reviewed_units": ["g005"]
+  }
+}

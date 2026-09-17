@@ -42,4 +42,5 @@ _concat.txt
 Thumbs.db
 .vscode/
 .idea/
+.workbuddy/
 *.log

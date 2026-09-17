@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 // board.mjs — 故事 → 剧本 → 关键帧 → 视频 的分阶段流水线（零依赖）
 //
-//   node tools/board.mjs story     <idea.txt> [--beats 6] [--model qwen3.5:27b] [--out x.json]
-//   node tools/board.mjs approve   <board.json> --stage story|shots|keyframes [--by 用户名]
-//   node tools/board.mjs from-story<board.json> --shots 6 [--model qwen3.5:27b]
-//   node tools/board.mjs table     <board.json> [--out x.md]      ← 给人确认的那张表
-//   node tools/board.mjs validate  <board.json>
-//   node tools/board.mjs render    <board.json> [--out x.md]
-//   node tools/board.mjs plan      <board.json> [--out x.ps1] [--out-dir <工作区\shots>]
+//   node cli/board.mjs story     <idea.txt> [--beats 6] [--model qwen3.5:27b] [--out x.json]
+//   node src/board.mjs approve   <board.json> --stage story|shots [--by 用户名]
+//   node cli/board.mjs from-story<board.json> --shots 6 [--model qwen3.5:27b]
+//   node cli/board.mjs table     <board.json> [--out x.md]      ← 给人确认的那张表
+//   node cli/board.mjs validate  <board.json>
+//   node cli/board.mjs render    <board.json> [--out x.md]
+//   node cli/board.mjs plan      <board.json> [--out x.ps1] [--out-dir <工作区\shots>]
 //
 // 闸门顺序：story（看故事）→ shots（确认镜头表）→ keyframes（确认关键帧）→ rendering（出片）
 // 未确认的闸门不允许下游消费：分镜表没过、plan 直接拒绝跑。
@@ -21,14 +21,16 @@ import { fileURLToPath } from 'node:url';
 import { buildBrief, readBrief, callDirector, validateDirection, collectDialogueLines, DIRECTOR_MODEL } from './director.mjs';
 import { parseScenes, sceneMenu } from './parse-scenes.mjs';
 import { compileLiteral } from './literal.mjs';
+import { applyDirection } from './direction-shots.mjs';
+import { COMFY_GEN, COMFY_PYTHON } from './runtime-paths.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 /** 工程根（导演简报在那儿）。 */
 const PROJECT_ROOT = path.resolve(HERE, '..');
 const ROOT = path.resolve(HERE, '..');
 const SCHEMA_PATH = path.join(ROOT, 'schema', 'storyboard.schema.json');
-const PROMPT_PATH = path.join(ROOT, 'prompts', 'story2board.md');
-const STORY_PROMPT_PATH = path.join(ROOT, 'prompts', 'idea2story.md');
+const PROMPT_PATH = path.join(ROOT, 'references', 'prompts', 'story-to-board.md');
+const STORY_PROMPT_PATH = path.join(ROOT, 'references', 'prompts', 'idea-to-story.md');
 const OLLAMA = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
 const DEFAULT_MODEL = 'qwen3.5:27b';
 
@@ -39,8 +41,8 @@ const GATE_LABEL = { story: '故事', shots: '分镜表', assets: '资产', keyf
 const GATES = ['story', 'shots', 'assets', 'keyframes'];
 
 // comfy-studio 的唯一入口（见该 skill 的硬契约）
-const PY = 'E:\\AI-Image\\ComfyUI-aki-v1.4\\python\\python.exe';
-const GEN = 'C:\\Users\\Administrator\\.agents\\skills\\comfy-studio\\scripts\\gen.py';
+const PY = COMFY_PYTHON;
+const GEN = COMFY_GEN;
 
 const SHOT_MAX_S = 15; // H3 单条上限
 
@@ -186,6 +188,19 @@ function validateSemantics(b) {
     if (PLACEHOLDER.test(String(x.appearance_details || ''))) {
       warnings.push(`identities: "${x.id}" 的 appearance_details 是占位符 —— 服装会由模型自己编，出图前先填上`);
     }
+  }
+
+  // **风格圣经只有一个落点：场景主图（空镜）。**
+  // 实测：一部猫片的 style_prompt 里写了「角色可爱但不幼稚，动作有卡通夸张的弹性」，
+  // 于是那张本该空无一人的场景主图正中坐着一只猫 —— 而且是主体。
+  // 一边写"画面里没有角色"、一边告诉模型"有个可爱角色在做夸张动作"，是压不住的。
+  // 风格圣经该写的是**媒介 / 色调 / 质感**，不是角色和动作。
+  const STYLE_CAST_LEAK = /角色|人物|主角|演员|表情|神态|动作|姿态|可爱|卖萌/;
+  const styleLeak = String(b.meta?.style_prompt || '').match(STYLE_CAST_LEAK);
+  if (styleLeak) {
+    warnings.push(`meta.style_prompt 混进了角色/动作词（「${styleLeak[0]}」）—— `
+      + '它唯一的落点是**场景主图（空镜）**，而那张图会喂给全部关键帧；'
+      + '这里只该写媒介、色调、质感，别写角色和动作');
   }
 
   // 脸里混进表情、服装里混进动态 —— 这两样会把「可复用的锚」降级成「一帧快照」
@@ -489,8 +504,11 @@ function gateLine(b) {
 function dialogueText(b, s) {
   if (!s.dialogue || !s.dialogue.length) return '—';
   return s.dialogue.map((d) => {
-    const who = (b.identities || []).find((x) => x.id === d.character);
-    return `${who ? who.name : d.character}：「${d.text}」`;
+    // 说话人是**角色**，不是造型。`identities[].name` 存的是服装名（"居家"/"龙袍"），
+    // 直接拿它当说话人，表上会出现「居家：「啊！老公！有老鼠！」」这种读不通的句子。
+    const ident = (b.identities || []).find((x) => x.id === d.character);
+    const ch = ident ? (b.characters || []).find((c) => c.id === ident.character) : null;
+    return `${ch?.name || ident?.name || d.character}：「${d.text}」`;
   }).join('<br>');
 }
 
@@ -612,7 +630,7 @@ function renderPlan(b, outDir) {
   const L = [];
   L.push('# 由 board.mjs plan 生成：分镜 JSON → 生成命令清单');
   L.push('# 资产走线上（绘梦 image2 / qwen-image-3.0，要一致性），关键帧走本地（要便宜快）');
-  L.push('$py = "E:\\AI-Image\\ComfyUI-aki-v1.4\\python\\python.exe"');
+  L.push(`$py = ${JSON.stringify(PY)}`);
   L.push(`$gs = "${GEN}"`);
   L.push(`$out = "${dir}"`);
   L.push('');
@@ -1138,7 +1156,57 @@ async function main() {
       process.exit(1);
     }
     console.log('\n✓ 校验通过。');
-    console.log('  下一步：把设计编译成分镜表（还没实现），或者先人工看一遍 .direction.json');
+    console.log(`  下一步：node src/board.mjs apply-direction ${path.basename(file)}`
+      + '　← 把设计写回 board.shots（关键帧/片段都读它）');
+    return;
+  }
+
+  // ── 导演的设计 → board.shots ────────────────────────────────────
+  // `direct` 交完设计后一直断在这里（它自己打印的是「还没实现」）。
+  // 没有这一步，关键帧 / 片段 / table / 成片自检读的全是 literal 的机械分组，
+  // **导演的活儿从没进过契约**。
+  if (cmd === 'apply-direction') {
+    const file = args._[1];
+    if (!file) die('用法：apply-direction <board.json> [--direction board.direction.json]');
+    if (!fs.existsSync(file)) die(`找不到板子：${file}`);
+    const dirPath = typeof args.direction === 'string'
+      ? args.direction
+      : file.replace(/\.json$/, '.direction.json');
+    if (!fs.existsSync(dirPath)) die(`找不到导演设计：${dirPath}（先跑 board.mjs direct）`);
+
+    const scriptPath = typeof args.script === 'string' ? args.script : path.join(path.dirname(file), 'story.md');
+    if (!fs.existsSync(scriptPath)) die(`找不到剧本：${scriptPath}`);
+    const script = fs.readFileSync(scriptPath, 'utf8');
+
+    const input = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const direction = JSON.parse(fs.readFileSync(dirPath, 'utf8'));
+
+    // 先按导演校验器过一遍：越界的（超 15s / 台词太短 / 写了台词原文）一律不写板子
+    const v = validateDirection(direction, { board: input, script });
+    for (const w of v.warnings) console.log(`  ⚠ ${w}`);
+    if (!v.ok) {
+      for (const e of v.errors) console.error(`  ✗ ${e}`);
+      die(`导演设计校验不通过（${v.errors.length} 项），拒绝写回板子`);
+    }
+
+    const before = (input.shots || []).length;
+    const { board: next, report, warnings } = applyDirection(input, direction, script);
+    fs.writeFileSync(file, JSON.stringify(next, null, 2) + '\n');
+    for (const w of warnings) console.log(`  ⚠ ${w}`);
+    console.log(`✓ 设计已写回：${report.units} 个生成单元 → ${before} 镜机械分镜 变为 ${report.shots} 镜 / ${report.total_duration_s}s`);
+    console.log(`  台词 ${report.claimed}/${report.spoken} 句被单元认领`);
+    // 闸门不自动重开：作废 shots 会连带 assets 变成"跳着批"（顺序违规），
+    // 而资产本身跟分镜无关、不需要重出。所以只喊出来，让人自己再确认一次。
+    if (next.meta?.approvals?.shots) {
+      console.log('  ⚠ shots 闸门上的票是对**旧分镜**的确认。这里不自动作废（作废会让 assets 顺序违规），');
+      console.log('    请重看一遍分镜表再确认一次：'
+        + `node src/board.mjs approve ${file} --stage shots --by <你的名字>`);
+    }
+
+    const { errors, warnings: w2 } = checkBoard(next);
+    for (const w of w2) console.log(`  warning: ${w}`);
+    for (const e of errors) console.error(`  ERROR: ${e}`);
+    if (errors.length) process.exitCode = 2;
     return;
   }
 
@@ -1157,10 +1225,10 @@ async function main() {
     opts.model = await ensureModel(opts.model);
     process.stderr.write(`→ ${opts.model} 写故事中（节拍≈${opts.beats}）…\n`);
     const { board, warnings, rounds, errors } = await ideaToStory(fs.readFileSync(file, 'utf8'), opts);
-    // 默认写到「当前工作区」的 story2video/examples/，而不是 skill 自己的目录里
+    // 一部剧一个工作区：默认把板子写到故事文件所在的项目目录。
     const out = typeof args.out === 'string'
       ? args.out
-      : path.join(process.cwd(), 'story2video', 'examples', path.basename(file).replace(/\.[^.]+$/, '') + '.storyboard.json');
+      : path.join(path.dirname(path.resolve(file)), 'board.json');
     fs.mkdirSync(path.dirname(out), { recursive: true });
     fs.writeFileSync(out, JSON.stringify(board, null, 2) + '\n');
     process.stderr.write(`${errors ? '⚠' : '✓'} 已写出 ${out}（${rounds} 轮，${board.story?.beats?.length || 0} 个节拍）\n`);
@@ -1174,8 +1242,11 @@ async function main() {
   if (cmd === 'approve') {
     const file = args._[1];
     const stage = typeof args.stage === 'string' ? args.stage : '';
-    if (!file || !GATES.includes(stage)) {
-      die('用法：approve <board.json> --stage story|shots|assets|keyframes [--by 用户名]');
+    if (['assets', 'keyframes'].includes(stage)) {
+      die(`${stage} 已使用新版哈希票据；请改用 node cli/review-gate.mjs approve --project <项目目录> --stage ${stage} --artifacts <文件列表>`);
+    }
+    if (!file || !['story', 'shots'].includes(stage)) {
+      die('用法：approve <board.json> --stage story|shots [--by 用户名]');
     }
     const board = JSON.parse(fs.readFileSync(file, 'utf8'));
     if (board.meta.approvals[stage]) {
@@ -1211,7 +1282,7 @@ async function main() {
     const gateErrs = checkGate(input, 'shots');
     if (gateErrs.length && !args.force) {
       for (const e of gateErrs) console.log(`拦住：${e}`);
-      console.log('\n先让用户确认故事：node tools/board.mjs approve ' + file + ' --stage story');
+      console.log('\n先让用户确认故事：node cli/board.mjs approve ' + file + ' --stage story');
       process.exitCode = 3;
       return;
     }

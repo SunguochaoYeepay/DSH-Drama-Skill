@@ -1,0 +1,36 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { assertPlanEmotionContract, assertPlanProvenance, assertUnitEmotionContract, makePlanProvenance, sealPlan } from '../src/plan-provenance.mjs';
+
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-plan-'));
+const board = path.join(dir, 'board.json');
+const story = path.join(dir, 'story.md');
+const direction = path.join(dir, 'board.direction.json');
+const planPath = path.join(dir, 'render.plan.json');
+fs.writeFileSync(board, JSON.stringify({ meta: { project: 'one' } }));
+fs.writeFileSync(story, 'story one');
+fs.writeFileSync(direction, JSON.stringify({ version: 6, units: [] }));
+const plan = { units: [{ id: 'g001' }] };
+plan.provenance = makePlanProvenance({ boardPath: board, storyPath: story, directionPath: direction });
+sealPlan(plan);
+assert.doesNotThrow(() => assertPlanProvenance(plan, { boardPath: board, storyPath: story, planPath }));
+const changed = structuredClone(plan); changed.units[0].id = 'g999';
+assert.throws(() => assertPlanProvenance(changed, { boardPath: board, storyPath: story, planPath }), /内容已被修改/);
+fs.writeFileSync(story, 'different story');
+assert.throws(() => assertPlanProvenance(plan, { boardPath: board, storyPath: story, planPath }), /剧本已变化/);
+fs.writeFileSync(story, 'story one');
+fs.writeFileSync(board, JSON.stringify({ meta: { project: 'another' } }));
+assert.throws(() => assertPlanProvenance(plan, { boardPath: board, storyPath: story, planPath }), /当前项目/);
+
+const legacy = JSON.parse(fs.readFileSync(new URL('./fixtures/legacy-v4-render-plan.json', import.meta.url), 'utf8'));
+const g003 = legacy.units.find((unit) => unit.id === 'g003');
+const g005 = legacy.units.find((unit) => unit.id === 'g005');
+assert.throws(() => assertUnitEmotionContract(g003, { plan: legacy }), /未列入 provenance\.reviewed_units/);
+assert.doesNotThrow(() => assertUnitEmotionContract(g005, { plan: legacy }));
+assert.throws(() => assertPlanEmotionContract(legacy), /g003 未列入/);
+const incomplete = structuredClone(legacy);
+incomplete.units[1].shots[0].emotion_analysis = [];
+assert.throws(() => assertUnitEmotionContract(incomplete.units[1], { plan: incomplete }), /缺少 orange_cat_home/);
+console.log('plan provenance: 8/8 passed');

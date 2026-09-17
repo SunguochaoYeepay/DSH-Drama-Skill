@@ -41,6 +41,10 @@ const REGION_BY_LANG = { zh: '东亚人，中国人', ja: '东亚人', ko: '东�
 const STYLE_ANCHOR = {
   realistic: '写实实拍，真人电影质感，皮肤纹理与毛孔自然真实，高清细节；不要动漫、插画、3D 渲染、卡通感',
   anime: '2D 赛璐璐动画，动画电影质感，清晰线条与平涂上色，高清细节；不要写实照片感',
+  // 卡通3D：萌宠/合家欢题材的媒介锚点。
+  // 注意它给的是**渲染媒介**（3D 渲染管线 + 毛发/材质质感），不是"可爱"这种形容词 ——
+  // 和 realistic/anime 一样，色调仍然归 meta.style_prompt，这里只管"这是哪种画面"。
+  cartoon3d: '3D 卡通动画电影质感，三维渲染，圆润饱满的造型，柔软蓬松的毛发，柔和通透的光影；不要写实照片感、不要真人皮肤纹理、不要 2D 平涂与赛璐璐描线',
   cyberpunk: '写实实拍，霓虹冷调，电影质感，皮肤纹理真实，高清细节；不要动漫、插画、卡通感',
   healing: '写实实拍，柔和自然光，温馨质感，皮肤纹理真实，高清细节；不要动漫、插画、卡通感',
   vintage: '写实实拍，复古胶片质感，轻微颗粒，皮肤纹理真实，高清细节；不要动漫、插画、卡通感',
@@ -92,92 +96,18 @@ export function shotPrompt(board, shot) {
 }
 
 /**
- * 说话者的稳定 ID：`(S1)` `(S2)`。
- * 官方规范：**同一个说话者跨镜头保持同一 ID**；从不出声的角色不给 ID。
- * 所以按 board 里 characters 的顺序分配，不是按出场顺序 —— 换镜头不会串。
+ * 这个角色是人类吗？
+ *
+ * **缺省是 human** —— 老板子没有 species 字段，行为必须一字不变。
+ *
+ * 为什么需要这个判断：族裔锚点、人类年龄档、以及肖像里那条「只穿素色上衣」，
+ * 是**为人类写实剧写的**。把 `东亚人，中国人` 和「只穿素色无花纹的上衣（领口可见即可）」
+ * 注入到一只猫的肖像提示词里（实测），等于在要求模型把它画成**拟人化或穿衣服的角色** ——
+ * 而萌宠短剧要的是四足真猫。和"年龄/族裔/风格"一样：**属性必需，就必须有代码拥有者。**
  */
-export function speakerIds(board) {
-  const byIdentity = new Map();   // 造型 id → 'S1' / 'S2'
-  let n = 0;
-  for (const c of board.characters || []) {
-    // 这个角色**在任一镜头里出过声吗**（按造型反查角色）
-    const speaks = (board.shots || []).some((s) => (s.dialogue || []).some((d) => {
-      const x = (board.identities || []).find((v) => v.id === d.character);
-      return (x ? x.character : d.character) === c.id;
-    }));
-    if (!speaks) continue;
-    const sid = `S${++n}`;
-    // 同一角色的**所有造型**共用同一个 ID —— 换镜头不会串
-    for (const x of board.identities || []) if (x.character === c.id) byIdentity.set(x.id, sid);
-  }
-  return byIdentity;
+export function isHuman(ch) {
+  return !ch || !ch.species || ch.species === 'human';
 }
-
-const LANG_TAG = { zh: 'Chinese', en: 'English', ja: 'Japanese', ko: 'Korean' };
-
-/**
- * 组装 H3 的官方提示词格式。
- *
- * **这是修一个真 bug 的结果。** 原先我把台词写成散文、塞进 `overall_soundscape`：
- *
- *     overall_soundscape: 树叶沙沙声；小师妹说：「大师兄，昨天晚上，谢谢你救了我。」
- *
- * 而 MiniMax 官方指南（`docs/VIDEO_PROMPT_WRITING_GUIDE`）要求：
- *
- *   1. 台词必须在 **`integrated_multimodal_description`** 里，包成 `<d>[语言] 台词</d>`，
- *      且**逐字保留**（不翻译、不改写）
- *   2. **`overall_soundscape` 明令禁止重复台词**（那里只放环境音、动作音、非语言人声）
- *   3. 说话者要有稳定 ID `(S1)`；画外音必须用固定短语 `says in an off-screen voiceover`
- *      并紧跟一句"嘴唇不动"
- *   4. **屏上文字是"显式声明制"** —— 用引号写出来才会出现。
- *      所以**不写就不会有**；而写"不要出现字幕"这种否定句反而更容易画出来（实测过）
- *   5. I2VA 必须带对齐指令 `For the target video, at 0.00 seconds ... <Picture 1> ...`
- *
- * **字幕就是第 1、2、4 条一起造成的**：没有结构标记的裸对白文本，
- * 模型只能把"这一段文字"当成要画在画面上的东西。
- *
- * 已知偏离：官方示例的描述文字是英文，我们这边是中文（板子本来就是中文，
- * 翻译要额外过一遍模型）。**结构性标记（`<d>` / 字段名 / 对齐指令）都按官方写死了。**
- */
-export function h3Prompt(board, shot) {
-  const scene = (board.scenes || []).find((s) => s.id === shot.scene);
-  const sids = speakerIds(board);
-  const lang = LANG_TAG[board.meta?.language] || 'Chinese';
-
-  // ---- Part One：I2VA 的对齐指令（官方固定句式，必须原样） ----
-  const parts = ['For the target video, at 0.00 seconds into the target video, '
-    + '<Picture 1> (from [Shot 1]) is fully referenced.'];
-
-  // ---- Part Two 之一：integrated_multimodal_description（看得见 + 听得见的时间线） ----
-  const body = ['[Shot 1]'];
-  // shot.prompt 里已经含「造型 + 景别 + 运镜」，别再单独加一遍（会重复）
-  body.push(expandMarkers(board, shot));
-  if (scene?.environment) body.push(scene.environment);
-
-  // **台词只放这里**，包进 <d>。说话者身份/语气/动作写在 <d> 外面。
-  for (const d of shot.dialogue || []) {
-    const x = (board.identities || []).find((v) => v.id === d.character);
-    const ch = x ? (board.characters || []).find((c) => c.id === x.character) : null;
-    const name = ch ? ch.name : d.character;
-    const sid = sids.get(d.character);
-    const id = sid ? ` (${sid})` : '';
-    const delivery = d.emotion ? `，${d.emotion}` : '';
-    body.push(d.kind === 'voiceover'
-      // 官方固定短语；且必须紧跟一句"嘴唇不动"
-      ? `${name}${id} says in an off-screen voiceover: <d>[${lang}] ${d.text}</d>，嘴唇始终完全闭合`
-      : `${name}${id}${delivery}，说道：<d>[${lang}] ${d.text}</d>`);
-  }
-  parts.push('integrated_multimodal_description: ' + body.filter(Boolean).join(' '));
-
-  // ---- Part Two 之二：overall_soundscape（**只写环境音**，官方禁止重复台词） ----
-  parts.push('overall_soundscape: ' + (shot.audio || 'Ambient environmental sound matching the scene.'));
-
-  // ---- Part Two 之三：non_diegetic_music ----
-  parts.push('non_diegetic_music: ' + (board.meta?.music || 'N/A'));
-
-  return parts.join('\n\n');
-}
-
 
 /**
  * 角色肖像（脸部锚点）。
@@ -185,38 +115,80 @@ export function h3Prompt(board, shot) {
  * **故意不写服装** —— 服装属于造型层；写进来会让这张脸只适配一套衣服。
  */
 export function portraitPrompt(board, character) {
-  const region = needsRegion(character.face_prompt) ? regionAnchor(board) : '';
+  const human = isHuman(character);
+  const region = human && needsRegion(character.face_prompt) ? regionAnchor(board) : '';
   return [
     styleAnchor(board),
-    AGE_CN[character.age_group] || '青年',
+    human ? (AGE_CN[character.age_group] || '青年') : '',
     region,
     character.face_prompt,
-    '正面朝向，脸部占画面 60-70%，纯灰底，只穿素色上衣',
-    '影棚均匀布光，肩部以上，不出现任何服装细节、道具、场景和文字',
+    // ---- 构图规则写死（同 sheetInstruction 的理由：模型不替你守版面）----
+    human
+      ? '【构图】**正方形画幅**，正面朝向，**脸部占画面 60-70%**，肩部以上，头顶留少量空隙，左右对称居中。'
+      // 非人类这条改成**硬边界**：实测「头部占画面 60-70%」这种软描述压不住，
+      // 出成了一张全身坐姿（头只占约 35-40%），锁不住五官。
+      // 和 cli/keyframes.mjs 的景别同一条教训：**必须写清两侧不允许出现什么**。
+      : '【构图｜硬约束】**正方形画幅**。**画面里只有头部与颈部** —— 下巴以下只保留少量胸口，'
+        + '画面下边界切在胸口上方、**明显高于肩线**。头部（含两只耳朵）占画面总高度约 60-70%，'
+        + '正面朝向、左右对称居中，头顶留少量空隙。'
+        + '**绝不允许出现前爪、身体、尾巴，也不允许出现坐姿或站姿的全身。**',
+    '【背景】**纯中性灰底**，平坦无渐变、无场景、无道具、无阴影。',
+    human
+      ? '【服装】只穿**素色无花纹的上衣**（领口可见即可）；**不出现任何服装细节** —— 不要戏服、纹样、腰带、配饰。'
+      : '【体表】**四足动物，不穿任何衣物、不佩戴任何配饰**，不拟人化、不直立；只有自然的毛发与体表特征。',
+    '【禁止】画面里不许出现任何文字、水印、边框、色卡、标注，也不许出现道具和场景。',
   ].filter(Boolean).join('，');
 }
 
 /**
  * 身份图（造型）的编辑指令：**一次出 4 面板**。
  * 用 portrait 当 anchor（图1），有 costume_image 就作 图2 —— 脸取自图1，衣取自图2。
+ *
+ * ## ⚠ 版面必须写死，否则模型自己乱排
+ *
+ * 第一版只写了「4 个面板分别是什么」，**没写怎么排** —— 结果：
+ * · 画幅用了 1:1，4 格排不下 → 排成「上二下一大」
+ * · 有的格子人很大、有的很小
+ * · 背景一格白一格灰
+ *
+ * **模型不会替你守版面。** 所以这里把**画幅、方向、等宽等高、留白、居中、背景**
+ * 全部显式写出来，一条都不省。
  */
 export function sheetInstruction(board, identity) {
   const ch = (board.characters || []).find((c) => c.id === identity.character);
-  const region = ch && needsRegion(ch.face_prompt) ? regionAnchor(board) : '';
+  const human = isHuman(ch);
+  const region = ch && human && needsRegion(ch.face_prompt) ? regionAnchor(board) : '';
   return [
     `${styleAnchor(board)}，`,
     region ? `${region}，` : '',
     ch ? `${ch.face_prompt}，` : '',
     identity.appearance_details,
-    '。一张 4 面板角色设定图：Panel1 脸部特写 / Panel2 正面全身 / Panel3 约 45 度三分 / Panel4 背面。',
-    'Panel1 必须是 Panel2 头部的放大裁切，四个面板的发型、领口、服装完全一致，**只允许视角变化**',
+    '。',
+    // ---- 版面：这是最容易漏、也最容易被模型乱来的部分 ----
+    '一张 4 面板角色设定图。',
+    '【版面】**横构图 16:9**。画面被**等分成从左到右一排四个格子（Panel1 Panel2 Panel3 Panel4）**，',
+    '**只有一行，绝不换行、绝不 2×2、绝不上下堆叠**。四格**宽度完全相同、高度完全相同**。',
+    '【每格内容】Panel1＝脸部特写（头部占满该格，下巴到头顶）；',
+    'Panel2＝正面全身（**脚底和头顶都在格子内，不裁切**）；',
+    'Panel3＝约 45 度侧身全身；Panel4＝背面全身。',
+    `【站位】每一格里的${human ? '人物' : '角色'}都**水平居中、脚踩同一条水平线、头顶留同样的空隙**，四格人物高度一致。`,
+    '【背景】**四格背景统一为纯浅灰色**，平坦无场景、无道具、无阴影投射。',
+    // ---- 一致性 ----
+    human
+      ? '【一致性】Panel1 到 Panel4 是同一个人的同一套服装、同一发型、同一光线、同一画风，**只允许视角变化**。'
+      : '【一致性】Panel1 到 Panel4 是**同一只角色的同一身毛色与斑纹**、同一体型、同一光线、同一画风，**只允许视角变化**。',
+    'Panel1 必须是 Panel2 头部的放大，五官、发型、领口完全对得上。',
     // 实测教训：肖像参考图身上那件"素色上衣"会被一并继承过去，
     // 导致 4 个面板里只有脸是对的、身上还是 T 恤。参考图只该用来锁脸。
-    '**参考图只用于锁定长相（脸型、五官、发型）；参考图里的衣着必须完全忽略，'
-    + '四个面板的服装以上面那段服装描述为准**',
+    human
+      ? '**参考图只用于锁定长相（脸型、五官、发型）；参考图里的衣着必须完全忽略，'
+        + '四个面板的服装以上面那段服装描述为准**'
+      : '**参考图只用于锁定长相（脸型、五官、毛色与斑纹）；参考图里出现的任何衣着都必须完全忽略，'
+        + '四个面板的体表以上面那段描述为准；角色是四足动物，不穿衣、不拟人化**',
     // 另一条实测教训：模型会自作主张加上"角色设定图 / 年龄 / 门派 / 服装配色"那套排版文字。
     // 那张图要当参考图喂给关键帧，**烧进去的字会跟着污染画面**。
-    '**画面里不许出现任何文字、标题、标注、参数表、色卡或排版元素**，只有角色本身',
+    '【禁止】**画面里不许出现任何文字、数字、标题、标注、色标、参数表、分隔线、边框或水印**，'
+    + '也不许出现场景、道具、其他人物 —— 只有这四个格子里的同一个角色。',
   ].join('');
 }
 
@@ -241,7 +213,25 @@ export function masterPrompt(board, scene) {
     styleAnchor(board),
     board.meta?.style_prompt || '',
     scene.environment,
-    '正面 160-180 度环境图，画面里没有任何人，没有任何临时道具，没有文字',
+    // **必须写成"动物"而不只是"人"。** 实测：只写「没有任何人」时，
+    // 一部猫片出的场景主图正中是一只腾空跳起的橘猫 —— 因为"猫不是人"，
+    // 那条否定式根本没管住它。而场景主图是空镜、要喂给全部关键帧，
+    // 这只猫会跟着污染每一张关键帧。否定式必须**把卡司整个类别都覆盖到**。
+    // **正向陈述 > 否定式。** 实测：写「没有任何人」时猫片出了一只跳起的橘猫；
+    // 扩成「没有任何动物」后，本地 Qwen 仍然把猫画成主体 —— 而且场景描述里
+    // 那个「猫零食」的「猫」字本身就是诱因（SKILL 早记过：否定词写在"要画什么"
+    // 那一段里会被当成内容）。所以这里先给**正向的画面定义**，再补否定。
+    //
+    // **但场景类型不能被写死在这一段里。** 上一版是
+    // 「纯室内环境空镜：画面里只有房间本身 —— 家具、地面、灯光与陈设」，
+    // 那是从一部室内猫片提炼的规则；写死之后户外场景会收到
+    // 「午后海滨木栈道、海面反光…**纯室内环境空镜**：画面里只有房间本身」——
+    // 自相矛盾的指令（干跑实测直接暴露）。**场景是什么类型归 `scene.environment` 拥有**，
+    // 这里只负责"空镜"这一件事，措辞必须对室内/户外/自然景都成立。
+    '**纯环境空镜**：画面里只有这个场景本身 —— 地面、周围固定的建筑或自然景物、'
+    + '光线与固定陈设，'
+    + '看不到任何一个角色：没有人物、没有动物、没有宠物（**一个都不出现**），'
+    + '没有任何临时道具，没有文字',
   ].filter(Boolean).join('，');
 }
 
@@ -343,19 +333,70 @@ export function refsOf(job) {
   return (typeof job.refsFor === 'function' ? job.refsFor() : (job.refs || [])).filter(Boolean);
 }
 
-/** 关键帧的参考图：身份图 + 场景主图（顺序即「图 N」）。 */
+/**
+ * 关键帧的身份参考图：**紧景别用肖像，宽景别用身份图**。
+ *
+ * ## 这条是"部分有效"，别当成景别的解法
+ *
+ * 起因：4 张关键帧里 3 张的景别出成了全身（要「近景：只取胸部以上」，出来整只连脚）。
+ * 当时的假设是「身份图是 4 面板全身，模型照抄参考图」。
+ *
+ * 两次**单变量**实验的结果：
+ *
+ * | 实验 | 改了什么 | 结果 |
+ * |---|---|---|
+ * | ① | 近景改用肖像（+ 场景主图） | 主体明显变大，**仍是全身** |
+ * | ② | 再把场景主图也去掉（只剩肖像） | **没有任何改善**，仍全身 |
+ *
+ * **所以"参考图决定景别"这个假设是错的**（②把它否掉了）。
+ * 肖像参考只带来"主体更大"这一点边际收益，不是景别的开关。
+ *
+ * 真正的阻塞更像**指令结构**：景别是开头一句话，后面跟着整个角色的长相/体表描述
+ * （连尾巴、体型都写了）加整个房间的环境描述 —— 描述"全身上下"的文字压过"只取胸部以上"。
+ * 这条和 `FRAMING` 上面那段注释记的是同一个坑，只是"挪到最前面"并不够。
+ *
+ * 这个函数暂时保留按景别选图（②没证明它有害，①显示略有帮助），
+ * **但不要拿它当景别问题的答案**。
+ *
+ * @returns {{refs: string[], series: Array}}
+ */
+const TIGHT_FRAMING = new Set(['特写', '近景', '中景']);
+
+/** 关键帧的参考图：身份参考（按景别选肖像/身份图）+ 场景主图（顺序即「图 N」）。 */
 export function keyframeRefs(board, shot) {
   const refs = [];
   const series = [];
+  const tight = TIGHT_FRAMING.has(shot.shot_size);
   for (const id of shot.cast || []) {
     const x = (board.identities || []).find((v) => v.id === id);
-    if (x && x.sheet) { refs.push(x.sheet); series.push({ label: `造型「${x.name}」`, index: refs.length }); }
+    if (!x) continue;
+    const ch = (board.characters || []).find((c) => c.id === x.character) || {};
+    const usePortrait = Boolean(tight && ch.portrait);
+    const file = usePortrait ? ch.portrait : (x.sheet || ch.portrait);
+    if (!file) continue;
+    refs.push(file);
+    // 标签带上角色名 —— 多个人物时原来全是造型名（三个「居家」），模型分不清图几是谁。
+    // `kind` 是给代码用的：**别再靠 label 的字符串前缀判断它是不是卡司参考** ——
+    // 之前 `label.startsWith('造型')` 就因为改了标签措辞而静默丢掉整段绑定说明。
+    const who = ch.name ? `${ch.name}·${x.name || x.id}` : (x.name || x.id);
+    series.push({
+      kind: 'cast',
+      label: `造型「${who}」·${usePortrait ? '肖像·脸部锚点' : '身份图·全身'}`,
+      index: refs.length,
+    });
   }
+  // 场景主图是**一张全屋宽景**，它同样在把画面往宽里拉。
+  // 紧到「特写/近景」时不再喂它 —— 环境与光已经在指令文字里（scene.environment + lighting），
+  // 而参考图给的是"构图"这个语义，宽景参考和"只取胸部以上"是直接冲突的。
+  const VERY_TIGHT = new Set(['特写', '近景']);
   const scene = (board.scenes || []).find((s) => s.id === shot.scene);
-  if (scene && scene.master) { refs.push(scene.master); series.push({ label: `场景「${scene.name}」`, index: refs.length }); }
+  if (scene && scene.master && !VERY_TIGHT.has(shot.shot_size)) {
+    refs.push(scene.master);
+    series.push({ kind: 'scene', label: `场景「${scene.name}」`, index: refs.length });
+  }
   for (const id of shot.props || []) {
     const p = (board.props || []).find((v) => v.id === id);
-    if (p && p.ref_image) { refs.push(p.ref_image); series.push({ label: `道具「${p.name}」`, index: refs.length }); }
+    if (p && p.ref_image) { refs.push(p.ref_image); series.push({ kind: 'prop', label: `道具「${p.name}」`, index: refs.length }); }
   }
   const MAX = 3;   // Qwen-Image-Edit 上限 3 张
   return { refs: refs.slice(0, MAX), series: series.filter((s) => s.index <= MAX) };
@@ -379,7 +420,8 @@ const FRAMING = {
 
 export function keyframeInstruction(board, shot, series) {
   const scene = (board.scenes || []).find((s) => s.id === shot.scene);
-  const looks = series.filter((s) => s.label.startsWith('造型'));
+  // 按 `kind` 找卡司参考，**不按 label 的字符串前缀**（改措辞就会静默丢绑定说明）
+  const looks = series.filter((s) => s.kind === 'cast');
   const who = looks.map((s) => `图${s.index}`);
 
   const parts = [];
@@ -388,7 +430,16 @@ export function keyframeInstruction(board, shot, series) {
 
   // ② 指定哪张参考图对应谁 —— 不说的话模型会自己猜谁是谁
   if (who.length) {
-    parts.push(`画面里的人以${who.join('、')}为准，长相与服装保持完全一致（${looks.map((s) => s.label).join('、')}）`);
+    // 卡司是动物时，「人」「服装」是错的词：实测指令里写着
+    // 「画面里的**人**以图1为准，长相与**服装**保持完全一致」，而对象是四足无衣的老鼠。
+    const allHuman = (shot.cast || []).every((id) => {
+      const x = (board.identities || []).find((v) => v.id === id);
+      const c = x ? (board.characters || []).find((v) => v.id === x.character) : null;
+      return isHuman(c);
+    });
+    parts.push(allHuman
+      ? `画面里的人以${who.join('、')}为准，长相与服装保持完全一致（${looks.map((s) => s.label).join('、')}）`
+      : `画面里的角色以${who.join('、')}为准，长相与体表（毛色、斑纹、体型）保持完全一致（${looks.map((s) => s.label).join('、')}）`);
   }
 
   // ③ 造型 + 运镜 + 动作（`shot.prompt` 里本来就有景别和运镜，**不要再加一遍**，会重复）

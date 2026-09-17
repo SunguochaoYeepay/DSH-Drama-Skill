@@ -1,0 +1,600 @@
+{
+  "meta": {
+    "title": "大师兄的离谱负责",
+    "logline": "小师妹因被救而要求大师兄负责，却没想到直男大师兄理解的“负责”是赔钱",
+    "genre": "古风仙侠",
+    "language": "zh-CN",
+    "aspect": "16:9",
+    "style": "realistic",
+    "style_prompt": "古风仙侠写实风格，电影级摄影质感，青绿与暖阳金主色调，中高饱和，柔焦自然光效，细腻人物皮肤与服饰纹理，清新通透氛围",
+    "total_duration_s": 80,
+    "created_by": "qwen3.5:27b",
+    "stage": "shots",
+    "approvals": {
+      "story": {
+        "at": "2026-09-14T12:04:47Z",
+        "by": "用户"
+      },
+      "shots": null,
+      "assets": null,
+      "keyframes": null
+    },
+    "music": null
+  },
+  "story": {
+    "synopsis": "清晨林间，小师妹追上大师兄道谢，并羞怯地提起昨晚沐浴遇险之事。她暗示大师兄看过她的身体，理应承担情感上的责任。然而清冷的大师兄只关心救人所耗材料费是否结清，令小师妹愣在原地哭笑不得。",
+    "beats": [
+      {
+        "text": "清晨林道，小师妹追上独自前行的大师兄",
+        "purpose": "未标注（迁移自旧版）",
+        "emotion": ""
+      },
+      {
+        "text": "她羞涩提起昨晚被邪祟上身之事，请求保密",
+        "purpose": "未标注（迁移自旧版）",
+        "emotion": ""
+      },
+      {
+        "text": "大师兄坦言只见到她昏睡并为其更衣，引发师妹慌乱",
+        "purpose": "未标注（迁移自旧版）",
+        "emotion": ""
+      },
+      {
+        "text": "师妹红着脸要求大师兄对看过她的身体负责",
+        "purpose": "未标注（迁移自旧版）",
+        "emotion": ""
+      },
+      {
+        "text": "大师兄严肃点头，承诺将除妖所得银两全数给她",
+        "purpose": "未标注（迁移自旧版）",
+        "emotion": ""
+      },
+      {
+        "text": "小师妹瞬间石化，意识到两人对“负责”的理解完全不同",
+        "purpose": "未标注（迁移自旧版）",
+        "emotion": ""
+      },
+      {
+        "text": "她无奈吐槽大师兄是木头，内心暗叹暗恋无望",
+        "purpose": "未标注（迁移自旧版）",
+        "emotion": ""
+      },
+      {
+        "text": "大师兄继续前行，心中只算着耗材账目是否公允",
+        "purpose": "未标注（迁移自旧版）",
+        "emotion": ""
+      }
+    ],
+    "tone": "轻甜、搞笑、乌龙",
+    "ending": "小师妹望着背影叹气，两人各怀心思，误会加深却更显暧昧",
+    "source": "短剧剧本：大师兄的离谱负责（标准分镜版）\n\n风格：古风仙侠、轻甜搞笑、双向暧昧、直男乌龙\n时长：2分钟左右\n\n人物设定\n大师兄：清冷靠谱、修为高强、钢铁直男，做事一码归一码，完全不懂儿女情长\n小师妹：灵动傲娇、脸皮薄、容易脑补，暗恋大师兄，害羞又主动\n\n第 1 集 1-1 场景：外 林间古道 清晨 人物：大师兄、小师妹\n\n△ 清晨林间古道，阳光穿透枝叶洒落，林间静谧清幽，大师兄背负长剑，独自缓步前行，身姿挺拔，神色清冷淡然。\n\n△ 小师妹快步从后方奔走追上，提速走到大师兄身侧，与他并肩同行。\n\n小师妹（眉眼带庆幸，语气温软）：大师兄，昨天晚上，谢谢你救了我。\n\n△ 大师兄目视前方，步伐未停，神情毫无波澜。\n\n大师兄（语气平淡，一丝不苟）：举手之劳，不用谢。把我救你耗用的材料补给我就行。\n\n△ 小师妹脚步一顿，小嘴微微嘟起，面露肉疼又委屈的神色。\n\n小师妹（语气闷闷，小声嘟囔）：……好嘛。\n\n△ 小师妹快速环顾四周，确认无人，脸颊泛起红晕，伸手轻轻拉扯大师兄的衣袖，神色局促羞涩。\n\n小师妹（压低嗓音，眉眼羞怯）：大师兄，昨晚的事，你千万不要跟别人说。我昨天沐浴时被邪祟上身，后面的事我一点都不记得了。\n\n△ 大师兄神色坦然，转头淡淡看向小师妹。\n\n大师兄（语气平静）：没事，我进来的时候，你已经昏死过去了。\n\n△ 小师妹瞳孔骤然一缩，猛地抬头看向大师兄，耳尖瞬间通红，满脸慌乱无措。\n\n小师妹（语气慌张，手足无措）：昏死？那我的衣服……是你给我穿的？那你、那你有没有对我做什么？\n\n△ 大师兄神色坦然，眼神清澈，一脸理所当然。\n\n大师兄（平直语气）：不然呢？难道让邪祟给你穿？\n\n△ 小师妹双手紧紧攥住衣角，脸颊绯红，又羞又急，深吸一口气，抬头直视大师兄，神色认真。\n\n小师妹（羞涩又坚定）：那你看过也碰过了，你要对我负责！\n\n△ 大师兄微微颔首，神情严肃正经，无半分暧昧情愫。\n\n大师兄（语气沉稳认真）：嗯，行。等会儿除掉邪祟卖的钱，全都给你。\n\n△ 小师妹瞬间僵在原地，脸上的羞涩尽数褪去，满眼呆滞错愕。\n\n小师妹（无奈失笑，满心无语）：……你果然是个木头！\n\n△ 微风拂过林间，树叶沙沙作响，小师妹站在原地，又气又羞，望着淡然前行的大师兄满心无奈。\n\n小师妹 OS：我以为的负责是相守相伴，他居然只想着赔钱？这个呆子到底懂不懂儿女情长！\n\n大师兄 OS：救人耗材需核算清楚，邪祟内丹变卖的银两刚好可以补偿师妹受惊之苦，也算公允。\n\n片尾字幕：她以为的负责是余生相守，他理解的负责是全额赔款。双向暗恋的乌龙，最是清甜好笑的仙侠日常。\n"
+  },
+  "characters": [
+    {
+      "id": "senior_brother",
+      "name": "大师兄",
+      "voice": "沉稳冷淡，语速平缓，无起伏",
+      "age_group": "youth",
+      "face_prompt": "成年男子，清冷俊美，黑发束冠，眉眼冷峻，身姿挺拔，皮肤白皙",
+      "portrait": "story2video/shots/t2i_20260914-214223.png",
+      "identities": [
+        "senior_brother_default"
+      ]
+    },
+    {
+      "id": "junior_sister",
+      "name": "小师妹",
+      "voice": "清脆软糯，语速轻快，情绪丰富",
+      "age_group": "youth",
+      "face_prompt": "成年女子，圆脸杏眼，五官灵动，长发挽髻，身形纤细，与大师兄年龄相仿",
+      "portrait": "story2video/shots/t2i_20260914-214239.png",
+      "identities": [
+        "junior_sister_default"
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "id": "forest_path",
+      "name": "林间古道",
+      "environment": "清晨森林，阳光穿透枝叶洒落斑驳光影，青石板路，静谧清幽",
+      "time_of_day": "清晨",
+      "master": "story2video/shots/t2i_20260914-201809.png",
+      "reverse_master": null,
+      "spatial_layout": null
+    }
+  ],
+  "shots": [
+    {
+      "id": "s01",
+      "scene": "forest_path",
+      "duration_s": 6,
+      "shot_size": "远景",
+      "lighting": "清晨柔光，林间丁达尔效应，地面斑驳树影",
+      "camera": "固定机位，缓慢横移跟随",
+      "action": "大师兄背负长剑，独自沿林间古道缓步前行，身姿挺拔，神色清冷淡然",
+      "prompt": "{{senior_brother_default}}，清冷俊美黑发束冠眉眼冷峻青年，穿白色古装长衫腰间佩剑布鞋，背负长剑独自走在清晨森林青石板路上，阳光穿透枝叶洒落，地面斑驳树影，电影级摄影质感，古风仙侠写实风格",
+      "audio": "脚踩落叶的清脆声响，远处几声鸟鸣，微风拂过树叶沙沙声",
+      "dialogue": [],
+      "edit_note": "开场定调，展示环境与大主角独行状态，缓入",
+      "transition": {
+        "type": "cut",
+        "note": "开场"
+      },
+      "first_frame": "story2video/shots/t2i_20260914-214304.png",
+      "last_frame": null,
+      "clip": null,
+      "cast": [
+        "senior_brother_default"
+      ],
+      "props": []
+    },
+    {
+      "id": "s02",
+      "scene": "forest_path",
+      "duration_s": 4,
+      "shot_size": "全景",
+      "lighting": "清晨柔光，人物轮廓带金边",
+      "camera": "跟拍，从后侧方捕捉奔跑动作",
+      "action": "小师妹快步从后方奔走追上，发丝飞扬，神色急切又带着期待",
+      "prompt": "{{junior_sister_default}}，灵动可爱圆脸杏眼双发髻少女，穿粉色古装短裙丝带装饰绣花鞋，在清晨森林青石板路上快速奔跑追赶，阳光穿透枝叶洒落，发丝飞扬，古风仙侠写实风格",
+      "audio": "急促的脚步声踏在石板上，衣料摩擦的窸窣声，呼吸略显急促",
+      "dialogue": [],
+      "edit_note": "展示师妹追上的动态，节奏稍快",
+      "transition": {
+        "type": "cut",
+        "note": "动作接上"
+      },
+      "first_frame": "story2video/shots/t2i_20260914-214319.png",
+      "last_frame": null,
+      "clip": null,
+      "cast": [
+        "junior_sister_default"
+      ],
+      "props": []
+    },
+    {
+      "id": "s03",
+      "scene": "forest_path",
+      "duration_s": 5,
+      "shot_size": "中景",
+      "lighting": "自然柔光，面部清晰",
+      "camera": "侧跟拍，两人并肩",
+      "action": "小师妹走到大师兄身侧，眉眼带庆幸，语气温软道谢",
+      "prompt": "{{senior_brother_default}}、{{junior_sister_default}}，清冷俊美黑发束冠青年穿白色古装长衫与灵动可爱圆脸杏眼少女穿粉色古装短裙并肩走在清晨森林古道，阳光穿透枝叶洒落，两人面部清晰，古风仙侠写实风格",
+      "audio": "脚步声同步，衣料摩擦声，鸟鸣背景音减弱",
+      "dialogue": [
+        {
+          "character": "junior_sister_default",
+          "text": "大师兄，昨天晚上，谢谢你救了我。",
+          "emotion": "庆幸、温软",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "两人同框，开启对话节奏",
+      "transition": {
+        "type": "cut",
+        "note": "接上镜动作"
+      },
+      "first_frame": "story2video/shots/t2i_20260914-214335.png",
+      "last_frame": null,
+      "clip": null,
+      "cast": [
+        "senior_brother_default",
+        "junior_sister_default"
+      ],
+      "props": []
+    },
+    {
+      "id": "s04",
+      "scene": "forest_path",
+      "duration_s": 5,
+      "shot_size": "近景",
+      "lighting": "面部受光均匀，眼神清冷",
+      "camera": "固定，聚焦大师兄面部",
+      "action": "大师兄目视前方，步伐未停，神情毫无波澜地回应",
+      "prompt": "{{senior_brother_default}}，清冷俊美黑发束冠眉眼冷峻青年特写，穿白色古装长衫，眼神清澈无波，背景虚化清晨森林，古风仙侠写实风格",
+      "audio": "脚步声持续，语气平淡的人声",
+      "dialogue": [
+        {
+          "character": "senior_brother_default",
+          "text": "举手之劳，不用谢。把我救你耗用的材料补给我就行。",
+          "emotion": "平淡、一丝不苟",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "大师兄反应冷淡，制造反差",
+      "transition": {
+        "type": "cut",
+        "note": "硬切至反应"
+      },
+      "first_frame": "story2video/shots/t2i_20260914-214350.png",
+      "last_frame": null,
+      "clip": null,
+      "cast": [
+        "senior_brother_default"
+      ],
+      "props": []
+    },
+    {
+      "id": "s05",
+      "scene": "forest_path",
+      "duration_s": 3,
+      "shot_size": "特写",
+      "lighting": "暖光打在脸颊，突出委屈表情",
+      "camera": "固定，聚焦小师妹嘴部与眼神",
+      "action": "小师妹脚步一顿，小嘴微微嘟起，面露肉疼又委屈的神色",
+      "prompt": "{{junior_sister_default}}，灵动可爱圆脸杏眼少女特写，穿粉色古装短裙，脸颊红润，小嘴微微嘟起，眼神委屈，背景虚化清晨森林，古风仙侠写实风格",
+      "audio": "脚步声停顿，闷闷的嘟囔声",
+      "dialogue": [
+        {
+          "character": "junior_sister_default",
+          "text": "……好嘛。",
+          "emotion": "闷闷、委屈",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "短促反应，体现师妹无奈",
+      "transition": {
+        "type": "cut",
+        "note": "接上镜情绪"
+      },
+      "first_frame": "story2video/shots/t2i_20260914-214406.png",
+      "last_frame": null,
+      "clip": null,
+      "cast": [
+        "junior_sister_default"
+      ],
+      "props": []
+    },
+    {
+      "id": "s06",
+      "scene": "forest_path",
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "光线柔和，突出羞涩氛围",
+      "camera": "跟随，捕捉环顾动作",
+      "action": "小师妹快速环顾四周，确认无人，脸颊泛起红晕",
+      "prompt": "{{junior_sister_default}}，灵动可爱圆脸杏眼少女穿粉色古装短裙，在清晨森林古道侧身环顾四周，脸颊泛红，神色局促羞涩，古风仙侠写实风格",
+      "audio": "衣料摩擦声，轻微的吸气声，环境音压低",
+      "dialogue": [],
+      "edit_note": "铺垫长台词前的紧张感",
+      "transition": {
+        "type": "cut",
+        "note": "动作衔接"
+      },
+      "first_frame": "story2video/shots/t2i_20260914-214421.png",
+      "last_frame": null,
+      "clip": null,
+      "cast": [
+        "junior_sister_default"
+      ],
+      "props": []
+    },
+    {
+      "id": "s07",
+      "scene": "forest_path",
+      "duration_s": 6,
+      "shot_size": "近景",
+      "lighting": "柔光，眼神躲闪",
+      "camera": "固定，聚焦面部表情变化",
+      "action": "小师妹压低嗓音，眉眼羞怯地提起昨晚沐浴遇险之事",
+      "prompt": "{{junior_sister_default}}，灵动可爱圆脸杏眼少女近景，穿粉色古装短裙，眉眼羞怯，脸颊绯红，眼神躲闪，背景虚化清晨森林，古风仙侠写实风格",
+      "audio": "压低嗓音的说话声，呼吸略显紧张",
+      "dialogue": [
+        {
+          "character": "junior_sister_default",
+          "text": "大师兄，昨晚的事，你千万不要跟别人说。我昨天沐浴时被邪祟上身，后面的事我一点都不记得了。",
+          "emotion": "羞怯、压低嗓音",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "关键信息揭露，时长拉长给足表演空间",
+      "transition": {
+        "type": "cut",
+        "note": "接上镜情绪延续"
+      },
+      "first_frame": "story2video/shots/t2i_20260914-214437.png",
+      "last_frame": null,
+      "clip": null,
+      "cast": [
+        "junior_sister_default"
+      ],
+      "props": []
+    },
+    {
+      "id": "s08",
+      "scene": "forest_path",
+      "duration_s": 5,
+      "shot_size": "近景",
+      "lighting": "冷调光，神色坦然",
+      "camera": "转头捕捉眼神接触",
+      "action": "大师兄神色坦然，转头淡淡看向小师妹",
+      "prompt": "{{senior_brother_default}}，清冷俊美黑发束冠青年近景，穿白色古装长衫，转头淡淡看向侧面，神色坦然，眼神清澈，背景虚化清晨森林，古风仙侠写实风格",
+      "audio": "衣料转身声，平静的说话声",
+      "dialogue": [
+        {
+          "character": "senior_brother_default",
+          "text": "没事，我进来的时候，你已经昏死过去了。",
+          "emotion": "平静、坦然",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "直男发言，打破暧昧预期",
+      "transition": {
+        "type": "cut",
+        "note": "硬切至大师兄反应"
+      },
+      "first_frame": "story2video/shots/t2i_20260914-214452.png",
+      "last_frame": null,
+      "clip": null,
+      "cast": [
+        "senior_brother_default"
+      ],
+      "props": []
+    },
+    {
+      "id": "s09",
+      "scene": "forest_path",
+      "duration_s": 3,
+      "shot_size": "特写",
+      "lighting": "高光打在瞳孔，突出震惊",
+      "camera": "固定，捕捉瞳孔变化",
+      "action": "小师妹瞳孔骤然一缩，猛地抬头看向大师兄",
+      "prompt": "{{junior_sister_default}}，灵动可爱圆脸杏眼少女眼部特写，穿粉色古装短裙，瞳孔骤然一缩，耳尖通红，满脸慌乱无措，背景虚化清晨森林，古风仙侠写实风格",
+      "audio": "心跳声放大，轻微的倒吸凉气声",
+      "dialogue": [],
+      "edit_note": "反应镜头，强化内心冲击",
+      "transition": {
+        "type": "cut",
+        "note": "情绪高潮前奏"
+      },
+      "first_frame": "story2video/shots/t2i_20260914-214508.png",
+      "last_frame": null,
+      "clip": null,
+      "cast": [
+        "junior_sister_default"
+      ],
+      "props": []
+    },
+    {
+      "id": "s10",
+      "scene": "forest_path",
+      "duration_s": 6,
+      "shot_size": "近景",
+      "lighting": "暖光，脸颊通红",
+      "camera": "固定，捕捉慌乱语速",
+      "action": "小师妹语气慌张，手足无措地追问衣服与身体之事",
+      "prompt": "{{junior_sister_default}}，灵动可爱圆脸杏眼少女近景，穿粉色古装短裙，满脸通红，眼神慌乱，双手微抬，背景虚化清晨森林，古风仙侠写实风格",
+      "audio": "慌张的语速说话声，衣角被攥紧的声音",
+      "dialogue": [
+        {
+          "character": "junior_sister_default",
+          "text": "昏死？那我的衣服……是你给我穿的？那你、那你有没有对我做什么？",
+          "emotion": "慌张、手足无措",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "核心误会点，语速加快",
+      "transition": {
+        "type": "cut",
+        "note": "接上镜情绪爆发"
+      },
+      "first_frame": "story2video/shots/t2i_20260914-214524.png",
+      "last_frame": null,
+      "clip": null,
+      "cast": [
+        "junior_sister_default"
+      ],
+      "props": []
+    },
+    {
+      "id": "s11",
+      "scene": "forest_path",
+      "duration_s": 4,
+      "shot_size": "中景",
+      "lighting": "自然光，一脸理所当然",
+      "camera": "固定，大师兄正面",
+      "action": "大师兄神色坦然，眼神清澈，一脸理所当然地反问",
+      "prompt": "{{senior_brother_default}}，清冷俊美黑发束冠青年中景，穿白色古装长衫，站在清晨森林古道，神色坦然，眼神清澈，一脸理所当然，古风仙侠写实风格",
+      "audio": "平直语气的说话声，脚步声继续",
+      "dialogue": [
+        {
+          "character": "senior_brother_default",
+          "text": "不然呢？难道让邪祟给你穿？",
+          "emotion": "平直、理所当然",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "直男逻辑，笑点铺垫",
+      "transition": {
+        "type": "cut",
+        "note": "硬切至大师兄"
+      },
+      "first_frame": "story2video/shots/t2i_20260914-214539.png",
+      "last_frame": null,
+      "clip": null,
+      "cast": [
+        "senior_brother_default"
+      ],
+      "props": []
+    },
+    {
+      "id": "s12",
+      "scene": "forest_path",
+      "duration_s": 4,
+      "shot_size": "中景",
+      "lighting": "侧逆光，突出坚定眼神",
+      "camera": "固定，两人同框或师妹正面",
+      "action": "小师妹深吸一口气，抬头直视大师兄，神色认真要求负责",
+      "prompt": "{{junior_sister_default}}，灵动可爱圆脸杏眼少女中景，穿粉色古装短裙，双手紧紧攥住衣角，脸颊绯红，抬头直视前方，神色认真坚定，古风仙侠写实风格",
+      "audio": "深吸一口气的声音，坚定的说话声",
+      "dialogue": [
+        {
+          "character": "junior_sister_default",
+          "text": "那你看过也碰过了，你要对我负责！",
+          "emotion": "羞涩又坚定",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "情感高潮，师妹提出核心要求",
+      "transition": {
+        "type": "cut",
+        "note": "接上镜情绪升级"
+      },
+      "first_frame": "story2video/shots/t2i_20260914-214555.png",
+      "last_frame": null,
+      "clip": null,
+      "cast": [
+        "junior_sister_default"
+      ],
+      "props": []
+    },
+    {
+      "id": "s13",
+      "scene": "forest_path",
+      "duration_s": 5,
+      "shot_size": "近景",
+      "lighting": "面部清晰，神情严肃",
+      "camera": "固定，聚焦点头动作",
+      "action": "大师兄微微颔首，神情严肃正经，承诺赔钱",
+      "prompt": "{{senior_brother_default}}，清冷俊美黑发束冠青年近景，穿白色古装长衫，微微颔首，神情严肃正经，无半分暧昧情愫，背景虚化清晨森林，古风仙侠写实风格",
+      "audio": "沉稳认真的说话声，衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "senior_brother_default",
+          "text": "嗯，行。等会儿除掉邪祟卖的钱，全都给你。",
+          "emotion": "沉稳、认真",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "笑点爆发，直男理解偏差",
+      "transition": {
+        "type": "cut",
+        "note": "硬切至大师兄承诺"
+      },
+      "first_frame": "story2video/shots/t2i_20260914-214611.png",
+      "last_frame": null,
+      "clip": null,
+      "cast": [
+        "senior_brother_default"
+      ],
+      "props": []
+    },
+    {
+      "id": "s14",
+      "scene": "forest_path",
+      "duration_s": 4,
+      "shot_size": "特写",
+      "lighting": "高光，突出呆滞表情",
+      "camera": "固定，捕捉石化瞬间",
+      "action": "小师妹瞬间僵在原地，脸上的羞涩尽数褪去，满眼呆滞错愕",
+      "prompt": "{{junior_sister_default}}，灵动可爱圆脸杏眼少女面部特写，穿粉色古装短裙，眼神呆滞错愕，嘴巴微张，满脸无语，背景虚化清晨森林，古风仙侠写实风格",
+      "audio": "环境音突然静止一秒，随后无奈失笑的声音",
+      "dialogue": [
+        {
+          "character": "junior_sister_default",
+          "text": "……你果然是个木头！",
+          "emotion": "无奈失笑、无语",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "结局反应，笑点收尾",
+      "transition": {
+        "type": "cut",
+        "note": "接上镜瞬间石化"
+      },
+      "first_frame": "story2video/shots/t2i_20260914-214627.png",
+      "last_frame": null,
+      "clip": null,
+      "cast": [
+        "junior_sister_default"
+      ],
+      "props": []
+    },
+    {
+      "id": "s15",
+      "scene": "forest_path",
+      "duration_s": 8,
+      "shot_size": "中景",
+      "lighting": "逆光，氛围感强",
+      "camera": "过肩镜头，前景师妹，背景师兄背影",
+      "action": "小师妹站在原地，望着淡然前行的大师兄满心无奈，内心独白",
+      "prompt": "{{junior_sister_default}}，灵动可爱圆脸杏眼少女中景背影侧身，穿粉色古装短裙，站在清晨森林古道，望着前方清冷俊美黑发束冠青年背影远去，古风仙侠写实风格",
+      "audio": "微风拂过林间树叶沙沙作响，脚步渐远声，内心独白配音",
+      "dialogue": [
+        {
+          "character": "junior_sister_default",
+          "text": "我以为的负责是相守相伴，他居然只想着赔钱？这个呆子到底懂不懂儿女情长！",
+          "emotion": "无奈、暗叹",
+          "kind": "voiceover"
+        }
+      ],
+      "edit_note": "OS 独白，情感升华与吐槽",
+      "transition": {
+        "type": "cut",
+        "note": "转至内心戏"
+      },
+      "first_frame": "story2video/shots/t2i_20260914-214643.png",
+      "last_frame": null,
+      "clip": null,
+      "cast": [
+        "junior_sister_default"
+      ],
+      "props": []
+    },
+    {
+      "id": "s16",
+      "scene": "forest_path",
+      "duration_s": 8,
+      "shot_size": "远景",
+      "lighting": "晨光穿透，背影拉长",
+      "camera": "固定，大师兄走入光晕",
+      "action": "大师兄继续前行，心中只算着耗材账目是否公允，OS 独白",
+      "prompt": "{{senior_brother_default}}，清冷俊美黑发束冠青年远景背影，穿白色古装长衫背负长剑，走向清晨森林深处光晕中，身姿挺拔，古风仙侠写实风格",
+      "audio": "脚步声渐行渐远，内心独白配音，风声",
+      "dialogue": [
+        {
+          "character": "senior_brother_default",
+          "text": "救人耗材需核算清楚，邪祟内丹变卖的银两刚好可以补偿师妹受惊之苦，也算公允。",
+          "emotion": "理性、核算",
+          "kind": "voiceover"
+        }
+      ],
+      "edit_note": "片尾收束，留白结束",
+      "transition": {
+        "type": "cut",
+        "note": "结尾淡出"
+      },
+      "first_frame": "story2video/shots/t2i_20260914-214658.png",
+      "last_frame": null,
+      "clip": null,
+      "cast": [
+        "senior_brother_default"
+      ],
+      "props": []
+    }
+  ],
+  "identities": [
+    {
+      "id": "senior_brother_default",
+      "character": "senior_brother",
+      "name": "默认造型",
+      "appearance_details": "白色古装长衫，腰间佩剑，布鞋",
+      "costume_image": null,
+      "sheet": "story2video/shots/t2i_20260914-214223.png",
+      "reference_images": [],
+      "voice_ref": null
+    },
+    {
+      "id": "junior_sister_default",
+      "character": "junior_sister",
+      "name": "默认造型",
+      "appearance_details": "粉色古装襦裙，丝带束腰，绣花鞋",
+      "costume_image": null,
+      "sheet": "story2video/shots/t2i_20260914-214239.png",
+      "reference_images": [],
+      "voice_ref": null
+    }
+  ]
+}

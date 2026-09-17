@@ -12,10 +12,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { checkBoard } from '../src/board.mjs';
+import { FIXTURE, fixtureOrArg } from './fixtures/index.mjs';
 
-const file = process.argv[2];
+const file = fixtureOrArg(process.argv, 2, FIXTURE.board);
 if (!file || !fs.existsSync(file)) {
-  console.error('用法：node tests/contract.test.mjs <board.json>');
+  console.error('用法：node tests/contract.test.mjs [board.json]');
   process.exit(2);
 }
 const baseline = JSON.parse(fs.readFileSync(file, 'utf8'));

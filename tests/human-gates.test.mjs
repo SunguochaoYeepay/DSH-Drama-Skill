@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { approve, approvalStatus, requireAllClips, requireApproval } from '../src/human-gates.mjs';
+
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-gates-'));
+const a = path.join(dir, 'a.txt');
+const b = path.join(dir, 'b.txt');
+fs.writeFileSync(a, 'one'); fs.writeFileSync(b, 'two');
+assert.equal(approvalStatus(dir, 'direction', [a]).ok, false);
+approve(dir, 'direction', [a]);
+assert.equal(approvalStatus(dir, 'direction', [a]).ok, true);
+fs.writeFileSync(a, 'changed');
+assert.match(approvalStatus(dir, 'direction', [a]).reason, /失效/);
+approve(dir, 'clip', [a], { id: 'g001' });
+assert.equal(approvalStatus(dir, 'clip', [a], 'g001').ok, true);
+assert.equal(approvalStatus(dir, 'clip', [a], 'g002').ok, false);
+assert.throws(() => requireApproval(dir, 'keyframes', [b]), /机器检查通过只表示/);
+const units = path.join(dir, 'units'); fs.mkdirSync(units);
+fs.writeFileSync(path.join(units, 'g001.result.json'), JSON.stringify({ files: [a] }));
+requireAllClips(dir, { units: [{ id: 'g001' }] });
+assert.throws(() => requireAllClips(dir, { units: [{ id: 'g001' }, { id: 'g002' }] }), /尚未生成/);
+console.log('human gates: 8/8 passed');

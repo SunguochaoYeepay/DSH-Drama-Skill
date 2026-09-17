@@ -62,7 +62,7 @@ export function costOf({ op, model, units = 1, inputRefs = 0, chars = 0 }, env =
 // ---------------------------------------------------------------- 账本实例
 
 /**
- * 全局账本。`render.mjs` 启动时 `attach()` 一次，通道在每次调用后 `add()`。
+ * 全局账本。编排入口启动时 `attach()` 一次，通道在每次调用后 `add()`。
  * 没 attach 时是空操作 —— 单独调通道做实验不会报错，也不会乱写文件。
  */
 class Ledger {

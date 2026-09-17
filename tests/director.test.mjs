@@ -13,11 +13,14 @@
  */
 
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
-  validateDirection, collectDialogueLines, findDialogueLeak,
-  checkReverseFacing, CUT_PHRASES, FRAMINGS, MAX_UNIT_SECONDS,
+  validateDirection, collectDialogueLines, findDialogueLeak, buildBrief, readBrief,
+  checkReverseFacing, CUT_PHRASES, FRAMINGS, MAX_UNIT_SECONDS, MIN_DIRECTION_VERSION,
 } from '../src/director.mjs';
+import { FIXTURE, fixtureOrArg } from './fixtures/index.mjs';
 
 let passed = 0;
 const failures = [];
@@ -26,13 +29,36 @@ function check(label, ok, detail = '') {
   else { failures.push(label); console.log(`FAIL   ${label}${detail ? '  → ' + detail : ''}`); }
 }
 
-const boardPath = process.argv[2];
-const storyPath = process.argv[3] || (boardPath ? path.join(path.dirname(boardPath), 'story.md') : null);
-if (!boardPath || !fs.existsSync(boardPath)) { console.error('用法：node tests/director.test.mjs <board.json> [story.md]'); process.exit(2); }
+const boardPath = fixtureOrArg(process.argv, 2, FIXTURE.script);
+const storyPath = process.argv[3] || null;
+if (!fs.existsSync(boardPath)) { console.error('用法：node tests/director.test.mjs [board.json] [story.md]'); process.exit(2); }
 
 const board = JSON.parse(fs.readFileSync(boardPath, 'utf8'));
-const script = storyPath && fs.existsSync(storyPath) ? fs.readFileSync(storyPath, 'utf8') : '';
+const script = storyPath && fs.existsSync(storyPath)
+  ? fs.readFileSync(storyPath, 'utf8')
+  : (board.story?.source || '');
 const scriptLines = script ? script.split(/\r?\n/) : [];
+
+console.log('\n导演简报');
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const brief = readBrief(repoRoot);
+check('同时装入职业简报', brief.includes('# 你是这部剧的导演'));
+check('同时装入输出 schema', brief.includes('# 导演交什么 —— 格式与含义'));
+check('schema 当前版本进入 prompt', brief.includes(`"version": ${MIN_DIRECTION_VERSION}`));
+const prompt = buildBrief({ briefText: brief, board, script, projectRoot: repoRoot });
+check('交付提示不再硬编码旧 v4', !prompt.includes('v4 格式'));
+
+const missingSchemaRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'story2video-brief-'));
+try {
+  const briefDir = path.join(missingSchemaRoot, 'references', 'director');
+  fs.mkdirSync(briefDir, { recursive: true });
+  fs.writeFileSync(path.join(briefDir, 'brief.md'), '# test brief\n');
+  let missingSchemaError = null;
+  try { readBrief(missingSchemaRoot); } catch (error) { missingSchemaError = error; }
+  check('schema 缺失时立即报错', /找不到导演输出格式/.test(String(missingSchemaError?.message || '')));
+} finally {
+  fs.rmSync(missingSchemaRoot, { recursive: true, force: true });
+}
 
 console.log('\n台词识别');
 const dlg = collectDialogueLines(board, scriptLines);
@@ -55,7 +81,38 @@ function mkUnit(over = {}) {
     ...over,
   };
 }
-const ok = (dir) => validateDirection(dir, { board, script });
+function asCurrent(dir, { preserveLines = false } = {}) {
+  if (!dir || typeof dir !== 'object') return dir;
+  const current = structuredClone(dir);
+  current.version = MIN_DIRECTION_VERSION;
+  for (const [ui, unit] of (current.units || []).entries()) {
+    unit.why ??= '测试所需的连续表演单元';
+    unit.duration_reason ??= '按动作与停顿确定时长';
+    unit.keyframe_start ??= '人物处于稳定起始状态';
+    unit.boundary_trigger ??= ui === 0 ? 'opening' : 'identity_anchor';
+    unit.keyframe_cast ??= [...new Set((unit.shots || []).flatMap((shot) => shot.on_screen || []))].slice(0, 2);
+    unit.action_complexity ??= { level: 'low', strategy: 'none', high_risk_events: [] };
+    unit.end_state ??= '角色停在稳定、可观察的结束状态';
+    unit.continuity ??= ui === 0
+      ? { mode: 'independent', reason: '开场' }
+      : { mode: 'independent', reason: '测试单元独立开始' };
+    for (const shot of unit.shots || []) {
+      if (!preserveLines) shot.lines = [];
+      shot.emotion_analysis ??= (shot.on_screen || []).map((character) => ({
+        character,
+        cause: '当前剧情事件',
+        internal_state: '专注',
+        visible_behavior: '身体保持稳定，注意前方',
+        gaze: '看向当前目标',
+        avoid_symbols: ['与剧情相反的夸张表情'],
+      }));
+    }
+  }
+  return current;
+}
+const coreBoard = { ...board, shots: [] };
+const ok = (dir) => validateDirection(asCurrent(dir), { board: coreBoard, script: '' });
+const dialogueOk = (dir) => validateDirection(asCurrent(dir, { preserveLines: true }), { board, script });
 
 console.log('\n结构约束');
 {
@@ -65,6 +122,131 @@ console.log('\n结构约束');
 check('空 units 被拒', !ok({ units: [] }).ok);
 check('不是对象被拒', !ok(null).ok);
 check('shots 为空被拒', !ok({ units: [{ id: 'u1', shots: [] }] }).ok);
+check('缺 version 被拒', !validateDirection({ units: [mkUnit()] }, { board, script }).ok);
+check('过低 version 被拒', !validateDirection({ version: MIN_DIRECTION_VERSION - 1, units: [mkUnit()] }, { board, script }).ok);
+
+console.log('\nv2 导演分析契约');
+{
+  const v2ctx = {
+    board: {
+      identities: [{ id: A, character: 'c1' }],
+      characters: [{ id: 'c1' }],
+      shots: [{ source_lines: [1], dialogue: [{ text: '这是一句需要时间说完的测试台词。' }] }],
+    },
+    script: '这是一句需要时间说完的测试台词。',
+  };
+  const base = asCurrent({
+    units: [{
+      id: 'u1', why: '同一主体与构图', duration_reason: '按口播时间安排',
+      boundary_trigger: 'opening',
+      keyframe_cast: [A],
+      keyframe_start: '人物闭口，准备说话',
+      shots: [{ n: 1, at: 0, duration_s: 8, framing: '近景', camera: '固定', on_screen: [A], action: '人物准备说话', lines: [1] }],
+    }],
+  }, { preserveLines: true });
+  check('v2 分析字段齐全且台词时间充足 → 通过', validateDirection(base, v2ctx).ok,
+    validateDirection(base, v2ctx).errors.join(' | '));
+  const missingAnalysis = structuredClone(base);
+  delete missingAnalysis.units[0].duration_reason;
+  check('v2 缺时长分析 → 拒绝', !validateDirection(missingAnalysis, v2ctx).ok);
+  const tooShort = structuredClone(base);
+  tooShort.units[0].shots[0].duration_s = 1;
+  const shortResult = validateDirection(tooShort, v2ctx);
+  check('v2 台词说不完 → 拒绝', !shortResult.ok && shortResult.errors.some((e) => /最低需要/.test(e)), shortResult.errors.join(' | '));
+  const fakeBoundary = structuredClone(base);
+  fakeBoundary.units.push({ ...structuredClone(base.units[0]), id: 'u2', boundary_trigger: '节奏需要' });
+  fakeBoundary.units[1].shots[0].lines = [];
+  check('v3 不接受“节奏需要”作为新关键帧理由', !validateDirection(fakeBoundary, v2ctx).ok);
+}
+
+console.log('\n交付时长预算');
+{
+  const durationCtx = {
+    board: { identities: [{ id: A, character: 'c1' }], characters: [{ id: 'c1' }], shots: [], meta: { total_duration_s: 10 } },
+    script: '',
+  };
+  const bloated = asCurrent({
+    units: Array.from({ length: 3 }, (_, i) => ({
+      id: `u${i + 1}`,
+      why: '测试', duration_reason: '两秒动作', keyframe_start: '人物静止',
+      boundary_trigger: i === 0 ? 'opening' : 'identity_anchor',
+      keyframe_cast: [A],
+      shots: [{ n: 1, at: 0, duration_s: 2, framing: '近景', camera: '固定', on_screen: [A], action: '短动作', lines: [] }],
+    })),
+  });
+  const result = validateDirection(bloated, durationCtx);
+  check('多个短单元导致预计交付时长膨胀 → 拒绝', !result.ok && result.errors.some((e) => /预计交付时长/.test(e)), result.errors.join(' | '));
+}
+
+console.log('\nv4 H3 动作复杂度');
+{
+  const ctx = {
+    board: { identities: [{ id: A, character: 'c1' }], characters: [{ id: 'c1' }], shots: [], meta: { total_duration_s: 12 } },
+    script: '',
+  };
+  const base = asCurrent({
+    units: [{
+      id: 'u1', why: '同一空间连续表演', duration_reason: '动作需要六秒', keyframe_start: '人物尚未接触',
+      boundary_trigger: 'opening', keyframe_cast: [A],
+      action_complexity: { level: 'medium', strategy: 'single_transition', high_risk_events: [
+        { at_s: 3, type: 'multi_actor_contact', description: '人物抓住目标' },
+      ] },
+      shots: [{ n: 1, at: 0, duration_s: 6, framing: '中景', camera: '固定', on_screen: [A], action: '人物抓住目标', lines: [] }],
+    }],
+  });
+  check('v4 单个高风险状态转换 → 通过', validateDirection(base, ctx).ok,
+    validateDirection(base, ctx).errors.join(' | '));
+  const missing = structuredClone(base);
+  delete missing.units[0].action_complexity;
+  check('v4 缺动作复杂度分析 → 拒绝', !validateDirection(missing, ctx).ok);
+  const overloaded = structuredClone(base);
+  overloaded.units[0].action_complexity.high_risk_events.push({
+    at_s: 5, type: 'appearance_or_disappearance', description: '目标消失',
+  });
+  check('同一单元两个高风险状态转换 → 拒绝',
+    !validateDirection(overloaded, ctx).ok
+      && validateDirection(overloaded, ctx).errors.some((e) => /只允许一个/.test(e)));
+  const outOfRange = structuredClone(base);
+  outOfRange.units[0].action_complexity.high_risk_events[0].at_s = 9;
+  check('状态转换时间超过单元时长 → 拒绝', !validateDirection(outOfRange, ctx).ok);
+  const noRisk = structuredClone(base);
+  noRisk.units[0].action_complexity = { level: 'low', strategy: 'none', high_risk_events: [] };
+  check('无高风险转换使用 none → 通过', validateDirection(noRisk, ctx).ok,
+    validateDirection(noRisk, ctx).errors.join(' | '));
+}
+
+console.log('\nv6 客观情绪与连续性分析');
+{
+  const ctx = {
+    board: { identities: [{ id: A, character: 'c1' }], characters: [{ id: 'c1' }], shots: [], meta: { total_duration_s: 6 } },
+    script: '',
+  };
+  const emotion = {
+    version: MIN_DIRECTION_VERSION,
+    units: [{
+      id: 'u1', why: '同一表演', duration_reason: '动作六秒', keyframe_start: '人物站定',
+      boundary_trigger: 'opening', keyframe_cast: [A],
+      action_complexity: { level: 'low', strategy: 'none', high_risk_events: [] },
+      end_state: '人物保持站立并看向声源', continuity: { mode: 'independent', reason: '开场' },
+      shots: [{
+        n: 1, at: 0, duration_s: 6, framing: '中景', camera: '固定', on_screen: [A], action: '人物观察前方', lines: [],
+        emotion_analysis: [{ character: A, cause: '听见异响', internal_state: '警觉', visible_behavior: '肩背收紧，眼睛睁大', gaze: '看向声源', avoid_symbols: ['微笑'] }],
+      }],
+    }],
+  };
+  check('v5 完整情绪因果链通过', validateDirection(emotion, ctx).ok, validateDirection(emotion, ctx).errors.join(' | '));
+  const missing = structuredClone(emotion); delete missing.units[0].shots[0].emotion_analysis;
+  check('v5 缺 emotion_analysis 被拒', !validateDirection(missing, ctx).ok);
+  const emptyAvoid = structuredClone(emotion); emptyAvoid.units[0].shots[0].emotion_analysis[0].avoid_symbols = [];
+  check('v5 缺禁止误读符号被拒', !validateDirection(emptyAvoid, ctx).ok);
+  const continuation = structuredClone(emotion);
+  continuation.units.push({ ...structuredClone(continuation.units[0]), id: 'u2', boundary_trigger: 'state_transition_anchor',
+    continuity: { mode: 'continue_previous', previous_unit: 'u1', handoff_state: '继承站立姿态', deferred_keyframe: true, allowed_changes: ['framing'] } });
+  check('v6 连续单元声明完整可通过', validateDirection(continuation, { ...ctx, board: { ...ctx.board, meta: { total_duration_s: 12 } } }).ok,
+    validateDirection(continuation, { ...ctx, board: { ...ctx.board, meta: { total_duration_s: 12 } } }).errors.join(' | '));
+  const premature = structuredClone(continuation); premature.units[1].continuity.deferred_keyframe = false;
+  check('v6 连续单元禁止提前锁死关键帧', !validateDirection(premature, { ...ctx, board: { ...ctx.board, meta: { total_duration_s: 12 } } }).ok);
+}
 
 console.log(`\n${MAX_UNIT_SECONDS}s 上限`);
 check('单镜 18s 被拒', !ok({ units: [{ id: 'u1', shots: [{ n: 1, at: 0, duration_s: 18, framing: '全景', camera: '固定', on_screen: [A], action: 'x', lines: allLines }] }] }).ok);
@@ -101,7 +283,7 @@ check('合法切词都通过', CUT_PHRASES.every((c) => ok({ units: [{ id: 'u1',
 console.log('\n台词：一条不漏、一条不重');
 {
   const only1 = { units: [{ id: 'u1', shots: [{ n: 1, at: 0, duration_s: 5, framing: '全景', camera: '固定', on_screen: [A], action: 'x', lines: [allLines[0]] }] }] };
-  const r = ok(only1);
+  const r = dialogueOk(only1);
   check('漏台词被拒', !r.ok && r.errors.some((e) => /漏了/.test(e)), r.errors.join(' | '));
 }
 {
@@ -109,10 +291,12 @@ console.log('\n台词：一条不漏、一条不重');
     { n: 1, at: 0, duration_s: 5, framing: '全景', camera: '固定', on_screen: [A], action: 'a', lines: [allLines[0]] },
     { n: 2, at: 5, duration_s: 3, cut: CUT_PHRASES[0], framing: '近景', camera: '固定', on_screen: [A], action: 'b', lines: allLines },
   ] }] };
-  const r = ok(dup);
+  const r = dialogueOk(dup);
   check('台词重复放被拒', !r.ok && r.errors.some((e) => /放了多次/.test(e)), r.errors.join(' | '));
 }
-check('引用非台词行被拒', ok({ units: [{ id: 'u1', shots: [{ n: 1, at: 0, duration_s: 4, framing: '全景', camera: '固定', on_screen: [A], action: 'x', lines: [1] }] }] }).errors.some((e) => /不是台词行/.test(e)));
+const nonDialogueLine = Array.from({ length: Math.max(scriptLines.length, 1) + 1 }, (_, i) => i + 1)
+  .find((line) => !dlg.has(line));
+check('引用非台词行被拒', dialogueOk({ units: [{ id: 'u1', shots: [{ n: 1, at: 0, duration_s: 4, framing: '全景', camera: '固定', on_screen: [A], action: 'x', lines: [nonDialogueLine] }] }] }).errors.some((e) => /不是台词行/.test(e)));
 
 console.log('\n⛔ 死线：导演不许写台词原文');
 {
@@ -123,7 +307,7 @@ console.log('\n⛔ 死线：导演不许写台词原文');
       n: 1, at: 0, duration_s: 4, framing: '近景', camera: '固定', on_screen: [A],
       action: `她说：${text}`, lines: [ln],
     }] }] };
-    const r = ok(leak);
+    const r = dialogueOk(leak);
     check('**台词原文出现在 action 里 → 报错**', !r.ok && r.errors.some((e) => /死线/.test(e)), r.errors.join(' | '));
     check('  报错里点明了是第几行', r.errors.some((e) => e.includes(String(ln))));
   } else {
@@ -133,7 +317,8 @@ console.log('\n⛔ 死线：导演不许写台词原文');
   const hidden = { units: [{ id: 'u1', note: '这一镜是高潮', shots: [{
     n: 1, at: 0, duration_s: 4, framing: '近景', camera: '固定', on_screen: [A], action: '她看着他', lines: allLines,
   }] }] };
-  check('自己写的注释不算台词泄漏', ok(hidden).ok, ok(hidden).errors.join(' | '));
+  const hiddenResult = dialogueOk(hidden);
+  check('自己写的注释不算台词泄漏', !hiddenResult.errors.some((e) => /死线/.test(e)), hiddenResult.errors.join(' | '));
 }
 {
   const fake = new Map([[1, '这是一句够长的假台词用来测试']]);
@@ -189,6 +374,26 @@ console.log('\n正反打朝向（180 度线，只警告）');
     ] }] }, {});
     return r2.ok && r2.warnings.some((w) => /朝 right/.test(w));
   })());
+}
+
+console.log('\n场景与道具引用');
+{
+  const ctx = {
+    board: {
+      identities: [{ id: A, character: 'c1' }], characters: [{ id: 'c1' }],
+      scenes: [{ id: 'hall' }, { id: 'garden' }], props: [{ id: 'key' }], shots: [],
+    },
+    script: '',
+  };
+  const make = (extra = {}) => asCurrent({ units: [{ id: 'u1', shots: [{
+    n: 1, at: 0, duration_s: 4, framing: '中景', camera: '固定',
+    on_screen: [A], action: '人物站定', lines: [], ...extra,
+  }] }] });
+  check('多场景项目不写 scene → 拒绝', !validateDirection(make(), ctx).ok);
+  check('不存在的 scene → 拒绝', !validateDirection(make({ scene: 'missing', props: [] }), ctx).ok);
+  check('不存在的 prop → 拒绝', !validateDirection(make({ scene: 'hall', props: ['missing'] }), ctx).ok);
+  check('合法 scene / props → 通过', validateDirection(make({ scene: 'hall', props: ['key'] }), ctx).ok,
+    validateDirection(make({ scene: 'hall', props: ['key'] }), ctx).errors.join(' | '));
 }
 
 console.log('\n' + '─'.repeat(56));

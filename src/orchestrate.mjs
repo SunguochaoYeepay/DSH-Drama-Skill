@@ -116,7 +116,7 @@ export function emotionToProsody(emotion, kind = 'spoken') {
  * 逐行编译器给所有镜头都写了 `cut`，于是一整片是 14 个硬切 ——
  * 这不叫"没做转场"，这叫**没做剪辑**。同场景同景别的连贯段落本来就该衔接起来。
  *
- * 规则（和 `prompts/story2board.md` 里写给模型的那条一致，只是这里由代码执行）：
+ * 规则（和 `references/prompts/story-to-board.md` 里写给模型的那条一致，只是这里由代码执行）：
  *   - 换场景 → 必须 cut（背景会跳）
  *   - 换景别 → 必须 cut（景别会被上一镜锁死）
  *   - 出场人物没有交集 → 必须 cut（多半是切到另一个视角了）

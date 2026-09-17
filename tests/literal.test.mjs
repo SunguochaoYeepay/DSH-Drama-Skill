@@ -15,6 +15,7 @@ import fs from 'node:fs';
 import { parseScript, spokenLines } from '../src/parse-script.mjs';
 import { compileLiteral } from '../src/literal.mjs';
 import { checkBoard } from '../src/board.mjs';
+import { FIXTURE, fixtureOrArg } from './fixtures/index.mjs';
 
 let passed = 0;
 const failures = [];
@@ -23,7 +24,8 @@ function check(label, ok, detail = '') {
   else { failures.push(label); console.log(`FAIL   ${label}${detail ? '  → ' + detail : ''}`); }
 }
 
-const SCRIPT_PATH = process.argv[2] || 'E:/AI-Tool/DeepSeek/story2video/examples/dashixiong.v2.json';
+// 默认用**仓库内夹具**（随代码保存），命令行可覆盖成真实剧目的板子。
+const SCRIPT_PATH = fixtureOrArg(process.argv, 2, FIXTURE.script);
 const board = JSON.parse(fs.readFileSync(SCRIPT_PATH, 'utf8'));
 const source = board.story.source;
 

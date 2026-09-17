@@ -17,12 +17,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { WINGET_PACKAGES } from './runtime-paths.mjs';
 
 const OLLAMA = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
 export const SCORE_MODEL = process.env.AIH_SCORE_MODEL || 'qwen3.5:27b';
 
 const FFMPEG = (() => {
-  const base = 'C:\\Users\\Administrator\\AppData\\Local\\Microsoft\\WinGet\\Packages';
+  const base = WINGET_PACKAGES;
   try {
     for (const dir of fs.readdirSync(base)) {
       if (!dir.startsWith('Gyan.FFmpeg_')) continue;

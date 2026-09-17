@@ -16,9 +16,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { aspectMatches } from './orchestrate.mjs';
+import { WINGET_PACKAGES } from './runtime-paths.mjs';
 
 const FFMPEG = (() => {
-  const base = 'C:\\Users\\Administrator\\AppData\\Local\\Microsoft\\WinGet\\Packages';
+  const base = WINGET_PACKAGES;
   try {
     for (const dir of fs.readdirSync(base)) {
       if (!dir.startsWith('Gyan.FFmpeg_')) continue;

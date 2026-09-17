@@ -18,6 +18,7 @@ import {
   flfPlan, srtTime, buildTimeline, toSrt, resolveVoice, emotionToProsody, estimateSpeechSeconds, aspectMatches, aspectRatioOf,
   planTransitions, applyTransitions,
 } from '../src/orchestrate.mjs';
+import { FIXTURE, fixtureOrArg } from './fixtures/index.mjs';
 
 let passed = 0;
 const failures = [];
@@ -26,7 +27,8 @@ function check(label, ok, detail = '') {
   else { failures.push(label); console.log(`FAIL   ${label}${detail ? '  → ' + detail : ''}`); }
 }
 
-const file = process.argv[2] || 'E:/AI-Tool/DeepSeek/story2video/examples/dashixiong.literal.json';
+// 默认用**仓库内夹具**（随代码保存），命令行可覆盖成真实剧目的板子。
+const file = fixtureOrArg(process.argv, 2, FIXTURE.board);
 const board = JSON.parse(fs.readFileSync(file, 'utf8'));
 
 console.log('\n帧网格（H3 的 17k+5）');

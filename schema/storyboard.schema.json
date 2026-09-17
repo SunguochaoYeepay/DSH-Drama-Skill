@@ -34,7 +34,7 @@
         "project": {
           "type": "string",
           "pattern": "^[A-Za-z0-9._-]+$",
-          "description": "剧目名：产出目录 story2video/projects/<project>/。一部剧一个目录；缺省用板子文件名。"
+          "description": "剧目名：由外部项目工作区决定产出目录。一部剧一个独立目录，禁止写入源码仓库。"
         },
         "logline": {
           "type": "string",
@@ -58,6 +58,7 @@
           "enum": [
             "realistic",
             "anime",
+            "cartoon3d",
             "cyberpunk",
             "healing",
             "vintage"
@@ -254,6 +255,10 @@
             "type": "string",
             "minLength": 1
           },
+          "species": {
+            "type": "string",
+            "description": "角色物种。缺省（或 human）= 人类：肖像会带族裔锚点、人类年龄档和「素色上衣」条款。非 human（cat/dog/mouse…）时**这三项全部跳过**，改用毛发/体表描述 —— 否则「东亚人，中国人」和「只穿素色上衣」会被注入到一只猫的提示词里，诱导模型把它画成拟人化或穿衣服的角色。非人类角色仍保留 age_group 字段，但不再进提示词。"
+          },
           "age_group": {
             "enum": [
               "child",
@@ -261,7 +266,7 @@
               "middle",
               "elder"
             ],
-            "description": "受控枚举，不是自由文本。含糊的年龄（「少女」「青年」）会被原样拼进提示词，等于把年龄交给模型抽签 —— 实测因此把成年角色画成幼儿园小孩。"
+            "description": "受控枚举，不是自由文本。含糊的年龄（「少女」「青年」）会被原样拼进提示词，等于把年龄交给模型抽签 —— 实测因此把成年角色画成幼儿园小孩。**非人类角色（species ≠ human）不进提示词。**"
           },
           "face_prompt": {
             "type": "string",
