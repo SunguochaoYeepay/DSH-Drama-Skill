@@ -15,6 +15,8 @@ metadata:
 项目立项（风格 + 画幅 + 已有参考资产）
   -> 故事/剧本
   -> 导演方案
+  -> 场景师 + 人物造型师方案
+  -> 导演审核资源方案
   -> 资源
   -> 关键帧
   -> 逐段视频
@@ -46,6 +48,8 @@ metadata:
 ## 双钥匙闸门
 
 剧本写作只能通过 `node cli/script.mjs generate --input <素材> --out <项目/story.md>` 调用百炼 `qwen3.8-max`。不得由执行任务的 Agent 自写，也不得用本地 Qwen 代写。CLI 留存输入、剧本哈希和模型响应来源；缺票或剧本被改动时，导演与计划编译拒绝继续。用户明确提供的完整原稿可用 `register-user` 登记，不能冒充模型产物；`--confirmed-by` 是人工声明，不是身份认证，Agent 不得代签。旧项目来源无法核实时停止并请用户确认，不能倒填模型票。
+
+剧本人工确认后即冻结。导演、场景师、人物造型师和 QA 模型只能报告问题、提出可选建议或拒绝进入下一阶段，**不得要求 Agent 直接改写已确认剧本，也不得把审查意见写回 `story.md`**。任何剧本修改都必须由用户明确授权，重新运行剧本入口并生成新的来源票据，再重新人工确认；否则只修复下游分镜/资产映射。
 
 导演同样只能走百炼 `qwen3.8-max`；导演稿旁必须有绑定板子、剧本、导演稿哈希及响应模型的 `.provenance.json`，计划编译和后续执行验票。旧导演稿缺票不能倒填，须重新生成并重新送审。剧本/导演模型、生图通道和模型、H3 档位/尺寸及运行路径统一在仓库根 `.env` 配置（模板 `.env.example`）；不要在项目文件中存密钥或改动全局默认值来切换剧目。
 
@@ -110,6 +114,10 @@ metadata:
 | Storyboard 数据结构 | `schema/storyboard.schema.json` |
 | 导演输出结构 | `references/director/schema.md` |
 | 导演决策规则 | `references/director/brief.md` |
+| 场景师规则 | `references/scene-designer.md` |
+| 人物造型师规则 | `references/character-designer.md` |
+| 场景师 Skill 入口 | `skills/scene-designer/SKILL.md` |
+| 人物造型师 Skill 入口 | `skills/character-designer/SKILL.md` |
 | 流程与人工闸门 | `references/workflow.md` |
 | 资产和关键帧规则 | `references/assets-and-keyframes.md` |
 | H3 执行参数 | `references/video-h3.md` |
@@ -128,6 +136,7 @@ node src/board.mjs table <board.json>
 # 导演与生成计划
 node cli/direct.mjs <board.json> --story <story.md> --out <board.direction.json>
 node cli/compile-units.mjs <board.direction.json> --out <render.plan.json>
+node cli/design-assets.mjs <board.json> --out <project/asset-design.json>
 
 # 关键帧与单段视频
 node cli/assets.mjs <board.json> --provider bailian

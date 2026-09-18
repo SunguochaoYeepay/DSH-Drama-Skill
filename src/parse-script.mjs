@@ -21,6 +21,7 @@ import { parseScenes } from './parse-scenes.mjs';
 const RE_OS = /^([^\s：:]{1,12})\s*(?:OS|O\.S\.|旁白|内心|独白)\s*[:：]\s*(.+)$/;
 const RE_CARD = /^(片尾字幕|片头字幕|字幕|画面字幕|旁白|画外音)\s*[:：]\s*(.+)$/;
 const RE_SPEAKER = /^([^\s：:【】\[\]（）()△▲]{1,12})\s*(?:[（(]([^）)]*)[）)])?\s*[:：]\s*(.+)$/;
+const RE_SPEAKER_CUE = /^([^\s：:【】\[\]（）()△▲]{1,12})\s*[（(]([^）)]*)[）)]\s*$/;
 const RE_META_KV = /^(短剧剧本|剧本|风格|时长|类型|题材|片名|集数|出品)\s*[:：]\s*(.*)$/;
 const RE_SECTION = /^(人物设定|人物介绍|人物表|场景表|分集大纲|故事大纲)\s*[:：]?\s*$/;
 
@@ -37,6 +38,7 @@ export function parseScript(text) {
   const lines = [];
   let seenScene = false;
   let currentScene = null;
+  let pendingSpeaker = null;
 
   for (let i = 0; i < raw.length; i++) {
     const no = i + 1;
@@ -46,6 +48,7 @@ export function parseScript(text) {
     const base = { no, raw: line };
 
     if (sceneHeaderLines.has(no)) {
+      pendingSpeaker = null;
       seenScene = true;
       currentScene = sceneByLine.get(no);
       lines.push({ ...base, kind: 'scene_header', scene_no: currentScene.scene_no, episode: currentScene.episode });
@@ -59,6 +62,20 @@ export function parseScript(text) {
 
     if (/^[△▲]/.test(line)) {
       lines.push({ ...base, kind: 'action', text: line.replace(/^[△▲]\s*/, ''), scene_no: currentScene?.scene_no ?? null });
+      continue;
+    }
+
+    const cue = seenScene && line.match(RE_SPEAKER_CUE);
+    if (cue) {
+      pendingSpeaker = { no, raw: line, speaker: cue[1], parenthetical: cue[2].trim() };
+      continue;
+    }
+
+    if (pendingSpeaker) {
+      const cueLine = pendingSpeaker;
+      pendingSpeaker = null;
+      lines.push({ ...cueLine, no, raw: line, cue_no: cueLine.no, kind: 'dialogue', text: line,
+        scene_no: currentScene?.scene_no ?? null });
       continue;
     }
 
@@ -94,7 +111,7 @@ export function parseScript(text) {
       continue;
     }
 
-    lines.push({ ...base, kind: 'other', text: line, scene_no: currentScene?.scene_no ?? null });
+    lines.push({ ...base, kind: seenScene ? 'action' : 'other', text: line, scene_no: currentScene?.scene_no ?? null });
   }
 
   const stats = { total: lines.length, dialogue: 0, voiceover: 0, action: 0, card: 0, meta: 0, other: 0, scene_header: 0, character_setting: 0 };

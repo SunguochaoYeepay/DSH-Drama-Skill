@@ -10,14 +10,14 @@ export function setting(name, fallback) {
   return process.env[name] || fallback;
 }
 
-export function advancedModel(name) {
+export function advancedModel(name, allowed = ['qwen3.8-max']) {
   const model = setting(name, 'qwen3.8-max');
-  if (model !== 'qwen3.8-max') throw new Error(`${name} 必须是已批准的高级模型 qwen3.8-max，收到 ${model}`);
+  if (!allowed.includes(model)) throw new Error(`${name} 必须是已批准的高级模型 ${allowed.join(' / ')}，收到 ${model}`);
   return model;
 }
 
 export const SCRIPT_MODEL = advancedModel('AIH_SCRIPT_MODEL');
-export const DIRECTOR_MODEL = advancedModel('AIH_DIRECTOR_MODEL');
+export const DIRECTOR_MODEL = advancedModel('AIH_DIRECTOR_MODEL', ['qwen3.8-max', 'glm-5.2']);
 function positiveInteger(name, fallback) {
   const value = Number(setting(name, fallback));
   if (!Number.isInteger(value) || value < 1) throw new Error(`${name} 必须是正整数`);

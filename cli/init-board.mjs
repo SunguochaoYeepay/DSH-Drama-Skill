@@ -44,7 +44,7 @@ const seed = {
   },
   story: { ...brief.story, source },
   characters: brief.characters || [], identities: brief.identities || [],
-  scenes: brief.scenes || [], props: brief.props || [], shots: [],
+  scenes: brief.scenes || [], scene_cast: brief.scene_cast || [], props: brief.props || [], shots: [],
 };
 const { board, report } = await compileLiteral(seed);
 if (!report.parsed.scenes.length || !report.shots || !report.verbatim) {

@@ -13,5 +13,14 @@
       { "text": "这里填写第一个故事节拍", "purpose": "这里填写它推动剧情的原因" },
       { "text": "这里填写第二个故事节拍", "purpose": "这里填写它形成结局的原因" }
     ]
-  }
+  },
+  "characters": [
+    { "id": "character_id", "name": "角色名", "age_group": "youth", "face_prompt": "已确认的面部特征；未知时明确写待人物造型师确认" }
+  ],
+  "identities": [
+    { "id": "identity_id", "name": "造型名称", "character": "character_id", "appearance_details": "已确认的妆发服装；未知项明确写待确认" }
+  ],
+  "scenes": [
+    { "id": "scene_id", "name": "场景名称", "environment": "已确认的空间和光线信息" }
+  ]
 }

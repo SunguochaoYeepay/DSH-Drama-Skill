@@ -116,6 +116,26 @@ export async function compileLiteral(board, opts = {}) {
 
   const parsed = parseScript(source);
   const { characters, identities, byName } = ensureCast(board, parsed);
+  const sceneCast = new Map((board.scene_cast || []).map((x) => [`${x.scene_no}:${x.speaker}`, x.identity]));
+  const identityIds = new Set(identities.map((x) => x.id));
+  for (const [key, identity] of sceneCast) {
+    if (!identityIds.has(identity)) throw new Error(`场次角色映射引用了不存在的造型：${key} -> ${identity}`);
+  }
+  // 同一剧本说话人可在不同场次对应不同身份；显式映射优先于名字匹配。
+  for (const [key, identity] of sceneCast) {
+    const speaker = key.slice(key.indexOf(':') + 1);
+    const ident = identities.find((x) => x.id === identity);
+    const ch = ident && characters.find((x) => x.id === ident.character);
+    if (ch) byName.set(speaker, ch);
+  }
+  const mappedSpeakers = new Set([...sceneCast.keys()].map((key) => key.slice(key.indexOf(':') + 1)));
+  const mappedCharacterIds = new Set([...sceneCast.values()].map((identity) => identities.find((x) => x.id === identity)?.character).filter(Boolean));
+  for (let i = characters.length - 1; i >= 0; i -= 1) {
+    if (characters[i].id.startsWith('c_') && mappedSpeakers.has(characters[i].name)) {
+      const removed = characters.splice(i, 1)[0];
+      for (let j = identities.length - 1; j >= 0; j -= 1) if (identities[j].character === removed.id) identities.splice(j, 1);
+    }
+  }
   const castOf = (name) => {
     const ch = byName.get(name);
     if (!ch) return null;
@@ -129,8 +149,9 @@ export async function compileLiteral(board, opts = {}) {
     if (byNo) return byNo.id;
     const byName_ = sceneList.find((s) => s.name === location || s.name === location?.trim());
     if (byName_) return byName_.id;
-    return sceneList[0]?.id || null;
+    return null;
   };
+  const sceneByNo = new Map(sceneList.map((s) => [s.scene_no, s]));
   // 若 board 里一个场景都没有，按剧本场次现造。
   // `environment` 用**这一场的第一个动作行**（它通常在描写环境），并在角色名出现处截断 ——
   // 环境描述里不该混进人物的动作。
@@ -163,9 +184,16 @@ export async function compileLiteral(board, opts = {}) {
       });
     }
   }
+  // Brief 提供的场景若未写 scene_no，只允许按明确的剧本顺序补齐一次，随后即冻结映射。
   for (const [i, s] of parsed.scenes.entries()) {
     if (sceneList[i] && sceneList[i].scene_no == null) sceneList[i].scene_no = s.scene_no;
   }
+  for (const s of parsed.scenes) {
+    if (s.scene_no == null || !sceneList.some((x) => x.scene_no === s.scene_no)) {
+      throw new Error(`剧本场次 ${s.scene_no ?? '?'} 没有明确对应的 Brief 场景`);
+    }
+  }
+  const castOfAt = (name, sceneNo) => sceneCast.get(`${sceneNo}:${name}`) || castOf(name);
 
   // ---- 分组：动作行攒着，遇到台词就合成一镜 ----
   const shots = [];
@@ -183,21 +211,21 @@ export async function compileLiteral(board, opts = {}) {
 
     const cast = [];
     if (dialogueLine) {
-      const cid = castOf(dialogueLine.speaker);
+      const cid = castOfAt(dialogueLine.speaker, sceneNo);
       if (cid) cast.push(cid);
     }
     // 动作里提到谁，谁就出场（按名字匹配）
     const actionText = buffer.map((b) => b.text).join(' ');
     for (const [name, ch] of byName) {
       if (name && actionText.includes(name)) {
-        const cid = ch.identities && ch.identities[0];
+        const cid = castOfAt(name, sceneNo) || (ch.identities && ch.identities[0]);
         if (cid && !cast.includes(cid)) cast.push(cid);
       }
     }
 
     const dialogue = dialogueLine
       ? [{
-        character: castOf(dialogueLine.speaker) || dialogueLine.speaker,
+        character: castOfAt(dialogueLine.speaker, sceneNo) || dialogueLine.speaker,
         text: dialogueLine.text,                       // ← 原文，未经任何模型
         emotion: dialogueLine.parenthetical || (dialogueLine.kind === 'voiceover' ? '内心独白' : ''),
         kind: dialogueLine.kind === 'voiceover' ? 'voiceover' : 'spoken',
@@ -220,7 +248,7 @@ export async function compileLiteral(board, opts = {}) {
 
     shots.push({
       id,
-      scene: sceneIdOf(sceneNo, location) || sceneList[0]?.id,
+      scene: sceneIdOf(sceneNo, location),
       cast,
       props: [],
       duration_s: estimateDuration(lines),
@@ -261,7 +289,7 @@ export async function compileLiteral(board, opts = {}) {
         idx += 1;
         shots.push({
           id: `s${String(idx).padStart(2, '0')}`,
-          scene: sceneIdOf(sceneNo, location) || sceneList[0]?.id,
+          scene: sceneIdOf(sceneNo, location),
           cast: [], props: [],
           duration_s: Math.min(SHOT_MAX_S, Math.max(2, Math.round(l.text.length / CHARS_PER_SEC))),
           shot_size: '全景', lighting: LIGHT_BY_TIME['无'],

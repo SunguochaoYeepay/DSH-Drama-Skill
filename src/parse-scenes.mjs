@@ -30,7 +30,7 @@ function cn2num(s) {
 
 const RE_EP_ANY = /第\s*([0-9一二三四五六七八九十]+)\s*[集话]/;
 const RE_NUMBERED = /(\d{1,3})\s*[-－—.]\s*(\d{1,3})/;
-const RE_SIMPLE_SCENE = /(?:第\s*([0-9一二三四五六七八九十]+)\s*场|场次\s*([0-9]+))/;
+const RE_SIMPLE_SCENE = /(?:第\s*([0-9一二三四五六七八九十]+)\s*场|场次\s*([0-9一二三四五六七八九十]+))/;
 const RE_LABEL_SCENE = /(?:场景|地点|外景|内景)\s*[:：]\s*([内外]?)\s*/;
 const RE_LABEL_PEOPLE = /人物\s*[:：]\s*([^\n]+)/;
 const RE_LABEL_TIME = /(?:时间|时)\s*[:：]\s*([^\n]+)/;

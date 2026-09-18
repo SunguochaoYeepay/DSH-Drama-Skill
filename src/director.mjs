@@ -619,7 +619,7 @@ export async function callDirector(prompt, opts = {}) {
   let response;
   try {
     response = await run({ messages, model, maxTokens: opts.maxTokens || DIRECTOR_MAX_OUTPUT_TOKENS,
-      reasoningEffort: opts.thinking ? 'xhigh' : 'low', timeoutMs: opts.timeoutMs || BAILIAN_TEXT_TIMEOUT_SECONDS * 1000 });
+      reasoningEffort: opts.reasoningEffort || (opts.thinking ? 'xhigh' : 'low'), timeoutMs: opts.timeoutMs || BAILIAN_TEXT_TIMEOUT_SECONDS * 1000 });
   } catch (error) {
     return { ok: false, raw: '', error: String(error.message || error), seconds: Math.round((Date.now() - started) / 1000) };
   }
@@ -632,7 +632,7 @@ export async function callDirector(prompt, opts = {}) {
   }
 
   const text = extractText(stdout);
-  const parsed = extractJson(text);
+  const parsed = response.parsed || extractJson(text);
   if (!parsed) {
     return { ok: false, raw: stdout, error: `模型没交出可解析的 JSON。原文前 300 字：${text.slice(0, 300)}`, seconds };
   }

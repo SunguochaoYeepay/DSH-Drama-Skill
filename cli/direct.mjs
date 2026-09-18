@@ -8,6 +8,7 @@ import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { requireScriptProvenance } from '../src/script-provenance.mjs';
 import { writeDirectionReceipt } from '../src/direction-provenance.mjs';
 import { DIRECTOR_MODEL, DIRECTOR_MAX_OUTPUT_TOKENS } from '../src/config.mjs';
+import { generateBatchedDirection } from '../src/director-batch.mjs';
 
 installCliErrorHandler();
 
@@ -18,7 +19,7 @@ const flag = (name, fallback) => {
   return at >= 0 && argv[at + 1] ? argv[at + 1] : fallback;
 };
 if (!boardArg) {
-  console.error('用法：node cli/direct.mjs <board.json> [--story story.md] [--out board.direction.json] [--model qwen3.8-max] [--thinking] [--max-tokens 12000]');
+  console.error('用法：node cli/direct.mjs <board.json> [--story story.md] [--out board.direction.json] [--batched] [--model qwen3.8-max] [--thinking] [--max-tokens 12000]');
   process.exit(2);
 }
 
@@ -36,11 +37,17 @@ else console.error('⚠ --skip-gate：仅限调试，已跳过剧本人工确认
 const script = fs.readFileSync(storyPath, 'utf8');
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/(?:[A-Za-z]:)/, (m) => m.slice(1))), '..');
 const prompt = buildBrief({ briefText: readBrief(root), board, script, projectRoot: root });
-const result = await callDirector(prompt, {
+const result = argv.includes('--batched')
+  ? await generateBatchedDirection({
+    basePrompt: prompt, board, script, model: flag('model', DIRECTOR_MODEL),
+    maxTokens: Number(flag('max-tokens', DIRECTOR_MAX_OUTPUT_TOKENS)),
+    thinking: argv.includes('--thinking'), timeoutMs: undefined,
+  })
+  : await callDirector(prompt, {
   model: flag('model', undefined),
   thinking: argv.includes('--thinking'),
   maxTokens: Number(flag('max-tokens', DIRECTOR_MAX_OUTPUT_TOKENS)),
-});
+  });
 if (!result.ok) {
   console.error(`导演失败（${result.seconds}s）：${result.error}`);
   process.exit(1);
