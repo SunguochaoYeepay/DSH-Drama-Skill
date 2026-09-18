@@ -58,7 +58,7 @@
 导演稿改动后，重新审阅并绑定 `board.direction.json`，再编译计划；不要把 `render.plan.json` 签到 `direction` 票位，也不要靠 `--skip-gate` 绕过不一致。
 
 `cli/keyframes.mjs` 把通道草稿复制到计划槽位；`review-gate --stage keyframes` 根据计划槽位签票，`cli/unit.mjs` 使用同一清单。不要手工签 `keyframes_bailian/` 草稿；若提示产物变化，检查计划槽位是否重新生成或被替换。
-连续承接单元（`continuity.mode = continue_previous`）的关键帧路径取自交接记录，不是计划 —— 签票前按实际清单核一遍。
+前段尾帧参考单元（`continuity.mode = reference_previous` 或 `continue_previous`）的关键帧路径取自交接记录，不是计划 —— 签票前按实际清单核一遍。
 
 ## 进程与日志
 

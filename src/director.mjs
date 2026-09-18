@@ -203,13 +203,13 @@ export function validateDirection(dir, ctx = {}) {
         errors.push(`${at}: v6 缺 continuity`);
       } else if (ui === 0) {
         if (continuity.mode !== 'independent') errors.push(`${at}: 第一单元 continuity.mode 必须是 independent`);
-      } else if (!['independent', 'continue_previous'].includes(continuity.mode)) {
-        errors.push(`${at}: continuity.mode 必须是 independent 或 continue_previous`);
-      } else if (continuity.mode === 'continue_previous') {
+      } else if (!['independent', 'reference_previous', 'continue_previous'].includes(continuity.mode)) {
+        errors.push(`${at}: continuity.mode 必须是 independent、reference_previous 或 continue_previous`);
+      } else if (continuity.mode === 'reference_previous' || continuity.mode === 'continue_previous') {
         const previousId = dir.units[ui - 1]?.id;
         if (continuity.previous_unit !== previousId) errors.push(`${at}: continuity.previous_unit 必须是紧邻上一单元 ${previousId}`);
-        if (!continuity.handoff_state || !String(continuity.handoff_state).trim()) errors.push(`${at}: 连续单元缺 handoff_state`);
-        if (continuity.deferred_keyframe !== true) errors.push(`${at}: 连续单元必须 deferred_keyframe=true，等待上一段实际稳定尾帧`);
+        if (continuity.mode === 'continue_previous' && (!continuity.handoff_state || !String(continuity.handoff_state).trim())) errors.push(`${at}: 连续单元缺 handoff_state`);
+        if (continuity.deferred_keyframe !== true) errors.push(`${at}: 依赖前段的单元必须 deferred_keyframe=true，等待上一段实际稳定尾帧`);
         if (!Array.isArray(continuity.allowed_changes)) errors.push(`${at}: continuity.allowed_changes 必须是数组`);
       }
     }

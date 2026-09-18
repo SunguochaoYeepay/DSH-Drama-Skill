@@ -161,7 +161,8 @@ FastH3 测试档每个生成单元至少会产出约 5.17 秒。三个 2 秒单�
 
 导演看不到未来由 H3 实际生成的最后一帧，但必须先定义符号状态契约。每个单元写 `end_state`；下一单元判断：
 
-- 与前段没有动作连续关系：`continuity.mode = independent`，说明独立开始理由。
+- 与前段没有动作连续关系、且首帧不需要上一段产物：`continuity.mode = independent`，说明独立开始理由。
+- 与前段动作可以切开、但首帧仍必须参考上一段实际视频尾帧：`continuity.mode = reference_previous`，写明 `previous_unit`、`deferred_keyframe: true` 和 `allowed_changes`；这表示参考上一段的真实人物、空间和身份，不表示继承上一段动作。
 - 必须承接前段动作或姿态：`continuity.mode = continue_previous`，写明 `previous_unit`、必须继承的 `handoff_state`、`deferred_keyframe: true`，以及只允许变化的 `allowed_changes`（例如景别或机位）。
 
 连续单元的关键帧不能批量提前锁死。上一段视频通过后，执行器会提取实际稳定尾帧，再直接沿用或以它为参考重做下一关键帧。导演负责定义“必须保持什么”，执行器负责读取“实际生成成什么”。

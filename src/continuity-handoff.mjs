@@ -18,7 +18,7 @@ function insideProject(projectDir, file) {
 }
 
 export function createHandoffRecord({ projectDir, unit, sourceUnit, sourceClip, stableFrame, tailOffsetS }) {
-  if (unit.continuity?.mode !== 'continue_previous') throw new Error(`${unit.id}: 不是连续承接单元`);
+  if (!['reference_previous', 'continue_previous'].includes(unit.continuity?.mode)) throw new Error(`${unit.id}: 不是需要上一段尾帧参考的单元`);
   if (unit.continuity.previous_unit !== sourceUnit) throw new Error(`${unit.id}: 导演指定承接 ${unit.continuity.previous_unit}，不能绑定 ${sourceUnit}`);
   for (const file of [sourceClip, stableFrame]) {
     if (!fs.existsSync(file)) throw new Error(`交接产物不存在：${file}`);
@@ -60,13 +60,13 @@ export function bindHandoffKeyframe(projectDir, unit, keyframe) {
 }
 
 export function requireHandoff(projectDir, unit, { requireKeyframe = true } = {}) {
-  if (unit.continuity?.mode !== 'continue_previous') return null;
+  if (!['reference_previous', 'continue_previous'].includes(unit.continuity?.mode)) return null;
   const file = handoffPath(projectDir, unit.id);
   if (!fs.existsSync(file)) throw new Error(`${unit.id}: 缺少实际尾帧交接凭证，必须等 ${unit.continuity.previous_unit} 生成并人工确认后再准备关键帧`);
   const record = JSON.parse(fs.readFileSync(file, 'utf8'));
   if (record.version !== HANDOFF_VERSION || record.project !== path.resolve(projectDir) || record.unit !== unit.id) throw new Error(`${unit.id}: 交接凭证不属于当前项目或单元`);
   if (record.source_unit !== unit.continuity.previous_unit) throw new Error(`${unit.id}: 交接来源与导演方案不符`);
-  if (record.handoff_state !== unit.continuity.handoff_state) throw new Error(`${unit.id}: 导演交接状态已变化，旧凭证失效`);
+  if (unit.continuity.mode === 'continue_previous' && record.handoff_state !== unit.continuity.handoff_state) throw new Error(`${unit.id}: 导演交接状态已变化，旧凭证失效`);
   for (const [label, filePath, expected] of [
     ['上一段视频', record.source_clip, record.source_clip_sha256],
     ['稳定尾帧', record.stable_frame, record.stable_frame_sha256],

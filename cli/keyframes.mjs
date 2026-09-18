@@ -315,8 +315,8 @@ let failures = 0;
 for (const unit of dir.units) {
   if (ONLY.length && !ONLY.includes(unit.id)) continue;
   let handoff = null;
-  if (unit.continuity?.mode === 'continue_previous') {
-    if (!ONLY.length) throw new Error(`${unit.id}: 连续单元禁止随整批提前生成关键帧；请在上一段通过后用 --units ${unit.id} 单独生成`);
+  if (['reference_previous', 'continue_previous'].includes(unit.continuity?.mode)) {
+    if (!ONLY.length) throw new Error(`${unit.id}: 依赖前段的单元禁止随整批提前生成关键帧；请在上一段通过后用 --units ${unit.id} 单独生成`);
     handoff = requireHandoff(PROJ, unit, { requireKeyframe: false });
     requireApproval(PROJ, 'handoff', [handoff.stable_frame], { id: unit.id, skip: SKIP_GATE });
   }

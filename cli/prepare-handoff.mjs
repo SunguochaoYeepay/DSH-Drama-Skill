@@ -18,7 +18,7 @@ const offset = Number(flag('tail-offset', '0.35'));
 if (!unitId || !Number.isFinite(offset) || offset <= 0) throw new Error('用法：node cli/prepare-handoff.mjs --plan <render.plan.json> --unit <下一单元> [--tail-offset 0.35]');
 const plan = JSON.parse(fs.readFileSync(planFile, 'utf8'));
 const unit = (plan.units || []).find((x) => x.id === unitId);
-if (!unit || unit.continuity?.mode !== 'continue_previous') throw new Error(`${unitId}: 不是导演标记的连续承接单元`);
+if (!unit || !['reference_previous', 'continue_previous'].includes(unit.continuity?.mode)) throw new Error(`${unitId}: 不是导演标记的前段尾帧参考单元`);
 const sourceUnit = unit.continuity.previous_unit;
 const resultFile = clipResultPath(project, sourceUnit);
 if (!resultFile) throw new Error(`上一段 ${sourceUnit} 尚未生成`);

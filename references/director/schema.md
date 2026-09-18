@@ -93,7 +93,7 @@
 | `keyframe_cast` | ✅ | 0 秒关键帧需要身份参考的角色，必须是本单元角色子集；本地 Qwen 最多 2 名 |
 | `action_complexity` | ✅ | H3 动作复杂度；每单元最多一个高风险状态转换 |
 | `end_state` | v6 必填 | 单元应停住的稳定、可观察状态，供下一单元承接和实际尾帧核对 |
-| `continuity` | v6 必填 | 第一单元为 `independent`。后续为 `independent`，或 `continue_previous` 并提供 `previous_unit/handoff_state/deferred_keyframe:true/allowed_changes` |
+| `continuity` | v6 必填 | 第一单元为 `independent`。后续可为 `independent`；若关键帧必须参考上一段实际尾帧，使用 `reference_previous` 并提供 `previous_unit/deferred_keyframe:true/allowed_changes`；若还必须继承动作状态，使用 `continue_previous` 并额外提供 `handoff_state` |
 | `shots` | ✅ | 至少一镜 |
 
 > **一个单元 = 一次生成 = 一个连续的世界。**
