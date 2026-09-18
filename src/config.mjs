@@ -28,6 +28,7 @@ export const DIRECTOR_MAX_OUTPUT_TOKENS = positiveInteger('AIH_DIRECTOR_MAX_OUTP
 export const BAILIAN_TEXT_TIMEOUT_SECONDS = positiveInteger('AIH_BAILIAN_TEXT_TIMEOUT_SECONDS', '600');
 export const ASSET_PROVIDER = setting('AIH_ASSET_PROVIDER', 'bailian');
 export const KEYFRAME_PROVIDER = setting('AIH_KEYFRAME_PROVIDER', 'bailian');
+export const VOLCENGINE_IMAGE_MODEL = setting('AIH_VOLCENGINE_IMAGE_MODEL', 'doubao-seedream-4-5-251128');
 export const ASSET_IMAGE_MODEL = setting('AIH_ASSET_IMAGE_MODEL', 'qwen-image-3.0');
 export const KEYFRAME_IMAGE_MODEL = setting('AIH_KEYFRAME_IMAGE_MODEL', 'qwen-image-3.0-pro');
 export const HUIMENG_IMAGE_MODEL = setting('AIH_HUIMENG_IMAGE_MODEL', 'image-2-official');

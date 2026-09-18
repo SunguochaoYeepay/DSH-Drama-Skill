@@ -31,6 +31,7 @@ import { projectAssetFiles, unitAssets } from '../src/asset-resolver.mjs';
 import { planKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { COMFY_GEN, COMFY_PYTHON, NODE } from '../src/runtime-paths.mjs';
 import * as bailian from '../src/providers/bailian.mjs';
+import * as volcengine from '../src/providers/volcengine.mjs';
 import { bindHandoffKeyframe, requireHandoff } from '../src/continuity-handoff.mjs';
 import { assertPlanProvenance } from '../src/plan-provenance.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
@@ -62,7 +63,7 @@ const BAILIAN_SIZE = String(flag('bailian-size', BAILIAN_KEYFRAME_SIZE));
 const ONLY = String(flag('units', '')).split(',').map((s) => s.trim()).filter(Boolean);
 const PROVIDER_SETTING = String(flag('provider', KEYFRAME_PROVIDER)).toLowerCase();
 const PROVIDER = PROVIDER_SETTING === 'comfyui' ? 'local' : PROVIDER_SETTING;
-if (!['huimeng', 'local', 'bailian'].includes(PROVIDER)) throw new Error('--provider 只能是 huimeng / local / bailian / comfyui');
+if (!['huimeng', 'local', 'bailian', 'volcengine'].includes(PROVIDER)) throw new Error('--provider 只能是 huimeng / local / bailian / volcengine / comfyui');
 const LOCAL_GEN = COMFY_GEN;
 const LOCAL_PY = COMFY_PYTHON;
 const LOCAL_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_local_v2'))));
@@ -70,6 +71,7 @@ const LOCAL_STEPS = String(flag('steps', LOCAL_IMAGE_STEPS));
 const LOCAL_CFG = String(flag('cfg', LOCAL_IMAGE_CFG));
 const BAILIAN_MODEL = String(flag('model', KEYFRAME_IMAGE_MODEL));
 const BAILIAN_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_bailian'))));
+const VOLCENGINE_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_volcengine'))));
 
 function staticKeyframeStart(unit, shot) {
   const text = String(unit.keyframe_start || shot.action || '').trim();
@@ -259,11 +261,11 @@ function refsFor(shot, unit) {
     { file: person.portrait, role: 'portrait', character: person.characterId },
     { file: person.sheet, role: 'sheet', character: person.characterId },
   ]);
-  if (PROVIDER === 'local' || PROVIDER === 'bailian') {
+  if (PROVIDER === 'local' || PROVIDER === 'bailian' || PROVIDER === 'volcengine') {
     if (assets.people.length > 2) {
       throw new Error(`${unit.id}: 三个参考位中需保留一个给场景，最多只能精确锚定 2 名角色；请让导演拆分镜头`);
     }
-    if (PROVIDER === 'bailian') {
+    if (PROVIDER === 'bailian' || PROVIDER === 'volcengine') {
       return [
         ...assets.people.map((person) => ({
           file: person.sheet || person.portrait,
@@ -321,10 +323,10 @@ for (const unit of dir.units) {
   const shot = unit.shots[0];
   let refs = refsFor(shot, unit);
   if (handoff) refs = withHandoffReference(refs, handoff.stable_frame, PROVIDER);
-  const refGuide = PROVIDER === 'local' || PROVIDER === 'bailian'
+  const refGuide = PROVIDER === 'local' || PROVIDER === 'bailian' || PROVIDER === 'volcengine'
     ? `【参考图职责】${refs.map((r, i) => `图${i + 1}=${r.role === 'handoff' ? '上一段实际稳定尾帧，必须继承姿态与空间状态' : r.role === 'scene' ? '场景与构图环境' : r.role === 'portrait' ? '人物脸部' : r.role === 'prop' ? `道具${r.name || ''}` : '人物服装与身份'}`).join('；')}`
     : '';
-  const prompt = PROVIDER === 'local' || PROVIDER === 'bailian'
+  const prompt = PROVIDER === 'local' || PROVIDER === 'bailian' || PROVIDER === 'volcengine'
     ? buildLocalPrompt(unit, shot, refs)
     : [refGuide, buildPrompt(unit, shot)].filter(Boolean).join('\n');
   const override = readKeyframeOverride(PROJ, unit.id);
@@ -336,6 +338,8 @@ for (const unit of dir.units) {
     ? path.join(LOCAL_OUT, `${unit.id}.png`)
     : PROVIDER === 'bailian'
     ? path.join(BAILIAN_OUT, `${unit.id}.png`)
+    : PROVIDER === 'volcengine'
+    ? path.join(VOLCENGINE_OUT, `${unit.id}.png`)
     : unit.keyframe
     ? path.resolve(PROJ, unit.keyframe)
     : path.join(DEFAULT_OUT, `${unit.id}.png`);
@@ -368,29 +372,31 @@ for (const unit of dir.units) {
         got = true;
       }
     } catch { /* 报错统一在下面显示 */ }
-  } else if (PROVIDER === 'bailian') {
-    const requestOut = path.join(BAILIAN_OUT, 'raw', unit.id);
+  } else if (PROVIDER === 'bailian' || PROVIDER === 'volcengine') {
+    const channelOut = PROVIDER === 'bailian' ? BAILIAN_OUT : VOLCENGINE_OUT;
+    const requestOut = path.join(channelOut, 'raw', unit.id);
     fs.mkdirSync(requestOut, { recursive: true });
     const requestDir = path.join(requestOut, '_request');
     fs.mkdirSync(requestDir, { recursive: true });
     // 走 `providers/bailian.mjs`，它内部直连 CLI（**不是** `bl.ps1`，本机 PowerShell 起不了外部进程）。
     // 这里不再自己拼 PS 脚本 —— 通道只该有一个所有者，否则两边会各自漂移。
     const started = Date.now();
-    const res = await bailian.edit({
+    const channel = PROVIDER === 'bailian' ? bailian : volcengine;
+    const res = await channel.edit({
       images: refs.map((ref) => ref.file),
       instruction: finalPrompt,
-      size: dimensionsForAspect(BAILIAN_SIZE, ASPECT, '*'),
+      size: PROVIDER === 'bailian' ? dimensionsForAspect(BAILIAN_SIZE, ASPECT, '*') : '2K',
       n: 1,
       outDir: requestOut,
       prefix: unit.id,
-      model: BAILIAN_MODEL,
+      model: PROVIDER === 'bailian' ? BAILIAN_MODEL : undefined,
       timeoutMs: 360000,
     });
     secs = String(Math.round((Date.now() - started) / 1000));
     txt = String(res.stdout || '') + String(res.stderr || '') + String(res.error || '');
     // `_request/` 留档：这一镜当时到底发了什么。正文 + 实际 argv 各存一份。
     fs.writeFileSync(path.join(requestDir, 'prompt.txt'), finalPrompt, 'utf8');
-    fs.writeFileSync(path.join(requestDir, 'command.json'), JSON.stringify(res.argv, null, 2) + '\n', 'utf8');
+    fs.writeFileSync(path.join(requestDir, 'command.json'), JSON.stringify({ provider: PROVIDER, model: res.json?.model || null }, null, 2) + '\n', 'utf8');
     const produced = res.files[0];
     if (res.status === 0 && produced && fs.existsSync(produced)) {
       fs.copyFileSync(produced, out);
@@ -433,7 +439,7 @@ if (failures) {
   const generated = planKeyframeFiles(PROJ, dir);
   const generationRecord = writeGenerationRecord(PROJ, 'keyframes', {
     provider: PROVIDER,
-    model: PROVIDER === 'local' ? 'local-comfyui' : PROVIDER === 'bailian' ? BAILIAN_MODEL : HUIMENG_IMAGE_MODEL,
+    model: PROVIDER === 'local' ? 'local-comfyui' : PROVIDER === 'bailian' ? BAILIAN_MODEL : PROVIDER === 'volcengine' ? process.env.AIH_VOLCENGINE_IMAGE_MODEL : HUIMENG_IMAGE_MODEL,
     requested_provider: PROVIDER_SETTING || null,
     artifacts: generated,
     plan: DIRECTION_PATH,

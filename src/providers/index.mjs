@@ -20,14 +20,15 @@
  *
  * 本地通道保留：探构图、批量试错、线上不可用时兜底。
  *
- * 环境变量可覆盖：AIH_ASSET_PROVIDER / AIH_KEYFRAME_PROVIDER = bailian | comfyui
+ * 环境变量可覆盖：AIH_ASSET_PROVIDER / AIH_KEYFRAME_PROVIDER = bailian | comfyui | volcengine
  */
 
 import * as bailian from './bailian.mjs';
 import * as comfyui from './comfyui.mjs';
+import * as volcengine from './volcengine.mjs';
 import { ASSET_PROVIDER, KEYFRAME_PROVIDER } from '../config.mjs';
 
-const REGISTRY = { bailian, comfyui };
+const REGISTRY = { bailian, comfyui, volcengine };
 
 export function provider(name) {
   const p = REGISTRY[name];

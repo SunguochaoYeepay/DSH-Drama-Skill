@@ -44,7 +44,7 @@ import { provider as getProvider, assetProvider } from '../src/providers/index.m
 import { requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { requireDirectionProvenance } from '../src/direction-provenance.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
-import { ASSET_IMAGE_MODEL, LOCAL_IMAGE_STEPS } from '../src/config.mjs';
+import { ASSET_IMAGE_MODEL, LOCAL_IMAGE_STEPS, VOLCENGINE_IMAGE_MODEL } from '../src/config.mjs';
 import { writeGenerationRecord } from '../src/generation-records.mjs';
 
 installCliErrorHandler();
@@ -156,7 +156,7 @@ function callProvider(p, job, outDir, images) {
       ? p.edit({ ...common, images, instruction: job.instruction })
       : p.generate({ ...common, prompt: job.prompt });
   }
-  const common = { size: ratio, n: N, outDir, prefix: job.id, model: ASSET_IMAGE_MODEL };
+  const common = { size: ratio, n: N, outDir, prefix: job.id, model: p.name === 'volcengine' ? VOLCENGINE_IMAGE_MODEL : ASSET_IMAGE_MODEL };
   return job.mode === 'edit'
     ? p.edit({ ...common, images, instruction: job.instruction })
     : p.generate({ ...common, prompt: job.prompt });
@@ -175,7 +175,7 @@ if (!jobs.length) {
 }
 
 const p = PROVIDER_NAME ? getProvider(PROVIDER_NAME) : assetProvider();
-const label = p.name === 'comfyui' ? '本地 ComfyUI（零成本）' : '百炼线上（付费）';
+const label = p.name === 'comfyui' ? '本地 ComfyUI（零成本）' : p.name === 'volcengine' ? '火山方舟 Seedream（付费）' : '百炼线上（付费）';
 
 console.log(`\n出资源　共 ${jobs.length} 项　通道：${label}${DRY ? '　【干跑】' : ''}`);
 if (SKIP_GATE) console.log('⚠ --skip-gate 已生效：未校验上游闸门');

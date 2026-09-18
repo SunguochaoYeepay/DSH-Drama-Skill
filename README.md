@@ -207,7 +207,7 @@ $env:VERIFY_INSTALLED=1; node tests/integration/dsh-plugins.test.mjs   # 验已�
 
 模型凭据、项目媒体和运行缓存不得提交到仓库。
 
-运行配置集中在仓库根目录 `.env`（按 `.env.example` 填写，已被 Git 忽略）。包含剧本/导演高级模型、生图通道及模型、H3 档位/尺寸和本机工具路径；命令行显式参数仍可覆盖非剧本/导演模型的运行档位。`AIH_SCRIPT_MODEL` 和 `AIH_DIRECTOR_MODEL` 目前只允许 `qwen3.8-max`。剧本和导演稿分别生成哈希绑定的来源票，历史产物没有票据时不能推断作者或直接继续生成。
+运行配置集中在仓库根目录 `.env`（按 `.env.example` 填写，已被 Git 忽略）。包含剧本/导演高级模型、生图通道及模型、H3 档位/尺寸和本机工具路径；生图通道可选 `comfyui`、`bailian`、`volcengine`（火山方舟 Seedream）。使用火山通道时填写 `AIH_VOLCENGINE_API_KEY`，模型由 `AIH_VOLCENGINE_IMAGE_MODEL` 配置。命令行显式参数仍可覆盖非剧本/导演模型的运行档位。`AIH_SCRIPT_MODEL` 和 `AIH_DIRECTOR_MODEL` 目前只允许 `qwen3.8-max`。剧本和导演稿分别生成哈希绑定的来源票，历史产物没有票据时不能推断作者或直接继续生成。
 
 ## License
 
