@@ -8,23 +8,23 @@ H3 暂时不可替换。视频成本高，因此先验证导演节奏、关键�
 
 | 用途 | 规格 |
 |---|---|
-| 默认预览（不带规格参数） | `fast` → FastVideo FastH3 8 步 + VSA，`i2v` 单首帧，`test` = `480x864` |
-| 首尾帧预览 | `fast` + `--last-keyframe` → FastVideo FastH3 `fl2v`，`480x864` |
-| 默认正式 | `fast` + `--quality final` → FastVideo FastH3 `i2v`/`fl2v`，`768x1344` |
+| 默认规格 | `fast` → FastVideo FastH3 8 步 + VSA，`i2v` 单首帧；`AIH_VIDEO_NORMAL_SIZE=480x864` |
+| 首尾帧 | `fast` + `--last-keyframe` → FastVideo FastH3 `fl2v`；使用本次指定的尺寸 |
+| 高质量 | `fast` + `--quality high` → FastVideo FastH3 `i2v`/`fl2v`；`AIH_VIDEO_HIGH_SIZE=768x1344` |
 | 显式多参考实验 | `--profile draft|balanced|final` → 基础 H3 `r2v`；不是正式档默认值 |
 
-**两轮的送审与确认规则见 [`workflow.md`](workflow.md) 的「预览档与正式档」** —— 本文件只负责规格，
-不重复闸门规则。
+**送审与确认规则见 [`workflow.md`](workflow.md) 的「视频规格与重抽」**。本文件只负责规格。
 
 `fast` 档支持两种输入：只有首帧时走 `i2v`；同时传入 `--last-keyframe` 时走 `fl2v`。
 FastH3 不支持多图 Ref2VA。首帧/尾帧应当由已确认的关键帧承担身份、构图和状态锚定；只有明确需要多参考实验时，才选基础 H3 的 `r2v` profile。
 
 `i2v`/`fl2v` 与 `r2v` 的提示词结构不同。FastH3 主要依靠首尾关键帧和镜内可观察动作；
-`r2v` 才使用多图 `subject_definitions` / `retention_analysis`。因此预览可以判断节奏、动作、对白和明显漂移，
-但不能替代正式分辨率下的纹理、文字、微小配饰等细节验收。
+`r2v` 才使用多图 `subject_definitions` / `retention_analysis`。因此常规尺寸（默认 `480x864`）可以判断节奏、动作、对白和明显漂移，
+但不能替代 `768x1344` 下的纹理、文字、微小配饰等细节验收。
 
-`--profile` 决定模型路线，`--quality` 决定尺寸，两者正交。只给 `--quality final` 会按设计得到
-FastH3 正式分辨率；不会自动切换到耗时更长的基础 H3 `r2v`。
+`--profile` 决定模型路线，`--quality` 决定尺寸，两者正交。`--quality high` 使用 `.env` 的高质量尺寸；不会自动切换到耗时更长的基础 H3 `r2v`。
+
+注意力由根目录 `.env` 的 `AIH_VIDEO_ATTENTION=vsa` 决定，`cli/unit.mjs` 显式传给本地 `gen.py`。默认保留 FastH3 8 步模型并接 VSA。Sage 与 VSA 不叠加；单次实验可用 `--attention sage` 覆盖，不改变项目默认值。同图、同种子、5.17 秒实测热态 VSA 37.0 秒、Sage 38.2 秒，差异很小，但输出动作不同。
 
 
 **算力近似正比于「像素 × 步数」**（2026-09-17 实测，RTX 4090，243 帧）：

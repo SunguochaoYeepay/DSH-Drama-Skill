@@ -1,4 +1,5 @@
 import path from 'node:path';
+import './config.mjs';
 
 /** Runtime locations that vary by machine. Environment variables always win. */
 export const WINGET_PACKAGES = process.env.AIH_WINGET_PACKAGES

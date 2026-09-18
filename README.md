@@ -25,6 +25,7 @@ ai-images-harness/
 ├─ SKILL.md                  Skill 入口、状态机和阶段路由
 ├─ README.md                 工程说明
 ├─ CHANGELOG.md              工程行为变更记录
+├─ .env.example              本机模型、通道与规格配置模板
 ├─ cli/                      可直接执行的命令
 ├─ src/                      业务逻辑和提供方适配
 ├─ references/               按阶段加载的规则和模型提示
@@ -48,8 +49,10 @@ ai-images-harness/
 ```text
 E:\AI-Tool\DeepSeek\story2video\projects\cat_mouse\
 ├─ story.md
+├─ story.provenance.json
 ├─ board.json
 ├─ board.direction.json
+├─ board.direction.json.provenance.json
 ├─ render.plan.json
 ├─ review.approvals.json
 ├─ inputs\references\          用户原始参考图，只读保存
@@ -64,6 +67,17 @@ E:\AI-Tool\DeepSeek\story2video\projects\cat_mouse\
 不要把项目输出写到仓库根目录，也不要创建跨剧目共用的 `comfy-out`。
 
 ## 基本用法
+
+先参照根目录的 [`.env.example`](.env.example) 配置本机 `.env`。剧本和导演使用 `AIH_SCRIPT_MODEL` / `AIH_DIRECTOR_MODEL`（当前仅接受 `qwen3.8-max`）；资源和关键帧分别读取资产/关键帧通道与模型配置。视频默认 `AIH_VIDEO_QUALITY=normal`、`AIH_VIDEO_PROFILE=fast`、`AIH_VIDEO_ATTENTION=vsa`，两档尺寸由 `AIH_VIDEO_NORMAL_SIZE` 和 `AIH_VIDEO_HIGH_SIZE` 指定。`.env` 不入库，已有进程环境变量优先。
+
+剧本必须由正式入口生成并留下来源票；已有完整用户原稿只能在用户明确确认后登记，不能代签：
+
+```powershell
+node cli/script.mjs generate --input <素材.txt> --out <项目/story.md>
+node cli/script.mjs register-user --input <用户原稿> --out <项目/story.md> --confirmed-by <确认者>
+```
+
+两条命令按来源二选一。人工确认完整剧本后再推进导演阶段；旧 `board.mjs story/from-story` 不能替代这条链路。
 
 检查 Storyboard：
 
@@ -96,19 +110,24 @@ node cli/review-gate.mjs approve --project <项目目录> --stage assets
 node cli/keyframes.mjs <board.json> --direction <render.plan.json> --provider bailian --model qwen-image-3.0-pro
 ```
 
-逐段生成测试视频：
+逐段生成视频（默认常规尺寸，每段人工确认）：
 
 ```powershell
-node cli/unit.mjs <board.json> --direction <render.plan.json> --unit g001 --quality test --profile fast
+node cli/unit.mjs <board.json> --direction <render.plan.json> --unit g001
 ```
 
-正式规格使用 `--quality final`。15 秒是单次生成上限，不是目标时长；视频必须串行生成并逐段人工确认。
+明确要求高质量时，在该命令加 `--quality high`。生成结果为 `units/<id>.result.json`；每段只保留当前视频的确认票，不满意重抽后须重新确认。
+
+默认尺寸由 `.env` 的 `AIH_VIDEO_NORMAL_SIZE` 指定（当前 `480x864`）；明确要求高质量时用 `--quality high`，尺寸取 `AIH_VIDEO_HIGH_SIZE`（当前 `768x1344`）。不满意就重抽并重新确认。
+15 秒是单次生成上限，不是目标时长；视频必须串行生成并逐段人工确认。
 
 合成所有已确认片段：
 
 ```powershell
 node cli/assemble-units.mjs <render.plan.json> --out <out/final.mp4>
 ```
+
+高质量成片同样加 `--quality high`；合成尺寸取 `.env` 的高质量尺寸。
 
 历史计划需要显式迁移到当前契约时使用 `cli/migrate-plan.mjs`；它要求列出已人工复核的单元并传入 `--acknowledge-reviewed-migration`，不属于普通新项目流程。
 
@@ -191,7 +210,7 @@ $env:VERIFY_INSTALLED=1; node tests/integration/dsh-plugins.test.mjs   # 验已�
 
 模型凭据、项目媒体和运行缓存不得提交到仓库。
 
-本机工具路径可用环境变量覆盖：`AIH_PYTHON`、`AIH_GEN`、`AIH_NODE`、`AIH_BAILIAN_ENTRY`、`AIH_WINGET_PACKAGES` 和 `DRAMACLAW_ENV`。
+运行配置集中在仓库根目录 `.env`（按 `.env.example` 填写，已被 Git 忽略）。包含剧本/导演高级模型、生图通道及模型、H3 档位/尺寸和本机工具路径；命令行显式参数仍可覆盖非剧本/导演模型的运行档位。`AIH_SCRIPT_MODEL` 和 `AIH_DIRECTOR_MODEL` 目前只允许 `qwen3.8-max`。剧本和导演稿分别生成哈希绑定的来源票，历史产物没有票据时不能推断作者或直接继续生成。
 
 ## License
 

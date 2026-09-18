@@ -34,6 +34,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { runBailian } from './bailian-cli.mjs';
+import { DIRECTOR_MODEL } from './config.mjs';
 import { estimateSpeechSeconds } from './orchestrate.mjs';
 
 /** 生成单元的上限（H3 的硬约束）。 */
@@ -601,7 +602,7 @@ export function readBrief(projectRoot) {
 // ---------------------------------------------------------------- 调用导演
 
 /** 默认用哪个模型当导演。`bl text chat` 的默认就是它，这里写死一份好记录。 */
-export const DIRECTOR_MODEL = process.env.AIH_DIRECTOR_MODEL || 'qwen3.8-max';
+export { DIRECTOR_MODEL };
 
 /**
  * 请导演做设计。
@@ -622,6 +623,7 @@ export function callDirector(prompt, opts = {}) {
   // 注入点保留：测试可以传一个假的 run 来断言参数拼装，不必真调线上。
   const run = opts.run || runBailian;
   const model = opts.model || DIRECTOR_MODEL;
+  if (model !== DIRECTOR_MODEL) throw new Error(`导演必须使用已批准的高级模型 ${DIRECTOR_MODEL}`);
   const timeoutMs = opts.timeoutMs || 600000;
   const tmp = opts.tmpDir || os.tmpdir();
 
@@ -636,7 +638,7 @@ export function callDirector(prompt, opts = {}) {
   // 实测直接 `Request timed out`（code 5）—— 跟当初 `bl image` 那个坑是同一个。
   const args = ['text', 'chat', '--model', model, '--messages-file', msgFile,
     '--max-tokens', String(opts.maxTokens || 6000), '--output', 'json',
-    '--timeout', String(opts.requestTimeoutSec || 600), '--stream'];
+    '--timeout', String(opts.requestTimeoutSec || 600)];
   // **默认不思考** —— 一次 8000 字简报 + thinking + 16000 tokens，网络层会先超时。
   // 镜头设计要的是判断，不是长推理链；需要时用 --thinking 显式打开。
   if (opts.thinking === true) args.push('--enable-thinking');
@@ -648,12 +650,17 @@ export function callDirector(prompt, opts = {}) {
   const stdout = String(r.stdout || '');
   const stderr = String(r.stderr || '');
 
-  if (r.status !== 0 && !stdout.trim()) {
+  if (r.status !== 0) {
     // `status` 为 null 是 spawn 层失败（起不来 / 超时），`error` 里有真正原因，
     // 不能只报「退出码 null」——那会把人引向"模型没回答"，而实际是进程根本没起来。
     const why = r.error ? `（${r.error.code || 'spawn 失败'}：${String(r.error.message || r.error).slice(0, 160)}）` : '';
     return { ok: false, raw: stdout, error: `bl 退出码 ${r.status}${why}：${stderr.slice(0, 300)}`, seconds };
   }
+
+  let response;
+  try { response = JSON.parse(stdout); } catch { return { ok: false, raw: stdout, error: '导演响应不是可核验的 JSON', seconds }; }
+  const responseModel = response.model || response.response?.model;
+  if (responseModel !== model) return { ok: false, raw: stdout, error: `导演响应模型不匹配：${responseModel || '未报告'}，要求 ${model}`, seconds };
 
   // `--output json` 的响应体结构可能变，所以**层层剥**：先找 choices/message，再找里面第一段 JSON
   const text = extractText(stdout);
@@ -661,7 +668,7 @@ export function callDirector(prompt, opts = {}) {
   if (!parsed) {
     return { ok: false, raw: stdout, error: `模型没交出可解析的 JSON。原文前 300 字：${text.slice(0, 300)}`, seconds };
   }
-  return { ok: true, direction: parsed, raw: stdout, seconds };
+  return { ok: true, direction: parsed, raw: stdout, model, responseModel, seconds };
 }
 
 /** 从 `bl --output json` 的响应里剥出助手文本。 */

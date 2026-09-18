@@ -25,6 +25,7 @@
 
 import * as bailian from './bailian.mjs';
 import * as comfyui from './comfyui.mjs';
+import { ASSET_PROVIDER, KEYFRAME_PROVIDER } from '../config.mjs';
 
 const REGISTRY = { bailian, comfyui };
 
@@ -36,11 +37,11 @@ export function provider(name) {
 
 /** 资产默认走线上；没有线上通道就退本地，并说清楚为什么退。 */
 export function assetProvider() {
-  return provider(process.env.AIH_ASSET_PROVIDER || 'bailian');
+  return provider(ASSET_PROVIDER);
 }
 
 export function keyframeProvider() {
-  return provider(process.env.AIH_KEYFRAME_PROVIDER || 'bailian');
+  return provider(KEYFRAME_PROVIDER);
 }
 
 export const AVAILABLE = Object.keys(REGISTRY);

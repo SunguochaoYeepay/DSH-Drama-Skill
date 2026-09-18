@@ -46,9 +46,11 @@ assert.match(assetApprove.stdout, /人工确认已记录：assets/);
 
 // 默认视频档必须真的是 FastVideo FastH3 单首帧，不能因内部步数默认值退化成 r2v。
 const unitSource = fs.readFileSync(path.join(root, 'cli', 'unit.mjs'), 'utf8');
-assert.match(unitSource, /return 'fast';/);
+assert.match(unitSource, /return VIDEO_PROFILE;/);
+assert.match(unitSource, /args\.push\('--attention', ATTENTION\)/);
+assert.match(unitSource, /flag\('attention', VIDEO_ATTENTION\)/);
 assert.doesNotMatch(unitSource, /const STEPS = Number\(flag\('steps', 4\)\)/);
-assert.match(unitSource, /const VIDEO_TIMEOUT_SECONDS = 10 \* 60;/);
+assert.match(fs.readFileSync(path.join(root, 'src', 'config.mjs'), 'utf8'), /VIDEO_TIMEOUT_SECONDS < 1 \|\| VIDEO_TIMEOUT_SECONDS > 600/);
 assert.match(unitSource, /'--timeout', String\(VIDEO_TIMEOUT_SECONDS\)/);
 assert.doesNotMatch(unitSource, /timeout: 1800000/);
 

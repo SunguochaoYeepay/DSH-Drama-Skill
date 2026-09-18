@@ -5,6 +5,9 @@ import path from 'node:path';
 import { buildBrief, callDirector, readBrief, validateDirection } from '../src/director.mjs';
 import { legacyApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { requireScriptProvenance } from '../src/script-provenance.mjs';
+import { writeDirectionReceipt } from '../src/direction-provenance.mjs';
+import { DIRECTOR_MODEL } from '../src/config.mjs';
 
 installCliErrorHandler();
 
@@ -20,10 +23,12 @@ if (!boardArg) {
 }
 
 const boardPath = path.resolve(boardArg);
+if (flag('model', DIRECTOR_MODEL) !== DIRECTOR_MODEL) throw new Error(`导演模型只能是 ${DIRECTOR_MODEL}`);
 const projectDir = path.dirname(boardPath);
 const storyPath = path.resolve(flag('story', path.join(projectDir, 'story.md')));
 const output = path.resolve(flag('out', path.join(projectDir, 'board.direction.json')));
 if (!fs.existsSync(storyPath)) throw new Error(`找不到剧本：${storyPath}`);
+requireScriptProvenance(storyPath);
 
 const board = JSON.parse(fs.readFileSync(boardPath, 'utf8'));
 if (!argv.includes('--skip-gate')) legacyApproval(board, 'story');
@@ -47,6 +52,7 @@ if (!checked.ok) {
   process.exit(1);
 }
 fs.writeFileSync(output, JSON.stringify(result.direction, null, 2) + '\n', 'utf8');
+writeDirectionReceipt({ directionPath: output, boardPath, storyPath, model: result.model, responseModel: result.responseModel });
 const note = writeReviewNote(projectDir, 'direction', [
   '# 导演方案人工审阅', '',
   '机器校验已通过，但尚不能进入关键帧阶段。请逐单元检查时长、台词完整性、切换理由和高风险动作。', '',

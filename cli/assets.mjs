@@ -43,6 +43,7 @@ import { projectAssetFiles } from '../src/asset-resolver.mjs';
 import { provider as getProvider, assetProvider } from '../src/providers/index.mjs';
 import { writeReviewNote } from '../src/human-gates.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { ASSET_IMAGE_MODEL, LOCAL_IMAGE_STEPS } from '../src/config.mjs';
 
 installCliErrorHandler();
 
@@ -61,7 +62,7 @@ const DRY = argv.includes('--dry-run');
 const SKIP_GATE = argv.includes('--skip-gate');
 const ONLY = String(flag('only', '')).split(',').map((s) => s.trim()).filter(Boolean);
 const N = Number(flag('n', 1)) || 1;
-const STEPS = flag('steps', null);
+const STEPS = flag('steps', LOCAL_IMAGE_STEPS);
 const WRITE = !argv.includes('--no-write');
 const WORKSPACE = flag('ws', null);
 
@@ -108,6 +109,39 @@ const relOf = (job) => `assets/${(FILE_NAME[job.kind] || ((j) => `${j.id}_${j.sl
 // ---------------------------------------------------------------- 通道适配
 
 /**
+ * `gen.py --style` 是**正负提示词预设**，不是换模型 —— 而且**不传会落到它自带的默认值**。
+ *
+ * 🔁 **2026-09-17 after_waking 实测：这就是本地资产的画面风格一直不受控的根因。**
+ *    - 通道调的是显式 `t2i`，而 gen.py 的 `infer_style()` 只在 `auto` 模式下跑，
+ *      所以 `args.style` **永远停在 argparse 默认值 `realistic`**，与项目声明的风格无关。
+ *    - `realistic` 预设的**负向词里写着「CG感，卡通，动漫」**，正向词还会追加
+ *      「写实摄影风格…生活快照般随手抓拍」。
+ *    - 于是 prompt 里写多少「3D 卡通动画长片质感」都被负向条件抵消 ——
+ *      改 prompt 措辞**根本无效**，因为负向条件不在我们手里。
+ *
+ * gen.py 的预设只有 `realistic/anime/cyberpunk/healing/vintage/none`，**没有 3D 卡通档**，
+ * 所以这里只能做**投降映射**：`cartoon3d → anime`（本地 A/B 实测观感最接近）。
+ * 注意 `anime` 的负向词里也含「3D渲染」，同样是妥协 —— 这是上游通道的能力边界，不是本仓能修的。
+ *
+ * 道具图**不跟随项目风格**：它自带「写实实拍，产品静物摄影」配方，固定走 `realistic`，
+ * 免得把手机/镜子也画成卡通。
+ */
+const LOCAL_STYLE = {
+  realistic: 'realistic',
+  anime: 'anime',
+  cartoon3d: 'anime',
+  cyberpunk: 'cyberpunk',
+  healing: 'healing',
+  vintage: 'vintage',
+};
+function localStyleFor(job) {
+  if (job.kind === 'prop_3view') return 'realistic';
+  // 未知风格显式给 `none`，**不要**退回 gen.py 的默认 realistic ——
+  // 那条路的负向词会反卡通，静默把画面拉走。
+  return LOCAL_STYLE[board.meta?.style] || 'none';
+}
+
+/**
  * 两个通道的参数名不一样，这一层只做翻译，不做决策：
  *   comfyui  → `ratio`
  *   bailian  → `size`
@@ -119,11 +153,13 @@ function callProvider(p, job, outDir, images) {
   if (p.name === 'comfyui') {
     const common = { ratio, n: N, outDir, prefix: job.id };
     if (STEPS) common.steps = Number(STEPS);
+    // `--style` 只对 t2i 生效；gen.py 的 `edit` 分支压根没有这个参数。
+    if (job.mode !== 'edit') common.style = localStyleFor(job);
     return job.mode === 'edit'
       ? p.edit({ ...common, images, instruction: job.instruction })
       : p.generate({ ...common, prompt: job.prompt });
   }
-  const common = { size: ratio, n: N, outDir, prefix: job.id };
+  const common = { size: ratio, n: N, outDir, prefix: job.id, model: ASSET_IMAGE_MODEL };
   return job.mode === 'edit'
     ? p.edit({ ...common, images, instruction: job.instruction })
     : p.generate({ ...common, prompt: job.prompt });

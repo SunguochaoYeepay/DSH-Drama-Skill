@@ -14,6 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { HUIMENG_IMAGE_MODEL } from '../src/config.mjs';
 
 const BASE = process.env.HUIMENGI_BASE_URL || 'https://api.huimengi.com';
 const DRAMACLAW_ENV = process.env.DRAMACLAW_ENV || 'E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\.env';
@@ -85,7 +86,7 @@ export function cloudinaryCreds() {
  * 提交一个生图任务。
  * @returns {Promise<string>} task_id
  */
-export async function submit({ key, prompt, model = 'image-2', ratio = '9:16', resolution = '2k', quality, image }) {
+export async function submit({ key, prompt, model = HUIMENG_IMAGE_MODEL, ratio = '9:16', resolution = '2k', quality, image }) {
   const params = { prompt, ratio };
   if (resolution) params.resolution = resolution;
   if (quality && model === 'image-2-official') params.quality = quality;
@@ -141,7 +142,7 @@ async function main() {
   --prompt       提示词（必需）
   --ratio        画幅 9:16 / 16:9 / 1:1（默认 9:16）
   --resolution   1k / 2k / 4k（默认 2k）
-  --model        image-2（默认）或 image-2-official
+  --model        生图模型（默认 AIH_HUIMENG_IMAGE_MODEL）
   --quality      low/medium/high（**只在 image-2-official 时有效**）
   --ref <文件>   参考图（可重复，最多 9 张）—— **先自动传 Cloudinary 换公开 URL**
   --out          输出路径（默认 ./huimeng-<时间戳>.png）`);
@@ -149,7 +150,7 @@ async function main() {
   }
 
   const key = readKey();
-  const model = String(flag('model', 'image-2'));
+  const model = String(flag('model', HUIMENG_IMAGE_MODEL));
   const ratio = String(flag('ratio', '9:16'));
   const resolution = String(flag('resolution', '2k'));
   const quality = flag('quality', null);

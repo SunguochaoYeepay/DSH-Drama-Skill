@@ -24,8 +24,7 @@
  *   --keyframe <png> 这一单元的首帧（不给就去找最接近的现有 keyframes/）
  *   --last-keyframe <png> 可选尾帧；FastH3 收到后走 fl2v，否则走 i2v
  *   --steps <n>      旧兼容参数；4/8/其他映射 draft/balanced/final，优先使用 --profile
- *   --quality <档位> test=480x864（默认）/ final=768x1344
- *   --size <WxH>     手动覆盖 quality 对应的尺寸
+ *   --quality <档位> normal=常规（默认）/ high=高质量；尺寸取自 .env
  *   --dry-run        只打印提示词，不生成
  */
 
@@ -33,12 +32,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { unitAssets } from '../src/asset-resolver.mjs';
-import { requireApproval, writeReviewNote } from '../src/human-gates.mjs';
+import { clipResultPath, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { assertPlanProvenance, assertUnitEmotionContract } from '../src/plan-provenance.mjs';
 import { buildUnitPrompt } from '../src/h3-prompt.mjs';
 import { COMFY_GEN, COMFY_PYTHON } from '../src/runtime-paths.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { requireHandoff } from '../src/continuity-handoff.mjs';
+import { VIDEO_QUALITY, VIDEO_PROFILE, VIDEO_ATTENTION, VIDEO_NORMAL_SIZE, VIDEO_HIGH_SIZE, VIDEO_TIMEOUT_SECONDS } from '../src/config.mjs';
 
 installCliErrorHandler();
 
@@ -76,14 +76,13 @@ const EXPLICIT_STEPS = argv.includes('--steps') ? Number(flag('steps', 0)) : nul
  *
  * `--size 768x1344` 可以换到那个 LoRA 的原生 768p（验证通过之后再说）。
  */
-const QUALITY = String(flag('quality', 'test')).toLowerCase();
-const CLIP_VARIANT = QUALITY === 'test' ? 'preview' : 'final';
-const QUALITY_SIZES = { test: '480x864', final: '768x1344' };
-const VIDEO_TIMEOUT_SECONDS = 10 * 60;
+const QUALITY = String(flag('quality', VIDEO_QUALITY)).toLowerCase();
+if (argv.includes('--size')) throw new Error('视频尺寸由 .env 的 AIH_VIDEO_NORMAL_SIZE / AIH_VIDEO_HIGH_SIZE 配置；请用 --quality normal|high 选择');
+const QUALITY_SIZES = { normal: VIDEO_NORMAL_SIZE, high: VIDEO_HIGH_SIZE };
 if (!QUALITY_SIZES[QUALITY]) {
   throw new Error(`--quality 只能是 ${Object.keys(QUALITY_SIZES).join(' / ')}，收到 ${QUALITY}`);
 }
-const sizeArg = String(flag('size', QUALITY_SIZES[QUALITY]));
+const sizeArg = QUALITY_SIZES[QUALITY];
 const [W, H] = sizeArg.split('x').map(Number);
 if (!Number.isFinite(W) || !Number.isFinite(H) || W <= 0 || H <= 0) {
   throw new Error(`--size 必须是 WxH，收到 ${sizeArg}`);
@@ -101,25 +100,16 @@ const keyframes = (dir.units || []).map((u) => {
   return u.keyframe && path.resolve(projectDir, u.keyframe);
 }).filter((f) => f && fs.existsSync(f));
 requireApproval(projectDir, 'keyframes', keyframes, { skip: skipGate });
-if (CLIP_VARIANT === 'final') {
-  const previewResult = path.join(projectDir, 'units', `${unit.id}.preview.result.json`);
-  if (!fs.existsSync(previewResult)) throw new Error(`${unit.id}: 正式生成前必须先完成预览档生成与人工确认`);
-  const previewData = JSON.parse(fs.readFileSync(previewResult, 'utf8'));
-  const previewFiles = (previewData.files || [])
-    .map((file) => typeof file === 'string' ? file : file?.local_path || file?.localPath || file?.path)
-    .filter((file) => file && fs.existsSync(file));
-  requireApproval(projectDir, 'clip', previewFiles, { id: unit.id, variant: 'preview', skip: skipGate });
-}
 const unitIndex = (dir.units || []).findIndex((u) => u.id === unitId);
 if (unitIndex > 0) {
   const previous = dir.units[unitIndex - 1];
-  const previousResult = path.join(projectDir, 'units', `${previous.id}.final.result.json`);
-  if (!fs.existsSync(previousResult)) throw new Error(`上一段 ${previous.id} 正式档尚未生成，必须先完成预览与正式审阅`);
+  const previousResult = clipResultPath(projectDir, previous.id);
+  if (!previousResult) throw new Error(`上一段 ${previous.id} 尚未生成并确认`);
   const previousData = JSON.parse(fs.readFileSync(previousResult, 'utf8'));
   const previousFiles = (previousData.files || [])
     .map((file) => typeof file === 'string' ? file : file?.local_path || file?.localPath || file?.path)
     .filter((file) => file && fs.existsSync(file));
-  requireApproval(projectDir, 'clip', previousFiles, { id: previous.id, variant: 'final', skip: skipGate });
+  requireApproval(projectDir, 'clip', previousFiles, { id: previous.id, skip: skipGate });
 }
 
 // ---------------------------------------------------------------- 台词原文（代码搬）
@@ -239,8 +229,12 @@ const PROFILE = (() => {
   if (EXPLICIT_STEPS !== null) {
     return EXPLICIT_STEPS === 4 ? 'draft' : EXPLICIT_STEPS === 8 ? 'balanced' : 'final';
   }
-  return 'fast';
+  return VIDEO_PROFILE;
 })();
+const ATTENTION = String(flag('attention', VIDEO_ATTENTION)).toLowerCase();
+if (!['sage', 'vsa'].includes(ATTENTION)) {
+  throw new Error(`--attention 只能是 sage / vsa，收到 ${ATTENTION}`);
+}
 const KNOWN_PROFILES = ['draft', 'balanced', 'final', 'fast'];
 if (!KNOWN_PROFILES.includes(PROFILE)) {
   throw new Error(`--profile 只能是 ${KNOWN_PROFILES.join(' / ')}，收到 ${PROFILE}`);
@@ -290,7 +284,7 @@ const seconds = legalFrames / 24;
 const GEN = COMFY_GEN;
 const PY = COMFY_PYTHON;
 
-console.log(`\n单元 ${unit.id}　${unit.shots.length} 镜　${seconds.toFixed(1)}s　${PROFILE} / ${MODE} / ${QUALITY}`);
+console.log(`\n单元 ${unit.id}　${unit.shots.length} 镜　${seconds.toFixed(1)}s　${PROFILE} / ${MODE} / ${QUALITY} / ${ATTENTION}`);
 if (unit.why) console.log(`  导演的理由：${unit.why}`);
 console.log(`  首帧：${keyframe || '（没有！要用 t2v）'}`);
 console.log('─'.repeat(70));
@@ -302,13 +296,13 @@ if (!keyframe) { console.error('没有首帧，这个单元的连续性没保证
 
 const outDir = path.join(path.dirname(boardPath), 'units');
 fs.mkdirSync(outDir, { recursive: true });
-const resultFile = path.join(outDir, `${unit.id}.${CLIP_VARIANT}.result.json`);
+const resultFile = path.join(outDir, `${unit.id}.result.json`);
 
 // **提示词写文件再传路径** —— 这台机器 PS 5.1 会吃命令行里的引号
 const pf = path.join(outDir, `.${unit.id}.prompt.txt`);
 fs.writeFileSync(pf, prompt, 'utf8');
 
-console.log(`\n出片（${PROFILE} / ${MODE} / ${QUALITY}，${seconds.toFixed(2)}s → ${Math.round(seconds * 24)} 帧）…`);
+console.log(`\n出片（${PROFILE} / ${MODE} / ${QUALITY} / ${ATTENTION}，${seconds.toFixed(2)}s → ${Math.round(seconds * 24)} 帧）…`);
 // **提示词直接进 argv** —— spawnSync 使用参数数组且不经过 shell，
 // 所以换行、引号、中文都不会被 shell 吃掉。
 // fast 档严格照 FastVideo FastH3 模板走单首帧 i2v 或单首尾帧 fl2v；不支持 Ref2VA。
@@ -345,19 +339,20 @@ if (MODE === 'i2v') {
  * draft     4 步 + minimax_h3_fl2v_turbo_4step_v1.0_768p
  * balanced  8 步 + minimax_h3_fl2v_turbo_8step_v1.0      ← 8 步有专用 LoRA
  * final    20 步 + 不挂 LoRA
- * fast      8 步 + **FastH3 模型 + VSA 稀疏注意力**（官方模板那条，不挂 LoRA）
+ * fast      8 步 + FastH3 模型（不挂 LoRA）；注意力由 --attention 单独选择
  * ```
  *
  * ⚠ 之前我拿 **4 步的 LoRA 硬跑 8 步**（`--steps 8 --fast`），那是离线的 ——
  * 实测尾部照样崩。**8 步必须换 8 步的 LoRA。**
  *
  * ⚠ 尾部崩坏（768×1344 下 13.5 秒之后）在 draft/balanced 上都复现，
- * 换成 FastH3 + VSA 才有可能解决 —— 所以有了 `fast` 这一档。
+ * 换成 FastH3 才有可能解决 —— 所以有了 `fast` 这一档。
  *
  * 可用档位由 `gen.py` 的 `H3_PROFILES` 决定，这里不再写死白名单（写死过一次，
  * 加 `fast` 时就被卡住了）。
  */
 args.push('--profile', PROFILE);
+args.push('--attention', ATTENTION);
 if (DRY || flag('show-args', false)) console.log('  最终 argv: ' + args.map((a) => a.length > 40 ? a.slice(0, 37) + '…' : a).join(' '));
 console.log(`  尺寸 ${W}×${H}${W === 1088 ? '  ⚠ 这是 2.09MP，官方参考是 0.41MP' : ''}`);
 
@@ -417,7 +412,7 @@ try {
       `# 视频片段 ${unit.id} 人工审阅`, '',
       '机器技术检查通过后，请完整观看并检查：人物一致性、动作是否飞掉、台词是否说完、切镜是否自然、画面是否出现错误文字。', '',
       `视频：${f}`, `八帧总览：${sheet}`, '',
-      `确认命令：node cli/review-gate.mjs approve --project "${projectDir}" --stage clip --id ${unit.id} --variant ${CLIP_VARIANT} --artifacts "${f}"`,
+      `确认命令：node cli/review-gate.mjs approve --project "${projectDir}" --stage clip --id ${unit.id} --artifacts "${f}"`,
     ]);
     console.log(`等待人工审阅：${note}`);
   }

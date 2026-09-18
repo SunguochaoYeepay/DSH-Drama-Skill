@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { requireDirectionProvenance, directionReceiptPath } from './direction-provenance.mjs';
 
 export const MIN_DIRECTOR_VERSION = 6;
 const hash = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
@@ -13,6 +14,7 @@ export function projectId(board, boardPath) {
 }
 
 export function makePlanProvenance({ boardPath, storyPath, directionPath, legacyMigration = false }) {
+  requireDirectionProvenance({ directionPath, boardPath, storyPath });
   const board = JSON.parse(fs.readFileSync(boardPath, 'utf8'));
   const direction = JSON.parse(fs.readFileSync(directionPath, 'utf8'));
   return {
@@ -21,6 +23,7 @@ export function makePlanProvenance({ boardPath, storyPath, directionPath, legacy
     board_sha256: hash(boardPath),
     story_sha256: hash(storyPath),
     direction_sha256: hash(directionPath),
+    direction_receipt_sha256: hash(directionReceiptPath(directionPath)),
     direction_version: Number(direction.version || 0),
     direction_file: path.basename(directionPath),
     bound_at: new Date().toISOString(),
@@ -37,6 +40,8 @@ export function assertPlanProvenance(plan, { boardPath, storyPath, planPath }) {
   if (p.story_sha256 !== hash(storyPath)) throw new Error('剧本已变化，历史生成计划失效');
   const directionPath = path.join(path.dirname(planPath), p.direction_file);
   if (!fs.existsSync(directionPath) || p.direction_sha256 !== hash(directionPath)) throw new Error('导演稿已变化或不在当前项目，生成计划失效');
+  requireDirectionProvenance({ directionPath, boardPath, storyPath });
+  if (p.direction_receipt_sha256 !== hash(directionReceiptPath(directionPath))) throw new Error('导演来源票据已变化，生成计划失效');
   if (p.plan_units_sha256 !== hashJson(plan.units)) throw new Error('生成计划内容已被修改，项目身份证失效');
   if (p.direction_version < MIN_DIRECTOR_VERSION && !p.legacy_migration) throw new Error(`导演协议 v${p.direction_version} 低于最低 v${MIN_DIRECTOR_VERSION}`);
   if (p.legacy_migration) {

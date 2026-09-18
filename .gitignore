@@ -34,6 +34,7 @@ _concat.txt
 # 凭据 —— **绝不入库**
 .env
 .env.*
+!.env.example
 *.key
 *.pem
 

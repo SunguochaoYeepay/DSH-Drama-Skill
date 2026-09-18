@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 // board.mjs — 故事 → 剧本 → 关键帧 → 视频 的分阶段流水线（零依赖）
 //
-//   node cli/board.mjs story     <idea.txt> [--beats 6] [--model qwen3.5:27b] [--out x.json]
+//   node cli/script.mjs generate --input <idea.txt> --out <project/story.md>
 //   node src/board.mjs approve   <board.json> --stage story|shots [--by 用户名]
-//   node cli/board.mjs from-story<board.json> --shots 6 [--model qwen3.5:27b]
 //   node cli/board.mjs table     <board.json> [--out x.md]      ← 给人确认的那张表
 //   node cli/board.mjs validate  <board.json>
 //   node cli/board.mjs render    <board.json> [--out x.md]
@@ -19,6 +18,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildBrief, readBrief, callDirector, validateDirection, collectDialogueLines, DIRECTOR_MODEL } from './director.mjs';
+import { requireScriptProvenance } from './script-provenance.mjs';
+import { writeDirectionReceipt } from './direction-provenance.mjs';
 import { parseScenes, sceneMenu } from './parse-scenes.mjs';
 import { compileLiteral } from './literal.mjs';
 import { applyDirection } from './direction-shots.mjs';
@@ -1128,6 +1129,7 @@ async function main() {
     // 剧本：显式给 > 同目录 story.md
     const scriptPath = typeof args.script === 'string' ? args.script : path.join(path.dirname(file), 'story.md');
     if (!fs.existsSync(scriptPath)) die(`找不到剧本：${scriptPath}`);
+    requireScriptProvenance(scriptPath);
     const script = fs.readFileSync(scriptPath, 'utf8');
 
     const prompt = buildBrief({ briefText: readBrief(PROJECT_ROOT), board, script });
@@ -1149,7 +1151,10 @@ async function main() {
 
     const v = validateDirection(r.direction, { board, script });
     const raw = file.replace(/\.json$/, '.direction.json');
-    fs.writeFileSync(raw, JSON.stringify(r.direction, null, 2) + '\n');
+    if (v.ok) {
+      fs.writeFileSync(raw, JSON.stringify(r.direction, null, 2) + '\n');
+      writeDirectionReceipt({ directionPath: raw, boardPath: file, storyPath: scriptPath, model: r.model, responseModel: r.responseModel });
+    }
     console.log(`  设计写到 ${path.basename(raw)}`);
     console.log(`  单元 ${r.direction.units?.length || 0} 个，镜头 ${(r.direction.units || []).reduce((n, u) => n + (u.shots || []).length, 0)} 个`);
 
@@ -1216,32 +1221,7 @@ async function main() {
   }
 
   // ── 闸门 1：故事 ────────────────────────────────────────────────
-  if (cmd === 'story') {
-    const file = args._[1];
-    if (!file) die('用法：story <idea.txt> [--beats 6] [--model qwen3.5:27b] [--ratio 16:9] [--style realistic] [--out x.json]');
-    if (!fs.existsSync(file)) die(`找不到素材文件：${file}`);
-    const opts = {
-      beats: Number(args.beats) || 6,
-      model: typeof args.model === 'string' ? args.model : DEFAULT_MODEL,
-      ratio: typeof args.ratio === 'string' ? args.ratio : '16:9',
-      style: typeof args.style === 'string' ? args.style : 'realistic',
-      retries: args.retries === undefined ? 1 : Number(args.retries),
-    };
-    opts.model = await ensureModel(opts.model);
-    process.stderr.write(`→ ${opts.model} 写故事中（节拍≈${opts.beats}）…\n`);
-    const { board, warnings, rounds, errors } = await ideaToStory(fs.readFileSync(file, 'utf8'), opts);
-    // 一部剧一个工作区：默认把板子写到故事文件所在的项目目录。
-    const out = typeof args.out === 'string'
-      ? args.out
-      : path.join(path.dirname(path.resolve(file)), 'board.json');
-    fs.mkdirSync(path.dirname(out), { recursive: true });
-    fs.writeFileSync(out, JSON.stringify(board, null, 2) + '\n');
-    process.stderr.write(`${errors ? '⚠' : '✓'} 已写出 ${out}（${rounds} 轮，${board.story?.beats?.length || 0} 个节拍）\n`);
-    for (const w of warnings) process.stderr.write(`  warning: ${w}\n`);
-    process.stdout.write(out + '\n');
-    if (errors) process.exitCode = 2;
-    return;
-  }
+  if (cmd === 'story') die('旧 story 梗概入口已停用；完整剧本请用 node cli/script.mjs generate --input <素材> --out <项目/story.md>（百炼 qwen3.8-max）');
 
   // ── 人工确认：放行一个闸门 ──────────────────────────────────────
   if (cmd === 'approve') {
@@ -1279,34 +1259,7 @@ async function main() {
   }
 
   // ── 闸门 2：分镜表 ──────────────────────────────────────────────
-  if (cmd === 'from-story') {
-    const file = args._[1];
-    if (!file) die('用法：from-story <board.json> [--shots 6] [--model qwen3.5:27b] [--retries 1] [--force]');
-    if (!fs.existsSync(file)) die(`找不到分镜文件：${file}`);
-    const input = JSON.parse(fs.readFileSync(file, 'utf8'));
-    const gateErrs = checkGate(input, 'shots');
-    if (gateErrs.length && !args.force) {
-      for (const e of gateErrs) console.log(`拦住：${e}`);
-      console.log('\n先让用户确认故事：node cli/board.mjs approve ' + file + ' --stage story');
-      process.exitCode = 3;
-      return;
-    }
-    const opts = {
-      shots: Number(args.shots) || 6,
-      model: typeof args.model === 'string' ? args.model : DEFAULT_MODEL,
-      retries: args.retries === undefined ? 1 : Number(args.retries),
-      extra: typeof args.extra === 'string' ? args.extra : '',
-    };
-    opts.model = await ensureModel(opts.model);
-    process.stderr.write(`→ ${opts.model} 编译分镜中（镜头数≈${opts.shots}，最多 ${opts.retries + 1} 轮）…\n`);
-    const { board, warnings, rounds, errors } = await fromStory(input, opts);
-    fs.writeFileSync(file, JSON.stringify(board, null, 2) + '\n');
-    process.stderr.write(`${errors ? '⚠' : '✓'} 已写出 ${file}（${rounds} 轮，${board.shots?.length || 0} 镜，${board.meta?.total_duration_s || '?'}s）\n`);
-    for (const w of warnings) process.stderr.write(`  warning: ${w}\n`);
-    process.stdout.write(file + '\n');
-    if (errors) process.exitCode = 2;
-    return;
-  }
+  if (cmd === 'from-story') die('from-story 已停用：请用 cli/script.mjs 登记剧本，再用 cli/direct.mjs 生成带来源留痕的导演方案。');
 
   // ── 闸门 2（逐行模式）：剧本 → 分镜。**台词由代码搬运，模型碰不到** ──────
   // 和 from-story 的差别：那一种让模型"写一版分镜"，它会顺手改写台词；

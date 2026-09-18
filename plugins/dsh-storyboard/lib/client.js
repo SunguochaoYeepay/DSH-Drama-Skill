@@ -46,7 +46,7 @@ window.__ModuleLoader__.load({
 		const PROJECT_KEY = "dsh-storyboard.project";
 		/** 剧目里要读出来的文本产物（相对剧目根）。 */
 		const PROJECT_FILES = ["story.md", "board.direction.json", "render.plan.json", "review.approvals.json"];
-		/** 现行人工票据的显示名。视频片段分 `preview` / `final` 两张独立票（见 `references/workflow.md`）。 */
+		/** 现行人工票据的显示名。每段视频只保留当前产物的一张票。 */
 		const TICKETS = [
 			["direction", "导演方案"],
 			["assets", "资源"],
@@ -56,6 +56,16 @@ window.__ModuleLoader__.load({
 
 		/** apply 时装进来的宿主能力。组件拿不到 ctx，服务留在闭包里。 */
 		const host = { readAll: null, list: null, listDir: null };
+
+		/**
+		 * 最近一次渲染的现场快照。
+		 *
+		 * 面板崩溃时 React 会卸载子树，**组件内部的状态就再也读不到了** ——
+		 * 所以每次渲染把关键值写进这个函数级变量，让错误边界能把现场一起显示出来。
+		 * 没有它，就只有一个 `Cannot read properties of null` 的孤零零消息，无法定位。
+		 */
+		let renderSnapshot = "";
+		function trace() { return renderSnapshot; }
 
 		/** 面板样式。颜色走主题语义 token，带深色兜底。 */
 		const S = {
@@ -474,7 +484,7 @@ window.__ModuleLoader__.load({
 			const [boardPath, setBoardPath] = React.useState(readStoredPath);
 			const [boards, setBoards] = React.useState(null);
 			const [scanToken, setScanToken] = React.useState(0);
-			const [load, setLoad] = React.useState({ kind: "loading" });
+			const [boardState, setBoardState] = React.useState({ kind: "loading" });
 			const [picked, setPicked] = React.useState(0);
 			const [asset, setAsset] = React.useState({ kind: "none" });
 			// 剧目工作区（真实项目在仓库外，靠 directoryPicker 发现）
@@ -562,12 +572,12 @@ window.__ModuleLoader__.load({
 			// 读选中的分镜契约文件
 			React.useEffect(function () {
 				if (!sessionId || !host.readAll) {
-					setLoad({ kind: "error", message: "没拿到 session 或 workspaceFiles 服务" });
+					setBoardState({ kind: "error", message: "没拿到 session 或 workspaceFiles 服务" });
 					return undefined;
 				}
 				let alive = true;
 				const controller = new AbortController();
-				setLoad({ kind: "loading" });
+				setBoardState({ kind: "loading" });
 				(async function () {
 					try {
 						const result = await host.readAll(sessionId, boardPath, controller.signal);
@@ -585,15 +595,54 @@ window.__ModuleLoader__.load({
 							const what = board === null ? "null" : Array.isArray(board) ? "数组" : typeof board;
 							throw new Error("board.json 顶层不是对象（实际是 " + what + "）—— 文件可能损坏或被写空了");
 						}
-						if (alive) setLoad({ kind: "ready", board: board });
+						if (alive) setBoardState({ kind: "ready", board: board });
 					} catch (error) {
-						if (alive) setLoad({ kind: "error", message: String((error && error.message) || error) });
+						if (alive) setBoardState({ kind: "error", message: String((error && error.message) || error) });
 					}
 				})();
 				return function () { alive = false; controller.abort(); };
 			}, [sessionId, boardPath]);
 
-			const board = load.kind === "ready" ? load.board : null;
+			// 现场快照：崩溃后组件状态读不到了，但这里写下的值还在（函数级变量）。
+			// 放在归一化与所有早退**之前**，所以 loading/error 路径崩溃时也有现场。
+			renderSnapshot = [
+				"板子路径=" + boardPath,
+				"剧目=" + (project || "(未选)"),
+				"载入=" + (boardState && boardState.kind),
+				"板子类型=" + (boardState && boardState.kind === "ready"
+					? (boardState.board === null ? "null" : Array.isArray(boardState.board) ? "数组" : typeof boardState.board)
+					: "—")
+			].join("　");
+
+			/**
+			 * 载入状态的**归一化**：`kind:"ready"` 但板子不是对象时，**在渲染之前**降级为 `error`。
+			 *
+			 * 这是**根治**：面板里凡读 `board.xxx` 的地方，都隐含"ready ⇒ board 是对象"这个前提。
+			 * 只要有一处打破它（曾被写空的 board.json、`JSON.parse("null")` 得到 `null`、
+			 * 上游返回畸形数据），后面就会抛 `Cannot read properties of null (reading 'meta')`，
+			 * 而 React 一抛异常就卸载整棵子树 → **整屏黑**。这里把不合法状态**挡在渲染之前**，
+			 * 让它变成一个能读的错误提示，而不是崩溃。
+			 *
+			 * 归一化结果取名 `view`：**不要**用 `load` 这个变量名去遮蔽上面的 `boardState`，
+			 * 否则下面的 `load.kind` 会命中 TDZ。状态叫 `boardState`，归一化结果叫 `view`。
+			 */
+			const view = (function () {
+				const raw = boardState;
+				if (raw && raw.kind === "ready") {
+					const b = raw.board;
+					if (b === null || typeof b !== "object" || Array.isArray(b)) {
+						const what = b === null ? "null" : Array.isArray(b) ? "数组" : typeof b;
+						return {
+							kind: "error",
+							message: "板子载入后不是对象（实际是 " + what + "）：" + boardPath
+								+ "　—— 文件可能损坏或被写空；请检查该文件，或在剧目下拉里换一个剧目"
+						};
+					}
+				}
+				return raw;
+			})();
+
+			const board = view.kind === "ready" ? view.board : null;
 			const shots = board ? (board.shots || []) : [];
 			const shot = shots[picked];
 			const assetPath = shot ? (shot.clip || shot.first_frame || null) : null;
@@ -771,6 +820,43 @@ window.__ModuleLoader__.load({
 						if (next) { setProjectsRoot(next); storeKey(ROOT_KEY, next === PROJECTS_ROOT_DEFAULT ? "" : next); }
 					}
 				}, "根"));
+
+			/**
+			 * **loading / error 早退必须放在这里** —— `picker` / `projectPicker` **之后**，
+			 * 所有依赖 `board` 的表达式**之前**。
+			 *
+			 * 这是"面板全黑"的真正根因（实测）：`React.createElement("p", …, board.meta && …)`
+			 * 这类表达式在**函数体顺序执行时**就求值了。所以早退如果写在函数末尾，
+			 * 那时 `board` 是 `null` 的那些行**早就执行过了** → 抛
+			 * `Cannot read properties of null (reading 'meta')` → React 卸载整棵子树 → 全黑。
+			 *
+			 * 位置约束是**两头**的：
+			 * - 不能早于 `picker` / `projectPicker`（会命中它们的 TDZ）
+			 * - 不能晚于任何 `board.xxx` 访问（loading 时 board 为 null）
+			 */
+			if (view.kind === "loading") {
+				return React.createElement("div", { style: S.panel },
+					React.createElement("div", { style: S.head },
+						React.createElement("p", { style: S.note }, "正在读 " + boardPath + " …"),
+						picker,
+						projectPicker));
+			}
+			if (view.kind === "error") {
+				return React.createElement("div", { style: S.panel },
+					React.createElement("div", { style: S.head },
+						React.createElement("p", { style: S.bad }, "读不到分镜文件"),
+						React.createElement("p", { style: S.note }, view.message),
+						React.createElement("p", { style: S.note }, project
+							? "剧目：" + project + "　根：" + projectsRoot
+							: "没选剧目。真实项目按 README 规定落在仓库外，workspaceFiles 只在工作区根内列举 —— 用下面的剧目下拉（走 directoryPicker），或点「根」改工作区根。"),
+						projectNote ? React.createElement("p", { style: S.bad }, projectNote) : null,
+						picker,
+						projectPicker));
+			}
+
+			// ↓↓↓ 以下都可以安全假定 `board` 是对象（`view` 已归一化 + 上面已早退）↓↓↓
+			const meta = board.meta || {};
+			const total = shots.reduce(function (sum, s) { return sum + (Number(s.duration_s) || 0); }, 0);
 
 			/**
 			 * ③ 剧目文本产物 + **剧本阅读**。
@@ -1133,33 +1219,12 @@ window.__ModuleLoader__.load({
 						["镜", "起点", "时长", "景别", "运镜", "动作", "台词", "切法", "情绪因果链"],
 						activeShotRows));
 
-			if (load.kind === "loading") {
-				return React.createElement("div", { style: S.panel },
-					React.createElement("div", { style: S.head },
-						React.createElement("p", { style: S.note }, "正在读 " + boardPath + " …"),
-						picker,
-						projectPicker));
-			}
-
-			if (load.kind === "error") {
-				return React.createElement("div", { style: S.panel },
-					React.createElement("div", { style: S.head },
-						React.createElement("p", { style: S.bad }, "读不到分镜文件"),
-						React.createElement("p", { style: S.note }, load.message),
-						React.createElement("p", { style: S.note }, project
-							? "剧目：" + project + "　根：" + projectsRoot
-							: "没选剧目。真实项目按 README 规定落在仓库外，workspaceFiles 只在工作区根内列举 —— 用下面的剧目下拉（走 directoryPicker），或点「根」改工作区根。"),
-						projectNote ? React.createElement("p", { style: S.bad }, projectNote) : null,
-						picker,
-						projectPicker));
-			}
-
-			const meta = board.meta || {};
-			const total = shots.reduce(function (sum, s) { return sum + (Number(s.duration_s) || 0); }, 0);
+			// 旧位置：早退块已移到函数开头（见上方注释 —— 放这里太晚，board.meta 会先被求值）。
+			// 这里的 meta / total 也一并移走了，避免重复声明。
 
 			/**
 			 * 现行人工票据行（**常驻**，不随分页切换）：
-			 * 从 `review.approvals.json` 读各阶段票，以及每段视频的 `preview`/`final` 两张独立票。
+			 * 从 `review.approvals.json` 读各阶段票，以及每段视频的当前票。
 			 */
 			const ticketRow = React.createElement("div", { style: S.gates },
 				TICKETS.map(function (entry) {
@@ -1172,8 +1237,9 @@ window.__ModuleLoader__.load({
 					if (!clips) return null;
 					return Object.keys(clips).sort().map(function (id) {
 						const v = clips[id] || {};
-						return React.createElement("span", { key: "clip:" + id, style: (v.final ? S.gateOn : S.gateOff) },
-							id + " " + (v.preview ? "预✅" : "预⬜") + "/" + (v.final ? "正✅" : "正⬜"));
+						const confirmed = Boolean(v.artifact_hash || v.final && v.final.artifact_hash);
+						return React.createElement("span", { key: "clip:" + id, style: confirmed ? S.gateOn : S.gateOff },
+							id + (confirmed ? " ✅" : " ⬜"));
 					});
 				})(),
 				// `projectNote` 有两类：列目录**失败**（红字）与**隐藏了空壳目录**的提示（灰字）
@@ -1590,9 +1656,13 @@ window.__ModuleLoader__.load({
 					}
 					render() {
 						if (!this.state.error) return this.props.children;
+						// **把现场数据一起显示出来** —— 光有错误消息不够，
+						// "哪个剧目、载入状态是什么、板子是什么类型"才是定位的关键。
+						const snap = (typeof trace === "function" ? trace() : "") || "（没有现场数据）";
 						return React.createElement("div", { style: { padding: "12px", font: "12px/1.6 system-ui,sans-serif" } },
 							React.createElement("p", { style: { color: "#e06c6c", margin: "0 0 6px", fontWeight: 600 } }, "分镜面板渲染失败"),
 							React.createElement("p", { style: { margin: "0 0 6px", opacity: 0.9 } }, String((this.state.error && this.state.error.message) || this.state.error)),
+							React.createElement("p", { style: { margin: "0 0 6px", opacity: 0.85, fontSize: "11px", overflowWrap: "anywhere" } }, "现场：" + snap),
 							React.createElement("p", { style: { margin: "0 0 8px", opacity: 0.6, fontSize: "10.5px", overflowWrap: "anywhere" } },
 								String((this.state.error && this.state.error.stack) || "").split("\n").slice(0, 5).join("  ←  ")),
 							React.createElement("button", {

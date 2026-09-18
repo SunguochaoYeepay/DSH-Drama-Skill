@@ -6,6 +6,8 @@ import { compileGenerationPlan } from '../src/generation-plan.mjs';
 import { requireApproval } from '../src/human-gates.mjs';
 import { makePlanProvenance, MIN_DIRECTOR_VERSION, sealPlan } from '../src/plan-provenance.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { requireScriptProvenance } from '../src/script-provenance.mjs';
+import { requireDirectionProvenance } from '../src/direction-provenance.mjs';
 
 installCliErrorHandler();
 
@@ -29,6 +31,8 @@ requireApproval(path.dirname(source), 'direction', [source], { skip: argv.includ
 const plan = compileGenerationPlan(direction, { targetSeconds: Number(value('target', 10)) });
 const boardPath = path.resolve(value('board', path.join(path.dirname(source), 'board.json')));
 const storyPath = path.resolve(value('story', path.join(path.dirname(source), 'story.md')));
+requireScriptProvenance(storyPath);
+requireDirectionProvenance({ directionPath: source, boardPath, storyPath });
 plan.provenance = makePlanProvenance({ boardPath, storyPath, directionPath: source });
 sealPlan(plan);
 fs.writeFileSync(output, JSON.stringify(plan, null, 2) + '\n', 'utf8');

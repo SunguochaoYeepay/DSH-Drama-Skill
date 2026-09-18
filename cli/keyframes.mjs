@@ -20,7 +20,7 @@
  * 绘梦不支持 base64，`huimeng.mjs` 会自动传 Cloudinary 换公开 URL。
  *
  * 用法：
- *   node cli/keyframes.mjs <board.json> --direction <render.plan.json> [--units g001,g002] [--size 2k] [--dry-run]
+ *   node cli/keyframes.mjs <board.json> --direction <render.plan.json> [--units g001,g002] [--size 2k] [--bailian-size 1024*1792] [--dry-run]
  */
 
 import fs from 'node:fs';
@@ -32,7 +32,9 @@ import { requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { COMFY_GEN, COMFY_PYTHON, NODE } from '../src/runtime-paths.mjs';
 import * as bailian from '../src/providers/bailian.mjs';
 import { bindHandoffKeyframe, requireHandoff } from '../src/continuity-handoff.mjs';
+import { assertPlanProvenance } from '../src/plan-provenance.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { KEYFRAME_PROVIDER, KEYFRAME_IMAGE_MODEL, HUIMENG_IMAGE_MODEL, KEYFRAME_SIZE, BAILIAN_KEYFRAME_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG } from '../src/config.mjs';
 
 installCliErrorHandler();
 
@@ -50,16 +52,18 @@ const PROJ = path.dirname(BOARD_PATH);
 const DIRECTION_PATH = path.resolve(String(flag('direction', path.join(PROJ, 'render.plan.json'))));
 const DEFAULT_OUT = path.join(PROJ, 'keyframes_render');
 const DRY = argv.includes('--dry-run');
-const SIZE = String(flag('size', '2k'));
+const SIZE = String(flag('size', KEYFRAME_SIZE));
+const BAILIAN_SIZE = String(flag('bailian-size', BAILIAN_KEYFRAME_SIZE));
 const ONLY = String(flag('units', '')).split(',').map((s) => s.trim()).filter(Boolean);
-const PROVIDER = String(flag('provider', 'huimeng')).toLowerCase();
-if (!['huimeng', 'local', 'bailian'].includes(PROVIDER)) throw new Error('--provider 只能是 huimeng / local / bailian');
+const PROVIDER_SETTING = String(flag('provider', KEYFRAME_PROVIDER)).toLowerCase();
+const PROVIDER = PROVIDER_SETTING === 'comfyui' ? 'local' : PROVIDER_SETTING;
+if (!['huimeng', 'local', 'bailian'].includes(PROVIDER)) throw new Error('--provider 只能是 huimeng / local / bailian / comfyui');
 const LOCAL_GEN = COMFY_GEN;
 const LOCAL_PY = COMFY_PYTHON;
 const LOCAL_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_local_v2'))));
-const LOCAL_STEPS = String(flag('steps', '20'));
-const LOCAL_CFG = String(flag('cfg', '4'));
-const BAILIAN_MODEL = String(flag('model', 'qwen-image-3.0-pro'));
+const LOCAL_STEPS = String(flag('steps', LOCAL_IMAGE_STEPS));
+const LOCAL_CFG = String(flag('cfg', LOCAL_IMAGE_CFG));
+const BAILIAN_MODEL = String(flag('model', KEYFRAME_IMAGE_MODEL));
 const BAILIAN_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_bailian'))));
 
 /**
@@ -116,9 +120,24 @@ const board = JSON.parse(fs.readFileSync(BOARD_PATH, 'utf8'));
 const SKIP_GATE = argv.includes('--skip-gate');
 const approvedAssets = projectAssetFiles(board, BOARD_PATH, { workspace: flag('ws', null) });
 requireApproval(PROJ, 'assets', approvedAssets, { skip: SKIP_GATE });
-// 审批必须绑定本次明确传入的执行计划。不能因为项目里恰好存在一个
-// board.direction.json，就拿旧导演文件的票据放行另一份 render plan。
-requireApproval(PROJ, 'direction', [DIRECTION_PATH], { skip: SKIP_GATE });
+// 🔁 **这张票原先绑的是 `render.plan.json`，与 `compile-units` 互斥**（2026-09-17 after_waking 复发）：
+//    `compile-units.mjs:28` 要求 `direction` 票绑**导演稿** `board.direction.json`；
+//    这里原先要求绑**执行计划** `--direction`。而票据只有一个 `artifact_hash` 槽位 ——
+//    **签任何一个，另一个必然报「产物已变化，旧确认自动失效」**，流程在同一张票上死锁。
+//
+//    这条 2026-09-17 13:17 已经以"操作失误"记过一次（批成了 board.direction.json），
+//    没被识别成代码缺陷，所以同一个坑原样复发。
+//
+//    原注释想要的保证（"不能拿旧导演文件的票放行另一份 plan"）**由计划身份证提供**：
+//    `assertPlanProvenance` 会核对 `provenance.direction_sha256` 与项目里的导演稿是否一致，
+//    比单哈希更强 —— 它还连带核了 board / story / units 三份哈希。
+//    所以这里改成：**票绑导演稿（与 compile-units 对齐），再用身份证反证计划来源。**
+requireApproval(PROJ, 'direction', [path.join(PROJ, 'board.direction.json')], { skip: SKIP_GATE });
+assertPlanProvenance(dir, {
+  boardPath: BOARD_PATH,
+  storyPath: path.join(PROJ, 'story.md'),
+  planPath: DIRECTION_PATH,
+});
 
 /** 造型 id → 角色 id（要拿角色的肖像当脸锚点） */
 const charOf = (identId) => (board.identities.find((x) => x.id === identId) || {}).character;
@@ -217,13 +236,28 @@ function refsFor(shot, unit) {
         { file: assets.sceneMaster, role: 'scene' },
       ];
     }
-    const portraits = people.filter((x) => x.role === 'portrait');
-    const sheets = people.filter((x) => x.role === 'sheet');
-    const ordered = [
+    // 🔁 **一个角色只给一张身份参考，且优先身份图、不要肖像**（2026-09-17 after_waking）。
+    //
+    // 原先是「1 人时给 [场景, 肖像, 身份图]，2 人时只给 [场景, 肖像A, 肖像B]」，两个分支都不对：
+    //   · 肖像与身份图**互相矛盾**时模型随机选边。实测换性别的剧里，肖像（短发男）
+    //     和身份图（长发女装）同时进来，g001 画成男孩、g002 画成"镜前男孩+镜中女孩"、
+    //     g004 却又画对 —— 同一批参考图出三种结果，这就是矛盾被随机裁决的样子。
+    //   · 根因是契约本身：`characters[].portrait` 挂在**角色**上，而**头发是画在肖像里的**。
+    //     一个角色有多套发型不同的造型时，肖像只能匹配其中一套，其余必然冲突。
+    //   · 2 人时丢掉身份图更糟：服装描述整个没了，只剩两张脸。
+    //
+    // 身份图（4 面板）的 Panel1 本来就是**脸部特写**，锁脸不缺依据；而服装只有身份图有。
+    // 所以「优先身份图」同时锁住脸和服装，还省下一个参考位。
+    // `bailian` 分支下面一直就是这么写的，这里把 local 对齐过去。
+    const anchored = assets.people.map((person) => ({
+      file: person.sheet || person.portrait,
+      role: person.sheet ? 'sheet' : 'portrait',
+      character: person.characterId,
+    }));
+    return [
       { file: assets.sceneMaster, role: 'scene' },
-      ...(portraits.length > 1 ? portraits : [...portraits, ...sheets]),
-    ];
-    return ordered.slice(0, 3);
+      ...anchored,
+    ].slice(0, 3);
   }
   const refs = [
     ...people,
@@ -302,7 +336,7 @@ for (const unit of dir.units) {
     const res = await bailian.edit({
       images: refs.map((ref) => ref.file),
       instruction: prompt,
-      size: '1024*1792',
+      size: BAILIAN_SIZE,
       n: 1,
       outDir: requestOut,
       prefix: unit.id,
@@ -321,7 +355,7 @@ for (const unit of dir.units) {
     }
   } else {
     const a = ['cli/huimeng.mjs', '--prompt', prompt, '--ratio', '9:16', '--resolution', SIZE,
-      '--model', 'image-2-official'];
+      '--model', HUIMENG_IMAGE_MODEL];
     for (const ref of refs) a.push('--ref', ref.file);
     a.push('--out', out);
     r = spawnSync(NODE, a, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 900000, cwd: ROOT });

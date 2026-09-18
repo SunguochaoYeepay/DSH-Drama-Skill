@@ -45,6 +45,10 @@ metadata:
 
 ## 双钥匙闸门
 
+剧本写作只能通过 `node cli/script.mjs generate --input <素材> --out <项目/story.md>` 调用百炼 `qwen3.8-max`。不得由执行任务的 Agent 自写，也不得用本地 Qwen 代写。CLI 留存输入、剧本哈希和模型响应来源；缺票或剧本被改动时，导演与计划编译拒绝继续。用户明确提供的完整原稿可用 `register-user` 登记，不能冒充模型产物；`--confirmed-by` 是人工声明，不是身份认证，Agent 不得代签。旧项目来源无法核实时停止并请用户确认，不能倒填模型票。
+
+导演同样只能走百炼 `qwen3.8-max`；导演稿旁必须有绑定板子、剧本、导演稿哈希及响应模型的 `.provenance.json`，计划编译和后续执行验票。旧导演稿缺票不能倒填，须重新生成并重新送审。剧本/导演模型、生图通道和模型、H3 档位/尺寸及运行路径统一在仓库根 `.env` 配置（模板 `.env.example`）；不要在项目文件中存密钥或改动全局默认值来切换剧目。
+
 正式流程始终需要两把钥匙：
 
 1. 机器 QA 通过：产物才有资格交给人看。
@@ -58,7 +62,7 @@ metadata:
 2. 剧本生成后，展示完整剧本和结构检查结果。
 3. 资源生成后，展示角色肖像、身份图、场景和道具总览。
 4. 关键帧生成后，展示编号总览和每张原图。
-5. 每段视频分两轮：先跑快档预览并展示完整视频和多帧总览，确认后再跑正式规格、再展示、再确认。该段两次确认都拿到，才生成下一段。
+5. 每段视频出片后展示完整视频和多帧总览，确认后才生成下一段；不满意就按意见重抽并重新送审。
 6. 合成后展示成片和接缝检查结果，等待最终确认。
 
 确认记录位于项目目录的 `review.approvals.json`，票据绑定产物哈希。重新生成、覆盖或修改产物后，旧票自动失效。
@@ -91,8 +95,8 @@ metadata:
 - 角色身份、造型、场景和道具必须引用结构化资产，不靠临时提示词重新发明。
 - 视频逐段串行生成、逐段检查、逐段人工确认，禁止并发批跑。
 - 台词必须有足够时长说完。时长由台词/音频和动作需求反推，不得裁断句尾。
-- H3 暂时是既定视频模型；模型成本较高，先用测试规格验证节奏，再决定是否跑正式规格。
-- 视频生成是抽卡，重复生成不可避免。用快档反复抽、确认之后才跑正式规格；不要把重跑当异常，也不要为省一轮而跳过确认。
+- H3 暂时是既定视频模型。默认使用 `.env` 的常规尺寸（当前 `480x864`）；用户明确要求“高质量”时使用 `.env` 的高质量尺寸（当前 `768x1344`）。
+- 视频生成是抽卡，重复生成不可避免。不满就重抽**同一规格**；不要把重跑当异常，也不要为省一轮而跳过确认。
 - 机器报告、缩略图和评分不能替代人观看原图、完整视频和实听音轨。
 - 不把带过期时间的远程 URL 写进项目契约；产物必须落到本地稳定路径。
 - 真实项目和生成媒体必须在仓库外；确定性测试只使用仓库内 `tests/fixtures/` 的最小夹具，不依赖某个用户项目。
@@ -129,15 +133,14 @@ node cli/compile-units.mjs <board.direction.json> --out <render.plan.json>
 node cli/assets.mjs <board.json> --provider bailian
 node cli/keyframes.mjs <board.json> --direction <render.plan.json> --provider bailian
 node cli/prepare-handoff.mjs --plan <render.plan.json> --unit g002
-node cli/unit.mjs <board.json> --direction <render.plan.json> --unit g001 --quality test --profile fast
+node cli/unit.mjs <board.json> --direction <render.plan.json> --unit g001
 node cli/assemble-units.mjs <render.plan.json> --out <out/final.mp4>
 
 # 新版人工票据
 node cli/review-gate.mjs approve --project <项目目录> --stage direction --artifacts <direction.json>
 node cli/review-gate.mjs approve --project <项目目录> --stage assets
-node cli/review-gate.mjs approve --project <项目目录> --stage keyframes --artifacts <图片列表>
-node cli/review-gate.mjs approve --project <项目目录> --stage clip --id g001 --variant preview --artifacts <g001.preview.mp4>
-node cli/review-gate.mjs approve --project <项目目录> --stage clip --id g001 --variant final --artifacts <g001.final.mp4>
+node cli/review-gate.mjs approve --project <项目目录> --stage keyframes --artifacts <图片列表，逗号分隔>
+node cli/review-gate.mjs approve --project <项目目录> --stage clip --id g001 --artifacts <g001.mp4>
 node cli/review-gate.mjs ready-assemble --project <项目目录> --plan <render.plan.json>
 ```
 

@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { readReviews, requireAllClips, writeReviewNote } from '../src/human-gates.mjs';
 import { assertPlanProvenance } from '../src/plan-provenance.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { VIDEO_QUALITY, VIDEO_NORMAL_SIZE, VIDEO_HIGH_SIZE } from '../src/config.mjs';
 
 installCliErrorHandler();
 
@@ -12,7 +13,7 @@ const argv = process.argv.slice(2);
 const planArg = argv.find((x) => /\.json$/i.test(x) && !x.startsWith('--'));
 const value = (name, fallback) => { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : fallback; };
 if (!planArg) {
-  console.error('用法：node cli/assemble-units.mjs <render.plan.json> [--out final.mp4]');
+  console.error('用法：node cli/assemble-units.mjs <render.plan.json> [--quality normal|high] [--out final.mp4]');
   process.exit(2);
 }
 const planPath = path.resolve(planArg);
@@ -20,6 +21,13 @@ const projectDir = path.dirname(planPath);
 const boardPath = path.resolve(value('board', path.join(projectDir, 'board.json')));
 const storyPath = path.resolve(value('story', path.join(projectDir, 'story.md')));
 const output = path.resolve(value('out', path.join(projectDir, 'out', 'final.mp4')));
+const quality = String(value('quality', VIDEO_QUALITY)).toLowerCase();
+const sizes = { normal: VIDEO_NORMAL_SIZE, high: VIDEO_HIGH_SIZE };
+if (!sizes[quality]) throw new Error(`--quality 只能是 normal / high，收到 ${quality}`);
+const size = sizes[quality];
+if (!/^\d+x\d+$/.test(size)) throw new Error(`AIH_VIDEO_${quality.toUpperCase()}_SIZE 必须是 WxH，收到 ${size}`);
+const [width, height] = size.split('x').map(Number);
+if (width <= 0 || height <= 0) throw new Error(`合成尺寸必须大于零，收到 ${size}`);
 const plan = JSON.parse(fs.readFileSync(planPath, 'utf8'));
 assertPlanProvenance(plan, { boardPath, storyPath, planPath });
 // 情绪与表演契约在单段视频生成前校验。进入合成阶段后，真正的输入是
@@ -49,7 +57,7 @@ for (const [index, unit] of plan.units.entries()) {
   const hasDialogue = (unit.shots || []).some((shot) => (shot.lines || []).length > 0);
   const trimArgs = hasDialogue ? [] : ['-t', Number(unit.content_duration_s).toFixed(3)];
   run(['-y', '-v', 'error', '-i', input, ...trimArgs,
-    '-vf', 'scale=480:864:flags=lanczos,fps=24,format=yuv420p',
+    '-vf', `scale=${width}:${height}:flags=lanczos,fps=24,format=yuv420p`,
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '18',
     '-c:a', 'aac', '-ar', '44100', '-ac', '2', '-b:a', '192k', '-movflags', '+faststart', out], unit.id);
   console.log(`  ${unit.id}: ${hasDialogue ? '含台词，保留完整生成时长' : `无台词，裁到 ${unit.content_duration_s.toFixed(2)}s`}`);
