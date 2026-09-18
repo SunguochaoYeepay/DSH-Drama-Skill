@@ -14,6 +14,7 @@
  *   小师妹（语气温软）：大师兄，昨天晚上…   → dialogue
  *   小师妹 OS：我以为的负责是相守相伴…     → voiceover
  *   片尾字幕：她以为的负责是余生相守…      → card
+ *   （完）/（全剧终）/（剧终）独立成行      → end_marker（不成镜，不进 action）
  */
 
 import { parseScenes } from './parse-scenes.mjs';
@@ -24,6 +25,10 @@ const RE_SPEAKER = /^([^\s：:【】\[\]（）()△▲]{1,12})\s*(?:[（(]([^）
 const RE_SPEAKER_CUE = /^([^\s：:【】\[\]（）()△▲]{1,12})\s*[（(]([^）)]*)[）)]\s*$/;
 const RE_META_KV = /^(短剧剧本|剧本|风格|时长|类型|题材|片名|集数|出品)\s*[:：]\s*(.*)$/;
 const RE_SECTION = /^(人物设定|人物介绍|人物表|场景表|分集大纲|故事大纲)\s*[:：]?\s*$/;
+// 剧本结尾标记：独立成行的（完）/（全剧终）/（剧终）等。它们不是动作，凑成一个
+// 「垃圾动作镜」会被板子契约（action ≥4 字、prompt ≥12 字）拒绝，或侥幸过关污染分镜。
+// 允许全角/半角括号包裹或裸写；只匹配整行，不碰正文。
+const RE_END_MARK = /^(?:[（(]\s*)?(?:全剧终|剧终|完剧|the\s*end|end|完)\s*(?:[）)])?$/i;
 
 /**
  * @returns {{lines: Array, stats: object, scenes: Array, episode_count: number}}
@@ -108,6 +113,12 @@ export function parseScript(text) {
         text: sp[3].trim(),
         scene_no: currentScene?.scene_no ?? null,
       });
+      continue;
+    }
+
+    // 结尾标记（（完）/（全剧终）等）：不算动作，避免凑出垃圾镜头
+    if (RE_END_MARK.test(line)) {
+      lines.push({ ...base, kind: 'end_marker', scene_no: currentScene?.scene_no ?? null });
       continue;
     }
 
