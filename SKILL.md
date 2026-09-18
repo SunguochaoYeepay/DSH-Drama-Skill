@@ -101,6 +101,8 @@ metadata:
 - 台词必须有足够时长说完。时长由台词/音频和动作需求反推，不得裁断句尾。
 - H3 暂时是既定视频模型。默认使用 `.env` 的常规尺寸（当前 `480x864`）；用户明确要求“高质量”时使用 `.env` 的高质量尺寸（当前 `768x1344`）。
 - 视频生成是抽卡，重复生成不可避免。不满就重抽**同一规格**；不要把重跑当异常，也不要为省一轮而跳过确认。
+- 下游发现单个镜头的姿态、走位、构图或动作问题时，走 `references/workflow.md` 的“局部返修分支”：剧本继续冻结，召回导演修订受影响单元，重新编译并只重跑该单元及其依赖链。
+- 局部问题先分类：执行层约束缺失、提示词翻译不完整或生成参数错误，可由当前 Agent 直接写入项目级覆盖并重跑受影响产物；涉及剧情、台词、角色设定、场景语义、单元边界或连续性决策，才必须召回高级导演模型。此规则适用于所有剧目和所有对话模型，不绑定某个项目。
 - 机器报告、缩略图和评分不能替代人观看原图、完整视频和实听音轨。
 - 不把带过期时间的远程 URL 写进项目契约；产物必须落到本地稳定路径。
 - 真实项目和生成媒体必须在仓库外；确定性测试只使用仓库内 `tests/fixtures/` 的最小夹具，不依赖某个用户项目。
@@ -121,6 +123,7 @@ metadata:
 | 流程与人工闸门 | `references/workflow.md` |
 | 资产和关键帧规则 | `references/assets-and-keyframes.md` |
 | H3 执行参数 | `references/video-h3.md` |
+| 抽卡师：导演意图到生图语言的执行编译 | `references/draw-specialist.md` |
 | QA 和送审规则 | `references/qa-and-review.md` |
 | 确定性行为 | `src/`、`cli/` 和对应测试 |
 
@@ -135,6 +138,7 @@ node src/board.mjs table <board.json>
 
 # 导演与生成计划
 node cli/direct.mjs <board.json> --story <story.md> --out <board.direction.json>
+node cli/revise-unit.mjs <board.json> --unit <id> --feedback <reviews/revision.md>
 node cli/compile-units.mjs <board.direction.json> --out <render.plan.json>
 node cli/design-assets.mjs <board.json> --out <project/asset-design.json>
 
@@ -152,6 +156,8 @@ node cli/review-gate.mjs approve --project <项目目录> --stage keyframes --pl
 node cli/review-gate.mjs approve --project <项目目录> --stage clip --id g001 --artifacts <g001.mp4>
 node cli/review-gate.mjs ready-assemble --project <项目目录> --plan <render.plan.json>
 ```
+
+资产和关键帧开始生成前，必须先向用户确认本次通道（本地预览或线上生成）；不得把环境默认值当作用户选择。生成完成后先展示整组结果，并把每个产物的绝对路径交给用户（对话中用可打开的本地文件链接）；只有用户人工确认并登记对应闸门票据，才能进入下一阶段。每次生成会在项目 `reviews/<stage>.generation.json` 留下实际 provider、模型和产物清单。
 
 具体参数属于对应阶段 reference，不在这里维护完整清单。
 

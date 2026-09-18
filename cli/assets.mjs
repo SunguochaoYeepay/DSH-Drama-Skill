@@ -45,6 +45,7 @@ import { requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { requireDirectionProvenance } from '../src/direction-provenance.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { ASSET_IMAGE_MODEL, LOCAL_IMAGE_STEPS } from '../src/config.mjs';
+import { writeGenerationRecord } from '../src/generation-records.mjs';
 
 installCliErrorHandler();
 
@@ -271,7 +272,14 @@ if (failed) {
   }
 
   console.log(`\n资源总览（请逐张核对身份、造型、场景、文字污染）：`);
-  for (const f of all) console.log(`  · ${f}`);
+  for (const f of all) console.log(`  · ${path.resolve(f)}`);
+
+  const generationRecord = writeGenerationRecord(PROJ, 'assets', {
+    provider: p.name,
+    model: p.name === 'comfyui' ? 'local-comfyui' : ASSET_IMAGE_MODEL,
+    requested_provider: PROVIDER_ARG || null,
+    artifacts: all,
+  });
 
   // 票据不代写。资源闸门要用户自己看总览再批 —— 这是 SKILL.md 的硬规矩。
   const assetsDir = ASSET_DIR;
@@ -282,6 +290,7 @@ if (failed) {
     ...all.map((file) => `- ${file}`), '',
     '请逐张查看原图，确认人物身份、造型、体型比例、场景、道具和文字污染。', '',
     `确认命令：${approveCommand}`,
+    `生成记录：${generationRecord}`,
   ]);
   console.log(`\n下一步：打开原图人工确认；确认票会绑定以上 ${all.length} 个文件的哈希`);
   console.log(`  ${approveCommand}`);

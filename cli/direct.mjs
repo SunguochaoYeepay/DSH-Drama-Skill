@@ -19,7 +19,7 @@ const flag = (name, fallback) => {
   return at >= 0 && argv[at + 1] ? argv[at + 1] : fallback;
 };
 if (!boardArg) {
-  console.error('用法：node cli/direct.mjs <board.json> [--story story.md] [--out board.direction.json] [--batched] [--model qwen3.8-max] [--thinking] [--max-tokens 12000]');
+  console.error('用法：node cli/direct.mjs <board.json> [--story story.md] [--out board.direction.json] [--feedback revision.md] [--batched] [--model qwen3.8-max] [--thinking] [--max-tokens 12000]');
   process.exit(2);
 }
 
@@ -36,7 +36,14 @@ if (!argv.includes('--skip-gate')) requireApproval(projectDir, 'story', [storyPa
 else console.error('⚠ --skip-gate：仅限调试，已跳过剧本人工确认');
 const script = fs.readFileSync(storyPath, 'utf8');
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/(?:[A-Za-z]:)/, (m) => m.slice(1))), '..');
-const prompt = buildBrief({ briefText: readBrief(root), board, script, projectRoot: root });
+const feedbackPath = flag('feedback', null);
+const feedback = feedbackPath
+  ? fs.readFileSync(path.resolve(feedbackPath), 'utf8')
+  : '';
+const prompt = [
+  buildBrief({ briefText: readBrief(root), board, script, projectRoot: root }),
+  feedback ? `\n\n【局部返修反馈】\n${feedback}\n\n只修订反馈点涉及的导演单元；已确认剧本、台词原文和无关单元保持不变。` : '',
+].filter(Boolean).join('');
 const result = argv.includes('--batched')
   ? await generateBatchedDirection({
     basePrompt: prompt, board, script, model: flag('model', DIRECTOR_MODEL),
@@ -66,6 +73,7 @@ const note = writeReviewNote(projectDir, 'direction', [
   '| 单元 | 内容时长 | 镜头数 | 边界理由 | 高风险动作 |', '|---|---:|---:|---|---|',
   ...result.direction.units.map((u) => `| ${u.id} | ${Math.max(...u.shots.map((s) => Number(s.at) + Number(s.duration_s))).toFixed(2)}s | ${u.shots.length} | ${u.boundary_trigger || ''} | ${(u.action_complexity?.high_risk_events || []).map((e) => e.type || e.event || '').join('、') || '无'} |`),
   '', `确认命令：node cli/review-gate.mjs approve --project "${projectDir}" --stage direction --artifacts "${output}"`,
+  ...(feedbackPath ? [`返修反馈：${path.resolve(feedbackPath)}`] : []),
 ]);
 console.log(`导演完成：${result.direction.units.length} 个单元，${result.seconds}s -> ${output}`);
 console.log(`等待人工审阅：${note}`);

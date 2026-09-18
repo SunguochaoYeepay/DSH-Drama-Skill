@@ -1,11 +1,12 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { requireDirectionProvenance, directionReceiptPath } from './direction-provenance.mjs';
+import { directorBoardView, requireDirectionProvenance, directionReceiptPath } from './direction-provenance.mjs';
 
 export const MIN_DIRECTOR_VERSION = 6;
 const hash = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const hashJson = (value) => crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
+const boardIdentityHash = (file) => hashJson(directorBoardView(JSON.parse(fs.readFileSync(file, 'utf8'))));
 
 export function projectId(board, boardPath) {
   const id = String(board.meta?.project || '').trim();
@@ -20,7 +21,7 @@ export function makePlanProvenance({ boardPath, storyPath, directionPath, legacy
   return {
     contract: 1,
     project_id: projectId(board, boardPath),
-    board_sha256: hash(boardPath),
+    board_identity_sha256: boardIdentityHash(boardPath),
     story_sha256: hash(storyPath),
     direction_sha256: hash(directionPath),
     direction_receipt_sha256: hash(directionReceiptPath(directionPath)),
@@ -36,7 +37,11 @@ export function assertPlanProvenance(plan, { boardPath, storyPath, planPath }) {
   if (!p || p.contract !== 1) throw new Error('生成计划没有项目身份证；历史计划禁止直接执行，请重新编译或显式迁移');
   const board = JSON.parse(fs.readFileSync(boardPath, 'utf8'));
   if (p.project_id !== projectId(board, boardPath)) throw new Error(`生成计划属于项目 ${p.project_id}，当前项目是 ${board.meta.project}`);
-  if (p.board_sha256 !== hash(boardPath)) throw new Error('Storyboard 已变化，历史生成计划失效');
+  if (p.board_identity_sha256) {
+    if (p.board_identity_sha256 !== boardIdentityHash(boardPath)) throw new Error('Storyboard 语义内容已变化，历史生成计划失效');
+  } else if (p.board_sha256 !== hash(boardPath)) {
+    throw new Error('Storyboard 已变化，历史生成计划失效');
+  }
   if (p.story_sha256 !== hash(storyPath)) throw new Error('剧本已变化，历史生成计划失效');
   const directionPath = path.join(path.dirname(planPath), p.direction_file);
   if (!fs.existsSync(directionPath) || p.direction_sha256 !== hash(directionPath)) throw new Error('导演稿已变化或不在当前项目，生成计划失效');

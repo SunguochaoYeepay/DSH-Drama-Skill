@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { handoffPath, requireHandoff } from './continuity-handoff.mjs';
+import { readGenerationRecord } from './generation-records.mjs';
 
 export const REVIEW_FILE = 'review.approvals.json';
 
@@ -73,6 +74,8 @@ export function approve(projectDir, stage, files, { id = null, by = '用户' } =
   const data = readReviews(projectDir);
   const artifact = fingerprint(files);
   const ticket = { at: new Date().toISOString(), by, artifact_hash: artifact.hash, artifacts: artifact.files };
+  const generation = readGenerationRecord(projectDir, stage);
+  if (generation) ticket.generation = generation;
   if (stage === 'clip') {
     if (!id) throw new Error('确认视频片段时必须提供 --id');
     data.approvals.clips[id] = ticket;

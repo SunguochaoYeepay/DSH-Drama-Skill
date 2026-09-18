@@ -22,6 +22,13 @@ test('local assets use configured steps unless overridden on CLI', () => {
   assert.match(assets, /common\.steps = Number\(STEPS\)/);
 });
 
+test('keyframe prompts translate timeline wording into a static pose', () => {
+  const keyframes = source('cli/keyframes.mjs');
+  assert.match(keyframes, /关键帧起始姿态/);
+  assert.match(keyframes, /replace\(\/\^0\\s\*秒/);
+  assert.doesNotMatch(keyframes, /画面起点：\$\{unit\.keyframe_start/);
+});
+
 test('Bailian keyframe size and Huimeng model have independent env defaults', () => {
   const result = spawnSync(process.execPath, ['--input-type=module', '-e',
     "import { BAILIAN_KEYFRAME_SIZE, HUIMENG_IMAGE_MODEL } from './src/config.mjs'; console.log(JSON.stringify([BAILIAN_KEYFRAME_SIZE, HUIMENG_IMAGE_MODEL]))"], {

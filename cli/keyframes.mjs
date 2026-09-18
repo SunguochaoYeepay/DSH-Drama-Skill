@@ -37,6 +37,9 @@ import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { KEYFRAME_PROVIDER, KEYFRAME_IMAGE_MODEL, HUIMENG_IMAGE_MODEL, KEYFRAME_SIZE, BAILIAN_KEYFRAME_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG } from '../src/config.mjs';
 import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
 import { withHandoffReference } from '../src/keyframe-references.mjs';
+import { writeGenerationRecord } from '../src/generation-records.mjs';
+import { readKeyframeOverride } from '../src/keyframe-overrides.mjs';
+import { compileDrawPlan } from '../src/draw-specialist.mjs';
 
 installCliErrorHandler();
 
@@ -67,6 +70,11 @@ const LOCAL_STEPS = String(flag('steps', LOCAL_IMAGE_STEPS));
 const LOCAL_CFG = String(flag('cfg', LOCAL_IMAGE_CFG));
 const BAILIAN_MODEL = String(flag('model', KEYFRAME_IMAGE_MODEL));
 const BAILIAN_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_bailian'))));
+
+function staticKeyframeStart(unit, shot) {
+  const text = String(unit.keyframe_start || shot.action || '').trim();
+  return text.replace(/^0\s*秒(?:时|时刻)?[：:，,\s]*/u, '');
+}
 
 /**
  * ## 景别 → 硬边界
@@ -158,7 +166,7 @@ function buildPrompt(unit, shot) {
     `【整体风格】${board.meta?.style_prompt || board.meta?.style || '与项目视觉风格一致'}。`,
     f.rule,                                    // ← 景别硬约束放最前
     `【人物】${people}`,
-    `【动作起点】${unit.keyframe_start || shot.action}`,
+    `【关键帧起始姿态】${staticKeyframeStart(unit, shot)}`,
     shot.lighting ? `【光】${shot.lighting}` : '',
     shot.camera && !/^固定/.test(shot.camera) ? `【运镜】${shot.camera}（这是一张静帧，只需体现这个机位的构图）` : '',
     NO_TEXT,
@@ -207,7 +215,7 @@ function buildLocalPrompt(unit, shot, refs) {
         : '',
     `构图要求：${f.rule.replaceAll('**', '')}`,
     scaleRule,
-    `画面起点：${unit.keyframe_start || shot.action}`,
+    `关键帧起始姿态：${staticKeyframeStart(unit, shot)}`,
     unit.continuity?.mode === 'continue_previous'
       ? `连续性交接：必须保持“${unit.continuity.handoff_state}”；只允许改变：${(unit.continuity.allowed_changes || []).join('、') || '无'}。`
       : '',
@@ -293,6 +301,9 @@ for (const unit of dir.units) {
   const prompt = PROVIDER === 'local' || PROVIDER === 'bailian'
     ? buildLocalPrompt(unit, shot, refs)
     : [refGuide, buildPrompt(unit, shot)].filter(Boolean).join('\n');
+  const override = readKeyframeOverride(PROJ, unit.id);
+  const drawPlan = compileDrawPlan({ unit, shot, override });
+  const finalPrompt = `${prompt}\n\n【抽卡师｜执行层执行编译】\n${drawPlan.prompt}`;
   const out = PROVIDER === 'local'
     ? path.join(LOCAL_OUT, `${unit.id}.png`)
     : PROVIDER === 'bailian'
@@ -304,7 +315,8 @@ for (const unit of dir.units) {
 
   console.log(`\n${'─'.repeat(68)}`);
   console.log(`  【${unit.id}】${shot.framing}　参考图 ${refs.length} 张`);
-  console.log(prompt.split('\n').map((l) => '    ' + l).join('\n'));
+  console.log(finalPrompt.split('\n').map((l) => '    ' + l).join('\n'));
+  for (const conflict of drawPlan.conflicts) console.log(`    warning: 抽卡师发现约束冲突：${conflict}`);
   if (DRY) continue;
 
   let r;
@@ -313,7 +325,7 @@ for (const unit of dir.units) {
   let txt = '';
   if (PROVIDER === 'local') {
     const resultFile = path.join(LOCAL_OUT, `.${unit.id}.result.json`);
-    const a = [LOCAL_GEN, 'edit', '--prompt', prompt, '--ratio', ASPECT, '--steps', LOCAL_STEPS, '--cfg', LOCAL_CFG,
+    const a = [LOCAL_GEN, 'edit', '--prompt', finalPrompt, '--ratio', ASPECT, '--steps', LOCAL_STEPS, '--cfg', LOCAL_CFG,
       '--out-dir', LOCAL_OUT, '--result-file', resultFile];
     for (const ref of refs) a.push('--image', ref.file);
     const started = Date.now();
@@ -338,7 +350,7 @@ for (const unit of dir.units) {
     const started = Date.now();
     const res = await bailian.edit({
       images: refs.map((ref) => ref.file),
-      instruction: prompt,
+      instruction: finalPrompt,
       size: dimensionsForAspect(BAILIAN_SIZE, ASPECT, '*'),
       n: 1,
       outDir: requestOut,
@@ -349,7 +361,7 @@ for (const unit of dir.units) {
     secs = String(Math.round((Date.now() - started) / 1000));
     txt = String(res.stdout || '') + String(res.stderr || '') + String(res.error || '');
     // `_request/` 留档：这一镜当时到底发了什么。正文 + 实际 argv 各存一份。
-    fs.writeFileSync(path.join(requestDir, 'prompt.txt'), prompt, 'utf8');
+    fs.writeFileSync(path.join(requestDir, 'prompt.txt'), finalPrompt, 'utf8');
     fs.writeFileSync(path.join(requestDir, 'command.json'), JSON.stringify(res.argv, null, 2) + '\n', 'utf8');
     const produced = res.files[0];
     if (res.status === 0 && produced && fs.existsSync(produced)) {
@@ -391,11 +403,24 @@ if (failures) {
   process.exitCode = 1;
 } else {
   const generated = planKeyframeFiles(PROJ, dir);
+  const generationRecord = writeGenerationRecord(PROJ, 'keyframes', {
+    provider: PROVIDER,
+    model: PROVIDER === 'local' ? 'local-comfyui' : PROVIDER === 'bailian' ? BAILIAN_MODEL : HUIMENG_IMAGE_MODEL,
+    requested_provider: PROVIDER_SETTING || null,
+    artifacts: generated,
+    plan: DIRECTION_PATH,
+    execution_overrides: dir.units
+      .filter((unit) => readKeyframeOverride(PROJ, unit.id))
+      .map((unit) => unit.id),
+  });
   const note = writeReviewNote(PROJ, 'keyframes', [
     '# 关键帧人工审阅', '',
     '机器检查只能判定是否可送审。请逐张查看人物身份、体型比例、构图、动作起点和场景连续性。', '',
     ...generated.map((f) => `- ${path.basename(f)}: ${f}`), '',
+    `生成记录：${generationRecord}`,
     `确认命令：node cli/review-gate.mjs approve --project "${PROJ}" --stage keyframes --plan "${DIRECTION_PATH}"`,
   ]);
+  console.log('\n关键帧绝对路径（请直接打开并逐张确认）：');
+  for (const file of generated) console.log(`  · ${path.resolve(file)}`);
   console.log(`\n完成。等待人工审阅：${note}`);
 }

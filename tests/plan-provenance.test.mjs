@@ -21,6 +21,29 @@ plan.provenance = makePlanProvenance({ boardPath: board, storyPath: story, direc
 sealPlan(plan);
 assert.doesNotThrow(() => assertPlanProvenance(plan, { boardPath: board, storyPath: story, planPath }));
 const originalReceipt = fs.readFileSync(directionReceiptPath(direction), 'utf8');
+
+// Resource backfill is a later stage and must not invalidate a director receipt.
+fs.writeFileSync(board, JSON.stringify({
+  meta: { project: 'one' },
+  characters: [{ id: 'c1', portrait: null }],
+  identities: [{ id: 'i1', sheet: null }],
+  scenes: [{ id: 's1', master: null }],
+}));
+writeDirectionReceipt({ directionPath: direction, boardPath: board, storyPath: story, model: DIRECTOR_MODEL, responseModel: DIRECTOR_MODEL });
+const resourcePlan = { units: [{ id: 'g001' }] };
+resourcePlan.provenance = makePlanProvenance({ boardPath: board, storyPath: story, directionPath: direction });
+sealPlan(resourcePlan);
+const withAssets = JSON.parse(fs.readFileSync(board, 'utf8'));
+withAssets.characters[0].portrait = 'assets/c1.png';
+withAssets.identities[0].sheet = 'assets/i1.png';
+withAssets.scenes[0].master = 'assets/s1.png';
+fs.writeFileSync(board, JSON.stringify(withAssets));
+assert.doesNotThrow(() => assertPlanProvenance(resourcePlan, { boardPath: board, storyPath: story, planPath }));
+withAssets.meta.style = 'different';
+fs.writeFileSync(board, JSON.stringify(withAssets));
+assert.throws(() => assertPlanProvenance(resourcePlan, { boardPath: board, storyPath: story, planPath }), /语义内容已变化/);
+fs.writeFileSync(board, JSON.stringify({ meta: { project: 'one' } }));
+fs.writeFileSync(directionReceiptPath(direction), originalReceipt);
 fs.writeFileSync(directionReceiptPath(direction), originalReceipt.replace('"contract": 1', '"contract": 2'));
 assert.throws(() => assertPlanProvenance(plan, { boardPath: board, storyPath: story, planPath }), /来源模型/);
 fs.writeFileSync(directionReceiptPath(direction), originalReceipt);
@@ -41,4 +64,4 @@ assert.throws(() => assertPlanEmotionContract(legacy), /g003 未列入/);
 const incomplete = structuredClone(legacy);
 incomplete.units[1].shots[0].emotion_analysis = [];
 assert.throws(() => assertUnitEmotionContract(incomplete.units[1], { plan: incomplete }), /缺少 orange_cat_home/);
-console.log('plan provenance: 8/8 passed');
+console.log('plan provenance: 10/10 passed');
