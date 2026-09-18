@@ -14,7 +14,7 @@
 
 正式流程使用双钥匙闸门：机器 QA 通过只表示可以交给人看；用户明确确认后，才允许进入下一阶段。导演方案、资源、关键帧、每段视频和最终成片都需要人工确认。产物被替换后，旧确认会因文件哈希变化自动失效。
 
-生成计划带项目身份证，绑定剧目 ID、剧本、Storyboard、导演稿和计划内容哈希。换剧、修改源文件或拿历史计划直接运行都会被拒绝；新计划最低使用导演 v5 协议。
+生成计划带项目身份证，绑定剧目 ID、剧本、Storyboard、导演稿和计划内容哈希。换剧、修改源文件或拿历史计划直接运行都会被拒绝；新计划最低使用导演 v6 协议。
 
 完整执行规则见 [SKILL.md](SKILL.md)，工程行为变更见 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -79,6 +79,15 @@ node cli/script.mjs register-user --input <用户原稿> --out <项目/story.md>
 
 两条命令按来源二选一。人工确认完整剧本后再推进导演阶段；旧 `board.mjs story/from-story` 不能替代这条链路。
 
+先给用户展示完整剧本，取得明确确认后记录 `story` 人工票；按已确认的剧名、风格、画幅、故事概述和人物资料填写 [Brief 最小模板](references/board-brief.example.json)，再由代码建立 `board.json`。初始化只搬运原文台词并建立索引镜头，导演仍由高级模型设计：
+
+```powershell
+node cli/review-gate.mjs approve --project <项目目录> --stage story
+node cli/init-board.mjs --story <项目/story.md> --brief <项目/board-brief.json> --out <项目/board.json>
+```
+
+Brief 不可由执行 Agent 擅自补写；角色脸部和服装若仍是“待补”，必须在付费生图前补齐并送审。画幅可为 `9:16`、`16:9` 或 `1:1`，关键帧、视频和合成均按 `board.meta.aspect` 使用对应形状。
+
 检查 Storyboard：
 
 ```powershell
@@ -90,7 +99,7 @@ node src/board.mjs table <board.json>
 
 ```powershell
 node cli/direct.mjs <board.json> --story <story.md> --out <board.direction.json>
-node cli/review-gate.mjs approve --project <项目目录> --stage direction --artifacts <board.direction.json>
+node cli/review-gate.mjs approve --project <项目目录> --stage direction
 node cli/compile-units.mjs <board.direction.json> --out <render.plan.json>
 ```
 
@@ -107,7 +116,8 @@ node cli/review-gate.mjs approve --project <项目目录> --stage assets
 生成关键帧：
 
 ```powershell
-node cli/keyframes.mjs <board.json> --direction <render.plan.json> --provider bailian --model qwen-image-3.0-pro
+node cli/keyframes.mjs <board.json> --direction <render.plan.json> --provider bailian
+node cli/review-gate.mjs approve --project <项目目录> --stage keyframes --plan <render.plan.json>
 ```
 
 逐段生成视频（默认常规尺寸，每段人工确认）：
@@ -186,20 +196,7 @@ $env:VERIFY_INSTALLED=1; node tests/integration/dsh-plugins.test.mjs   # 验已�
 
 ## 规则所有权
 
-| 内容 | 唯一所有者 |
-|---|---|
-| 开工前清单（环境体检、付费预算、提示词自检） | `references/preflight.md` |
-| 流程和人工闸门 | `references/workflow.md` |
-| 导演判断 | `references/director/brief.md` |
-| 导演输出格式 | `references/director/schema.md` |
-| Storyboard 格式 | `schema/storyboard.schema.json` |
-| 资产和关键帧 | `references/assets-and-keyframes.md` |
-| H3 执行约束 | `references/video-h3.md` |
-| QA 与人工送审 | `references/qa-and-review.md` |
-| 故障排查 | `references/troubleshooting.md` |
-| 确定性实现 | `src/`、`cli/` 和 `tests/` |
-
-同一规则不要复制到多个文件。具体项目的临时实验结果不进入源码仓库，也不能追加到主 Skill。
+唯一所有权表见 [SKILL.md](SKILL.md)；不要在 README 再维护一份。具体项目的临时实验结果不进入源码仓库。
 
 ## 依赖
 

@@ -574,7 +574,7 @@ ${dialogueIndex || '（本片没有台词）'}
 
 ## 本片画幅
 
-${board.meta?.aspect || '9:16'}　竖屏
+${board.meta?.aspect || '未设置'}　按本片实际画幅设计构图，不假设竖屏
 
 ## 交付时长硬预算
 

@@ -20,6 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { buildBrief, readBrief, callDirector, validateDirection, collectDialogueLines, DIRECTOR_MODEL } from './director.mjs';
 import { requireScriptProvenance } from './script-provenance.mjs';
 import { writeDirectionReceipt } from './direction-provenance.mjs';
+import { requireApproval } from './human-gates.mjs';
 import { parseScenes, sceneMenu } from './parse-scenes.mjs';
 import { compileLiteral } from './literal.mjs';
 import { applyDirection } from './direction-shots.mjs';
@@ -1130,6 +1131,7 @@ async function main() {
     const scriptPath = typeof args.script === 'string' ? args.script : path.join(path.dirname(file), 'story.md');
     if (!fs.existsSync(scriptPath)) die(`找不到剧本：${scriptPath}`);
     requireScriptProvenance(scriptPath);
+    requireApproval(path.dirname(path.resolve(file)), 'story', [scriptPath]);
     const script = fs.readFileSync(scriptPath, 'utf8');
 
     const prompt = buildBrief({ briefText: readBrief(PROJECT_ROOT), board, script });

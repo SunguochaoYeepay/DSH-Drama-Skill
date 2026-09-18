@@ -10,7 +10,7 @@ const board = path.join(dir, 'board.json');
 const story = path.join(dir, 'story.md');
 const direction = path.join(dir, 'board.direction.json');
 const plan = path.join(dir, 'render.plan.json');
-fs.writeFileSync(board, JSON.stringify({ meta: { project: 'cli-errors' } }));
+fs.writeFileSync(board, JSON.stringify({ meta: { project: 'cli-errors', aspect: '9:16' } }));
 fs.writeFileSync(story, 'test');
 fs.writeFileSync(direction, JSON.stringify({ version: 4, units: [] }));
 fs.writeFileSync(plan, JSON.stringify({ units: [{ id: 'g001', shots: [] }] }));
@@ -30,7 +30,7 @@ rejected('assemble-units.mjs', [plan], /错误：生成计划没有项目身份�
 const asset = path.join(dir, 'portrait.png');
 fs.writeFileSync(asset, 'portrait');
 fs.writeFileSync(board, JSON.stringify({
-  meta: { project: 'cli-errors' },
+  meta: { project: 'cli-errors', aspect: '9:16' },
   characters: [{ id: 'cat', name: '猫', portrait: asset }],
   identities: [], scenes: [], props: [],
 }));

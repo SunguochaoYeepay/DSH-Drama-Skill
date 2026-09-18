@@ -52,14 +52,12 @@
 | 入口 | 它校验的导演票绑定对象 |
 |---|---|
 | `cli/compile-units.mjs` | `board.direction.json`（编译源文件） |
-| `cli/keyframes.mjs` / `cli/unit.mjs` | 各自传入的 `--direction` 指向的执行计划 |
+| `cli/keyframes.mjs` | 项目目录的 `board.direction.json`（导演稿）；另外单独校验计划身份证 |
+| `cli/unit.mjs` | 不再验 `direction` 人工票；校验计划身份证、资源/关键帧及上一片段票 |
 
-票据槽只有一个，所以改过导演稿之后必须重签；重签后如果又需要重新编译，会出现互相踩的死锁 ——
-此时对**无成本**的编译步骤显式加 `--skip-gate`（闸门此前已人工确认过），不要手改计划文件。
+导演稿改动后，重新审阅并绑定 `board.direction.json`，再编译计划；不要把 `render.plan.json` 签到 `direction` 票位，也不要靠 `--skip-gate` 绕过不一致。
 
-`cli/keyframes.mjs` 写死计划里的关键帧路径是 `keyframes_render/`，而 `--provider bailian` 实际产出到
-`keyframes_bailian/`。两者不一致时，`cli/unit.mjs` 会拿**同名的旧残留文件**去验票，表现为「产物已变化」。
-处理方式：清掉 `keyframes_render/` 里的过期残留，把票绑到本次真实产出的那一份。
+`cli/keyframes.mjs` 把通道草稿复制到计划槽位；`review-gate --stage keyframes` 根据计划槽位签票，`cli/unit.mjs` 使用同一清单。不要手工签 `keyframes_bailian/` 草稿；若提示产物变化，检查计划槽位是否重新生成或被替换。
 连续承接单元（`continuity.mode = continue_previous`）的关键帧路径取自交接记录，不是计划 —— 签票前按实际清单核一遍。
 
 ## 进程与日志

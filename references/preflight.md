@@ -33,7 +33,7 @@
 | # | 查什么 | 怎么查 | 失败的典型表现 |
 |---|---|---|---|
 | 1 | 本地 ComfyUI 是否 ready | `node cli/wait-ready.mjs` | 端口通 ≠ 模型已加载 |
-| 2 | 本地 H3 生视频通路 | 跑一条最短的 `cli/unit.mjs --unit <id>` 干跑 | — |
+| 2 | 本地 H3 单元契约通路 | 已有有效板子、计划和人工票时运行 `node cli/unit.mjs <项目/board.json> --direction <项目/render.plan.json> --unit <id> --dry-run`；新项目尚未过闸门时先查 `node cli/wait-ready.mjs`，不要伪造票 | 缺位置参数或来源/人工票时会明确拒绝；干跑只验契约和提示词，不验证实际 GPU 生成参数 |
 | 3 | 百炼鉴权与配置 | `bl auth status`、`bl config show --output json` | 见下一条 |
 | 4 | **百炼 CLI 是否会被 PowerShell 吃掉** | 见 [`troubleshooting.md`](troubleshooting.md) 的「CLI 通道调用失败」 | **静默无产出 / 等满超时** |
 | 5 | 水印 | `bl config show` 里 `watermark` 必须为 `false` | 图上有水印，且会被当参考图传下去 |
@@ -66,8 +66,7 @@
 | 本地 Qwen-Image-Edit | 3 张 | 场景 1 + 人物 2 |
 | 百炼 `qwen-image-3.0-pro` | 3 张 | 人物 2 + 场景 1 |
 
-**超限时工具会静默截断**（`cli/keyframes.mjs` 按序 `.slice(0, 3)`），被挤掉的通常是**排最后的场景图**。
-所以：**双人同框的镜要按"人物优先、场景让位"来设计构图**，不要让场景参考成为关键的那一张。
+常规本地/百炼关键帧超过两名角色会明确拒绝；场景图保留在参考图列表中。连续性交接会先插入尾帧并限制总数，若原本已有场景加两名角色，最后一名角色参考可能被截掉；需要先简化构图或明确调整参考职责，再送审。
 
 ### 4.2 首帧锚定一致性（这条曾直接造成服装漂移）
 
@@ -82,8 +81,7 @@
 
 - **删掉所有"不要／禁止／别"句式**。规则与实测见 [`video-h3.md`](video-h3.md) 的「妆面污染」两轮记录：
   扩散模型对否定句的处理常等同于正向提示。
-  ⚠ 注意 `src/director-execution.mjs` 会把 `emotion_analysis[].avoid_symbols`
-  **自动拼成「禁止表现为：…」** —— 它是提示词里否定词的常见来源，用之前先确认它拼了什么。
+  `emotion_analysis[].avoid_symbols` 由 `src/director-execution.mjs` 转为正向表演边界，未知类别只供审阅，不原样拼进提示词；规则见 [`video-h3.md`](video-h3.md) 的对应小节。
 - **左右方位只允许一种说法**。用「画面左侧/右侧」描述视线、同时又用「他的右肩」描述身体部位时，
   两者可能指向同一块区域而互相矛盾（实测：巴掌打对了肩，她的视线却看向了另一侧）。
   固定一种参照系，写完之后全篇统一。

@@ -41,7 +41,8 @@ import path from 'node:path';
 import { assetPlan, refsOf } from '../src/assets.mjs';
 import { projectAssetFiles } from '../src/asset-resolver.mjs';
 import { provider as getProvider, assetProvider } from '../src/providers/index.mjs';
-import { writeReviewNote } from '../src/human-gates.mjs';
+import { requireApproval, writeReviewNote } from '../src/human-gates.mjs';
+import { requireDirectionProvenance } from '../src/direction-provenance.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { ASSET_IMAGE_MODEL, LOCAL_IMAGE_STEPS } from '../src/config.mjs';
 
@@ -77,14 +78,9 @@ const board = JSON.parse(fs.readFileSync(BOARD_PATH, 'utf8'));
 if (SKIP_GATE) {
   console.error('⚠ --skip-gate：仅限调试，已跳过资源阶段的上游人工确认');
 } else {
-  // 顺序不能颠倒：分镜表没定，资产就不知道该给谁做造型。
-  for (const stage of ['story', 'shots']) {
-    if (!board.meta?.approvals?.[stage]) {
-      console.error(`✗ 人工闸门未通过：${stage === 'story' ? '故事' : '分镜表'}尚未确认。`);
-      console.error(`  先确认产物，再生成资源；只做无成本调试可加 --skip-gate。`);
-      process.exit(1);
-    }
-  }
+  const directionPath = path.join(PROJ, 'board.direction.json');
+  requireDirectionProvenance({ directionPath, boardPath: BOARD_PATH, storyPath: path.join(PROJ, 'story.md') });
+  requireApproval(PROJ, 'direction', [directionPath]);
 }
 
 // ---------------------------------------------------------------- 产物命名

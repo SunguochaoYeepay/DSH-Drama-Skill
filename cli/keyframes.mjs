@@ -28,13 +28,15 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { projectAssetFiles, unitAssets } from '../src/asset-resolver.mjs';
-import { requireApproval, writeReviewNote } from '../src/human-gates.mjs';
+import { planKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { COMFY_GEN, COMFY_PYTHON, NODE } from '../src/runtime-paths.mjs';
 import * as bailian from '../src/providers/bailian.mjs';
 import { bindHandoffKeyframe, requireHandoff } from '../src/continuity-handoff.mjs';
 import { assertPlanProvenance } from '../src/plan-provenance.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { KEYFRAME_PROVIDER, KEYFRAME_IMAGE_MODEL, HUIMENG_IMAGE_MODEL, KEYFRAME_SIZE, BAILIAN_KEYFRAME_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG } from '../src/config.mjs';
+import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
+import { withHandoffReference } from '../src/keyframe-references.mjs';
 
 installCliErrorHandler();
 
@@ -117,6 +119,7 @@ const NO_TEXT = '【禁止】画面里**不许出现任何文字、字幕、水�
 
 const dir = JSON.parse(fs.readFileSync(DIRECTION_PATH, 'utf8'));
 const board = JSON.parse(fs.readFileSync(BOARD_PATH, 'utf8'));
+const ASPECT = aspectOf(board);
 const SKIP_GATE = argv.includes('--skip-gate');
 const approvedAssets = projectAssetFiles(board, BOARD_PATH, { workspace: flag('ws', null) });
 requireApproval(PROJ, 'assets', approvedAssets, { skip: SKIP_GATE });
@@ -257,7 +260,7 @@ function refsFor(shot, unit) {
     return [
       { file: assets.sceneMaster, role: 'scene' },
       ...anchored,
-    ].slice(0, 3);
+    ];
   }
   const refs = [
     ...people,
@@ -283,7 +286,7 @@ for (const unit of dir.units) {
   }
   const shot = unit.shots[0];
   let refs = refsFor(shot, unit);
-  if (handoff) refs = [{ file: handoff.stable_frame, role: 'handoff' }, ...refs].slice(0, PROVIDER === 'huimeng' ? 9 : 3);
+  if (handoff) refs = withHandoffReference(refs, handoff.stable_frame, PROVIDER);
   const refGuide = PROVIDER === 'local' || PROVIDER === 'bailian'
     ? `【参考图职责】${refs.map((r, i) => `图${i + 1}=${r.role === 'handoff' ? '上一段实际稳定尾帧，必须继承姿态与空间状态' : r.role === 'scene' ? '场景与构图环境' : r.role === 'portrait' ? '人物脸部' : r.role === 'prop' ? `道具${r.name || ''}` : '人物服装与身份'}`).join('；')}`
     : '';
@@ -310,7 +313,7 @@ for (const unit of dir.units) {
   let txt = '';
   if (PROVIDER === 'local') {
     const resultFile = path.join(LOCAL_OUT, `.${unit.id}.result.json`);
-    const a = [LOCAL_GEN, 'edit', '--prompt', prompt, '--ratio', '9:16', '--steps', LOCAL_STEPS, '--cfg', LOCAL_CFG,
+    const a = [LOCAL_GEN, 'edit', '--prompt', prompt, '--ratio', ASPECT, '--steps', LOCAL_STEPS, '--cfg', LOCAL_CFG,
       '--out-dir', LOCAL_OUT, '--result-file', resultFile];
     for (const ref of refs) a.push('--image', ref.file);
     const started = Date.now();
@@ -336,7 +339,7 @@ for (const unit of dir.units) {
     const res = await bailian.edit({
       images: refs.map((ref) => ref.file),
       instruction: prompt,
-      size: BAILIAN_SIZE,
+      size: dimensionsForAspect(BAILIAN_SIZE, ASPECT, '*'),
       n: 1,
       outDir: requestOut,
       prefix: unit.id,
@@ -354,7 +357,7 @@ for (const unit of dir.units) {
       got = true;
     }
   } else {
-    const a = ['cli/huimeng.mjs', '--prompt', prompt, '--ratio', '9:16', '--resolution', SIZE,
+    const a = ['cli/huimeng.mjs', '--prompt', prompt, '--ratio', ASPECT, '--resolution', SIZE,
       '--model', HUIMENG_IMAGE_MODEL];
     for (const ref of refs) a.push('--ref', ref.file);
     a.push('--out', out);
@@ -387,15 +390,12 @@ if (failures) {
   console.error(`\n✗ ${failures} 个关键帧生成失败`);
   process.exitCode = 1;
 } else {
-  const generated = dir.units.filter((u) => !ONLY.length || ONLY.includes(u.id)).map((u) => {
-    const candidate = PROVIDER === 'local' ? path.join(LOCAL_OUT, `${u.id}.png`) : PROVIDER === 'bailian' ? path.join(BAILIAN_OUT, `${u.id}.png`) : u.keyframe ? path.resolve(PROJ, u.keyframe) : path.join(DEFAULT_OUT, `${u.id}.png`);
-    return candidate;
-  }).filter(fs.existsSync);
+  const generated = planKeyframeFiles(PROJ, dir);
   const note = writeReviewNote(PROJ, 'keyframes', [
     '# 关键帧人工审阅', '',
     '机器检查只能判定是否可送审。请逐张查看人物身份、体型比例、构图、动作起点和场景连续性。', '',
     ...generated.map((f) => `- ${path.basename(f)}: ${f}`), '',
-    `确认命令：node cli/review-gate.mjs approve --project "${PROJ}" --stage keyframes --artifacts "${generated.join(',')}"`,
+    `确认命令：node cli/review-gate.mjs approve --project "${PROJ}" --stage keyframes --plan "${DIRECTION_PATH}"`,
   ]);
   console.log(`\n完成。等待人工审阅：${note}`);
 }

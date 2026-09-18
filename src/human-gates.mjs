@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { handoffPath, requireHandoff } from './continuity-handoff.mjs';
 
 export const REVIEW_FILE = 'review.approvals.json';
 
@@ -20,6 +21,14 @@ export function fingerprint(files) {
 }
 
 export function reviewPath(projectDir) { return path.join(projectDir, REVIEW_FILE); }
+
+export function planKeyframeFiles(projectDir, plan) {
+  return (plan.units || []).map((unit) => {
+    const handoff = fs.existsSync(handoffPath(projectDir, unit.id)) ? requireHandoff(projectDir, unit) : null;
+    const file = handoff?.keyframe || (unit.keyframe && path.resolve(projectDir, unit.keyframe));
+    return file && fs.existsSync(file) ? file : null;
+  }).filter(Boolean);
+}
 
 export function readReviews(projectDir) {
   const file = reviewPath(projectDir);
@@ -54,7 +63,7 @@ export function requireApproval(projectDir, stage, files, { id = null, skip = fa
   }
   const status = approvalStatus(projectDir, stage, files, id);
   if (!status.ok) {
-    const labels = { direction: '导演方案', assets: '资源', keyframes: '关键帧', final: '最终成片' };
+    const labels = { story: '剧本', direction: '导演方案', assets: '资源', keyframes: '关键帧', final: '最终成片' };
     const label = stage === 'clip' ? `视频片段 ${id}` : stage === 'handoff' ? `连续性交接 ${id}` : labels[stage] || stage;
     throw new Error(`人工闸门未通过：${label} ${status.reason}。机器检查通过只表示可以交给人看。`);
   }

@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { buildBrief, callDirector, readBrief, validateDirection } from '../src/director.mjs';
-import { legacyApproval, writeReviewNote } from '../src/human-gates.mjs';
+import { requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { requireScriptProvenance } from '../src/script-provenance.mjs';
 import { writeDirectionReceipt } from '../src/direction-provenance.mjs';
@@ -31,7 +31,7 @@ if (!fs.existsSync(storyPath)) throw new Error(`找不到剧本：${storyPath}`)
 requireScriptProvenance(storyPath);
 
 const board = JSON.parse(fs.readFileSync(boardPath, 'utf8'));
-if (!argv.includes('--skip-gate')) legacyApproval(board, 'story');
+if (!argv.includes('--skip-gate')) requireApproval(projectDir, 'story', [storyPath]);
 else console.error('⚠ --skip-gate：仅限调试，已跳过剧本人工确认');
 const script = fs.readFileSync(storyPath, 'utf8');
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/(?:[A-Za-z]:)/, (m) => m.slice(1))), '..');

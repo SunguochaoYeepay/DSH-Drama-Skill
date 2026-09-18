@@ -139,7 +139,7 @@ node cli/assemble-units.mjs <render.plan.json> --out <out/final.mp4>
 # 新版人工票据
 node cli/review-gate.mjs approve --project <项目目录> --stage direction --artifacts <direction.json>
 node cli/review-gate.mjs approve --project <项目目录> --stage assets
-node cli/review-gate.mjs approve --project <项目目录> --stage keyframes --artifacts <图片列表，逗号分隔>
+node cli/review-gate.mjs approve --project <项目目录> --stage keyframes --plan <render.plan.json>
 node cli/review-gate.mjs approve --project <项目目录> --stage clip --id g001 --artifacts <g001.mp4>
 node cli/review-gate.mjs ready-assemble --project <项目目录> --plan <render.plan.json>
 ```

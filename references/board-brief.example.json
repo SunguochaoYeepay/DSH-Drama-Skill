@@ -1,0 +1,17 @@
+{
+  "meta": {
+    "title": "示例剧名",
+    "project": "example_project",
+    "logline": "这里填写这部剧的故事核心和冲突，不要沿用示例内容",
+    "aspect": "9:16",
+    "style": "cartoon3d",
+    "style_prompt": "这里填写已确认的媒介、色调与质感"
+  },
+  "story": {
+    "synopsis": "这里填写已确认的完整故事概述，至少二十字，不能让执行器自行编写故事。",
+    "beats": [
+      { "text": "这里填写第一个故事节拍", "purpose": "这里填写它推动剧情的原因" },
+      { "text": "这里填写第二个故事节拍", "purpose": "这里填写它形成结局的原因" }
+    ]
+  }
+}

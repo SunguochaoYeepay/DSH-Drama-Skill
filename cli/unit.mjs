@@ -32,13 +32,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { unitAssets } from '../src/asset-resolver.mjs';
-import { clipResultPath, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
+import { clipResultPath, planKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { assertPlanProvenance, assertUnitEmotionContract } from '../src/plan-provenance.mjs';
 import { buildUnitPrompt } from '../src/h3-prompt.mjs';
 import { COMFY_GEN, COMFY_PYTHON } from '../src/runtime-paths.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { requireHandoff } from '../src/continuity-handoff.mjs';
 import { VIDEO_QUALITY, VIDEO_PROFILE, VIDEO_ATTENTION, VIDEO_NORMAL_SIZE, VIDEO_HIGH_SIZE, VIDEO_TIMEOUT_SECONDS } from '../src/config.mjs';
+import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
 
 installCliErrorHandler();
 
@@ -82,7 +83,7 @@ const QUALITY_SIZES = { normal: VIDEO_NORMAL_SIZE, high: VIDEO_HIGH_SIZE };
 if (!QUALITY_SIZES[QUALITY]) {
   throw new Error(`--quality 只能是 ${Object.keys(QUALITY_SIZES).join(' / ')}，收到 ${QUALITY}`);
 }
-const sizeArg = QUALITY_SIZES[QUALITY];
+const sizeArg = dimensionsForAspect(QUALITY_SIZES[QUALITY], aspectOf(board));
 const [W, H] = sizeArg.split('x').map(Number);
 if (!Number.isFinite(W) || !Number.isFinite(H) || W <= 0 || H <= 0) {
   throw new Error(`--size 必须是 WxH，收到 ${sizeArg}`);
@@ -95,10 +96,7 @@ assertPlanProvenance(dir, { boardPath: path.resolve(boardPath), storyPath: path.
 assertUnitEmotionContract(unit, { plan: dir });
 const continuityHandoff = requireHandoff(projectDir, unit);
 const skipGate = argv.includes('--skip-gate');
-const keyframes = (dir.units || []).map((u) => {
-  if (u.id === unit.id && continuityHandoff?.keyframe) return continuityHandoff.keyframe;
-  return u.keyframe && path.resolve(projectDir, u.keyframe);
-}).filter((f) => f && fs.existsSync(f));
+const keyframes = planKeyframeFiles(projectDir, dir);
 requireApproval(projectDir, 'keyframes', keyframes, { skip: skipGate });
 const unitIndex = (dir.units || []).findIndex((u) => u.id === unitId);
 if (unitIndex > 0) {
@@ -398,7 +396,7 @@ try {
   if (ok && f) {
     const sheet = path.join(outDir, `${unit.id}_review_frames.png`);
     const inspected = spawnSync(process.execPath, [path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/(?:[A-Za-z]:)/, (m) => m.slice(1))), 'inspect.mjs'), f,
-      '--frames', '8', '--aspect', '9:16', '--first-last', '--out', sheet], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+      '--frames', '8', '--aspect', aspectOf(board), '--first-last', '--out', sheet], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
     if (inspected.stdout) process.stdout.write(inspected.stdout);
     if (inspected.status !== 0) {
       if (inspected.stderr) process.stderr.write(inspected.stderr);

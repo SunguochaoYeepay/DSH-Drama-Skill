@@ -30,6 +30,6 @@ test('Bailian keyframe size and Huimeng model have independent env defaults', ()
   });
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(JSON.parse(result.stdout), ['768*1344', 'image-2']);
-  assert.match(source('cli/keyframes.mjs'), /size: BAILIAN_SIZE/);
+  assert.match(source('cli/keyframes.mjs'), /size: dimensionsForAspect\(BAILIAN_SIZE, ASPECT, '\*'\)/);
   assert.match(source('cli/huimeng.mjs'), /flag\('model', HUIMENG_IMAGE_MODEL\)/);
 });

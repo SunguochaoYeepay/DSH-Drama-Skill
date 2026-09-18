@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
-import { approve, approvalStatus, clipResultPath, requireAllClips } from '../src/human-gates.mjs';
+import { approve, approvalStatus, clipResultPath, planKeyframeFiles, requireAllClips } from '../src/human-gates.mjs';
 import { projectAssetFiles } from '../src/asset-resolver.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { requireScriptProvenance } from '../src/script-provenance.mjs';
 
 installCliErrorHandler();
 
@@ -14,7 +15,7 @@ const value = (name, fallback = null) => {
   return i >= 0 && argv[i + 1] ? argv[i + 1] : fallback;
 };
 const stage = value('stage');
-const stages = ['direction', 'assets', 'keyframes', 'handoff', 'clip', 'final'];
+const stages = ['story', 'direction', 'assets', 'keyframes', 'handoff', 'clip', 'final'];
 const project = path.resolve(value('project', '.'));
 const id = value('id');
 if (argv.includes('--variant')) throw new Error('片段不再区分轮次；请去掉 --variant，每段视频只确认当前产物');
@@ -25,6 +26,12 @@ if (command === 'ready-assemble') {
   process.exit(0);
 }
 let files = String(value('artifacts', '')).split(',').filter(Boolean).map((f) => path.resolve(f));
+if (!files.length && stage === 'story') files = [path.join(project, 'story.md')].filter(fs.existsSync);
+if (stage === 'story') {
+  const story = path.join(project, 'story.md');
+  requireScriptProvenance(story);
+  if (files.length !== 1 || files[0] !== story) throw new Error('剧本确认必须绑定本项目的 story.md');
+}
 if (!files.length && stage === 'direction') files = [path.join(project, 'board.direction.json')].filter(fs.existsSync);
 if (!files.length && stage === 'assets') {
   const boardFile = path.resolve(value('board', path.join(project, 'board.json')));
@@ -33,9 +40,15 @@ if (!files.length && stage === 'assets') {
     files = projectAssetFiles(board, boardFile, { workspace: value('ws', null) });
   }
 }
-if (!files.length && stage === 'keyframes') {
-  const dir = path.resolve(value('dir', path.join(project, 'keyframes_bailian')));
-  if (fs.existsSync(dir)) files = fs.readdirSync(dir).filter((n) => /\.(png|jpe?g|webp)$/i.test(n)).map((n) => path.join(dir, n));
+if (stage === 'keyframes') {
+  const planPath = path.resolve(value('plan', path.join(project, 'render.plan.json')));
+  const plan = JSON.parse(fs.readFileSync(planPath, 'utf8'));
+  const expected = planKeyframeFiles(project, plan);
+  if (!expected.length) throw new Error('计划槽位里没有可审阅的关键帧');
+  if (files.length && (files.length !== expected.length || files.some((file) => !expected.includes(file)))) {
+    throw new Error('关键帧确认必须绑定计划实际使用的图片；请省略 --artifacts 使用计划槽位');
+  }
+  files = expected;
 }
 if (!files.length && stage === 'clip' && id) {
   const actual = clipResultPath(project, id);
@@ -45,7 +58,7 @@ if (!files.length && stage === 'clip' && id) {
   }
 }
 if (!['approve', 'status'].includes(command) || !stages.includes(stage) || !files.length) {
-  console.error('用法：node cli/review-gate.mjs approve|status --project <dir> --stage direction|assets|keyframes|handoff|clip|final [--id g001] [--artifacts a,b]\n或：node cli/review-gate.mjs ready-assemble --project <dir> --plan render.plan.json');
+  console.error('用法：node cli/review-gate.mjs approve|status --project <dir> --stage story|direction|assets|keyframes|handoff|clip|final [--id g001] [--artifacts a,b]\n或：node cli/review-gate.mjs ready-assemble --project <dir> --plan render.plan.json');
   process.exit(2);
 }
 if (command === 'approve') {

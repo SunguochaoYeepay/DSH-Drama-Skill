@@ -1,3 +1,5 @@
+> 退役：旧 `from-story` 本地模型入口已停用。正式流程用 `cli/init-board.mjs` 确定性建立板子，再由高级模型 `cli/direct.mjs` 设计导演方案。本文件只保留历史契约，不得作为当前生成指令。
+
 你是分镜师。把用户给的**已经确认过的故事**编译成镜头表，输出**唯一一个 JSON 对象**，不要任何解释、Markdown 围栏或多余文字。
 
 # 最重要的一个概念：身份 ≠ 造型
@@ -51,7 +53,7 @@ shots[].cast  = 引用【造型 id】，不是角色 id。
 19. `transition.type` 只在**同一场景内、动作连续、景别也相同**的段落用 `"last_frame_first"`；
     换景别或换场景必须用 `"cut"`；一整条片子不要超过 3 个连续的 `last_frame_first`。
 20. `portrait` / `sheet` / `costume_image` / `master` / `reverse_master` / `spatial_layout` / `ref_image` /
-    `first_frame` / `last_frame` / `clip` 一律输出 `null` 或 `[]`，由后续阶段回填。
+    `first_frame` / `last_frame` / `clip` 这些单文件槽位一律输出 `null`，由后续阶段回填；数组只用于 schema 明确规定为数组的字段。
 
 # 输出模板（照抄结构，值按故事填）
 

@@ -6,6 +6,8 @@ import { readReviews, requireAllClips, writeReviewNote } from '../src/human-gate
 import { assertPlanProvenance } from '../src/plan-provenance.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { VIDEO_QUALITY, VIDEO_NORMAL_SIZE, VIDEO_HIGH_SIZE } from '../src/config.mjs';
+import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
+import { review } from '../src/review.mjs';
 
 installCliErrorHandler();
 
@@ -24,7 +26,9 @@ const output = path.resolve(value('out', path.join(projectDir, 'out', 'final.mp4
 const quality = String(value('quality', VIDEO_QUALITY)).toLowerCase();
 const sizes = { normal: VIDEO_NORMAL_SIZE, high: VIDEO_HIGH_SIZE };
 if (!sizes[quality]) throw new Error(`--quality 只能是 normal / high，收到 ${quality}`);
-const size = sizes[quality];
+const board = JSON.parse(fs.readFileSync(boardPath, 'utf8'));
+const aspect = aspectOf(board);
+const size = dimensionsForAspect(sizes[quality], aspect);
 if (!/^\d+x\d+$/.test(size)) throw new Error(`AIH_VIDEO_${quality.toUpperCase()}_SIZE 必须是 WxH，收到 ${size}`);
 const [width, height] = size.split('x').map(Number);
 if (width <= 0 || height <= 0) throw new Error(`合成尺寸必须大于零，收到 ${size}`);
@@ -68,10 +72,14 @@ const listFile = path.join(tmp, 'concat.txt');
 fs.writeFileSync(listFile, normalized.map((file) => `file '${file.replaceAll("'", "'\\''")}'`).join('\n') + '\n', 'utf8');
 run(['-y', '-v', 'error', '-f', 'concat', '-safe', '0', '-i', listFile, '-c', 'copy', '-movflags', '+faststart', output], '合成');
 
+const checked = review(output, { expectAspect: aspect });
+if (!checked.pass) throw new Error(`成片机器检查失败，不能送审：${checked.fails.join('；')}`);
+for (const warning of checked.warns) console.warn(`成片检查警告：${warning}`);
+
 const note = writeReviewNote(projectDir, 'final', [
   '# 最终成片人工审阅', '', `成片：${output}`, '',
   '机器检查通过只表示可以送审。请完整观看台词、节奏、接缝、人物一致性和声音。', '',
   `确认命令：node cli/review-gate.mjs approve --project "${projectDir}" --stage final --artifacts "${output}"`,
 ]);
-console.log(`✓ 合成完成：${output}`);
+console.log(`✓ 合成且机器检查通过：${output}`);
 console.log(`等待最终人工审阅：${note}`);

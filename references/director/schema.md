@@ -89,7 +89,7 @@
 | `why` | ✅ | 为什么这些镜头适合共享一次生成和一张首帧 |
 | `duration_reason` | ✅ | 台词、动作、反应和停顿如何共同决定时长 |
 | `keyframe_start` | ✅ | 0 秒首帧的确切状态，只写动作起点，不写整段动作结果 |
-| `boundary_trigger` | ✅ | 第一单元为 `opening`；后续只允许场景/时间/身份锚点/空间重置/引擎上限五类硬理由 |
+| `boundary_trigger` | ✅ | 第一单元为 `opening`；后续只允许 `scene_change` / `time_jump` / `identity_anchor` / `spatial_reset` / `state_transition_anchor` / `engine_limit` 六类硬理由 |
 | `keyframe_cast` | ✅ | 0 秒关键帧需要身份参考的角色，必须是本单元角色子集；本地 Qwen 最多 2 名 |
 | `action_complexity` | ✅ | H3 动作复杂度；每单元最多一个高风险状态转换 |
 | `end_state` | v6 必填 | 单元应停住的稳定、可观察状态，供下一单元承接和实际尾帧核对 |
