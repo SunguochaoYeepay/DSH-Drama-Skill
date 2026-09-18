@@ -18,6 +18,14 @@ export function advancedModel(name) {
 
 export const SCRIPT_MODEL = advancedModel('AIH_SCRIPT_MODEL');
 export const DIRECTOR_MODEL = advancedModel('AIH_DIRECTOR_MODEL');
+function positiveInteger(name, fallback) {
+  const value = Number(setting(name, fallback));
+  if (!Number.isInteger(value) || value < 1) throw new Error(`${name} 必须是正整数`);
+  return value;
+}
+export const SCRIPT_MAX_OUTPUT_TOKENS = positiveInteger('AIH_SCRIPT_MAX_OUTPUT_TOKENS', '6000');
+export const DIRECTOR_MAX_OUTPUT_TOKENS = positiveInteger('AIH_DIRECTOR_MAX_OUTPUT_TOKENS', '12000');
+export const BAILIAN_TEXT_TIMEOUT_SECONDS = positiveInteger('AIH_BAILIAN_TEXT_TIMEOUT_SECONDS', '600');
 export const ASSET_PROVIDER = setting('AIH_ASSET_PROVIDER', 'bailian');
 export const KEYFRAME_PROVIDER = setting('AIH_KEYFRAME_PROVIDER', 'bailian');
 export const ASSET_IMAGE_MODEL = setting('AIH_ASSET_IMAGE_MODEL', 'qwen-image-3.0');

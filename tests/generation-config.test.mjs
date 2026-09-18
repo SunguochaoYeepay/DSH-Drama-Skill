@@ -33,3 +33,16 @@ test('Bailian keyframe size and Huimeng model have independent env defaults', ()
   assert.match(source('cli/keyframes.mjs'), /size: dimensionsForAspect\(BAILIAN_SIZE, ASPECT, '\*'\)/);
   assert.match(source('cli/huimeng.mjs'), /flag\('model', HUIMENG_IMAGE_MODEL\)/);
 });
+
+test('text output budgets and timeout come from env and reject invalid values', () => {
+  const code = "import { SCRIPT_MAX_OUTPUT_TOKENS, DIRECTOR_MAX_OUTPUT_TOKENS, BAILIAN_TEXT_TIMEOUT_SECONDS } from './src/config.mjs'; console.log(JSON.stringify([SCRIPT_MAX_OUTPUT_TOKENS, DIRECTOR_MAX_OUTPUT_TOKENS, BAILIAN_TEXT_TIMEOUT_SECONDS]))";
+  const env = { ...process.env, AIH_SCRIPT_MAX_OUTPUT_TOKENS: '7000', AIH_DIRECTOR_MAX_OUTPUT_TOKENS: '14000', AIH_BAILIAN_TEXT_TIMEOUT_SECONDS: '800' };
+  const result = spawnSync(process.execPath, ['--input-type=module', '-e', code], { cwd: root, encoding: 'utf8', env });
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout), [7000, 14000, 800]);
+  const invalid = spawnSync(process.execPath, ['--input-type=module', '-e', code], {
+    cwd: root, encoding: 'utf8', env: { ...env, AIH_SCRIPT_MAX_OUTPUT_TOKENS: '0' },
+  });
+  assert.notEqual(invalid.status, 0);
+  assert.match(invalid.stderr, /AIH_SCRIPT_MAX_OUTPUT_TOKENS/);
+});

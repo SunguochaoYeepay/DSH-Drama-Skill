@@ -31,10 +31,9 @@
  */
 
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
-import { runBailian } from './bailian-cli.mjs';
-import { DIRECTOR_MODEL } from './config.mjs';
+import { runVerifiedTextResponse } from './providers/bailian-responses.mjs';
+import { DIRECTOR_MODEL, DIRECTOR_MAX_OUTPUT_TOKENS, BAILIAN_TEXT_TIMEOUT_SECONDS } from './config.mjs';
 import { estimateSpeechSeconds } from './orchestrate.mjs';
 
 /** 生成单元的上限（H3 的硬约束）。 */
@@ -601,68 +600,37 @@ export function readBrief(projectRoot) {
 
 // ---------------------------------------------------------------- 调用导演
 
-/** 默认用哪个模型当导演。`bl text chat` 的默认就是它，这里写死一份好记录。 */
+/** 默认用哪个模型当导演。 */
 export { DIRECTOR_MODEL };
 
 /**
- * 请导演做设计。
- *
- * **走 `bl text chat --messages-file`** —— 简报很长（含剧本全文），
- * 而且这台机器的 PowerShell 5.1 **会吃掉命令行参数里的引号**，
- * 所以一律"写临时文件 → 传文件路径"，绝不把长文本拼进命令行。
- *
- * **必须经 `runBailian()` 直连，不能 `spawn('bl', …, { shell: true })`。**
- * PATH 上的 `bl` 是 `%APPDATA%\npm\bl.ps1`（PowerShell 包装器），而本机 PowerShell
- * 起不了外部进程 —— 走它会退化成「静默无产出」，实测表现为等满超时、
- * 错误信息只有「bl 退出码 null」、stderr 为空。图片通道早已改用 `runBailian`，
- * 导演通道曾漏改（详见 `references/troubleshooting.md` 的「CLI 通道调用失败」）。
- *
+ * 流式 Responses 的完成事件同时给出模型身份与最终正文；不接受 CLI 的 content-only 摘要。
  * @returns {{ok:boolean, direction?:object, raw:string, error?:string, seconds:number}}
  */
-export function callDirector(prompt, opts = {}) {
-  // 注入点保留：测试可以传一个假的 run 来断言参数拼装，不必真调线上。
-  const run = opts.run || runBailian;
+export async function callDirector(prompt, opts = {}) {
+  const run = opts.run || runVerifiedTextResponse;
   const model = opts.model || DIRECTOR_MODEL;
   if (model !== DIRECTOR_MODEL) throw new Error(`导演必须使用已批准的高级模型 ${DIRECTOR_MODEL}`);
-  const timeoutMs = opts.timeoutMs || 600000;
-  const tmp = opts.tmpDir || os.tmpdir();
-
-  const msgFile = path.join(tmp, `director-msg-${Date.now()}.json`);
-  fs.writeFileSync(msgFile, JSON.stringify([
+  const messages = [
     { role: 'system', content: prompt },
     { role: 'user', content: '按上面的简报和材料，交出你的镜头设计。只交 JSON。' },
-  ]), 'utf8');
-
+  ];
   const started = Date.now();
-  // **`--timeout` 必须显式给。** bl 的默认超时撑不住「8000 字简报 + thinking + 16000 tokens」，
-  // 实测直接 `Request timed out`（code 5）—— 跟当初 `bl image` 那个坑是同一个。
-  const args = ['text', 'chat', '--model', model, '--messages-file', msgFile,
-    '--max-tokens', String(opts.maxTokens || 6000), '--output', 'json',
-    '--timeout', String(opts.requestTimeoutSec || 600)];
-  // **默认不思考** —— 一次 8000 字简报 + thinking + 16000 tokens，网络层会先超时。
-  // 镜头设计要的是判断，不是长推理链；需要时用 --thinking 显式打开。
-  if (opts.thinking === true) args.push('--enable-thinking');
-
-  const r = run(args, { timeoutMs });
-  try { fs.unlinkSync(msgFile); } catch { /* 无所谓 */ }
-
-  const seconds = Math.round((Date.now() - started) / 1000);
-  const stdout = String(r.stdout || '');
-  const stderr = String(r.stderr || '');
-
-  if (r.status !== 0) {
-    // `status` 为 null 是 spawn 层失败（起不来 / 超时），`error` 里有真正原因，
-    // 不能只报「退出码 null」——那会把人引向"模型没回答"，而实际是进程根本没起来。
-    const why = r.error ? `（${r.error.code || 'spawn 失败'}：${String(r.error.message || r.error).slice(0, 160)}）` : '';
-    return { ok: false, raw: stdout, error: `bl 退出码 ${r.status}${why}：${stderr.slice(0, 300)}`, seconds };
-  }
-
   let response;
-  try { response = JSON.parse(stdout); } catch { return { ok: false, raw: stdout, error: '导演响应不是可核验的 JSON', seconds }; }
+  try {
+    response = await run({ messages, model, maxTokens: opts.maxTokens || DIRECTOR_MAX_OUTPUT_TOKENS,
+      reasoningEffort: opts.thinking ? 'xhigh' : 'low', timeoutMs: opts.timeoutMs || BAILIAN_TEXT_TIMEOUT_SECONDS * 1000 });
+  } catch (error) {
+    return { ok: false, raw: '', error: String(error.message || error), seconds: Math.round((Date.now() - started) / 1000) };
+  }
+  const seconds = Math.round((Date.now() - started) / 1000);
+  const stdout = JSON.stringify(response);
   const responseModel = response.model || response.response?.model;
   if (responseModel !== model) return { ok: false, raw: stdout, error: `导演响应模型不匹配：${responseModel || '未报告'}，要求 ${model}`, seconds };
+  if (response.status && response.status !== 'completed') {
+    return { ok: false, raw: stdout, error: `导演响应未完成：${response.status}（${response.incomplete_details?.reason || response.error?.message || '原因未报告'}）`, seconds };
+  }
 
-  // `--output json` 的响应体结构可能变，所以**层层剥**：先找 choices/message，再找里面第一段 JSON
   const text = extractText(stdout);
   const parsed = extractJson(text);
   if (!parsed) {
@@ -671,10 +639,15 @@ export function callDirector(prompt, opts = {}) {
   return { ok: true, direction: parsed, raw: stdout, model, responseModel, seconds };
 }
 
-/** 从 `bl --output json` 的响应里剥出助手文本。 */
+/** 从 Responses 完成事件的信封里剥出助手文本。 */
 export function extractText(stdout) {
   try {
     const j = JSON.parse(stdout);
+    if (Array.isArray(j.output)) {
+      return j.output.flatMap((item) => item.type === 'message' ? item.content || [] : [])
+        .filter((part) => part.type === 'output_text' && typeof part.text === 'string')
+        .map((part) => part.text).join('\n').trim();
+    }
     const c = j.choices?.[0];
     if (c) return String(c.message?.content ?? c.text ?? '').trim();
     if (j.output?.text) return String(j.output.text).trim();

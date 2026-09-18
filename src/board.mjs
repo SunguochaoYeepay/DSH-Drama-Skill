@@ -1147,7 +1147,7 @@ async function main() {
     }
 
     console.log(`\n请导演（${args.model || DIRECTOR_MODEL}）…`);
-    const r = callDirector(prompt, { model: args.model });
+    const r = await callDirector(prompt, { model: args.model });
     if (!r.ok) die(`✗ 导演没交出东西：${r.error}`);
     console.log(`  模型回复用了 ${r.seconds} 秒`);
 

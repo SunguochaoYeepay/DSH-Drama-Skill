@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
-import os from 'node:os';
-import { runBailian } from '../src/bailian-cli.mjs';
-import { extractText } from '../src/director.mjs';
+import { generateScript } from '../src/script-generation.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { makeScriptReceipt, receiptPath, SCRIPT_MODEL } from '../src/script-provenance.mjs';
 
@@ -37,29 +35,11 @@ let model = null;
 let verifiedResponseModel = null;
 if (command === 'generate') {
   if (option('model') && option('model') !== SCRIPT_MODEL) throw new Error(`剧本模型必须是 ${SCRIPT_MODEL}`);
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'script-msg-'));
-  const messages = path.join(tempDir, 'messages.json');
-  let result;
-  try {
-    fs.writeFileSync(messages, JSON.stringify([
-      { role: 'system', content: '你是中文短剧编剧。根据用户素材写完整可拍摄的中文短剧剧本，包含场次、动作和完整台词。保留素材中已有台词的原文与顺序，不要输出解释或 Markdown 围栏。' },
-      { role: 'user', content: input },
-    ]), 'utf8');
-    result = runBailian(['text', 'chat', '--model', SCRIPT_MODEL, '--messages-file', messages,
-      '--max-tokens', '6000', '--output', 'json', '--timeout', '600'], { timeoutMs: 660000 });
-  } finally {
-    fs.rmSync(tempDir, { recursive: true, force: true });
-  }
-  if (result.status !== 0) throw new Error(`百炼剧本生成失败：${result.error?.message || result.stderr || `退出码 ${result.status}`}`);
-  let payload;
-  try { payload = JSON.parse(result.stdout); } catch { throw new Error('百炼未返回可核验的 JSON 响应'); }
-  const responseModel = payload.model || payload.response?.model;
-  if (responseModel !== SCRIPT_MODEL) throw new Error(`百炼响应未确认模型为 ${SCRIPT_MODEL}（实际：${responseModel || '未报告'}）`);
-  story = extractText(result.stdout);
-  if (!story) throw new Error('模型没有返回剧本');
+  const result = await generateScript(input);
+  story = result.story;
   source = 'bailian';
   model = SCRIPT_MODEL;
-  verifiedResponseModel = responseModel;
+  verifiedResponseModel = result.responseModel;
 } else {
   story = input;
   source = 'user_supplied';

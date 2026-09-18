@@ -6,11 +6,11 @@
 
 ## 立项入口
 
-剧本阶段使用 `cli/script.mjs generate --input <素材> --out <项目/story.md>`，固定百炼 `qwen3.8-max`；来源票 `story.provenance.json` 记录输入与剧本哈希、请求及响应模型。用户提供完整原稿时，仅经其明确确认后用 `register-user --input <原稿> --out <项目/story.md> --confirmed-by <确认者>` 登记；不得代签、不得把历史未知来源补写成模型创作。逐字阅读剧本后，用 `cli/review-gate.mjs approve --project <项目> --stage story` 记录人工票。旧 `src/board.mjs story/from-story` 已停用。
+剧本阶段使用 `cli/script.mjs generate --input <素材> --out <项目/story.md>`，固定百炼 `qwen3.8-max`。剧本与导演共用直连流式 Responses：只接受服务起始和完成事件中的相同模型、完整响应与非空正文；默认推理强度 `low`。文本请求超时及两阶段输出上限从根目录 `.env` 读取（见 `.env.example`）。来源票 `story.provenance.json` 记录输入与剧本哈希、请求及响应模型。用户提供完整原稿时，仅经其明确确认后用 `register-user --input <原稿> --out <项目/story.md> --confirmed-by <确认者>` 登记；不得代签、不得把历史未知来源补写成模型创作。逐字阅读剧本后，用 `cli/review-gate.mjs approve --project <项目> --stage story` 记录人工票。旧 `src/board.mjs story/from-story` 已停用。
 
 按 [`board-brief.example.json`](board-brief.example.json) 准备已确认的剧名、项目 id、风格、画幅、人物设定及故事概述，再运行 `node cli/init-board.mjs --story <项目/story.md> --brief <项目/board-brief.json> --out <项目/board.json>`。此入口只做结构化解析和台词搬运，不代写 Brief、不代签人工票；索引镜头不替代导演方案。
 
-导演用 `cli/direct.mjs` 调百炼高级模型，响应必须报告与请求相同的模型，校验后写 `board.direction.json.provenance.json`；票据绑定板子、剧本和导演稿。编译计划及执行时验票。历史项目缺票无法证明作者，不能推断或补签；必须重新出导演稿并取得人工确认。统一配置见根目录 `.env`（可参照 `.env.example`），敏感凭据只放本地文件或已有 CLI 凭据存储。
+导演用 `cli/direct.mjs` 调百炼高级模型，直接读取流式 Responses 的起始和完成事件；默认推理强度为 `low`，显式 `--thinking` 才用 `xhigh`（模型默认 `xhigh` 会占用大量输出 token）。必须确认完整结束、两个事件都报告与请求相同的模型，且正文可解析并通过导演契约，才写 `board.direction.json.provenance.json`。`bl --stream` 的 content-only 摘要不报告模型，不得据此生成来源票；票据绑定板子、剧本和导演稿。编译计划及执行时验票。历史项目缺票无法证明作者，不能推断或补签；必须重新出导演稿并取得人工确认。统一配置见根目录 `.env`（可参照 `.env.example`），敏感凭据可放本地 `.env` 或已有 CLI 凭据存储。
 
 收到短句、故事点子或没有制作规格的剧本时，第一步不是扩写，而是补齐项目 Brief。
 
