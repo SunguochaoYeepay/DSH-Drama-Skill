@@ -18,3 +18,17 @@ export function compileDrawPlan({ unit, shot, override = '' }) {
   ].filter(Boolean).join('\n');
   return { source, conflicts, prompt };
 }
+
+export function compileCharacterDesign({ designs = [], unit, shot }) {
+  const ids = new Set(unit.keyframe_cast || unit.cast || shot.on_screen || []);
+  const relevant = designs.filter((item) => item.kind === 'character_design' && ids.has(item.identity_id));
+  const keep = relevant.flatMap((item) => [item.locked?.face, item.locked?.appearance].filter(Boolean));
+  const lying = /躺|卧|仰面|侧躺|趴/u.test(`${shot.action || ''} ${unit.keyframe_start || ''}`);
+  const exclude = lying
+    ? ['当前镜头不应出现鞋子、拖鞋或站立姿态；不要把身份图中的鞋履和站立姿势复制到床上躺卧镜头。']
+    : [];
+  return { keep, exclude, prompt: [
+    keep.length ? `【人物造型师锁定】${keep.join('；')}` : '',
+    exclude.length ? `【人物造型师当前镜头排除】${exclude.join('；')}` : '',
+  ].filter(Boolean).join('\n') };
+}

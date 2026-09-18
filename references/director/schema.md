@@ -88,7 +88,7 @@
 | `id` | ✅ | 随便起，但要唯一 |
 | `why` | ✅ | 为什么这些镜头适合共享一次生成和一张首帧 |
 | `duration_reason` | ✅ | 台词、动作、反应和停顿如何共同决定时长 |
-| `keyframe_start` | ✅ | 0 秒首帧的确切状态，只写动作起点，不写整段动作结果 |
+| `keyframe_start` | ✅ | 0 秒首帧的确切状态：同时写静态动作、景别/画面截取范围、机位/构图、可见角色与空间关系，以及尚未发生的动作；不写整段动作结果 |
 | `boundary_trigger` | ✅ | 第一单元为 `opening`；后续只允许 `scene_change` / `time_jump` / `identity_anchor` / `spatial_reset` / `state_transition_anchor` / `engine_limit` 六类硬理由 |
 | `keyframe_cast` | ✅ | 0 秒关键帧需要身份参考的角色，必须是本单元角色子集；本地 Qwen 最多 2 名 |
 | `action_complexity` | ✅ | H3 动作复杂度；每单元最多一个高风险状态转换 |

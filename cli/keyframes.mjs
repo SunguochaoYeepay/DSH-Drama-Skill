@@ -39,7 +39,7 @@ import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
 import { withHandoffReference } from '../src/keyframe-references.mjs';
 import { writeGenerationRecord } from '../src/generation-records.mjs';
 import { readKeyframeOverride } from '../src/keyframe-overrides.mjs';
-import { compileDrawPlan } from '../src/draw-specialist.mjs';
+import { compileCharacterDesign, compileDrawPlan } from '../src/draw-specialist.mjs';
 
 installCliErrorHandler();
 
@@ -74,6 +74,30 @@ const BAILIAN_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyfram
 function staticKeyframeStart(unit, shot) {
   const text = String(unit.keyframe_start || shot.action || '').trim();
   return text.replace(/^0\s*秒(?:时|时刻)?[：:，,\s]*/u, '');
+}
+
+function applyCompositionOverride(prompt, override) {
+  if (!/构图覆盖|斜侧中景|中景/u.test(override)) return prompt;
+  return prompt.split('\n')
+    .filter((line) => !line.startsWith('构图要求：') && !line.startsWith('【生成前最终检查】'))
+    .join('\n');
+}
+
+function executionShotSpec(shot, override) {
+  const framing = FRAMING[shot.framing]?.rule?.replaceAll('**', '') || `景别：${shot.framing || '未指定'}`;
+  const camera = shot.camera || '固定机位';
+  const overrideText = override
+    ? `执行层覆盖优先：${override}`
+    : '按导演分镜的景别与构图执行，不自行改变人物位置。';
+  const capture = override
+    ? '画面从床头的斜侧方向取景，完整看到床头板、枕头、女孩头部、肩膀、躯干、双手、双腿和床尾方向；保留人物从头到脚的纵向身体轴线，不裁掉床头或脚部。'
+    : framing;
+  return [
+    `【景别】${override ? '斜侧中景（执行层覆盖原始景别）' : shot.framing}`,
+    `【画面截取范围】${capture}`,
+    `【机位/构图】${camera}；${overrideText}`,
+    '【空间关系】画面中的人物、承托物、床头/床尾、道具和镜面关系必须与导演首帧状态一致；不得新增人物、重复人物或改变头脚方向。',
+  ].join('\n');
 }
 
 /**
@@ -127,6 +151,8 @@ const NO_TEXT = '【禁止】画面里**不许出现任何文字、字幕、水�
 
 const dir = JSON.parse(fs.readFileSync(DIRECTION_PATH, 'utf8'));
 const board = JSON.parse(fs.readFileSync(BOARD_PATH, 'utf8'));
+const assetDesignPath = path.join(PROJ, 'asset-design.json');
+const assetDesign = fs.existsSync(assetDesignPath) ? JSON.parse(fs.readFileSync(assetDesignPath, 'utf8')) : { designs: [] };
 const ASPECT = aspectOf(board);
 const SKIP_GATE = argv.includes('--skip-gate');
 const approvedAssets = projectAssetFiles(board, BOARD_PATH, { workspace: flag('ws', null) });
@@ -303,7 +329,9 @@ for (const unit of dir.units) {
     : [refGuide, buildPrompt(unit, shot)].filter(Boolean).join('\n');
   const override = readKeyframeOverride(PROJ, unit.id);
   const drawPlan = compileDrawPlan({ unit, shot, override });
-  const finalPrompt = `${prompt}\n\n【抽卡师｜执行层执行编译】\n${drawPlan.prompt}`;
+  const characterDesign = compileCharacterDesign({ designs: assetDesign.designs || [], unit, shot });
+  const normalizedPrompt = applyCompositionOverride(prompt, override);
+  const finalPrompt = `${normalizedPrompt}\n\n【抽卡师｜执行层执行编译】\n${executionShotSpec(shot, override)}\n${characterDesign.prompt}\n${drawPlan.prompt}`;
   const out = PROVIDER === 'local'
     ? path.join(LOCAL_OUT, `${unit.id}.png`)
     : PROVIDER === 'bailian'
