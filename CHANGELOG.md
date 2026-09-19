@@ -2,6 +2,24 @@
 
 记录工程级行为变化。具体剧目的抽卡结果、耗时和逐帧评价留在对应项目目录，不写入这里。
 
+## 2026-09-19 - 剧本与导演稿默认由对话 Agent 直写，调外部模型降为可选
+
+起因：用户再次明确「剧本及后续不需要用 qwen-max 大模型去写剧本和分析，当前对话模型做就好」。
+此前只把 `register-agent` / `register-direction` 写成「可选 / 短片推荐」，主路径文档里仍写着「调 `.env` 的模型」——
+结果 `cli/direct.mjs` 的 12000 token 截断被当成一个"要修的默认值问题"提了出来，**而那条路根本不该是默认**。
+
+**剧本要的理解和判断、分镜分析要的判断力，当前对话模型就有**；再调一次 `qwen3.8-max` 只是多绕一圈，
+还多一层"改一个字就要重跑入口、重新出票"的锁定成本。
+
+- `SKILL.md` / `references/workflow.md` / `README.md` / `.env.example` / `references/preflight.md` /
+  `references/troubleshooting.md` / `references/prompts/story-to-board.md`：统一改成
+  「剧本和导演稿**默认由当前对话的 Agent 直写**，`register-agent` / `register-direction` 是默认路径；
+  `cli/script.mjs generate` 与 `cli/direct.mjs` **只是用户明确要求调模型时才用**」。
+- `src/board.mjs` 两处停用提示（旧 `story` / `direct` 入口）改为指向直写登记入口。
+- `preflight.md` 预算表：剧本、导演两行由「费用随模型而定」改为 **0 元**。
+- 不动默认值：`AIH_SCRIPT_MODEL` / `AIH_DIRECTOR_MODEL` 保留（可选路径仍要读），注释标明**默认用不到**；
+  `cli/direct.mjs` 的 `--max-tokens 30000` 只在"万一真要调模型"的说明里出现。
+
 ## 2026-09-19 - 测试清理：源码文本断言清零，集成验证纳入回归
 
 ### 源码文本断言清零

@@ -1,4 +1,4 @@
-> 退役：旧 `from-story` 本地模型入口已停用。正式流程用 `cli/init-board.mjs` 确定性建立板子，再由高级模型 `cli/direct.mjs` 设计导演方案。本文件只保留历史契约，不得作为当前生成指令。
+> 退役：旧 `from-story` 本地模型入口已停用。正式流程用 `cli/init-board.mjs` 确定性建立板子，导演方案默认由当前对话的 Agent 直写后用 `cli/register-direction.mjs` 登记（`cli/direct.mjs` 调外部模型只是可选项）。本文件只保留历史契约，不得作为当前生成指令。
 
 你是分镜师。把用户给的**已经确认过的故事**编译成镜头表，输出**唯一一个 JSON 对象**，不要任何解释、Markdown 围栏或多余文字。
 

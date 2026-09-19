@@ -47,11 +47,11 @@ metadata:
 
 ## 人工闸门
 
-剧本有三条合法来源，按项目类型选：① `cli/script.mjs generate` 调 `.env` 的剧本模型；② `cli/script.mjs register-agent --input <草稿> --out <项目/story.md>` 登记**对话里由 Agent 直写的草稿**（短片默认走这条，用户不满意直接在对话里改、改完重新登记）；③ 用户原稿经其明确确认后用 `register-user --confirmed-by <确认者>` 登记。三者都留来源票，记录输入与剧本哈希；**任何来源都不得冒充另一种**：模型产物不得标用户原稿或 Agent 直写，用户原稿和 Agent 直写都不得标模型。`--confirmed-by` 是人工声明，不是身份认证，Agent 不得代签。缺票不再阻断流程，但票据缺失时不得倒填。
+剧本有三条合法来源，**默认第 ② 条**：① `cli/script.mjs generate` 调 `.env` 的剧本模型 —— **可选，默认不走**，只有用户明确要求"用模型写一版"时才用；② `cli/script.mjs register-agent --input <草稿> --out <项目/story.md>` 登记**对话里由 Agent（当前对话模型）直写的草稿** —— **这是默认路径**：写剧本要的就是理解和判断，当前对话模型就能做，不必再绕一圈外部付费模型，用户不满意直接在对话里改、改完重新登记；③ 用户原稿经其明确确认后用 `register-user --confirmed-by <确认者>` 登记。三者都留来源票，记录输入与剧本哈希；**任何来源都不得冒充另一种**：模型产物不得标用户原稿或 Agent 直写，用户原稿和 Agent 直写都不得标模型。`--confirmed-by` 是人工声明，不是身份认证，Agent 不得代签。缺票不再阻断流程，但票据缺失时不得倒填。
 
 剧本人工确认后即冻结。导演、场景师和人物造型师只能报告问题、提出可选建议或拒绝进入下一阶段，**不得要求 Agent 直接改写已确认剧本，也不得把审查意见写回 `story.md`**。任何剧本修改都必须由用户明确授权，重新运行剧本入口并生成新的来源票据，再重新人工确认；否则只修复下游分镜/资产映射。
 
-导演稿有**两条合法来源**：① `cli/direct.mjs` 调 `.env` 的 `AIH_DIRECTOR_MODEL`（**不限制厂商或型号**）；② **对话里的 Agent 直写** —— 按 `references/director/brief.md` + `schema.md` 的契约交付后用 `cli/register-direction.mjs` 登记，**纯本地跑、或执行 Agent 本身就是高级模型时走这条**。**判据不是「必须由另一个模型写」，而是「必须按契约交付，且单元边界诚实」** —— 白名单与机器校验都已取消，唯一把关的是人工审阅。两条来源各自留 `.provenance.json`（模型来源记请求与响应模型，直写来源记 `authored_by`），**只作留痕，不再作为放行前提**，且不得互相冒充。统一配置见根目录 `.env`（可参照 `.env.example`）；不要在项目文件中存密钥或改动全局默认值来切换剧目。
+导演稿有**两条合法来源，默认第 ② 条**：① `cli/direct.mjs` 调 `.env` 的 `AIH_DIRECTOR_MODEL` —— **可选，默认不走**（同剧本：分镜分析要的判断力当前对话模型就有，调外部模型只是多绕一圈）；② **对话里的 Agent 直写** —— 按 `references/director/brief.md` + `schema.md` 的契约交付后用 `cli/register-direction.mjs` 登记。**判据不是「必须由另一个模型写」，而是「必须按契约交付，且单元边界诚实」** —— 白名单与机器校验都已取消，唯一把关的是人工审阅。两条来源各自留 `.provenance.json`（模型来源记请求与响应模型，直写来源记 `authored_by`），**只作留痕，不再作为放行前提**，且不得互相冒充。统一配置见根目录 `.env`（可参照 `.env.example`）；不要在项目文件中存密钥或改动全局默认值来切换剧目。
 
 **正式流程只有一把钥匙：人工明确确认。**
 
@@ -101,7 +101,7 @@ metadata:
 - H3 暂时是既定视频模型。默认使用 `.env` 的常规尺寸（当前 `480x864`）；用户明确要求“高质量”时使用 `.env` 的高质量尺寸（当前 `768x1344`）。
 - 视频生成是抽卡，重复生成不可避免。不满就重抽**同一规格**；不要把重跑当异常，也不要为省一轮而跳过确认。
 - 下游发现单个镜头的姿态、走位、构图或动作问题时，走 `references/workflow.md` 的“局部返修分支”：剧本继续冻结，召回导演修订受影响单元，重新编译并只重跑该单元及其依赖链。
-- 局部问题先分类：执行层约束缺失、提示词翻译不完整或生成参数错误，可由当前 Agent 直接写入项目级覆盖并重跑受影响产物；涉及剧情、台词、角色设定、场景语义、单元边界或连续性决策，才必须由**导演角色**决定（`cli/direct.mjs` 调用的模型，或按同一契约执行的当前 Agent），不能由抽卡师或执行层顺手改。此规则适用于所有剧目和所有对话模型，不绑定某个项目。
+- 局部问题先分类：执行层约束缺失、提示词翻译不完整或生成参数错误，可由当前 Agent 直接写入项目级覆盖并重跑受影响产物；涉及剧情、台词、角色设定、场景语义、单元边界或连续性决策，才必须由**导演角色**决定 —— **默认就是按同一契约执行的当前 Agent**（调 `cli/direct.mjs` 时才是那个模型），不能由抽卡师或执行层顺手改。此规则适用于所有剧目和所有对话模型，不绑定某个项目。
 - 缩略图和任何自动化产物都不能替代人观看原图、完整视频和实听音轨。
 - 不把带过期时间的远程 URL 写进项目契约；产物必须落到本地稳定路径。
 - 真实项目和生成媒体必须在仓库外；确定性测试只使用仓库内 `tests/fixtures/` 的最小夹具，不依赖某个用户项目。
@@ -136,8 +136,8 @@ node src/board.mjs validate <board.json>
 node src/board.mjs table <board.json>
 
 # 导演与生成计划
-node cli/direct.mjs <board.json> --story <story.md> --out <board.direction.json>
-node cli/register-direction.mjs <board.json> --input <草稿.json>   # Agent 直写导演稿的登记入口（纯本地跑）
+node cli/register-direction.mjs <board.json> --input <草稿.json>   # 默认：Agent 直写导演稿后登记
+node cli/direct.mjs <board.json> --story <story.md> --out <board.direction.json>   # 可选：调外部模型（不默认走）
 node cli/revise-unit.mjs <board.json> --unit <id> --feedback <reviews/revision.md>
 node cli/compile-units.mjs <board.direction.json> --out <render.plan.json>
 node cli/design-assets.mjs <board.json> --out <project/asset-design.json>

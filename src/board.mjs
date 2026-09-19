@@ -1116,10 +1116,10 @@ async function main() {
   // `direct` / `apply-direction` 是 cli/direct.mjs 之前的旧入口，
   // 与之绑定的 validateDirection 机器校验已随「去掉 QA 机器人审核」一并移除。
   if (cmd === 'direct' || cmd === 'apply-direction') {
-    die(`direct / apply-direction 已停用：请用 node cli/direct.mjs <board.json> --story story.md --out board.direction.json。导演稿不再跑机器校验，是否放行由人工审阅决定。`);
+    die(`direct / apply-direction 已停用：导演稿默认由当前对话的 Agent 直写后用 node cli/register-direction.mjs <board.json> --input <草稿.json> 登记；确实要调外部模型才用 node cli/direct.mjs <board.json> --story story.md --out board.direction.json。导演稿不再跑机器校验，是否放行由人工审阅决定。`);
   }
   // ── 闸门 1：故事 ────────────────────────────────────────────────
-  if (cmd === 'story') die('旧 story 梗概入口已停用；完整剧本请用 node cli/script.mjs generate --input <素材> --out <项目/story.md>（模型由 .env 的 AIH_SCRIPT_MODEL 指定）');
+  if (cmd === 'story') die('旧 story 梗概入口已停用；完整剧本默认由当前对话的 Agent 直写后用 node cli/script.mjs register-agent --input <草稿.md> --out <项目/story.md> 登记（确实要调模型才用 generate，模型由 .env 的 AIH_SCRIPT_MODEL 指定）');
 
   // ── 人工确认：放行一个闸门 ──────────────────────────────────────
   if (cmd === 'approve') {

@@ -6,16 +6,16 @@
 
 ## 立项入口
 
-剧本阶段按项目类型三选一：`cli/script.mjs generate --input <素材> --out <项目/story.md>` 走 `.env` 的 `AIH_SCRIPT_MODEL` 模型生成；**短片推荐 `cli/script.mjs register-agent --input <草稿> --out <项目/story.md>`：草稿由 Agent 在对话里直写，用户不满意改完重新登记即可，不绕付费模型，票据记 `agent_draft` 与 `drafted_by`**；用户原稿仅经其明确确认后用 `register-user --input <原稿> --out <项目/story.md> --confirmed-by <确认者>` 登记。三者都留来源票，记录输入与剧本哈希。`generate` 与导演共用直连流式 Responses：只接受服务起始和完成事件中的相同模型、完整响应与非空正文；默认推理强度 `low`。文本请求超时及两阶段输出上限从根目录 `.env` 读取（见 `.env.example`）。来源票 `story.provenance.json` 记录输入与剧本哈希、请求及响应模型。不得代签、不得把历史未知来源补写成模型创作、不得把 Agent 直写稿标成模型产物。逐字阅读剧本后，用 `cli/review-gate.mjs approve --project <项目> --stage story` 记录人工票。旧 `src/board.mjs story/from-story` 已停用。
+剧本阶段**默认走 Agent 直写**：`cli/script.mjs register-agent --input <草稿> --out <项目/story.md>` —— 草稿由**当前对话的 Agent 自己写**，用户不满意改完重新登记即可，不绕付费模型，票据记 `agent_draft` 与 `drafted_by`。**"剧本必须用外部大模型写"这条旧约束已作废**：写剧本要的理解和判断当前对话模型就有，再调一次 `qwen3.8-max` 只是多绕一圈、多一个改一个字就要重跑的锁定成本。另两条来源：`cli/script.mjs generate --input <素材> --out <项目/story.md>` 走 `.env` 的 `AIH_SCRIPT_MODEL` 模型生成 —— **可选，只有用户明确要求"用模型写一版"时才用**；用户原稿仅经其明确确认后用 `register-user --input <原稿> --out <项目/story.md> --confirmed-by <确认者>` 登记。三者都留来源票，记录输入与剧本哈希。`generate` 与导演共用直连流式 Responses：只接受服务起始和完成事件中的相同模型、完整响应与非空正文；默认推理强度 `low`。文本请求超时及两阶段输出上限从根目录 `.env` 读取（见 `.env.example`）。来源票 `story.provenance.json` 记录输入与剧本哈希、请求及响应模型。不得代签、不得把历史未知来源补写成模型创作、不得把 Agent 直写稿标成模型产物。逐字阅读剧本后，用 `cli/review-gate.mjs approve --project <项目> --stage story` 记录人工票。旧 `src/board.mjs story/from-story` 已停用。
 
 按 [`board-brief.example.json`](board-brief.example.json) 准备已确认的剧名、项目 id、风格、画幅、人物设定及故事概述，再运行 `node cli/init-board.mjs --story <项目/story.md> --brief <项目/board-brief.json> --out <项目/board.json>`。此入口只做结构化解析和台词搬运，不代写 Brief、不代签人工票；索引镜头不替代导演方案。
 
 导演方案确认后，先运行 `node cli/design-assets.mjs <项目/board.json> --out <项目/asset-design.json>`。场景师只编译空间和光线，人物造型师只编译脸、妆发、服装和连续性；两者不能改剧情或镜头。`asset-design.json` 必须先经导演审核，再进入资源生成和人工资源票。
 
-导演稿有**两条合法来源**，按项目条件二选一，两条都必须按 [`director/brief.md`](director/brief.md) + [`director/schema.md`](director/schema.md) 的契约交付：
+导演稿有**两条合法来源，默认走第 2 条**，两条都必须按 [`director/brief.md`](director/brief.md) + [`director/schema.md`](director/schema.md) 的契约交付：
 
-1. **`cli/direct.mjs <board.json>`** 调 `AIH_DIRECTOR_MODEL` 指定的模型（**不限制厂商或型号**）。非分批路径直读流式 Responses 的起始与完成事件；默认推理强度 `low`，显式 `--thinking` 才用 `xhigh`（模型默认 `xhigh` 会占用大量输出 token）。必须确认完整结束、两个事件都报告与请求相同的模型、且正文可解析，才写 `board.direction.json.provenance.json`。`--batched` 改走 chat/completions 的结构化输出，先规划单元再逐单元设计。`bl --stream` 的 content-only 摘要不报告模型，不得据此生成来源票。
-2. **对话里的 Agent 直写**（与剧本 `register-agent` 对称）—— 没有可调的高级导演模型时走这条，包括**纯本地跑**，以及**执行 Agent 本身就是高级模型**的情形。草稿按同一份契约写出，再用 `cli/register-direction.mjs <board.json> --input <草稿.json>` 登记；票据记 `provider: agent_draft` / `model: null` / `authored_by`，**不得冒充模型产物**。
+1. **对话里的 Agent 直写（默认）** —— 与剧本 `register-agent` 对称：**分镜分析要的判断力当前对话模型就有**，不需要再调一次外部大模型。草稿按契约写出后用 `cli/register-direction.mjs <board.json> --input <草稿.json>` 登记；票据记 `provider: agent_draft` / `model: null` / `authored_by`，**不得冒充模型产物**。
+2. **`cli/direct.mjs <board.json>`** 调 `AIH_DIRECTOR_MODEL` 指定的模型 —— **可选，默认不走**（只有用户明确要求"用模型出一版"时才用；不限制厂商或型号）。非分批路径直读流式 Responses 的起始与完成事件；默认推理强度 `low`，显式 `--thinking` 才用 `xhigh`（模型默认 `xhigh` 会占用大量输出 token）。必须确认完整结束、两个事件都报告与请求相同的模型、且正文可解析，才写 `board.direction.json.provenance.json`。`--batched` 改走 chat/completions 的结构化输出，先规划单元再逐单元设计。`bl --stream` 的 content-only 摘要不报告模型，不得据此生成来源票。
 
 **判据不是「必须由另一个模型写」，而是「必须按契约交付，且单元边界诚实」。** `AIH_DIRECTOR_MODEL` 的白名单和机器校验都已取消，唯一把关的是人工审阅；两条来源的票据都绑定板子、剧本和导演稿，**只作留痕，不再作为放行前提**。统一配置见根目录 `.env`（可参照 `.env.example`），敏感凭据可放本地 `.env` 或已有 CLI 凭据存储。
 

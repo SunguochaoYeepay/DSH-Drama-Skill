@@ -68,19 +68,19 @@ E:\AI-Tool\DeepSeek\story2video\projects\cat_mouse\
 
 ## 基本用法
 
-先参照根目录的 [`.env.example`](.env.example) 配置本机 `.env`。剧本和导演使用 `AIH_SCRIPT_MODEL` / `AIH_DIRECTOR_MODEL`（**不限制厂商或型号**，默认 `qwen3.8-max`）；资源和关键帧分别读取资产/关键帧通道与模型配置。视频默认 `AIH_VIDEO_QUALITY=normal`、`AIH_VIDEO_PROFILE=fast`、`AIH_VIDEO_ATTENTION=vsa`，两档尺寸由 `AIH_VIDEO_NORMAL_SIZE` 和 `AIH_VIDEO_HIGH_SIZE` 指定。`.env` 不入库，已有进程环境变量优先。
+先参照根目录的 [`.env.example`](.env.example) 配置本机 `.env`。**剧本和导演稿默认由当前对话的 Agent 直写**，不调外部大模型 —— `AIH_SCRIPT_MODEL` / `AIH_DIRECTOR_MODEL` 只在**显式要调模型**时才用得到（不限制厂商或型号）。资源和关键帧分别读取资产/关键帧通道与模型配置。视频默认 `AIH_VIDEO_QUALITY=normal`、`AIH_VIDEO_PROFILE=fast`、`AIH_VIDEO_ATTENTION=vsa`，两档尺寸由 `AIH_VIDEO_NORMAL_SIZE` 和 `AIH_VIDEO_HIGH_SIZE` 指定。`.env` 不入库，已有进程环境变量优先。
 
 剧本必须由正式入口登记并留下来源票；已有完整用户原稿只能在用户明确确认后登记，不能代签：
 
 ```powershell
-node cli/script.mjs generate --input <素材.txt> --out <项目/story.md>                                  # 模型创作
-node cli/script.mjs register-agent --input <草稿.md> [--material <素材.txt>] --out <项目/story.md>      # 对话里 Agent 直写（短片推荐）
+node cli/script.mjs register-agent --input <草稿.md> [--material <素材.txt>] --out <项目/story.md>      # 默认：当前对话的 Agent 直写
 node cli/script.mjs register-user --input <用户原稿> --out <项目/story.md> --confirmed-by <确认者>       # 用户原稿
+node cli/script.mjs generate --input <素材.txt> --out <项目/story.md>                                  # 可选：调外部模型（不默认走）
 ```
 
-三条命令按来源三选一。**短片推荐 `register-agent`**：草稿由对话直接写成，不满意改完重新登记即可，不必绕付费模型；人工确认仍走 `review-gate --stage story`，登记不等于确认。
+**默认 `register-agent`**：剧本要的就是理解和判断，当前对话模型就能写，改一个字重新登记即可，不必绕付费模型。「剧本必须用外部大模型写」这条旧约束已作废。人工确认仍走 `review-gate --stage story`，登记不等于确认。
 
-先给用户展示完整剧本，取得明确确认后记录 `story` 人工票；按已确认的剧名、风格、画幅、故事概述和人物资料填写 [Brief 最小模板](references/board-brief.example.json)，再由代码建立 `board.json`。初始化只搬运原文台词并建立索引镜头，导演仍由高级模型设计：
+先给用户展示完整剧本，取得明确确认后记录 `story` 人工票；按已确认的剧名、风格、画幅、故事概述和人物资料填写 [Brief 最小模板](references/board-brief.example.json)，再由代码建立 `board.json`。初始化只搬运原文台词并建立索引镜头，**导演方案默认由当前对话的 Agent 按 `references/director/` 的契约直写**，不是"必须交给外部模型设计"。
 
 ```powershell
 node cli/review-gate.mjs approve --project <项目目录> --stage story
@@ -96,16 +96,16 @@ node src/board.mjs validate <board.json>
 node src/board.mjs table <board.json>
 ```
 
-生成并确认导演方案。导演稿有两条来源，**都不再设机器校验**，唯一把关的是人工审阅：
+生成并确认导演方案。**默认由当前对话的 Agent 直写**，调外部模型只是可选项 —— 两条来源都不再设机器校验，唯一把关的是人工审阅：
 
 ```powershell
-node cli/direct.mjs <board.json> --story <story.md> --out <board.direction.json>          # 调 .env 的导演模型
-node cli/register-direction.mjs <board.json> --input <草稿.json> [--authored-by agent]     # 对话里 Agent 直写后登记
+node cli/register-direction.mjs <board.json> --input <草稿.json> [--authored-by agent]     # 默认：Agent 直写导演稿后登记
+node cli/direct.mjs <board.json> --story <story.md> --out <board.direction.json>          # 可选：调外部模型（不默认走）
 node cli/review-gate.mjs approve --project <项目目录> --stage direction
 node cli/compile-units.mjs <board.direction.json> --out <render.plan.json>
 ```
 
-纯本地跑（没有可调的高级导演模型）、或执行 Agent 本身就是高级模型时走 `register-direction`：草稿按 `references/director/` 里的契约写出，登记只做「校验 JSON → 落盘 → 留来源票」，不调任何模型。票据记 `agent_draft` / `model: null`，**不得冒充模型产物**。`cli/direct.mjs` 的完整导演稿较长，必要时加 `--max-tokens 30000`（默认 12000 会中途截断）。
+草稿按 `references/director/` 里的契约写出，`register-direction` 只做「校验 JSON → 落盘 → 留来源票」，不调任何模型；票据记 `agent_draft` / `model: null`，**不得冒充模型产物**。（万一真要用 `cli/direct.mjs`：完整导演稿较长，需 `--max-tokens 30000`，默认 12000 会中途截断。）
 
 单元边界默认由导演方案决定。要手工切分（哪些导演单元合并成一个生成单元、每个单元生成多少秒），传 `--units`：
 
@@ -236,7 +236,7 @@ $env:VERIFY_INSTALLED=1; node tests/integration/dsh-plugins.test.mjs
 
 模型凭据、项目媒体和运行缓存不得提交到仓库。
 
-运行配置集中在仓库根目录 `.env`（按 `.env.example` 填写，已被 Git 忽略）。包含剧本/导演高级模型、生图通道及模型、H3 档位/尺寸和本机工具路径；生图通道可选 `comfyui`、`bailian`、`volcengine`（火山方舟 Seedream）。使用火山通道时填写 `AIH_VOLCENGINE_API_KEY`，模型由 `AIH_VOLCENGINE_IMAGE_MODEL` 配置。命令行显式参数仍可覆盖非剧本/导演模型的运行档位。`AIH_SCRIPT_MODEL` 和 `AIH_DIRECTOR_MODEL` 接受任意非空模型名，不再设白名单。剧本和导演稿可生成哈希绑定的来源票作为留痕，但票据不是放行前提。
+运行配置集中在仓库根目录 `.env`（按 `.env.example` 填写，已被 Git 忽略）。包含生图通道及模型、H3 档位/尺寸和本机工具路径；生图通道可选 `comfyui`、`bailian`、`volcengine`（火山方舟 Seedream）。使用火山通道时填写 `AIH_VOLCENGINE_API_KEY`，模型由 `AIH_VOLCENGINE_IMAGE_MODEL` 配置。命令行显式参数仍可覆盖非剧本/导演模型的运行档位。`AIH_SCRIPT_MODEL` / `AIH_DIRECTOR_MODEL` 接受任意非空模型名、不再设白名单，但**默认用不到** —— 剧本和导演稿默认由当前对话的 Agent 直写，只有显式调 `generate` / `cli/direct.mjs` 时才读这两项。剧本和导演稿可生成哈希绑定的来源票作为留痕，但票据不是放行前提。
 
 ## License
 

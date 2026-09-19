@@ -102,8 +102,9 @@
 ```text
 ① 环境体检（第二节）                                   0 元
 ② 立项确认（第三节）                                   0 元
-③ 剧本 → 用户确认                                      0 元
-④ 导演：cli/direct.mjs（模型取 .env）              费用随所选模型而定
+③ 剧本（当前对话 Agent 直写 → register-agent）→ 用户确认    0 元
+④ 导演稿（当前对话 Agent 直写 → register-direction）→ 用户确认  0 元
+   （只有显式调 `cli/script.mjs generate` / `cli/direct.mjs` 才产生模型费用）
 ⑤ 资源：本地通道出图 → 用户确认                          0 元
 ⑥ 配额审计 + 提示词自检（第四节）                        0 元
 ⑦ 关键帧：本地试跑 → 提示词定稿 → 同一提示词上付费通道      0.3 元/张

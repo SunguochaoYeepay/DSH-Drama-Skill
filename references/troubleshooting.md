@@ -44,7 +44,7 @@
 | 命令不报错、退出码 0，但没有任何产物 | 是否经了 `bl.ps1`（PowerShell 包装器） |
 | 等满超时才失败，错误信息是「bl 退出码 null」，stderr 为空 | 同上；`shell: true` 启动了 PowerShell 但子进程没起来 |
 | 图片通道能跑、导演通道不能跑 | 两个通道的调用方式不一致 —— 图片走 `runBailian`，导演曾走 `spawn('bl', {shell:true})` |
-| 导演调用跑满 5–6 分钟后报 `max_output_tokens`，没有任何产物 | 单次输出的额度被耗尽。**两条路都实测过**：① `node cli/direct.mjs <board.json> --batched` —— 先紧凑规划单元、再逐单元设计，走 JSON Schema 结构化输出，`mimi_bone`（2026-09-19）实测 **29 秒成功**；② 加大 `--max-tokens` —— `ant_crumb_20260919`（同日）用 `--max-tokens 30000`、**276 秒成功**。**优先 ①**：更快更省，且不必把额度翻倍；见 [`workflow.md`](workflow.md) 的「导演分批模式」|
+| 导演调用跑满 5–6 分钟后报 `max_output_tokens`，没有任何产物 | **只在显式调 `cli/direct.mjs` 时会遇到**（默认由当前对话 Agent 直写，不走这条路径）。单次输出的额度被耗尽。**两条路都实测过**：① `node cli/direct.mjs <board.json> --batched` —— 先紧凑规划单元、再逐单元设计，走 JSON Schema 结构化输出，`mimi_bone`（2026-09-19）实测 **29 秒成功**；② 加大 `--max-tokens` —— `ant_crumb_20260919`（同日）用 `--max-tokens 30000`、**276 秒成功**。**优先 ①**：更快更省，且不必把额度翻倍；见 [`workflow.md`](workflow.md) 的「导演分批模式」|
 
 ### 票据「产物已变化」但文件没动
 
