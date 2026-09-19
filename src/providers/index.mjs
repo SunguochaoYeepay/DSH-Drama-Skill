@@ -1,11 +1,14 @@
 /**
  * providers/index.mjs — 生图通道的路由。
  *
- * 原判据是从 DramaClaw 的 `.env` 抄的：
- *   资产（角色肖像 / 身份图 / 场景 / 道具）→ **线上**：数量少、要一致性、要质量
- *   关键帧（批量草稿）                    → **本地**：数量多、要便宜、要快
+ * ## 当前决策（2026-09-19）：默认走本地 ComfyUI
  *
- * **但「关键帧走本地」这条被实测推翻了。** 同镜、同参考图 A/B：
+ * 用户决定不再依赖线上生图通道。所以 `AIH_ASSET_PROVIDER` / `AIH_KEYFRAME_PROVIDER`
+ * 默认都是 `comfyui`；线上通道保留为**显式覆盖**（`--provider bailian`），不是默认路径。
+ *
+ * ## 这个默认值的已知代价（曾经的 A/B 实测，结论已反转但数据仍然有效）
+ *
+ * 同镜、同参考图，线上 qwen-image-3.0 对本地 Qwen-Image-Edit：
  *
  * | | 线上 qwen-image-3.0 | 本地 Qwen-Image-Edit |
  * |---|---|---|
@@ -15,12 +18,11 @@
  * | 耗时 | 133s | 120s |
  * | 价格 | 0.24 元/张 | 0 元 |
  *
- * **时间几乎一样，只差 0.24 元。** 而关键帧是观众真正看到的画面 ——
- * 14 张也就 3.4 元换整片画质，这个账不用算。
+ * 也就是说：**本地在构图、人脸、细节三项上确实更弱**，省下的只有钱（时间几乎一样）。
+ * 走本地时要主动盯这三项 —— 关键帧是观众真正看到的画面，构图对不上分镜就得重抽，
+ * 不能因为"本地不要钱"就接受明显跑偏的画面。
  *
- * 本地通道保留：探构图、批量试错、线上不可用时兜底。
- *
- * 环境变量可覆盖：AIH_ASSET_PROVIDER / AIH_KEYFRAME_PROVIDER = bailian | comfyui | volcengine
+ * 环境变量可覆盖：AIH_ASSET_PROVIDER / AIH_KEYFRAME_PROVIDER = comfyui | bailian | volcengine
  */
 
 import * as bailian from './bailian.mjs';

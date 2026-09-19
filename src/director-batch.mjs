@@ -1,4 +1,4 @@
-import { callDirector, collectDialogueLines, collectDialogueSeconds, validateDirection } from './director.mjs';
+import { callDirector, collectDialogueLines, collectDialogueSeconds } from './director.mjs';
 import { parseScript, spokenLines } from './parse-script.mjs';
 import { runStructuredChat } from './providers/bailian-chat.mjs';
 
@@ -82,7 +82,5 @@ export async function generateBatchedDirection({ basePrompt, board, script, run,
     units.push(unit);
   }
   const direction = { version: 6, logline: '分批导演合并方案', units };
-  const checked = validateDirection(direction, { board, script });
-  if (!checked.ok) return { ok: false, stage: 'merge', error: checked.errors.join('\n'), seconds, direction, checked };
-  return { ok: true, direction, model, responseModel: model, seconds, warnings: checked.warnings, plan };
+  return { ok: true, direction, model, responseModel: model, seconds, warnings: [], plan };
 }

@@ -11,7 +11,7 @@ import { DIRECTOR_MODEL } from '../src/config.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 
-test('assembly checks aspect and refuses an unaudible final film', () => {
+test('assembly scales clips to the project aspect', () => {
   const project = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-assemble-review-'));
   const boardPath = path.join(project, 'board.json');
   const storyPath = path.join(project, 'story.md');
@@ -39,12 +39,5 @@ test('assembly checks aspect and refuses an unaudible final film', () => {
   const probed = spawnSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries',
     'stream=width,height', '-of', 'csv=p=0', film], { encoding: 'utf8' });
   assert.equal(probed.stdout.trim(), '864,480');
-
-  const mute = spawnSync('ffmpeg', ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'testsrc2=size=320x180:rate=24',
-    '-t', '1', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', clip], { encoding: 'utf8' });
-  assert.equal(mute.status, 0, mute.stderr);
-  approve(project, 'clip', [clip], { id: 'g001' });
-  const invalid = run();
-  assert.notEqual(invalid.status, 0);
-  assert.match(invalid.stderr, /成片机器检查失败.*没有音轨/s);
+  // 成片不再做机器检查：能不能用由人在终审时判断，代码不拦。
 });

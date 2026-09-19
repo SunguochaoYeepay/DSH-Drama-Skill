@@ -33,7 +33,6 @@ import { COMFY_GEN, COMFY_PYTHON, NODE } from '../src/runtime-paths.mjs';
 import * as bailian from '../src/providers/bailian.mjs';
 import * as volcengine from '../src/providers/volcengine.mjs';
 import { bindHandoffKeyframe, requireHandoff } from '../src/continuity-handoff.mjs';
-import { assertPlanProvenance } from '../src/plan-provenance.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { KEYFRAME_PROVIDER, KEYFRAME_IMAGE_MODEL, HUIMENG_IMAGE_MODEL, KEYFRAME_SIZE, BAILIAN_KEYFRAME_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG } from '../src/config.mjs';
 import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
@@ -167,16 +166,8 @@ requireApproval(PROJ, 'assets', approvedAssets, { skip: SKIP_GATE });
 //    这条 2026-09-17 13:17 已经以"操作失误"记过一次（批成了 board.direction.json），
 //    没被识别成代码缺陷，所以同一个坑原样复发。
 //
-//    原注释想要的保证（"不能拿旧导演文件的票放行另一份 plan"）**由计划身份证提供**：
-//    `assertPlanProvenance` 会核对 `provenance.direction_sha256` 与项目里的导演稿是否一致，
-//    比单哈希更强 —— 它还连带核了 board / story / units 三份哈希。
-//    所以这里改成：**票绑导演稿（与 compile-units 对齐），再用身份证反证计划来源。**
+//    现在机器不再反证计划来源：票就绑导演稿，与 compile-units 对齐，不再有第二套哈希。
 requireApproval(PROJ, 'direction', [path.join(PROJ, 'board.direction.json')], { skip: SKIP_GATE });
-assertPlanProvenance(dir, {
-  boardPath: BOARD_PATH,
-  storyPath: path.join(PROJ, 'story.md'),
-  planPath: DIRECTION_PATH,
-});
 
 /** 造型 id → 角色 id（要拿角色的肖像当脸锚点） */
 const charOf = (identId) => (board.identities.find((x) => x.id === identId) || {}).character;

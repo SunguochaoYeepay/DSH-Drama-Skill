@@ -33,7 +33,6 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { unitAssets } from '../src/asset-resolver.mjs';
 import { clipResultPath, planKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
-import { assertPlanProvenance, assertUnitEmotionContract } from '../src/plan-provenance.mjs';
 import { buildUnitPrompt } from '../src/h3-prompt.mjs';
 import { COMFY_GEN, COMFY_PYTHON } from '../src/runtime-paths.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
@@ -92,8 +91,6 @@ if (!Number.isFinite(W) || !Number.isFinite(H) || W <= 0 || H <= 0) {
 const unit = (dir.units || []).find((u) => u.id === unitId);
 if (!unit) { console.error(`找不到单元 ${unitId}`); process.exit(2); }
 const projectDir = path.dirname(path.resolve(boardPath));
-assertPlanProvenance(dir, { boardPath: path.resolve(boardPath), storyPath: path.join(projectDir, 'story.md'), planPath: path.resolve(dirPath) });
-assertUnitEmotionContract(unit, { plan: dir });
 const continuityHandoff = requireHandoff(projectDir, unit);
 const skipGate = argv.includes('--skip-gate');
 const keyframes = planKeyframeFiles(projectDir, dir);

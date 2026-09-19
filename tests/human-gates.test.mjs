@@ -19,7 +19,7 @@ approve(dir, 'clip', [b], { id: 'g001' });
 assert.equal(approvalStatus(dir, 'clip', [a], 'g001').ok, false);
 assert.equal(approvalStatus(dir, 'clip', [b], 'g001').ok, true);
 assert.equal(approvalStatus(dir, 'clip', [a], 'g002').ok, false);
-assert.throws(() => requireApproval(dir, 'keyframes', [b]), /机器检查通过只表示/);
+assert.throws(() => requireApproval(dir, 'keyframes', [b]), /人工闸门未通过/);
 const units = path.join(dir, 'units'); fs.mkdirSync(units);
 fs.writeFileSync(path.join(units, 'g001.result.json'), JSON.stringify({ files: [b] }));
 requireAllClips(dir, { units: [{ id: 'g001' }] });

@@ -2,7 +2,7 @@
 
 把故事或成品剧本转换为导演方案、视觉资产、关键帧、逐段视频和最终成片的本地工程。
 
-工程的重点不是“一键生成”，而是让每个高成本阶段都有结构化输入、机器检查和人工确认，避免错误一直传到视频生成阶段。
+工程的重点不是"一键生成"，而是让每个高成本阶段都有结构化输入和人工确认，避免错误一直传到视频生成阶段。
 
 ## 当前流程
 
@@ -12,9 +12,9 @@
 
 用户只提供短句或故事点子时，必须先确认视觉风格和画面比例。已经明确提供的参数不重复询问；不能沿用上一部剧的设置，也不能静默猜默认值。
 
-正式流程使用双钥匙闸门：机器 QA 通过只表示可以交给人看；用户明确确认后，才允许进入下一阶段。导演方案、资源、关键帧、每段视频和最终成片都需要人工确认。产物被替换后，旧确认会因文件哈希变化自动失效。
+正式流程只有一道闸门：**人工确认**。工程不做机器审核 —— 没有视觉模型打分、没有成片自检、没有契约或来源票的强制校验。产物生成后直接送审，能不能用由人判断。导演方案、资源、关键帧、每段视频和最终成片都需要人工确认。产物被替换后，旧确认会因文件哈希变化自动失效。
 
-生成计划带项目身份证，绑定剧目 ID、剧本、Storyboard、导演稿和计划内容哈希。换剧、修改源文件或拿历史计划直接运行都会被拒绝；新计划最低使用导演 v6 协议。
+生成计划带项目身份证，绑定剧目 ID、剧本、Storyboard、导演稿和计划内容哈希，**只作留痕**：换剧、改了源文件或手改计划都不会被代码拦住，判断计划是否仍然对得上由人来做。导演协议版本也不再设下限。
 
 完整执行规则见 [SKILL.md](SKILL.md)，工程行为变更见 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -30,11 +30,11 @@ ai-images-harness/
 ├─ src/                      业务逻辑和提供方适配
 ├─ references/               按阶段加载的规则和模型提示
 │  ├─ preflight.md           开工前清单（环境体检、预算、提示词自检）
+│  ├─ qa-and-review.md       人工送审规则（只有人工确认，没有机器审核）
 │  ├─ director/              导演 Brief 与输出结构
-│  ├─ prompts/               故事与 storyboard 提示模板
-│  └─ qa/                    视觉 QA Brief
+│  └─ prompts/               故事与 storyboard 提示模板
 ├─ schema/                   Storyboard JSON Schema
-├─ tests/                    确定性测试
+├─ tests/                    确定性测试（含 tests/integration/ 活体验证）
 └─ plugins/                  UI 插件
 ```
 
@@ -68,16 +68,17 @@ E:\AI-Tool\DeepSeek\story2video\projects\cat_mouse\
 
 ## 基本用法
 
-先参照根目录的 [`.env.example`](.env.example) 配置本机 `.env`。剧本和导演使用 `AIH_SCRIPT_MODEL` / `AIH_DIRECTOR_MODEL`（当前仅接受 `qwen3.8-max`）；资源和关键帧分别读取资产/关键帧通道与模型配置。视频默认 `AIH_VIDEO_QUALITY=normal`、`AIH_VIDEO_PROFILE=fast`、`AIH_VIDEO_ATTENTION=vsa`，两档尺寸由 `AIH_VIDEO_NORMAL_SIZE` 和 `AIH_VIDEO_HIGH_SIZE` 指定。`.env` 不入库，已有进程环境变量优先。
+先参照根目录的 [`.env.example`](.env.example) 配置本机 `.env`。剧本和导演使用 `AIH_SCRIPT_MODEL` / `AIH_DIRECTOR_MODEL`（**不限制厂商或型号**，默认 `qwen3.8-max`）；资源和关键帧分别读取资产/关键帧通道与模型配置。视频默认 `AIH_VIDEO_QUALITY=normal`、`AIH_VIDEO_PROFILE=fast`、`AIH_VIDEO_ATTENTION=vsa`，两档尺寸由 `AIH_VIDEO_NORMAL_SIZE` 和 `AIH_VIDEO_HIGH_SIZE` 指定。`.env` 不入库，已有进程环境变量优先。
 
-剧本必须由正式入口生成并留下来源票；已有完整用户原稿只能在用户明确确认后登记，不能代签：
+剧本必须由正式入口登记并留下来源票；已有完整用户原稿只能在用户明确确认后登记，不能代签：
 
 ```powershell
-node cli/script.mjs generate --input <素材.txt> --out <项目/story.md>
-node cli/script.mjs register-user --input <用户原稿> --out <项目/story.md> --confirmed-by <确认者>
+node cli/script.mjs generate --input <素材.txt> --out <项目/story.md>                                  # 模型创作
+node cli/script.mjs register-agent --input <草稿.md> [--material <素材.txt>] --out <项目/story.md>      # 对话里 Agent 直写（短片推荐）
+node cli/script.mjs register-user --input <用户原稿> --out <项目/story.md> --confirmed-by <确认者>       # 用户原稿
 ```
 
-两条命令按来源二选一。人工确认完整剧本后再推进导演阶段；旧 `board.mjs story/from-story` 不能替代这条链路。
+三条命令按来源三选一。**短片推荐 `register-agent`**：草稿由对话直接写成，不满意改完重新登记即可，不必绕付费模型；人工确认仍走 `review-gate --stage story`，登记不等于确认。
 
 先给用户展示完整剧本，取得明确确认后记录 `story` 人工票；按已确认的剧名、风格、画幅、故事概述和人物资料填写 [Brief 最小模板](references/board-brief.example.json)，再由代码建立 `board.json`。初始化只搬运原文台词并建立索引镜头，导演仍由高级模型设计：
 
@@ -95,18 +96,39 @@ node src/board.mjs validate <board.json>
 node src/board.mjs table <board.json>
 ```
 
-生成并确认导演方案：
+生成并确认导演方案。导演稿有两条来源，**都不再设机器校验**，唯一把关的是人工审阅：
 
 ```powershell
-node cli/direct.mjs <board.json> --story <story.md> --out <board.direction.json>
+node cli/direct.mjs <board.json> --story <story.md> --out <board.direction.json>          # 调 .env 的导演模型
+node cli/register-direction.mjs <board.json> --input <草稿.json> [--authored-by agent]     # 对话里 Agent 直写后登记
 node cli/review-gate.mjs approve --project <项目目录> --stage direction
 node cli/compile-units.mjs <board.direction.json> --out <render.plan.json>
 ```
 
+纯本地跑（没有可调的高级导演模型）、或执行 Agent 本身就是高级模型时走 `register-direction`：草稿按 `references/director/` 里的契约写出，登记只做「校验 JSON → 落盘 → 留来源票」，不调任何模型。票据记 `agent_draft` / `model: null`，**不得冒充模型产物**。`cli/direct.mjs` 的完整导演稿较长，必要时加 `--max-tokens 30000`（默认 12000 会中途截断）。
+
+单元边界默认由导演方案决定。要手工切分（哪些导演单元合并成一个生成单元、每个单元生成多少秒），传 `--units`：
+
+```powershell
+node cli/compile-units.mjs <board.direction.json> --out <render.plan.json> --units units.json
+```
+
+```json
+{
+  "target_seconds": 12,
+  "groups": [
+    { "source_units": ["u1", "u2"] },
+    { "source_units": ["u3"], "generation_duration_s": 9.5 }
+  ]
+}
+```
+
+`generation_duration_s` 直写生效，不受 5.17–15 秒的自动钳制；没写就按内容时长钳到该区间。没被 `groups` 列出的导演单元各自单独成组，不会丢镜头。
+
 生成并确认视觉资源：
 
 ```powershell
-node cli/assets.mjs <board.json> --provider bailian
+node cli/assets.mjs <board.json>
 node cli/review-gate.mjs approve --project <项目目录> --stage assets
 ```
 
@@ -116,7 +138,7 @@ node cli/review-gate.mjs approve --project <项目目录> --stage assets
 生成关键帧：
 
 ```powershell
-node cli/keyframes.mjs <board.json> --direction <render.plan.json> --provider bailian
+node cli/keyframes.mjs <board.json> --direction <render.plan.json>
 node cli/review-gate.mjs approve --project <项目目录> --stage keyframes --plan <render.plan.json>
 ```
 
@@ -156,7 +178,7 @@ node cli/animatic.mjs <board.json> --direction <board.direction.json>
 node cli/desub.mjs <视频>
 ```
 
-其他专项入口：`cli/huimeng.mjs` 调用绘梦生图，`cli/look-local.mjs` 检查本地造型，`cli/qa-batch.mjs` 批量质检，`cli/qa-local-keyframes.mjs` 质检本地关键帧。它们不是主流程入口。
+其他专项入口：`cli/huimeng.mjs` 调用绘梦生图，`cli/look-local.mjs` 检查本地造型。它们不是主流程入口。
 
 发生模型、音频、字幕或 ComfyUI 问题时，读取 [references/troubleshooting.md](references/troubleshooting.md)。
 
@@ -168,11 +190,17 @@ node cli/desub.mjs <视频>
 npm test
 ```
 
-该命令会运行 `tests/` 根目录下全部 `*.test.mjs`；新增测试无需再手工维护清单。
+递归运行 `tests/` 下全部 `*.test.mjs`（含 `tests/integration/`；`fixtures/` 是测试输入不是测试，跳过），新增文件无需维护清单。
+
+**判据是「它守护的行为今天还在不在」，不是「它还绿不绿」。** 所以这里只收行为断言：
+
+- **纯函数**直接 import 调用；**CLI** 实际跑一遍再断言它的输出（多数用 `--dry-run`，既确定性又不调通道）；产物落盘后读回来比对的算产物行为。
+- **不测源码文本**：不用正则去查「源码里有没有写这行字」—— 源码换个等价写法它就假红，行为真坏了它却绿。这类断言已清零，不再新增。
+- 被守的函数删了，守它的测试一起删，不留孤儿测试；**新增能力必须带测试**。
 
 全部确定性测试都自带输入，**不依赖任何外部工作区**：
 
-- `review.test.mjs` 的正例和负例都在临时目录里用 FFmpeg 现造。想看真实成片过不过，显式传 `--film <成片.mp4>`。
+- `assemble-review.test.mjs` 的输入都在临时目录里用 FFmpeg 现造（需要本机有 `ffmpeg`）。
 - 需要板子的测试默认读仓库内的 `tests/fixtures/`，也可以显式传入板子覆盖：
 
 ```powershell
@@ -185,13 +213,14 @@ node tests/orchestrate.test.mjs <board.json>
 夹具是**测试输入**，随代码保存；约定见 [tests/fixtures/README.md](tests/fixtures/README.md)。
 不要把这些测试的默认路径改回指向外部工作区的绝对路径 —— 那会随工作区迁移再次失效。
 
-### 集成测试
+### 集成验证
 
-需要本机环境（DSH profile / 插件），不属于上面的回归集：
+`tests/integration/` 的活体验证**默认已包含在 `npm test` 里** —— 它默认验的是仓库 `plugins/` 源码，不碰本机环境，是确定性的。
+
+只有「验本机已安装的插件副本」这一档需要手动跑，它依赖 DSH profile，**红了通常是提示你重装插件，不是测试坏了**：
 
 ```powershell
-node tests/integration/dsh-plugins.test.mjs              # 默认验仓库 plugins/ 源码
-$env:VERIFY_INSTALLED=1; node tests/integration/dsh-plugins.test.mjs   # 验已安装副本
+$env:VERIFY_INSTALLED=1; node tests/integration/dsh-plugins.test.mjs
 ```
 
 ## 规则所有权
@@ -207,7 +236,7 @@ $env:VERIFY_INSTALLED=1; node tests/integration/dsh-plugins.test.mjs   # 验已�
 
 模型凭据、项目媒体和运行缓存不得提交到仓库。
 
-运行配置集中在仓库根目录 `.env`（按 `.env.example` 填写，已被 Git 忽略）。包含剧本/导演高级模型、生图通道及模型、H3 档位/尺寸和本机工具路径；生图通道可选 `comfyui`、`bailian`、`volcengine`（火山方舟 Seedream）。使用火山通道时填写 `AIH_VOLCENGINE_API_KEY`，模型由 `AIH_VOLCENGINE_IMAGE_MODEL` 配置。命令行显式参数仍可覆盖非剧本/导演模型的运行档位。`AIH_SCRIPT_MODEL` 和 `AIH_DIRECTOR_MODEL` 目前只允许 `qwen3.8-max`。剧本和导演稿分别生成哈希绑定的来源票，历史产物没有票据时不能推断作者或直接继续生成。
+运行配置集中在仓库根目录 `.env`（按 `.env.example` 填写，已被 Git 忽略）。包含剧本/导演高级模型、生图通道及模型、H3 档位/尺寸和本机工具路径；生图通道可选 `comfyui`、`bailian`、`volcengine`（火山方舟 Seedream）。使用火山通道时填写 `AIH_VOLCENGINE_API_KEY`，模型由 `AIH_VOLCENGINE_IMAGE_MODEL` 配置。命令行显式参数仍可覆盖非剧本/导演模型的运行档位。`AIH_SCRIPT_MODEL` 和 `AIH_DIRECTOR_MODEL` 接受任意非空模型名，不再设白名单。剧本和导演稿可生成哈希绑定的来源票作为留痕，但票据不是放行前提。
 
 ## License
 

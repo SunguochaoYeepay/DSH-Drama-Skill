@@ -13,8 +13,10 @@ const option = (name) => {
   return i < 0 ? null : args[i + 1];
 };
 const outArg = option('out');
-if (!['generate', 'register-user'].includes(command) || !outArg) {
-  console.error('用法：node cli/script.mjs generate --input <brief.txt> --out <project/story.md> | register-user --input <用户原稿> --out <project/story.md> --confirmed-by <用户>');
+if (!['generate', 'register-agent', 'register-user'].includes(command) || !outArg) {
+  console.error('用法：node cli/script.mjs generate --input <brief.txt> --out <project/story.md>'
+    + ' | register-agent --input <草稿> --out <project/story.md>'
+    + ' | register-user --input <用户原稿> --out <project/story.md> --confirmed-by <用户>');
   process.exit(2);
 }
 const output = path.resolve(outArg);
@@ -33,21 +35,28 @@ let story;
 let source;
 let model = null;
 let verifiedResponseModel = null;
+let draftedBy = null;
 if (command === 'generate') {
-  if (option('model') && option('model') !== SCRIPT_MODEL) throw new Error(`剧本模型必须是 ${SCRIPT_MODEL}`);
-  const result = await generateScript(input);
+  const result = await generateScript(input, option('model') ? { model: option('model') } : {});
   story = result.story;
   source = 'bailian';
-  model = SCRIPT_MODEL;
+  model = result.responseModel;
   verifiedResponseModel = result.responseModel;
+} else if (command === 'register-agent') {
+  // Agent 在对话里直写：没有模型响应可核验，票据绑定 drafted_by 留痕。
+  if (option('model')) throw new Error('Agent 直写稿不能标记模型');
+  story = input;
+  source = 'agent_draft';
+  draftedBy = option('drafted-by') || 'agent';
 } else {
   story = input;
   source = 'user_supplied';
 }
 
-const receipt = makeScriptReceipt({ story, input, source, model, responseModel: verifiedResponseModel || null });
+const receipt = makeScriptReceipt({ story, input, source, model, responseModel: verifiedResponseModel || null, draftedBy });
 if (source === 'user_supplied') receipt.confirmed_by = option('confirmed-by');
 fs.mkdirSync(path.dirname(output), { recursive: true });
 fs.writeFileSync(output, story, 'utf8');
 fs.writeFileSync(receiptPath(output), JSON.stringify(receipt, null, 2) + '\n', 'utf8');
-console.log(`剧本：${output}\n来源：${source === 'bailian' ? model : `用户原稿（${receipt.confirmed_by} 确认）`}\n票据：${receiptPath(output)}`);
+const sourceLabel = { bailian: model, user_supplied: `用户原稿（${receipt.confirmed_by} 确认）`, agent_draft: `Agent 直写（${receipt.drafted_by}）` }[source];
+console.log(`剧本：${output}\n来源：${sourceLabel}\n票据：${receiptPath(output)}`);

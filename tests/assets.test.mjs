@@ -143,6 +143,26 @@ for (const x of board.identities) {
     refs.length > 0 && /portrait/.test(refs[0]), refs[0] || '(没解析出肖像)');
 }
 
+// ---------- 三之二、非人类卡司的身份图分支 ----------
+// 夹具里两个角色都是人类，所以这条分支原先**没有任何断言** ——
+// 结果非人类分支里残留了三处人类措辞（「四格人物高度一致」「五官、发型、领口」「其他人物」），
+// 会把一只狗的身份图往拟人化/穿衣服的方向推。这几条断言就是钉住它。
+console.log('\n身份图（非人类分支）');
+{
+  const animalBoard = structuredClone(board);
+  const ch = animalBoard.characters[0];
+  ch.species = 'dog';
+  const ident = animalBoard.identities.find((y) => y.character === ch.id);
+  const ins = sheetInstruction(animalBoard, ident);
+  check('非人类：不出现「人物」措辞', !/人物/.test(ins), ins.slice(0, 80));
+  check('非人类：不出现「发型／领口」等人类措辞', !/发型|领口/.test(ins), ins.slice(0, 80));
+  check('非人类：点明四足、不穿衣、不拟人化', /四足动物/.test(ins) && /不穿/.test(ins) && /不拟人化/.test(ins), ins.slice(0, 80));
+  check('非人类：一致性改成毛色与斑纹，不是同一套服装',
+    /同一身毛色与斑纹/.test(ins) && !/同一套服装/.test(ins), ins.slice(0, 80));
+  check('人类：仍保留「人物」与「发型、领口」措辞（不能被改回归）',
+    /人物/.test(sheetInstruction(board, board.identities[0])) && /发型、领口/.test(sheetInstruction(board, board.identities[0])));
+}
+
 // ---------- 四、场景：带风格圣经 + 禁人 ----------
 console.log('\n场景');
 for (const s of board.scenes) {

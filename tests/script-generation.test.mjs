@@ -22,5 +22,5 @@ test('剧本流式响应必须完成、报告批准模型并有正文', async ()
   await assert.rejects(generateScript(input, { run: run(envelope(SCRIPT_MODEL, 'incomplete')) }), /尚未完成/);
   await assert.rejects(generateScript(input, { run: run(envelope(SCRIPT_MODEL, 'completed', '')) }), /没有返回剧本/);
   await assert.rejects(generateScript(input, { run: () => Promise.reject(new Error('流中断')) }), /流中断/);
-  await assert.rejects(generateScript(input, { model: 'local', run: run(envelope()) }), /模型必须/);
+  await assert.rejects(generateScript(input, { model: SCRIPT_MODEL, run: run(envelope('other')) }), /响应未确认模型/);
 });

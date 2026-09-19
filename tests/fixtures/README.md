@@ -24,8 +24,11 @@
 |---|---|---|
 | `dashixiong-source.json` | 带剧本原文的板子：`story.source` 里有行号、台词、`△` 动作行 | `tests/literal.test.mjs`、`tests/director.test.mjs` |
 | `dashixiong-board.json` | 逐行编译后的板子：2 角色 / 2 造型 / 1 场景 / 14 镜 / 12 句台词（含 2 句 OS） | `tests/assets.test.mjs`、`tests/contract.test.mjs`、`tests/orchestrate.test.mjs` |
-| `legacy-v4-render-plan.json` | 从历史计划缺陷提炼的 v4 迁移样本：情绪已补不等于已人工复核 | `tests/plan-provenance.test.mjs` |
 | `index.mjs` | 夹具入口。**路径规则只有这一个所有者**，测试不要自己拼路径 | 由上述测试 import |
+
+> `legacy-v4-render-plan.json`（v4 迁移样本）已于 2026-09-19 删除：它的唯一引用方
+> `tests/plan-provenance.test.mjs` 随「去掉机器审核」一起删了，之后再无任何测试读它。
+> 需要时从 git 历史取回。
 
 原件来自 `E:\AI-Tool\DeepSeek\story2video\_archive\examples\`（`dashixiong.v2.json` 与
 `dashixiong.literal.json`），**内容未改**，以便需要时能跟原件对上。
@@ -75,9 +78,4 @@ node tests/literal.test.mjs <带剧本原文的板子.json>
 
 `tests/h3-prompt.test.mjs` 使用代码内最小输入，直接覆盖正式 H3 提示词编译器，不读取板子夹具。
 
-`tests/review.test.mjs` 不需要夹具 —— 它的输入（正例和负例）都在临时目录里用 FFmpeg 现造。
-想看真实成片过不过，显式传：
-
-```powershell
-node tests/review.test.mjs --film <成片.mp4> [--board <board.json>]
-```
+`tests/assemble-review.test.mjs` 不需要夹具 —— 它的输入都在临时目录里用 FFmpeg 现造。

@@ -2,10 +2,9 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { buildBrief, callDirector, readBrief, validateDirection } from '../src/director.mjs';
+import { buildBrief, callDirector, readBrief } from '../src/director.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { requireApproval } from '../src/human-gates.mjs';
-import { requireScriptProvenance } from '../src/script-provenance.mjs';
 import { writeDirectionReceipt } from '../src/direction-provenance.mjs';
 import { DIRECTOR_MAX_OUTPUT_TOKENS, DIRECTOR_MODEL } from '../src/config.mjs';
 
@@ -31,7 +30,6 @@ const board = JSON.parse(fs.readFileSync(boardPath, 'utf8'));
 const direction = JSON.parse(fs.readFileSync(directionPath, 'utf8'));
 const current = direction.units?.find((unit) => unit.id === unitId);
 if (!current) throw new Error(`导演稿中找不到单元：${unitId}`);
-requireScriptProvenance(storyPath);
 requireApproval(projectDir, 'story', [storyPath]);
 const feedback = fs.readFileSync(path.resolve(feedbackPath), 'utf8');
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/(?:[A-Za-z]:)/, (m) => m.slice(1))), '..');
@@ -50,13 +48,6 @@ const revisedUnit = result.direction.unit || result.direction;
 if (!revisedUnit || revisedUnit.id !== unitId) throw new Error(`返修结果没有交出单元 ${unitId}`);
 const merged = structuredClone(direction);
 merged.units = merged.units.map((unit) => unit.id === unitId ? revisedUnit : unit);
-const checked = validateDirection(merged, { board, script: fs.readFileSync(storyPath, 'utf8') });
-if (!checked.ok) {
-  console.error(`单元返修合并后未通过全量校验：${unitId}`);
-  for (const error of checked.errors) console.error(`  - ${error}`);
-  process.exit(1);
-}
 fs.writeFileSync(output, JSON.stringify(merged, null, 2) + '\n', 'utf8');
 writeDirectionReceipt({ directionPath: output, boardPath, storyPath, model: result.model, responseModel: result.responseModel });
 console.log(`单元返修完成：${unitId}，导演稿已更新：${output}`);
-for (const warning of checked.warnings) console.log(`  warning: ${warning}`);

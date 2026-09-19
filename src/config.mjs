@@ -10,14 +10,16 @@ export function setting(name, fallback) {
   return process.env[name] || fallback;
 }
 
-export function advancedModel(name, allowed = ['qwen3.8-max']) {
-  const model = setting(name, 'qwen3.8-max');
-  if (!allowed.includes(model)) throw new Error(`${name} 必须是已批准的高级模型 ${allowed.join(' / ')}，收到 ${model}`);
+// 剧本与导演模型不再限定厂商或型号：任何非空字符串都可写入 .env。
+// 来源票照常记录实际请求与响应模型，只是不再拿白名单拦人。
+export function advancedModel(name, fallback = 'qwen3.8-max') {
+  const model = String(setting(name, fallback) || '').trim();
+  if (!model) throw new Error(`${name} 不能为空`);
   return model;
 }
 
 export const SCRIPT_MODEL = advancedModel('AIH_SCRIPT_MODEL');
-export const DIRECTOR_MODEL = advancedModel('AIH_DIRECTOR_MODEL', ['qwen3.8-max', 'glm-5.2']);
+export const DIRECTOR_MODEL = advancedModel('AIH_DIRECTOR_MODEL');
 function positiveInteger(name, fallback) {
   const value = Number(setting(name, fallback));
   if (!Number.isInteger(value) || value < 1) throw new Error(`${name} 必须是正整数`);
@@ -26,8 +28,10 @@ function positiveInteger(name, fallback) {
 export const SCRIPT_MAX_OUTPUT_TOKENS = positiveInteger('AIH_SCRIPT_MAX_OUTPUT_TOKENS', '6000');
 export const DIRECTOR_MAX_OUTPUT_TOKENS = positiveInteger('AIH_DIRECTOR_MAX_OUTPUT_TOKENS', '12000');
 export const BAILIAN_TEXT_TIMEOUT_SECONDS = positiveInteger('AIH_BAILIAN_TEXT_TIMEOUT_SECONDS', '600');
-export const ASSET_PROVIDER = setting('AIH_ASSET_PROVIDER', 'bailian');
-export const KEYFRAME_PROVIDER = setting('AIH_KEYFRAME_PROVIDER', 'bailian');
+// 生图默认走**本地 ComfyUI**（2026-09-19 用户决定：不再依赖线上生图通道）。
+// 线上通道保留为显式覆盖：`--provider bailian` / `AIH_ASSET_PROVIDER=bailian`。
+export const ASSET_PROVIDER = setting('AIH_ASSET_PROVIDER', 'comfyui');
+export const KEYFRAME_PROVIDER = setting('AIH_KEYFRAME_PROVIDER', 'comfyui');
 export const VOLCENGINE_IMAGE_MODEL = setting('AIH_VOLCENGINE_IMAGE_MODEL', 'doubao-seedream-4-5-251128');
 export const ASSET_IMAGE_MODEL = setting('AIH_ASSET_IMAGE_MODEL', 'qwen-image-3.0');
 export const KEYFRAME_IMAGE_MODEL = setting('AIH_KEYFRAME_IMAGE_MODEL', 'qwen-image-3.0-pro');

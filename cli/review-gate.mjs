@@ -4,7 +4,6 @@ import path from 'node:path';
 import { approve, approvalStatus, clipResultPath, planKeyframeFiles, requireAllClips } from '../src/human-gates.mjs';
 import { projectAssetFiles } from '../src/asset-resolver.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
-import { requireScriptProvenance } from '../src/script-provenance.mjs';
 
 installCliErrorHandler();
 
@@ -29,7 +28,6 @@ let files = String(value('artifacts', '')).split(',').filter(Boolean).map((f) =>
 if (!files.length && stage === 'story') files = [path.join(project, 'story.md')].filter(fs.existsSync);
 if (stage === 'story') {
   const story = path.join(project, 'story.md');
-  requireScriptProvenance(story);
   if (files.length !== 1 || files[0] !== story) throw new Error('剧本确认必须绑定本项目的 story.md');
 }
 if (!files.length && stage === 'direction') files = [path.join(project, 'board.direction.json')].filter(fs.existsSync);

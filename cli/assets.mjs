@@ -42,7 +42,6 @@ import { assetPlan, refsOf } from '../src/assets.mjs';
 import { projectAssetFiles } from '../src/asset-resolver.mjs';
 import { provider as getProvider, assetProvider } from '../src/providers/index.mjs';
 import { requireApproval, writeReviewNote } from '../src/human-gates.mjs';
-import { requireDirectionProvenance } from '../src/direction-provenance.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { ASSET_IMAGE_MODEL, LOCAL_IMAGE_STEPS, VOLCENGINE_IMAGE_MODEL } from '../src/config.mjs';
 import { writeGenerationRecord } from '../src/generation-records.mjs';
@@ -80,7 +79,6 @@ if (SKIP_GATE) {
   console.error('⚠ --skip-gate：仅限调试，已跳过资源阶段的上游人工确认');
 } else {
   const directionPath = path.join(PROJ, 'board.direction.json');
-  requireDirectionProvenance({ directionPath, boardPath: BOARD_PATH, storyPath: path.join(PROJ, 'story.md') });
   requireApproval(PROJ, 'direction', [directionPath]);
 }
 

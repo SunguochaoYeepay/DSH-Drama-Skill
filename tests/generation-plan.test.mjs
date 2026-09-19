@@ -124,3 +124,59 @@ test('连续性状态契约保留到生成单元', () => {
   assert.equal(unit.end_state, '人物继续趴地');
   assert.notEqual(unit.continuity, continuity);
 });
+
+test('reference_previous 同样做导演单元到生成单元的 ID 翻译', () => {
+  const direction = { version: 6, units: [
+    { id: 'u1', end_state: '人物闭眼', continuity: { mode: 'independent', reason: '开场' }, shots: [shot(1, 0, 5, ['a'])] },
+    { id: 'u2', continuity: { mode: 'reference_previous', previous_unit: 'u1', handoff_state: '人物仍在原地' }, shots: [shot(1, 0, 5, ['a'])] },
+  ] };
+  const unit = compileGenerationPlan(direction).units[1];
+  assert.equal(unit.continuity.mode, 'reference_previous');
+  assert.equal(unit.continuity.previous_unit, 'g001');
+  assert.equal(unit.continuity.previous_source_unit, 'u1');
+});
+
+const threeUnits = () => ({ version: 6, units: [
+  { id: 'u1', shots: [shot(1, 0, 3, ['a'])] },
+  { id: 'u2', shots: [shot(1, 3, 3, ['a'])] },
+  { id: 'u3', shots: [shot(1, 6, 4, ['a'])] },
+] });
+
+test('手工边界：指定哪些导演单元合并成一个生成单元', () => {
+  const plan = compileGenerationPlan(threeUnits(), {
+    groups: [{ source_units: ['u1', 'u2'] }, { source_units: ['u3'] }],
+  });
+  assert.equal(plan.units.length, 2);
+  assert.equal(plan.units[0].content_duration_s, 6);
+  assert.equal(plan.units[1].content_duration_s, 4);
+  // 自动切分下 u1/u2/u3 会因导演单元边界各成一组，这里是 2 组 —— 证明手工边界真的生效
+  assert.equal(compileGenerationPlan(threeUnits()).units.length, 3);
+  assert.equal(plan.policy.manual_boundaries, true);
+  assert.equal(plan.policy.director_owns_unit_boundaries, false);
+});
+
+test('手工边界可直写生成时长，突破自动钳制', () => {
+  const plan = compileGenerationPlan(threeUnits(), {
+    groups: [{ source_units: ['u3'], generation_duration_s: 9.5 }],
+  });
+  const u3 = plan.units.find((u) => u.source_units.includes('u3'));
+  assert.equal(u3.content_duration_s, 4);
+  // 自动切分会把 4 秒内容补到 5.17 秒预算；手工指定则原样采用，不做上下钳制
+  assert.equal(u3.generation_duration_s, 9.5);
+  assert.equal(compileGenerationPlan(threeUnits()).units.find((u) => u.source_units.includes('u3')).generation_duration_s, 5.17);
+});
+
+test('手工边界未提到的导演单元各自成组，不静默丢镜头', () => {
+  const plan = compileGenerationPlan(threeUnits(), { groups: [{ source_units: ['u1'] }] });
+  assert.equal(plan.units.length, 3);
+  const shotCount = plan.units.reduce((n, u) => n + (u.shots?.length || 0), 0);
+  assert.equal(shotCount, 3);
+  assert.deepEqual(plan.units.map((u) => u.source_units), [['u1'], ['u2'], ['u3']]);
+});
+
+test('手工边界引用不存在的导演单元时报错，不静默忽略', () => {
+  assert.throws(
+    () => compileGenerationPlan(threeUnits(), { groups: [{ source_units: ['u1', '不存在的单元'] }] }),
+    /不存在的单元|没有|找不到/,
+  );
+});

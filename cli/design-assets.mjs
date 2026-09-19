@@ -2,7 +2,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { buildSceneDesign, buildCharacterDesign, designReceipt } from '../src/asset-designers.mjs';
-import { requireDirectionProvenance } from '../src/direction-provenance.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 
 installCliErrorHandler();
@@ -12,7 +11,6 @@ const boardPath = path.resolve(argv.find((x) => x.endsWith('.json') && !x.starts
 const out = path.resolve(value('out') || path.join(path.dirname(boardPath), 'asset-design.json'));
 if (!boardPath || !fs.existsSync(boardPath)) throw new Error('用法：node cli/design-assets.mjs <board.json> [--out asset-design.json]');
 const project = path.dirname(boardPath);
-requireDirectionProvenance({ directionPath: path.join(project, 'board.direction.json'), boardPath, storyPath: path.join(project, 'story.md') });
 const board = JSON.parse(fs.readFileSync(boardPath, 'utf8'));
 const designs = [
   ...(board.scenes || []).map((scene) => buildSceneDesign(board, scene)),

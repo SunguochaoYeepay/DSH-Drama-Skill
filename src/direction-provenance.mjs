@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { sha256 } from './script-provenance.mjs';
-import { DIRECTOR_MODEL } from './config.mjs';
 
 export function directionReceiptPath(directionPath) {
   return `${path.resolve(directionPath)}.provenance.json`;
@@ -30,10 +29,10 @@ function boardIdentity(boardPath) {
   return sha256(Buffer.from(JSON.stringify(directorBoardView(JSON.parse(fs.readFileSync(boardPath, 'utf8'))))));
 }
 
-export function writeDirectionReceipt({ directionPath, boardPath, storyPath, model, responseModel }) {
-  if (model !== DIRECTOR_MODEL || responseModel !== DIRECTOR_MODEL) throw new Error('导演模型来源不能核验');
+export function writeDirectionReceipt({ directionPath, boardPath, storyPath, model, responseModel, provider = 'bailian' }) {
+  if (!model || model !== responseModel) throw new Error('导演请求与响应模型必须一致且非空');
   const receipt = {
-    contract: 1, provider: 'bailian', model, response_model: responseModel,
+    contract: 1, provider, model, response_model: responseModel,
     board_sha256: sha256(fs.readFileSync(boardPath)),
     board_identity_sha256: boardIdentity(boardPath),
     story_sha256: sha256(fs.readFileSync(storyPath)),
@@ -44,25 +43,27 @@ export function writeDirectionReceipt({ directionPath, boardPath, storyPath, mod
   return receipt;
 }
 
-export function requireDirectionProvenance({ directionPath, boardPath, storyPath }) {
-  const file = directionReceiptPath(directionPath);
-  if (!fs.existsSync(file)) throw new Error(`导演来源未登记：${file}；旧导演稿不能倒填，请重新调用高级模型`);
-  const receipt = JSON.parse(fs.readFileSync(file, 'utf8'));
-  if (receipt.contract !== 1 || receipt.provider !== 'bailian' || receipt.model !== DIRECTOR_MODEL || receipt.response_model !== DIRECTOR_MODEL) {
-    throw new Error('导演来源模型不是已批准的高级模型');
-  }
-  if (receipt.board_identity_sha256) {
-    if (receipt.board_identity_sha256 !== boardIdentity(boardPath)) throw new Error('导演来源票据失效：board 语义内容已变化');
-  } else if (receipt.board_sha256 !== sha256(fs.readFileSync(boardPath))) {
-    // One-time compatibility path for receipts created before resource fields
-    // were separated from the director input. Keep the old hash for audit.
-    receipt.board_identity_sha256 = boardIdentity(boardPath);
-    receipt.migrated_at = new Date().toISOString();
-    receipt.migration = 'legacy-full-board-hash-to-director-input-identity';
-    fs.writeFileSync(file, JSON.stringify(receipt, null, 2) + '\n');
-  }
-  for (const [name, target] of [['story', storyPath], ['direction', directionPath]]) {
-    if (receipt[`${name}_sha256`] !== sha256(fs.readFileSync(target))) throw new Error(`导演来源票据失效：${name} 已变化`);
-  }
+/**
+ * Agent 在对话里直写导演稿的来源票 —— 与剧本的 `agent_draft` 对称。
+ *
+ * 与 `writeDirectionReceipt` 的唯一区别：**没有模型响应可核验**，所以
+ * `model` / `response_model` 都是 `null`，作者由 `authored_by` 声明。
+ * **两条来源不得互相冒充**：真的调了模型就必须走 `writeDirectionReceipt`。
+ *
+ * 票据只作留痕（见 `src/plan-provenance.mjs` 的「有票就记哈希，没有票也不拦」），
+ * 能不能进入下一阶段仍只由人工票决定。
+ */
+export function writeAgentDirectionReceipt({ directionPath, boardPath, storyPath, authoredBy = 'agent' }) {
+  const author = String(authoredBy || '').trim();
+  if (!author) throw new Error('Agent 直写导演稿必须声明 authored_by');
+  const receipt = {
+    contract: 1, provider: 'agent_draft', model: null, response_model: null, authored_by: author,
+    board_sha256: sha256(fs.readFileSync(boardPath)),
+    board_identity_sha256: boardIdentity(boardPath),
+    story_sha256: sha256(fs.readFileSync(storyPath)),
+    direction_sha256: sha256(fs.readFileSync(directionPath)),
+    recorded_at: new Date().toISOString(),
+  };
+  fs.writeFileSync(directionReceiptPath(directionPath), JSON.stringify(receipt, null, 2) + '\n');
   return receipt;
 }

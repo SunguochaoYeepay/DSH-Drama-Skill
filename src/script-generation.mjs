@@ -3,7 +3,6 @@ import { extractText } from './director.mjs';
 import { runVerifiedTextResponse } from './providers/bailian-responses.mjs';
 
 export async function generateScript(input, { run = runVerifiedTextResponse, model = SCRIPT_MODEL } = {}) {
-  if (model !== SCRIPT_MODEL) throw new Error(`剧本模型必须是 ${SCRIPT_MODEL}`);
   const response = await run({
     model, maxTokens: SCRIPT_MAX_OUTPUT_TOKENS, reasoningEffort: 'low', timeoutMs: BAILIAN_TEXT_TIMEOUT_SECONDS * 1000,
     messages: [

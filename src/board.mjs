@@ -17,13 +17,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildBrief, readBrief, callDirector, validateDirection, collectDialogueLines, DIRECTOR_MODEL } from './director.mjs';
-import { requireScriptProvenance } from './script-provenance.mjs';
-import { writeDirectionReceipt } from './direction-provenance.mjs';
 import { requireApproval } from './human-gates.mjs';
 import { parseScenes, sceneMenu } from './parse-scenes.mjs';
 import { compileLiteral } from './literal.mjs';
-import { applyDirection } from './direction-shots.mjs';
 import { COMFY_GEN, COMFY_PYTHON } from './runtime-paths.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -1116,114 +1112,14 @@ async function main() {
 
   // ── 🎬 导演：让 AI 导演做镜头设计 ──────────────────────────────
   //
-  // 这一步取代了原来"一行动作 = 一个镜头"的机械切分。
-  // 剧本里**只有台词**归代码（逐字搬），**镜头怎么排**归导演。
-  //
-  // 产出先过校验器（≤15s / 行号 / 人物引用 / **台词原文死线**），
-  // 通过了才写回板子。**不允许"差不多对"。**
-  if (cmd === 'direct') {
-    const file = args._[1];
-    if (!file) die('用法：direct <board.json> [--script story.md] [--model qwen3.8-max] [--dry-run]');
-    if (!fs.existsSync(file)) die(`找不到板子：${file}`);
-    const board = JSON.parse(fs.readFileSync(file, 'utf8'));
-
-    // 剧本：显式给 > 同目录 story.md
-    const scriptPath = typeof args.script === 'string' ? args.script : path.join(path.dirname(file), 'story.md');
-    if (!fs.existsSync(scriptPath)) die(`找不到剧本：${scriptPath}`);
-    requireScriptProvenance(scriptPath);
-    requireApproval(path.dirname(path.resolve(file)), 'story', [scriptPath]);
-    const script = fs.readFileSync(scriptPath, 'utf8');
-
-    const prompt = buildBrief({ briefText: readBrief(PROJECT_ROOT), board, script });
-    console.log(`导演简报 ${prompt.length} 字　剧本 ${script.split(/\r?\n/).length} 行`);
-    const dlg = collectDialogueLines(board, script.split(/\r?\n/));
-    console.log(`台词 ${dlg.size} 句（第 ${[...dlg.keys()].join('、')} 行）—— 导演只能引用行号，不许写原文`);
-
-    if (args['dry-run']) {
-      const out = file.replace(/\.json$/, '.director-prompt.txt');
-      fs.writeFileSync(out, prompt);
-      console.log(`\n--dry-run：简报写到 ${out}（${prompt.length} 字），没调用模型`);
-      return;
-    }
-
-    console.log(`\n请导演（${args.model || DIRECTOR_MODEL}）…`);
-    const r = await callDirector(prompt, { model: args.model });
-    if (!r.ok) die(`✗ 导演没交出东西：${r.error}`);
-    console.log(`  模型回复用了 ${r.seconds} 秒`);
-
-    const v = validateDirection(r.direction, { board, script });
-    const raw = file.replace(/\.json$/, '.direction.json');
-    if (v.ok) {
-      fs.writeFileSync(raw, JSON.stringify(r.direction, null, 2) + '\n');
-      writeDirectionReceipt({ directionPath: raw, boardPath: file, storyPath: scriptPath, model: r.model, responseModel: r.responseModel });
-    }
-    console.log(`  设计写到 ${path.basename(raw)}`);
-    console.log(`  单元 ${r.direction.units?.length || 0} 个，镜头 ${(r.direction.units || []).reduce((n, u) => n + (u.shots || []).length, 0)} 个`);
-
-    for (const w of v.warnings) console.log(`  ⚠ ${w}`);
-    for (const e of v.errors) console.log(`  ✗ ${e}`);
-    if (!v.ok) {
-      console.error(`\n✗ 校验不通过（${v.errors.length} 项）—— 设计没写回板子。`);
-      console.error('  改 BRIEF.md 或让导演重做，不要手改他的产出。');
-      process.exit(1);
-    }
-    console.log('\n✓ 校验通过。');
-    console.log(`  下一步：node src/board.mjs apply-direction ${path.basename(file)}`
-      + '　← 把设计写回 board.shots（关键帧/片段都读它）');
-    return;
+  // ── 导演（已停用）──────────────────────────────────────────────
+  // `direct` / `apply-direction` 是 cli/direct.mjs 之前的旧入口，
+  // 与之绑定的 validateDirection 机器校验已随「去掉 QA 机器人审核」一并移除。
+  if (cmd === 'direct' || cmd === 'apply-direction') {
+    die(`direct / apply-direction 已停用：请用 node cli/direct.mjs <board.json> --story story.md --out board.direction.json。导演稿不再跑机器校验，是否放行由人工审阅决定。`);
   }
-
-  // ── 导演的设计 → board.shots ────────────────────────────────────
-  // `direct` 交完设计后一直断在这里（它自己打印的是「还没实现」）。
-  // 没有这一步，关键帧 / 片段 / table / 成片自检读的全是 literal 的机械分组，
-  // **导演的活儿从没进过契约**。
-  if (cmd === 'apply-direction') {
-    const file = args._[1];
-    if (!file) die('用法：apply-direction <board.json> [--direction board.direction.json]');
-    if (!fs.existsSync(file)) die(`找不到板子：${file}`);
-    const dirPath = typeof args.direction === 'string'
-      ? args.direction
-      : file.replace(/\.json$/, '.direction.json');
-    if (!fs.existsSync(dirPath)) die(`找不到导演设计：${dirPath}（先跑 board.mjs direct）`);
-
-    const scriptPath = typeof args.script === 'string' ? args.script : path.join(path.dirname(file), 'story.md');
-    if (!fs.existsSync(scriptPath)) die(`找不到剧本：${scriptPath}`);
-    const script = fs.readFileSync(scriptPath, 'utf8');
-
-    const input = JSON.parse(fs.readFileSync(file, 'utf8'));
-    const direction = JSON.parse(fs.readFileSync(dirPath, 'utf8'));
-
-    // 先按导演校验器过一遍：越界的（超 15s / 台词太短 / 写了台词原文）一律不写板子
-    const v = validateDirection(direction, { board: input, script });
-    for (const w of v.warnings) console.log(`  ⚠ ${w}`);
-    if (!v.ok) {
-      for (const e of v.errors) console.error(`  ✗ ${e}`);
-      die(`导演设计校验不通过（${v.errors.length} 项），拒绝写回板子`);
-    }
-
-    const before = (input.shots || []).length;
-    const { board: next, report, warnings } = applyDirection(input, direction, script);
-    fs.writeFileSync(file, JSON.stringify(next, null, 2) + '\n');
-    for (const w of warnings) console.log(`  ⚠ ${w}`);
-    console.log(`✓ 设计已写回：${report.units} 个生成单元 → ${before} 镜机械分镜 变为 ${report.shots} 镜 / ${report.total_duration_s}s`);
-    console.log(`  台词 ${report.claimed}/${report.spoken} 句被单元认领`);
-    // 闸门不自动重开：作废 shots 会连带 assets 变成"跳着批"（顺序违规），
-    // 而资产本身跟分镜无关、不需要重出。所以只喊出来，让人自己再确认一次。
-    if (next.meta?.approvals?.shots) {
-      console.log('  ⚠ shots 闸门上的票是对**旧分镜**的确认。这里不自动作废（作废会让 assets 顺序违规），');
-      console.log('    请重看一遍分镜表再确认一次：'
-        + `node src/board.mjs approve ${file} --stage shots --by <你的名字>`);
-    }
-
-    const { errors, warnings: w2 } = checkBoard(next);
-    for (const w of w2) console.log(`  warning: ${w}`);
-    for (const e of errors) console.error(`  ERROR: ${e}`);
-    if (errors.length) process.exitCode = 2;
-    return;
-  }
-
   // ── 闸门 1：故事 ────────────────────────────────────────────────
-  if (cmd === 'story') die('旧 story 梗概入口已停用；完整剧本请用 node cli/script.mjs generate --input <素材> --out <项目/story.md>（百炼 qwen3.8-max）');
+  if (cmd === 'story') die('旧 story 梗概入口已停用；完整剧本请用 node cli/script.mjs generate --input <素材> --out <项目/story.md>（模型由 .env 的 AIH_SCRIPT_MODEL 指定）');
 
   // ── 人工确认：放行一个闸门 ──────────────────────────────────────
   if (cmd === 'approve') {

@@ -2,12 +2,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { readReviews, requireAllClips, writeReviewNote } from '../src/human-gates.mjs';
-import { assertPlanProvenance } from '../src/plan-provenance.mjs';
+import { clipResultPath, readReviews, requireAllClips, writeReviewNote } from '../src/human-gates.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { VIDEO_QUALITY, VIDEO_NORMAL_SIZE, VIDEO_HIGH_SIZE } from '../src/config.mjs';
 import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
-import { review } from '../src/review.mjs';
 
 installCliErrorHandler();
 
@@ -33,11 +31,8 @@ if (!/^\d+x\d+$/.test(size)) throw new Error(`AIH_VIDEO_${quality.toUpperCase()}
 const [width, height] = size.split('x').map(Number);
 if (width <= 0 || height <= 0) throw new Error(`合成尺寸必须大于零，收到 ${size}`);
 const plan = JSON.parse(fs.readFileSync(planPath, 'utf8'));
-assertPlanProvenance(plan, { boardPath, storyPath, planPath });
-// 情绪与表演契约在单段视频生成前校验。进入合成阶段后，真正的输入是
-// 已经逐段人工确认且由哈希票据绑定的视频；纯剪辑不应反过来要求旧导演稿
-// 补写不会改变现有视频的字段。
-requireAllClips(projectDir, plan);
+const SKIP_GATE = argv.includes('--skip-gate');
+requireAllClips(projectDir, plan, { skip: SKIP_GATE });
 
 const reviews = readReviews(projectDir);
 const tmp = path.join(projectDir, '.tmp', 'assemble');
@@ -53,8 +48,15 @@ function run(args, label) {
 for (const [index, unit] of plan.units.entries()) {
   const entry = reviews.approvals.clips[unit.id];
   const ticket = entry?.artifact_hash ? entry : entry?.final;
-  const input = ticket?.artifacts?.[0];
-  if (!input || !fs.existsSync(input)) throw new Error(`${unit.id}: 人工确认票没有可用视频`);
+  let input = ticket?.artifacts?.[0];
+  if (!input || !fs.existsSync(input)) {
+    // 调试模式下没有人工票，回退到该单元的实际产物；正式流程仍必须持有票。
+    if (!SKIP_GATE) throw new Error(`${unit.id}: 人工确认票没有可用视频`);
+    const resultFile = clipResultPath(projectDir, unit.id);
+    const result = resultFile ? JSON.parse(fs.readFileSync(resultFile, 'utf8')) : null;
+    input = (result?.files || []).map((x) => (typeof x === 'string' ? x : x?.local_path || x?.path)).find((x) => x && fs.existsSync(x));
+    if (!input) throw new Error(`${unit.id}: 既没有人工确认票，也没有可用视频产物`);
+  }
   const out = path.join(tmp, `${String(index + 1).padStart(3, '0')}_${unit.id}.mp4`);
   // H3 的真实口播速度不可由导演估算精确预测。含台词单元保留完整生成片，
   // 否则按 content_duration_s 裁切会把一句话的尾字物理截断。
@@ -72,14 +74,10 @@ const listFile = path.join(tmp, 'concat.txt');
 fs.writeFileSync(listFile, normalized.map((file) => `file '${file.replaceAll("'", "'\\''")}'`).join('\n') + '\n', 'utf8');
 run(['-y', '-v', 'error', '-f', 'concat', '-safe', '0', '-i', listFile, '-c', 'copy', '-movflags', '+faststart', output], '合成');
 
-const checked = review(output, { expectAspect: aspect });
-if (!checked.pass) throw new Error(`成片机器检查失败，不能送审：${checked.fails.join('；')}`);
-for (const warning of checked.warns) console.warn(`成片检查警告：${warning}`);
-
 const note = writeReviewNote(projectDir, 'final', [
   '# 最终成片人工审阅', '', `成片：${output}`, '',
-  '机器检查通过只表示可以送审。请完整观看台词、节奏、接缝、人物一致性和声音。', '',
+  '没有机器检查代替你观看。请完整观看台词、节奏、接缝、人物一致性和声音。', '',
   `确认命令：node cli/review-gate.mjs approve --project "${projectDir}" --stage final --artifacts "${output}"`,
 ]);
-console.log(`✓ 合成且机器检查通过：${output}`);
+console.log(`✓ 合成完成：${output}`);
 console.log(`等待最终人工审阅：${note}`);

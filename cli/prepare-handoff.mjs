@@ -15,7 +15,8 @@ const planFile = path.resolve(flag('plan', 'render.plan.json'));
 const project = path.dirname(planFile);
 const unitId = flag('unit');
 const offset = Number(flag('tail-offset', '0.35'));
-if (!unitId || !Number.isFinite(offset) || offset <= 0) throw new Error('用法：node cli/prepare-handoff.mjs --plan <render.plan.json> --unit <下一单元> [--tail-offset 0.35]');
+const SKIP_GATE = argv.includes('--skip-gate');
+if (!unitId || !Number.isFinite(offset) || offset <= 0) throw new Error('用法：node cli/prepare-handoff.mjs --plan <render.plan.json> --unit <下一单元> [--tail-offset 0.35] [--skip-gate]');
 const plan = JSON.parse(fs.readFileSync(planFile, 'utf8'));
 const unit = (plan.units || []).find((x) => x.id === unitId);
 if (!unit || !['reference_previous', 'continue_previous'].includes(unit.continuity?.mode)) throw new Error(`${unitId}: 不是导演标记的前段尾帧参考单元`);
@@ -25,7 +26,7 @@ if (!resultFile) throw new Error(`上一段 ${sourceUnit} 尚未生成`);
 const result = JSON.parse(fs.readFileSync(resultFile, 'utf8'));
 const clip = (result.files || []).map((x) => typeof x === 'string' ? x : x?.local_path || x?.path).find((x) => x && fs.existsSync(x));
 if (!clip) throw new Error(`上一段 ${sourceUnit} 没有有效视频产物`);
-requireApproval(project, 'clip', [clip], { id: sourceUnit });
+requireApproval(project, 'clip', [clip], { id: sourceUnit, skip: SKIP_GATE });
 
 let ffmpeg = 'ffmpeg';
 try {

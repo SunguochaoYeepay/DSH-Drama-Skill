@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { compileLiteral } from '../src/literal.mjs';
 import { checkBoard } from '../src/board.mjs';
-import { requireScriptProvenance } from '../src/script-provenance.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 
 installCliErrorHandler();
@@ -23,7 +22,6 @@ if (path.basename(output) !== 'board.json' || path.dirname(storyPath) !== path.d
   throw new Error('story.md 和 board.json 必须位于同一项目目录');
 }
 if (fs.existsSync(output)) throw new Error(`板子已存在，拒绝覆盖：${output}`);
-requireScriptProvenance(storyPath);
 const source = fs.readFileSync(storyPath, 'utf8');
 const brief = JSON.parse(fs.readFileSync(briefPath, 'utf8'));
 const meta = brief.meta || {};

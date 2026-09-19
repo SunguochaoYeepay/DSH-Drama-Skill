@@ -44,6 +44,7 @@
 | 命令不报错、退出码 0，但没有任何产物 | 是否经了 `bl.ps1`（PowerShell 包装器） |
 | 等满超时才失败，错误信息是「bl 退出码 null」，stderr 为空 | 同上；`shell: true` 启动了 PowerShell 但子进程没起来 |
 | 图片通道能跑、导演通道不能跑 | 两个通道的调用方式不一致 —— 图片走 `runBailian`，导演曾走 `spawn('bl', {shell:true})` |
+| 导演调用跑满 5–6 分钟后报 `max_output_tokens`，没有任何产物 | 单次输出的额度被耗尽。**两条路都实测过**：① `node cli/direct.mjs <board.json> --batched` —— 先紧凑规划单元、再逐单元设计，走 JSON Schema 结构化输出，`mimi_bone`（2026-09-19）实测 **29 秒成功**；② 加大 `--max-tokens` —— `ant_crumb_20260919`（同日）用 `--max-tokens 30000`、**276 秒成功**。**优先 ①**：更快更省，且不必把额度翻倍；见 [`workflow.md`](workflow.md) 的「导演分批模式」|
 
 ### 票据「产物已变化」但文件没动
 
@@ -59,6 +60,14 @@
 
 `cli/keyframes.mjs` 把通道草稿复制到计划槽位；`review-gate --stage keyframes` 根据计划槽位签票，`cli/unit.mjs` 使用同一清单。不要手工签 `keyframes_bailian/` 草稿；若提示产物变化，检查计划槽位是否重新生成或被替换。
 前段尾帧参考单元（`continuity.mode = reference_previous` 或 `continue_previous`）的关键帧路径取自交接记录，不是计划 —— 签票前按实际清单核一遍。
+
+### 「响应未完成」时看不到 token 花在哪
+
+流式文本通道收到 `response.incomplete` / `response.failed` 事件时，**只抛一个 reason 字符串**（例如 `max_output_tokens`），把同一个事件里的 `usage` 和已生成的正文一起丢掉。于是"额度被推理链吃掉"和"输出正文本身过长"这两种成因**完全无法区分** —— 而两者的处置方式相反（前者要降推理或换通道，后者要拆任务）。
+
+**要定位就先把它带出来**：不完整事件里 `usage.output_tokens_details.reasoning_tokens` 直接回答是不是推理撞顶；`output[]` 各项的 `type` 与字符数说明已经产出到哪一步；正文尾部能看出是不是断在 JSON 中间。
+
+**来历**：`mimi_bone`（2026-09-19）首次导演调用跑 307 秒后报 `max_output_tokens`，输出 token 花了钱却拿不到任何可诊断信息，只能改用分批模式绕开，成因至今未确证。
 
 ## 进程与日志
 

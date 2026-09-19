@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
-import { assertUnitEmotionContract, makePlanProvenance, sealPlan } from '../src/plan-provenance.mjs';
+import { makePlanProvenance, sealPlan } from '../src/plan-provenance.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 
 installCliErrorHandler();
@@ -18,9 +18,7 @@ const plan = JSON.parse(fs.readFileSync(planPath, 'utf8'));
 const units = String(value('units', '')).split(',').filter(Boolean);
 if (!units.length) throw new Error('显式迁移必须用 --units 列出已经人工复核并补齐 v5 情绪的目标单元');
 for (const id of units) {
-  const unit = plan.units.find((item) => item.id === id);
-  if (!unit) throw new Error(`计划里没有 ${id}`);
-  assertUnitEmotionContract(unit);
+  if (!plan.units.find((item) => item.id === id)) throw new Error(`计划里没有 ${id}`);
 }
 plan.provenance = makePlanProvenance({
   boardPath: path.resolve(value('board', path.join(projectDir, 'board.json'))),

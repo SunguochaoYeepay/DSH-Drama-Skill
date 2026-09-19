@@ -23,9 +23,16 @@ function rejected(script, args, expected) {
   assert.doesNotMatch(result.stderr, /\n\s*at |ModuleJob\.run|node:internal/);
 }
 
-rejected('compile-units.mjs', [direction], /错误：拒绝编译历史导演稿 v4/);
-rejected('unit.mjs', [board, '--direction', plan, '--unit', 'g001', '--dry-run'], /错误：生成计划没有项目身份证/);
-rejected('assemble-units.mjs', [plan], /错误：生成计划没有项目身份证/);
+// 机器检查已全部移除：旧导演稿、缺身份证的计划都不再由代码拒绝。
+// 人工闸门仍在（见下面 keyframes 的断言）。
+function noLongerRejected(script, args, forbidden) {
+  const result = spawnSync(process.execPath, [path.join(root, 'cli', script), ...args], { encoding: 'utf8' });
+  assert.doesNotMatch(result.stderr, forbidden, `${script} 不应再因机器检查拒绝`);
+}
+
+noLongerRejected('compile-units.mjs', [direction], /拒绝编译历史导演稿/);
+noLongerRejected('unit.mjs', [board, '--direction', plan, '--unit', 'g001', '--dry-run'], /项目身份证|机器检查/);
+noLongerRejected('assemble-units.mjs', [plan], /项目身份证|机器检查/);
 
 const asset = path.join(dir, 'portrait.png');
 fs.writeFileSync(asset, 'portrait');
@@ -44,14 +51,7 @@ const assetApprove = spawnSync(process.execPath, [path.join(root, 'cli', 'review
 assert.equal(assetApprove.status, 0, assetApprove.stderr);
 assert.match(assetApprove.stdout, /人工确认已记录：assets/);
 
-// 默认视频档必须真的是 FastVideo FastH3 单首帧，不能因内部步数默认值退化成 r2v。
-const unitSource = fs.readFileSync(path.join(root, 'cli', 'unit.mjs'), 'utf8');
-assert.match(unitSource, /return VIDEO_PROFILE;/);
-assert.match(unitSource, /args\.push\('--attention', ATTENTION\)/);
-assert.match(unitSource, /flag\('attention', VIDEO_ATTENTION\)/);
-assert.doesNotMatch(unitSource, /const STEPS = Number\(flag\('steps', 4\)\)/);
-assert.match(fs.readFileSync(path.join(root, 'src', 'config.mjs'), 'utf8'), /VIDEO_TIMEOUT_SECONDS < 1 \|\| VIDEO_TIMEOUT_SECONDS > 600/);
-assert.match(unitSource, /'--timeout', String\(VIDEO_TIMEOUT_SECONDS\)/);
-assert.doesNotMatch(unitSource, /timeout: 1800000/);
+// 视频档位/超时那部分断言已移走：那属于「生成配置」，且已改成跑 dry-run 验实际档位
+// （见 tests/generation-config.test.mjs），不再靠正则查源码里写没写那行参数。
 
-console.log('cli errors: 11/11 passed');
+console.log('cli errors: 5/5 passed');
