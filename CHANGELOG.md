@@ -2,6 +2,22 @@
 
 记录工程级行为变化。具体剧目的抽卡结果、耗时和逐帧评价留在对应项目目录，不写入这里。
 
+## 2026-09-19 - 清死代码：删 direction-shots.mjs 与两个零引用导出
+
+全仓引用扫描（src / cli / tests / references / 根目录 md）确认后删除：
+
+- `src/direction-shots.mjs`（181 行）：`board.mjs direct` / `apply-direction` 停用后，`applyDirection`
+  再无调用方，只剩 CHANGELOG 一行提到它。旧导演入口的最后一块实现，需要时从 git 历史取。
+- `src/human-gates.mjs` 的 `legacyApproval()`：读 `board.meta.approvals[stage]` 的旧票格式，
+  当前闸门只认 `review.approvals.json`，零调用方。
+- `src/director-batch.mjs` 的 `planningPrompt()`：已被 `compactPlanningPrompt()` 取代，
+  分批路径现在只调后者。
+
+保留不动（不是僵尸，是「还没接线的能力」或模块公共 API）：
+`src/providers/bailian.mjs` 的 `speak()`（TTS 合成，流水线尚未接配音）、
+`src/providers/index.mjs` 的 `keyframeProvider()` / `AVAILABLE`（通道索引对外 API）、
+`src/plan-provenance.mjs` 的 `MIN_DIRECTOR_VERSION`、`src/migrate.mjs`（旧契约板子的一次性迁移工具）。
+
 ## 2026-09-19 - 剧本与导演稿默认由对话 Agent 直写，调外部模型降为可选
 
 起因：用户再次明确「剧本及后续不需要用 qwen-max 大模型去写剧本和分析，当前对话模型做就好」。
@@ -73,7 +89,7 @@
 
 - `src/board.mjs direct` / `apply-direction` 停用，改用 `cli/direct.mjs`。这两个子命令是 `cli/direct.mjs`
   之前的旧入口，README / workflow 早已不提，但代码一直活着，是「两套导演入口」的历史遗留。
-- 连带 `src/direction-shots.mjs` 的 `applyDirection` 变为零引用（文件保留，未删）。
+- 连带 `src/direction-shots.mjs` 的 `applyDirection` 变为零引用；该文件已于当日清理删除（见下）。
 
 ### 删除已无调用方的校验代码
 

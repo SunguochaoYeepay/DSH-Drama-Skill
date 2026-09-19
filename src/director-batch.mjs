@@ -22,10 +22,6 @@ const UNIT_SCHEMA = {
   schema: { type: 'object', required: ['unit'], properties: { unit: { type: 'object', additionalProperties: true } }, additionalProperties: false },
 };
 
-export function planningPrompt(basePrompt) {
-  return `${basePrompt}\n\n你现在只做导演单元规划，不设计镜头。输出严格 JSON：{"version":1,"units":[{"id":"u1","source_lines":[1,2],"boundary_trigger":"opening","reason":"..."}]}。根据连续表演、场景/身份变化、高风险动作和台词完整性决定单元数量，不要为了凑数量切分。source_lines 使用剧本行号；每句台词只能归属一个单元。只交 JSON。`;
-}
-
 export function compactPlanningPrompt({ script, board }) {
   const scenes = (board.scenes || []).map((s) => `${s.scene_no}:${s.id}`).join('; ');
   const scriptText = String(script).split(/\r?\n/).map((line, i) => `${i + 1}: ${line}`).join('\n');

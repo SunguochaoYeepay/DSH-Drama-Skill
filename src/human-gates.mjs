@@ -88,10 +88,6 @@ export function approve(projectDir, stage, files, { id = null, by = '用户' } =
   return ticket;
 }
 
-export function legacyApproval(board, stage) {
-  if (!board.meta?.approvals?.[stage]) throw new Error(`人工闸门未通过：${stage} 尚未确认`);
-}
-
 export function writeReviewNote(projectDir, stage, lines) {
   const dir = path.join(projectDir, 'reviews');
   fs.mkdirSync(dir, { recursive: true });
