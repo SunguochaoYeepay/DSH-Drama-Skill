@@ -2,6 +2,20 @@
 
 记录工程级行为变化。具体剧目的抽卡结果、耗时和逐帧评价留在对应项目目录，不写入这里。
 
+## 2026-09-19 - 干跑改打印真实命令，装配层终于有行为测试
+
+之前 `--dry-run` 在**构造参数之前**就退出了，干跑只能复述一遍变量（`PROFILE` / `ATTENTION` / `VIDEO_TIMEOUT_SECONDS`）——
+那样证明不了这些值真的传到了 `gen.py` 或生图通道。配置导出的值对，和它真的被传下去，是两件事。
+
+- `cli/unit.mjs`：把 `gen.py` 的 argv 构造提到干跑检查之前，干跑打印**将要执行的那条命令本身**
+  （`--profile fast --attention vsa --width 480 --height 864 --timeout 600`）。
+  顺带修一个隐藏问题：首帧缺失时 args 里是 `null`，原来的 `a.length` 会让这行打印直接崩掉
+  —— 以前只在 `--show-args` 下才执行，从没暴露过。
+- `cli/assets.mjs`：把传给通道的参数抽成 `providerArgsFor()`，真实调用和干跑**共用同一个函数**，
+  干跑逐项打印 `ratio / n / steps / style / images`。
+- 测试新增 2 条（合计 8 条）：env 的 `AIH_VIDEO_TIMEOUT_SECONDS` 真的出现在 argv 里；
+  本地生图 `steps=8` 真的进了通道参数、`cartoon3d` 真的映射成 `anime`、图生图分支不带 `style`。
+
 ## 2026-09-19 - 清死代码：删 direction-shots.mjs 与两个零引用导出
 
 全仓引用扫描（src / cli / tests / references / 根目录 md）确认后删除：

@@ -143,7 +143,7 @@ function localStyleFor(job) {
  * 传错不会报错，只会静默走通道默认画幅（本地默认 1024×576 横屏），
  * 竖屏项目会整批落错位 —— 所以这里显式映射，不留默认。
  */
-function callProvider(p, job, outDir, images) {
+function providerArgsFor(p, job, outDir, images) {
   const ratio = job.size || '1:1';
   if (p.name === 'comfyui') {
     const common = { ratio, n: N, outDir, prefix: job.id };
@@ -151,13 +151,20 @@ function callProvider(p, job, outDir, images) {
     // `--style` 只对 t2i 生效；gen.py 的 `edit` 分支压根没有这个参数。
     if (job.mode !== 'edit') common.style = localStyleFor(job);
     return job.mode === 'edit'
-      ? p.edit({ ...common, images, instruction: job.instruction })
-      : p.generate({ ...common, prompt: job.prompt });
+      ? { ...common, images, instruction: job.instruction }
+      : { ...common, prompt: job.prompt };
   }
   const common = { size: ratio, n: N, outDir, prefix: job.id, model: p.name === 'volcengine' ? VOLCENGINE_IMAGE_MODEL : ASSET_IMAGE_MODEL };
   return job.mode === 'edit'
-    ? p.edit({ ...common, images, instruction: job.instruction })
-    : p.generate({ ...common, prompt: job.prompt });
+    ? { ...common, images, instruction: job.instruction }
+    : { ...common, prompt: job.prompt };
+}
+
+function callProvider(p, job, outDir, images) {
+  const args = providerArgsFor(p, job, outDir, images);
+  return job.mode === 'edit'
+    ? p.edit(args)
+    : p.generate(args);
 }
 
 // ---------------------------------------------------------------- 主流程
@@ -185,6 +192,12 @@ if (DRY) {
     console.log(`  为什么：${job.why}`);
     const refs = refsOf(job);
     if (job.mode === 'edit') console.log(`  参考图：${refs.length ? refs.join('、') : '（缺失！肖像还没生成？）'}`);
+    // 干跑打印的是**真正会交给通道的那份参数**（同一函数算出来的），不是复述变量，
+    // 否则无法证明 steps / ratio / style 真的传下去了。
+    const shown = Object.entries(providerArgsFor(p, job, ASSET_DIR, refs))
+      .filter(([k]) => k !== 'prompt' && k !== 'instruction')
+      .map(([k, v]) => (k === 'images' ? `images=${v.length}张` : `${k}=${k === 'outDir' ? path.relative(PROJ, v) || '.' : v}`));
+    console.log(`  通道参数：${shown.join('  ')}`);
     console.log(`  ${job.mode === 'edit' ? job.instruction : job.prompt}`);
   }
   console.log(`\n干跑结束，未调用任何通道、未写任何文件。`);

@@ -73,6 +73,71 @@ test('default video run really is FastH3 + VSA on the small canvas', () => {
   assertConfigValues(['VIDEO_NORMAL_SIZE', 'VIDEO_HIGH_SIZE'], null, ['480x864', '768x1344']);
 });
 
+/** 造一个能跑通 `assets.mjs --dry-run` 的最小项目（含肖像/身份图/场景主图三类资产）。 */
+function makeAssetProject() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-asset-config-'));
+  const png = path.join(dir, 'portrait.png');
+  fs.writeFileSync(png, 'stub');
+  fs.writeFileSync(path.join(dir, 'board.json'), JSON.stringify({
+    meta: { project: 'asset-config', aspect: '9:16', style: 'cartoon3d' },
+    characters: [{ id: 'c_girl', name: '女孩', face_prompt: '圆脸', portrait: png }],
+    identities: [{ id: 'i_girl_default', character: 'c_girl', appearance_details: '白裙', sheet: png }],
+    scenes: [{ id: 's_room', name: '卧室', master: png }],
+    props: [],
+  }));
+  return dir;
+}
+
+function runCli(entry, args, env) {
+  return spawnSync(process.execPath, [path.join(root, 'cli', entry), ...args], {
+    encoding: 'utf8', env: { ...process.env, ...(env || {}) },
+  });
+}
+
+// 装配层：配置导出的值对，不等于它真的传到了通道。
+// 以前 `--dry-run` 在构造 argv **之前**就退出了，干跑只能复述一遍变量 ——
+// 复述无法证明 `--timeout` / `--attention` / 尺寸真的进了 gen.py 的命令行。
+test('dry-run prints the argv that will really be handed to gen.py', () => {
+  const dir = makeUnitProject();
+  const result = runCli('unit.mjs', [
+    path.join(dir, 'board.json'),
+    '--direction', path.join(dir, 'render.plan.json'),
+    '--unit', 'g001',
+    '--dry-run', '--skip-gate',
+  ], { AIH_VIDEO_TIMEOUT_SECONDS: '123' });
+  assert.equal(result.status, 0, result.stderr);
+  const argv = result.stdout.split('\n').find((line) => line.includes('最终 argv'));
+  assert.ok(argv, '干跑必须打印将要执行的那条 argv');
+  assert.match(argv, /--timeout 123/);              // env 覆盖真的到了命令行
+  assert.match(argv, /--width 480 --height 864/);   // 尺寸不是靠通道默认
+  assert.match(argv, /--profile fast/);
+  assert.match(argv, /--attention vsa/);
+  // 首帧缺失时 args 里是 null；打印必须兜住，不能让干跑连 argv 都看不见
+  assert.doesNotMatch(argv, /undefined/);
+});
+
+// 本地生图的步数来自 env，且 `cartoon3d` 要显式映射到 `anime`：
+// 不传 `--style` 会落到 gen.py 的 `realistic` 默认，负向词里写着「卡通」。
+test('asset dry-run prints real provider args: env steps, mapped style, no style on edit', () => {
+  const dir = makeAssetProject();
+  const result = runCli('assets.mjs', [path.join(dir, 'board.json'), '--dry-run', '--skip-gate'], {
+    AIH_ASSET_PROVIDER: 'comfyui',
+    AIH_LOCAL_IMAGE_STEPS: '8',
+  });
+  assert.equal(result.status, 0, result.stderr);
+  const lines = result.stdout.split('\n').filter((line) => line.includes('通道参数'));
+  assert.ok(lines.length >= 2, `至少两类资产各有一行通道参数，实际 ${lines.length}`);
+
+  const t2i = lines.find((line) => line.includes('style='));
+  assert.ok(t2i, '文生图必须带 style');
+  assert.match(t2i, /steps=8/);        // env 的步数真的进了通道参数
+  assert.match(t2i, /style=anime/);    // cartoon3d → anime（本地没有 3D 卡通档）
+
+  const edit = lines.find((line) => line.includes('images='));
+  assert.ok(edit, '图生图必须带参考图');
+  assert.doesNotMatch(edit, /style=/); // gen.py 的 edit 分支没有 --style
+});
+
 test('video timeout comes from env and rejects values outside 1-600s', () => {
   assertConfigValues(['VIDEO_TIMEOUT_SECONDS'], { AIH_VIDEO_TIMEOUT_SECONDS: '300' }, [300]);
   for (const bad of ['0', '601', 'abc']) {

@@ -286,46 +286,17 @@ console.log('─'.repeat(70));
 console.log(prompt);
 console.log('─'.repeat(70));
 
-if (DRY) { console.log('\n--dry-run：没生成。'); process.exit(0); }
-if (!keyframe) { console.error('没有首帧，这个单元的连续性没保证 —— 先出关键帧。'); process.exit(1); }
-
+/**
+ * **下面这段在干跑时也要真的走一遍。**
+ *
+ * 以前 `--dry-run` 在构造 argv **之前**就退出了，干跑只能复述一遍变量
+ * （`PROFILE` / `ATTENTION` / `VIDEO_TIMEOUT_SECONDS`）—— 那证明不了这些值
+ * 真的进了 `gen.py` 的命令行。现在把构造提前，干跑打印的就是**将要执行的
+ * 那条命令本身**，测试可以直接断言 `--timeout 600`、`--attention vsa` 在 argv 里。
+ */
 const outDir = path.join(path.dirname(boardPath), 'units');
-fs.mkdirSync(outDir, { recursive: true });
 const resultFile = path.join(outDir, `${unit.id}.result.json`);
 
-// **提示词写文件再传路径** —— 这台机器 PS 5.1 会吃命令行里的引号
-const pf = path.join(outDir, `.${unit.id}.prompt.txt`);
-fs.writeFileSync(pf, prompt, 'utf8');
-
-console.log(`\n出片（${PROFILE} / ${MODE} / ${QUALITY} / ${ATTENTION}，${seconds.toFixed(2)}s → ${Math.round(seconds * 24)} 帧）…`);
-// **提示词直接进 argv** —— spawnSync 使用参数数组且不经过 shell，
-// 所以换行、引号、中文都不会被 shell 吃掉。
-// fast 档严格照 FastVideo FastH3 模板走单首帧 i2v 或单首尾帧 fl2v；不支持 Ref2VA。
-// 其他档位使用基础 H3 Ref2VA，以人物资产换取更强的身份约束。
-//
-// 用户 2026-09-16 定的：
-// > 第一张图是关键帧，第二张图~N 张是关键帧里的人物或物品资产（人物优先）。
-//
-// 之前用的是 `i2v`（图生视频），身份只有一个入口 = `first_frame` ——
-// 它管"从哪开始"，不管"14 秒之后还得是同一个人"。实测后果：
-// u2 镜1→镜2 双螺髻变单高髻；u3 切到大师兄直接换了个人。
-//
-// `r2v` 会把 `ref_image_1..9` 交给 `MiniMaxH3ReferenceToVideo`，
-// 提示词里用 `<Picture N>` 指着它们 —— 那才是"锁人"的入口。
-const args = [GEN, MODE,
-  '--prompt', prompt,
-  '--duration', seconds.toFixed(3),
-  '--width', String(W), '--height', String(H),
-  '--out-dir', outDir, '--result-file', resultFile, '--no-shell',
-  '--timeout', String(VIDEO_TIMEOUT_SECONDS)];
-if (MODE === 'i2v') {
-  args.push('--image', keyframe);
-} else if (MODE === 'fl2v') {
-  args.push('--image', keyframe, '--last-image', lastKeyframe);
-} else {
-  for (const ref of refs) args.push('--image', ref.file);
-  if (!refs.length) args.push('--image', keyframe);
-}
 /**
  * **步数不再自己拼 `--steps` + `--fast`，改走 `gen.py` 的三档预设。**
  *
@@ -346,10 +317,52 @@ if (MODE === 'i2v') {
  * 可用档位由 `gen.py` 的 `H3_PROFILES` 决定，这里不再写死白名单（写死过一次，
  * 加 `fast` 时就被卡住了）。
  */
+const args = [GEN, MODE,
+  '--prompt', prompt,
+  '--duration', seconds.toFixed(3),
+  '--width', String(W), '--height', String(H),
+  '--out-dir', outDir, '--result-file', resultFile, '--no-shell',
+  '--timeout', String(VIDEO_TIMEOUT_SECONDS)];
+if (MODE === 'i2v') {
+  args.push('--image', keyframe);
+} else if (MODE === 'fl2v') {
+  args.push('--image', keyframe, '--last-image', lastKeyframe);
+} else {
+  for (const ref of refs) args.push('--image', ref.file);
+  if (!refs.length) args.push('--image', keyframe);
+}
 args.push('--profile', PROFILE);
 args.push('--attention', ATTENTION);
-if (DRY || flag('show-args', false)) console.log('  最终 argv: ' + args.map((a) => a.length > 40 ? a.slice(0, 37) + '…' : a).join(' '));
 console.log(`  尺寸 ${W}×${H}${W === 1088 ? '  ⚠ 这是 2.09MP，官方参考是 0.41MP' : ''}`);
+// 首帧缺失时 args 里会有 `null`（i2v/fl2v 分支照样 push，交给下面的闸门去报错）。
+// 打印时必须先兜住，否则 `a.length` 会在这里炸 —— 干跑就看不到任何东西了。
+const showArg = (a) => { const s = String(a ?? '∅'); return s.length > 40 ? s.slice(0, 37) + '…' : s; };
+console.log('  最终 argv: ' + args.map(showArg).join(' '));
+
+if (DRY) { console.log('\n--dry-run：没生成。上面那行 argv 就是将要交给 gen.py 的完整命令。'); process.exit(0); }
+if (!keyframe) { console.error('没有首帧，这个单元的连续性没保证 —— 先出关键帧。'); process.exit(1); }
+fs.mkdirSync(outDir, { recursive: true });
+
+// **提示词写文件再传路径** —— 这台机器 PS 5.1 会吃命令行里的引号
+const pf = path.join(outDir, `.${unit.id}.prompt.txt`);
+fs.writeFileSync(pf, prompt, 'utf8');
+
+console.log(`\n出片（${PROFILE} / ${MODE} / ${QUALITY} / ${ATTENTION}，${seconds.toFixed(2)}s → ${Math.round(seconds * 24)} 帧）…`);
+// **提示词直接进 argv** —— spawnSync 使用参数数组且不经过 shell，
+// 所以换行、引号、中文都不会被 shell 吃掉。
+// fast 档严格照 FastVideo FastH3 模板走单首帧 i2v 或单首尾帧 fl2v；不支持 Ref2VA。
+// 其他档位使用基础 H3 Ref2VA，以人物资产换取更强的身份约束。
+//
+// 用户 2026-09-16 定的：
+// > 第一张图是关键帧，第二张图~N 张是关键帧里的人物或物品资产（人物优先）。
+//
+// 之前用的是 `i2v`（图生视频），身份只有一个入口 = `first_frame` ——
+// 它管"从哪开始"，不管"14 秒之后还得是同一个人"。实测后果：
+// u2 镜1→镜2 双螺髻变单高髻；u3 切到大师兄直接换了个人。
+//
+// `r2v` 会把 `ref_image_1..9` 交给 `MiniMaxH3ReferenceToVideo`，
+// 提示词里用 `<Picture N>` 指着它们 —— 那才是"锁人"的入口。
+// （`args` 已在上面「输出」段构造并打印过，这里直接用。）
 
 const startedAt = Date.now();
 // gen.py 负责在 10 分钟时写出可读的超时结果；外层多留 30 秒做异常兜底。
