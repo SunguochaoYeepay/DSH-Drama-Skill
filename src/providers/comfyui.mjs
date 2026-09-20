@@ -23,8 +23,40 @@ const FFMPEG = (() => {
       if (fs.existsSync(c)) return c;
     }
   } catch { /* 退回 PATH */ }
-  return 'ffmpeg';
+    return 'ffmpeg';
 })();
+
+/**
+ * 项目风格 → gen.py `--style` 预设名。**这张表是"画面像不像"的真正开关。**
+ *
+ * gen.py 的预设只有 `realistic/anime/cyberpunk/healing/vintage/none`，
+ * **没有 3D 卡通档**，所以 `cartoon3d` 只能投降映射成 `anime`（本地 A/B 实测观感最接近）。
+ * 注意 `anime` 的负向词里也含「3D渲染」，同样是妥协 —— 这是上游通道的能力边界，不是本仓能修的。
+ *
+ * 🔁 **2026-09-17 实测：本地资产的画面风格一直不受控，根因就在这里。**
+ *    `realistic` 预设的**负向词里写着「CG感，卡通，动漫」**，正向词还会追加
+ *    「写实摄影风格…生活快照般随手抓拍」。于是 prompt 里写多少「3D 卡通动画长片质感」
+ *    都被负向条件抵消 —— **改 prompt 措辞根本无效，因为负向条件不在我们手里**。
+ *
+ * 🔁 **2026-09-20：edit 分支也必须吃这张表。** gen.py 的 `build_edit` 过去把 negative
+ *    **硬编码成空串**且不接受 `--style`，本仓据此不给图生图传它。后果是身份图与
+ *    **全部关键帧**（两者都走 edit）拿到空的负向条件，写实剧被系统性画成插画
+ *    —— 而 t2i 的肖像与场景主图因为有这张表一直正常。上游已修。
+ *    判据：**任何走 edit 的产物都必须显式传 `--style`**，不传就是把这个洞重新打开。
+ */
+export const LOCAL_STYLE = {
+  realistic: 'realistic',
+  anime: 'anime',
+  cartoon3d: 'anime',
+  cyberpunk: 'cyberpunk',
+  healing: 'healing',
+  vintage: 'vintage',
+};
+
+/** 未知风格**显式给 `none`**，不要退回 gen.py 的默认 realistic —— 那条路的负向词会反卡通，静默把画面拉走。 */
+export function localStyle(style) {
+  return LOCAL_STYLE[style] || 'none';
+}
 
 /**
  * 参考图降采样。
@@ -128,8 +160,13 @@ function stepArgs({ steps, fast }) {
  *
  * `--batch` **对 edit 无效**，所以抽多个候选只能循环、每次换个种子；串行跑，
  * ComfyUI 是单卡的，并发提交只会互相排队。
+ *
+ * `style` 现在**必须传**（2026-09-20 修）：gen.py 的 edit 分支过去把 negative 硬编码成空串，
+ * 画质预设完全不参与 —— 写实剧的身份图与关键帧被系统性画成插画，而 t2i 因为有
+ * `realistic` 的负向词「CG感，卡通，动漫」一直正常。上游已改成 edit 也取预设，
+ * 这里负责把它送过去。**不传 = 落回 gen.py 的默认 realistic**，显式传才与项目风格一致。
  */
-export async function edit({ images, instruction, n = 1, outDir, prefix = 'edit', fast = true, ratio, width, height, steps, timeoutMs = 900000 }) {
+export async function edit({ images, instruction, n = 1, outDir, prefix = 'edit', fast = true, ratio, width, height, steps, style, timeoutMs = 900000 }) {
   fs.mkdirSync(outDir, { recursive: true });
   const ratioSize = {
     '16:9': { w: 1024, h: 576 },
@@ -155,6 +192,7 @@ export async function edit({ images, instruction, n = 1, outDir, prefix = 'edit'
       if (target) args.push('--width', String(target.w), '--height', String(target.h));
       else if (ratio) args.push('--ratio', ratio);
       args.push(...stepArgs({ steps, fast }));
+      if (style) args.push('--style', style);
       if (n > 1) args.push('--seed', String(1000 + i * 7919));   // 固定但互不相同的种子：可复现
       const r = run(args, timeoutMs);
       if (r.status !== 0) lastErr = r.stderr || `exit ${r.status}`;

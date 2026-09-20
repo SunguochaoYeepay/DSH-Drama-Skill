@@ -46,6 +46,7 @@ import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { ASSET_IMAGE_MODEL, LOCAL_IMAGE_STEPS, VOLCENGINE_IMAGE_MODEL } from '../src/config.mjs';
 import { writeGenerationRecord } from '../src/generation-records.mjs';
 import { readCinematography } from '../src/cinematography.mjs';
+import { localStyle } from '../src/providers/comfyui.mjs';
 
 installCliErrorHandler();
 
@@ -127,19 +128,11 @@ const relOf = (job) => `assets/${(FILE_NAME[job.kind] || ((j) => `${j.id}_${j.sl
  * 道具图**不跟随项目风格**：它自带「写实实拍，产品静物摄影」配方，固定走 `realistic`，
  * 免得把手机/镜子也画成卡通。
  */
-const LOCAL_STYLE = {
-  realistic: 'realistic',
-  anime: 'anime',
-  cartoon3d: 'anime',
-  cyberpunk: 'cyberpunk',
-  healing: 'healing',
-  vintage: 'vintage',
-};
 function localStyleFor(job) {
   if (job.kind === 'prop_3view') return 'realistic';
-  // 未知风格显式给 `none`，**不要**退回 gen.py 的默认 realistic ——
-  // 那条路的负向词会反卡通，静默把画面拉走。
-  return LOCAL_STYLE[board.meta?.style] || 'none';
+  // 映射表收在 `src/providers/comfyui.mjs` 的 `localStyle()` —— 关键帧走同一张表，
+  // 在这里另起一份就会两边漂移（历史教训：cartoon3d → anime 的投降映射只有一处真相）。
+  return localStyle(board.meta?.style);
 }
 
 /**
@@ -154,8 +147,13 @@ function providerArgsFor(p, job, outDir, images) {
   if (p.name === 'comfyui') {
     const common = { ratio, n: N, outDir, prefix: job.id };
     if (STEPS) common.steps = Number(STEPS);
-    // `--style` 只对 t2i 生效；gen.py 的 `edit` 分支压根没有这个参数。
-    if (job.mode !== 'edit') common.style = localStyleFor(job);
+    // `--style` 对 t2i 与 edit **都要传**（2026-09-20 修）。
+    //
+    // 旧代码是 `if (job.mode !== 'edit')` —— 因为当时 gen.py 的 edit 分支把 negative
+    // 硬编码成空串、压根不接 style。后果是身份图（edit）拿到空负向条件，写实剧被系统性
+    // 画成插画。上游已让 edit 也取画质预设，**身份图与关键帧从此和肖像/主图同一套防线**。
+    // 别再把这个判断加回去 —— 加回去等于把插画化原样恢复。
+    common.style = localStyleFor(job);
     return job.mode === 'edit'
       ? { ...common, images, instruction: job.instruction }
       : { ...common, prompt: job.prompt };

@@ -69,16 +69,28 @@ test('timeline wording is stripped from the static keyframe pose', () => {
   assert.doesNotMatch(out, /0秒时/);
 });
 
-test('base framing clauses survive when there is no composition override', () => {
+test('framing rule appears exactly once when there is no composition override', () => {
   const out = dryRun(makeProject(null));
   assert.match(out, /构图要求：/);
-  assert.match(out, /【生成前最终检查】/);
+  // 去重守卫（2026-09-20 no_chute 对照实验）：景别硬边界曾经说三遍
+  // （构图要求 / 生成前最终检查 / 抽卡师画面截取范围），重复块把关键实体的字面权重稀释掉，
+  // 五连抽全废；130 字短提示词一发命中。现在**只允许出现一次**。
+  const hits = (out.match(/画面下边界严格切在人物的腰部/g) || []).length;
+  assert.equal(hits, 1, `景别规则应只出现一次，实际 ${hits} 次`);
+  assert.doesNotMatch(out, /【生成前最终检查】/);
+  assert.doesNotMatch(out, /【画面截取范围】/);
+});
+
+test('keyframe start pose appears exactly once', () => {
+  const out = dryRun(makeProject(null));
+  // 起始姿态曾经被 buildPrompt 与 compileDrawPlan 各拼一次（150 字整段重复）。
+  const hits = (out.match(/关键帧起始姿态：/g) || []).length;
+  assert.equal(hits, 1, `起始姿态应只出现一次，实际 ${hits} 次`);
 });
 
 test('composition override removes the conflicting base framing clauses', () => {
   const out = dryRun(makeProject('构图覆盖：改为斜侧中景，完整保留床头到床尾'));
   assert.doesNotMatch(out, /构图要求：/);
-  assert.doesNotMatch(out, /【生成前最终检查】/);
   assert.match(out, /斜侧中景/);
 });
 

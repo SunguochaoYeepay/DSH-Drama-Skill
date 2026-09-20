@@ -41,6 +41,7 @@ import { writeGenerationRecord } from '../src/generation-records.mjs';
 import { readKeyframeOverride } from '../src/keyframe-overrides.mjs';
 import { compileCharacterDesign, compileDrawPlan } from '../src/draw-specialist.mjs';
 import { readCinematography, compileCinematography } from '../src/cinematography.mjs';
+import { localStyle } from '../src/providers/comfyui.mjs';
 
 installCliErrorHandler();
 
@@ -81,29 +82,29 @@ function staticKeyframeStart(unit, shot) {
 function applyCompositionOverride(prompt, override) {
   if (!/构图覆盖|斜侧中景|中景/u.test(override)) return prompt;
   return prompt.split('\n')
-    .filter((line) => !line.startsWith('构图要求：') && !line.startsWith('【生成前最终检查】'))
+    .filter((line) => !line.startsWith('构图要求：'))
     .join('\n');
 }
 
 function executionShotSpec(shot, override) {
-  const framing = FRAMING[shot.framing]?.rule?.replaceAll('**', '') || `景别：${shot.framing || '未指定'}`;
   const camera = shot.camera || '固定机位';
-  // 覆盖启用时：**覆盖文本本身就是画面截取范围**，景别行仍写导演稿的景别供参照，
-  // 覆盖文本可以在散文里改写它，并显式声明优先。
+  // 覆盖启用时：**覆盖文本本身就是画面截取范围**，并显式声明优先于默认构图规则。
+  // 没有覆盖时这一整行不输出（见下面 capture 处的注释）。
   //
   // ⚠ 这里曾经硬编码过一段床戏取景（「画面从床头的斜侧方向取景…完整看到床头板、枕头…床尾方向」），
   // 于是**任何非床戏场景一旦用覆盖，就会被注入「床头板、枕头、床尾」**。
   // 覆盖是通用机制，不能只对一个剧目成立 —— 2026-09-20 在 pot_hit（老楼楼道口）实测踩到：
   // 楼道口的双人关键帧需要压构图，却拿到一段床戏描述，只能放弃覆盖这条路。
-  const capture = override || framing;
   return [
     `【景别】${shot.framing || '未指定'}`,
-    `【画面截取范围】${capture}`,
+    // 无覆盖时**不再复述景别规则**：正式描述区的「构图要求：」已经说过一遍，
+    // 这里再说就是第三遍。只有覆盖文本才需要这一行（覆盖优先于默认构图）。
+    override ? `【画面截取范围】${override}` : '',
     `【机位/构图】${camera}；${override
       ? '执行层覆盖优先：上面那段覆盖文本优先于任何默认构图规则。'
       : '按导演分镜的景别与构图执行，不自行改变人物位置。'}`,
     '【空间关系】画面中的人物、承托物、道具与空间关系必须与导演首帧状态一致；不得新增人物、重复人物或改变头脚方向。',
-  ].join('\n');
+  ].filter(Boolean).join('\n');
 }
 
 /**
@@ -162,6 +163,14 @@ const CINE = readCinematography(PROJ);
 const assetDesignPath = path.join(PROJ, 'asset-design.json');
 const assetDesign = fs.existsSync(assetDesignPath) ? JSON.parse(fs.readFileSync(assetDesignPath, 'utf8')) : { designs: [] };
 const ASPECT = aspectOf(board);
+/**
+ * 关键帧走 gen.py 的 `edit` 分支 —— 而 edit 过去把 negative **硬编码成空串**且不接受
+ * `--style`，等于成片每一帧都拿不到 `realistic` 那套负向词（「CG感，卡通，动漫」），
+ * 写实剧会系统性退化成插画（no_chute 实测：身份图三连插画、肖像与主图却正常，
+ * 差别只在 t2i 有这张表）。上游已让 edit 也取预设，**这里必须显式传**，
+ * 与 `cli/assets.mjs` 共用 `localStyle()`，别各写一份映射。
+ */
+const LOCAL_STYLE = localStyle(board.meta?.style);
 const SKIP_GATE = argv.includes('--skip-gate');
 const approvedAssets = projectAssetFiles(board, BOARD_PATH, { workspace: flag('ws', null) });
 requireApproval(PROJ, 'assets', approvedAssets, { skip: SKIP_GATE });
@@ -259,7 +268,10 @@ function buildLocalPrompt(unit, shot, refs, cine) {
     cineBlock.lighting,
     shot.lighting ? `光线：${shot.lighting}` : '',
     '保持参考图的角色身份、体型比例和体表材质。不得重设计脸部或头部特征、毛发、皮肤、服装与配饰。',
-    `【生成前最终检查】${f.rule.replaceAll('**', '')}`,
+    // ⚠ 这里曾经还有一行「【生成前最终检查】${f.rule}」，与上面「构图要求：」逐字重复。
+    // 2026-09-20 对照实验：景别规则说三遍（构图要求 / 生成前检查 / 抽卡师截取范围）
+    // 不会让它更被遵守，只会把「两个人」「伞包」这类关键实体的字面权重稀释掉 —— 五连抽全废。
+    // 景别**只说一次**：正式描述区的「构图要求：」，执行层不再复述。
     '画面中不要出现文字、字幕、水印、logo、边框或拼图。',
   ].filter(Boolean).join('\n');
 }
@@ -368,7 +380,7 @@ for (const unit of dir.units) {
   if (PROVIDER === 'local') {
     const resultFile = path.join(LOCAL_OUT, `.${unit.id}.result.json`);
     const a = [LOCAL_GEN, 'edit', '--prompt', finalPrompt, '--ratio', ASPECT, '--steps', LOCAL_STEPS, '--cfg', LOCAL_CFG,
-      '--out-dir', LOCAL_OUT, '--result-file', resultFile];
+      '--style', LOCAL_STYLE, '--out-dir', LOCAL_OUT, '--result-file', resultFile];
     for (const ref of refs) a.push('--image', ref.file);
     const started = Date.now();
     r = spawnSync(LOCAL_PY, a, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 900000 });

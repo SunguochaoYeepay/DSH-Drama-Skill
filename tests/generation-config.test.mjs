@@ -118,7 +118,13 @@ test('dry-run prints the argv that will really be handed to gen.py', () => {
 
 // 本地生图的步数来自 env，且 `cartoon3d` 要显式映射到 `anime`：
 // 不传 `--style` 会落到 gen.py 的 `realistic` 默认，负向词里写着「卡通」。
-test('asset dry-run prints real provider args: env steps, mapped style, no style on edit', () => {
+//
+// ⚠ 这条断言在 2026-09-20 **反向**过一次，别改回去：
+// 旧版写的是 `assert.doesNotMatch(edit, /style=/)`，理由是「gen.py 的 edit 分支没有 --style」。
+// 事实没错，但我们因此不给图生图传它 —— 而 edit 的 negative 是**硬编码空串**，
+// 于是身份图与全部关键帧拿到空的负向条件，写实剧被系统性画成插画（no_chute 实测）。
+// 上游已让 edit 也取画质预设，**图生图不带 style = 插画化复发**，所以这里是 match 不是 doesNotMatch。
+test('asset dry-run prints real provider args: env steps, mapped style on both t2i and edit', () => {
   const dir = makeAssetProject();
   const result = runCli('assets.mjs', [path.join(dir, 'board.json'), '--dry-run', '--skip-gate'], {
     AIH_ASSET_PROVIDER: 'comfyui',
@@ -135,7 +141,7 @@ test('asset dry-run prints real provider args: env steps, mapped style, no style
 
   const edit = lines.find((line) => line.includes('images='));
   assert.ok(edit, '图生图必须带参考图');
-  assert.doesNotMatch(edit, /style=/); // gen.py 的 edit 分支没有 --style
+  assert.match(edit, /style=anime/);   // 图生图同样吃画质预设；不传 = 负向条件落空 = 插画化
 });
 
 test('video timeout comes from env and rejects values outside 1-600s', () => {
