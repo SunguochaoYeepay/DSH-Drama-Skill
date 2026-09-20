@@ -69,6 +69,8 @@ E:\AI-Tool\DeepSeek\story2video\projects\cat_mouse\
 
 不要把项目输出写到仓库根目录，也不要创建跨剧目共用的 `comfy-out`。
 
+**项目根是硬规则**：一律建在正在运行生成的那套 story2video 副本下的 `projects\<剧名>\`（上例的 `E:\AI-Tool\DeepSeek\story2video\projects\` 即标准位置，根目录随副本所在磁盘而定）。不要在仓库旁边、其他磁盘或临时目录自建项目目录；新建立项前先列一次该 `projects\` 目录，已有同名副目录就续用，没有才新建。
+
 ## 基本用法
 
 先参照根目录的 [`.env.example`](.env.example) 配置本机 `.env`。**剧本和导演稿默认由当前对话的 Agent 直写**，不调外部大模型 —— `AIH_SCRIPT_MODEL` / `AIH_DIRECTOR_MODEL` 只在**显式要调模型**时才用得到（不限制厂商或型号）。资源和关键帧分别读取资产/关键帧通道与模型配置。视频默认 `AIH_VIDEO_QUALITY=normal`、`AIH_VIDEO_PROFILE=fast`、`AIH_VIDEO_ATTENTION=vsa`，两档尺寸由 `AIH_VIDEO_NORMAL_SIZE` 和 `AIH_VIDEO_HIGH_SIZE` 指定。`.env` 不入库，已有进程环境变量优先。
