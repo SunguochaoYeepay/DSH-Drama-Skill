@@ -121,32 +121,38 @@ function normalizeImages(files, target) {
 }
 
 /** 文生图。`--batch` 是 gen.py 的批量参数（**只对 t2i/music 有效**）。 */
-export async function generate({ prompt, ratio = '16:9', n = 1, outDir, prefix = 'img', style, fast = true, width, height, steps, timeoutMs = 900000 }) {
+export async function generate({ prompt, ratio = '16:9', n = 1, outDir, prefix = 'img', style, fast = true, width, height, steps, cfg, lora, timeoutMs = 900000 }) {
   fs.mkdirSync(outDir, { recursive: true });
   const before = snapshot(outDir);
   const args = ['t2i', '--prompt', prompt, '--batch', String(n), '--out-dir', outDir];
   // 画幅：显式宽高优先，其次 ratio。**不传的话走 IMAGE_DEFAULT = (1024,576) 横屏。**
   if (width && height) args.push('--width', String(width), '--height', String(height));
   else args.push('--ratio', ratio);
-  args.push(...stepArgs({ steps, fast }));
+  args.push(...stepArgs({ steps, cfg, lora, fast }));
   if (style) args.push('--style', style);
   const r = run(args, timeoutMs);
   return { files: newFiles(outDir, before), status: r.status, stderr: r.stderr, json: r.json };
 }
 
 /**
- * 步数 / `--fast` 的取舍。
+ * 步数 / `--fast` / LoRA 的取舍。
  *
- * gen.py 里：`steps = args.steps ?? (4 if args.fast else 25)`，
- * 而 `--fast` 同时会**挂上那个 4 步 Lightning LoRA，并把 cfg 默认拉到 1.0**。
+ * gen.py 里：`steps = args.steps ?? (4 if args.fast else 20)`，
+ * 而 `--fast` 同时会**挂上通道默认的 4 步 Lightning LoRA，并把 cfg 默认拉到 1.0**。
  *
- * 所以**显式给了步数就不再挂 `--fast`** —— 否则是"4 步 LoRA + 10 步 + cfg 1.0"
- * 这种谁都没验证过的组合。不挂 `--fast` 时 gen.py 的 cfg 默认是 **4.0**，
- * 这才是"跑 N 步基础模型"该有的样子。
+ * 所以三种情况分开处理：
+ *   · **给了 lora** → 成套下发 lora + steps + cfg（配错，比如 8 步 LoRA 配 20 步，会糊）；
+ *   · **给了 steps/cfg 但没给 lora** → 按“跑 N 步基础模型”处理，**不挂 `--fast`**，
+ *     否则是"4 步 LoRA + N 步 + cfg 1.0"这种谁都没验证过的组合；
+ *   · **都没给** → `--fast` 让上游挂通道自己的默认 LoRA。
  */
-function stepArgs({ steps, fast }) {
+function stepArgs({ steps, cfg, lora, fast }) {
+  if (lora) {
+    return ['--lora', lora, '--steps', String(steps ?? 20), '--cfg', String(cfg ?? 4)];
+  }
   const out = [];
   if (steps) out.push('--steps', String(steps));
+  if (cfg) out.push('--cfg', String(cfg));
   if (fast && !steps) out.push('--fast');
   return out;
 }
@@ -166,7 +172,7 @@ function stepArgs({ steps, fast }) {
  * `realistic` 的负向词「CG感，卡通，动漫」一直正常。上游已改成 edit 也取预设，
  * 这里负责把它送过去。**不传 = 落回 gen.py 的默认 realistic**，显式传才与项目风格一致。
  */
-export async function edit({ images, instruction, n = 1, outDir, prefix = 'edit', fast = true, ratio, width, height, steps, style, timeoutMs = 900000 }) {
+export async function edit({ images, instruction, n = 1, outDir, prefix = 'edit', fast = true, ratio, width, height, steps, cfg, lora, style, timeoutMs = 900000 }) {
   fs.mkdirSync(outDir, { recursive: true });
   const ratioSize = {
     '16:9': { w: 1024, h: 576 },
@@ -191,7 +197,7 @@ export async function edit({ images, instruction, n = 1, outDir, prefix = 'edit'
       // 只有显式宽高能定住它。不传的话 gen.py 走 `IMAGE_DEFAULT=(1024,576)` 横屏。
       if (target) args.push('--width', String(target.w), '--height', String(target.h));
       else if (ratio) args.push('--ratio', ratio);
-      args.push(...stepArgs({ steps, fast }));
+      args.push(...stepArgs({ steps, cfg, lora, fast }));
       if (style) args.push('--style', style);
       if (n > 1) args.push('--seed', String(1000 + i * 7919));   // 固定但互不相同的种子：可复现
       const r = run(args, timeoutMs);

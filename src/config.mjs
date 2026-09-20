@@ -60,6 +60,22 @@ if (!/^\d+$/.test(LOCAL_KEYFRAME_STEPS) || Number(LOCAL_KEYFRAME_STEPS) < 1) {
 if (!Number.isFinite(Number(LOCAL_KEYFRAME_CFG))) throw new Error('AIH_LOCAL_KEYFRAME_CFG 必须是数字');
 // 默认像素（短边x长边），实际宽高按剧目画幅排布 —— 横屏剧会自己排成 2048x1152。
 export const LOCAL_KEYFRAME_SIZE = setting('AIH_LOCAL_KEYFRAME_SIZE', '1152x2048');
+// ── 本地资产默认档（2026-09-20）─────────────────────────────────────────────
+// 过去 `assets.mjs` 用 `flag('steps', LOCAL_IMAGE_STEPS)` 取默认，那个 20 恒为真，
+// 于是永远往下发 steps=20，把 provider 里 `fast=true` 的默认整个压掉 —— 资产一直在跑
+// 20 步非蒸馏路径，而关键帧早已换成加速栈。同一处入口漏接，第二次。
+// 现在资产与关键帧共用同一套默认（环境变量可单独覆盖）。
+export const LOCAL_ASSET_FAST = setting('AIH_LOCAL_ASSET_FAST', '1') === '1';
+export const LOCAL_ASSET_LORA = setting('AIH_LOCAL_ASSET_LORA', LOCAL_KEYFRAME_LORA);
+export const LOCAL_ASSET_STEPS = setting('AIH_LOCAL_ASSET_STEPS', LOCAL_KEYFRAME_STEPS);
+export const LOCAL_ASSET_CFG = setting('AIH_LOCAL_ASSET_CFG', LOCAL_KEYFRAME_CFG);
+export const LOCAL_ASSET_SIZE = setting('AIH_LOCAL_ASSET_SIZE', LOCAL_KEYFRAME_SIZE);
+if (!/^\d+$/.test(LOCAL_ASSET_STEPS) || Number(LOCAL_ASSET_STEPS) < 1) {
+  throw new Error('AIH_LOCAL_ASSET_STEPS 必须是正整数');
+}
+if (!Number.isFinite(Number(LOCAL_ASSET_CFG))) throw new Error('AIH_LOCAL_ASSET_CFG 必须是数字');
+// 默认像素（短边x长边），实际宽高按 **该资产自己的比例** 排布（肖像 1:1、身份图 16:9、
+// 场景主图跟剧目画幅）—— t2i 与 edit 两条路都显式给尺寸，不留默认值。
 export const VIDEO_QUALITY = setting('AIH_VIDEO_QUALITY', 'normal');
 export const VIDEO_PROFILE = setting('AIH_VIDEO_PROFILE', 'fast');
 export const VIDEO_ATTENTION = setting('AIH_VIDEO_ATTENTION', 'vsa').toLowerCase();

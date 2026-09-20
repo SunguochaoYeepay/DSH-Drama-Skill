@@ -43,7 +43,8 @@ import { projectAssetFiles } from '../src/asset-resolver.mjs';
 import { provider as getProvider, assetProvider } from '../src/providers/index.mjs';
 import { requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
-import { ASSET_IMAGE_MODEL, LOCAL_IMAGE_STEPS, VOLCENGINE_IMAGE_MODEL } from '../src/config.mjs';
+import { dimensionsForAspect } from '../src/aspect.mjs';
+import { ASSET_IMAGE_MODEL, VOLCENGINE_IMAGE_MODEL, LOCAL_ASSET_FAST, LOCAL_ASSET_LORA, LOCAL_ASSET_STEPS, LOCAL_ASSET_CFG, LOCAL_ASSET_SIZE } from '../src/config.mjs';
 import { writeGenerationRecord } from '../src/generation-records.mjs';
 import { readCinematography } from '../src/cinematography.mjs';
 import { localStyle } from '../src/providers/comfyui.mjs';
@@ -65,7 +66,17 @@ const DRY = argv.includes('--dry-run');
 const SKIP_GATE = argv.includes('--skip-gate');
 const ONLY = String(flag('only', '')).split(',').map((s) => s.trim()).filter(Boolean);
 const N = Number(flag('n', 1)) || 1;
-const STEPS = flag('steps', LOCAL_IMAGE_STEPS);
+// ⚠ 步数/CFG/LoRA **不能给默认值兜底**：曾经写成 `flag('steps', LOCAL_IMAGE_STEPS)`，
+// 那个 20 恒为真，于是永远往下发 steps=20，把 provider 里 `fast=true` 的默认整个压掉 ——
+// 资产一直在跑 20 步非蒸馏路径，而关键帧早已换成加速栈。同一处入口漏接，第二次。
+// 现在：显式给了就手动档（三件套成套），没给就走 LOCAL_ASSET_* 默认加速档。
+const STEPS = flag('steps', null);
+const CFG = flag('cfg', null);
+const LORA = flag('lora', null);
+const MANUAL_IMAGE = STEPS || CFG || LORA;
+if (MANUAL_IMAGE && !(STEPS && CFG && LORA)) {
+  console.error('⚠ 步数/CFG/LoRA 只给了部分：剩下的交给通道兜底，可能凑出未验证的蒸馏档');
+}
 const WRITE = !argv.includes('--no-write');
 const WORKSPACE = flag('ws', null);
 
@@ -150,7 +161,21 @@ function providerArgsFor(p, job, outDir, images) {
   const ratio = job.size || '1:1';
   if (p.name === 'comfyui') {
     const common = { ratio, n: N, outDir, prefix: job.id };
-    if (STEPS) common.steps = Number(STEPS);
+    // 尺寸按**该资产自己的比例**排布（肖像 1:1、身份图 16:9、主图跟剧目画幅）；
+    // 不留默认值 —— 默认会退回 IMAGE_RATIO_MAP 的 ~1MP。
+    const [w, h] = dimensionsForAspect(LOCAL_ASSET_SIZE, ratio).split('x');
+    common.width = Number(w);
+    common.height = Number(h);
+    if (MANUAL_IMAGE) {
+      if (STEPS) common.steps = Number(STEPS);
+      if (CFG) common.cfg = Number(CFG);
+      if (LORA) common.lora = LORA;
+    } else if (LOCAL_ASSET_FAST) {
+      // 成套下发：LoRA + 步数 + CFG 三者配套，错配会糊
+      common.lora = LOCAL_ASSET_LORA;
+      common.steps = Number(LOCAL_ASSET_STEPS);
+      common.cfg = Number(LOCAL_ASSET_CFG);
+    }
     // `--style` 对 t2i 与 edit **都要传**（2026-09-20 修）。
     //
     // 旧代码是 `if (job.mode !== 'edit')` —— 因为当时 gen.py 的 edit 分支把 negative
