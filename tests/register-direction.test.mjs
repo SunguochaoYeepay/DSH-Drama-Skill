@@ -147,4 +147,22 @@ test('--skip-gate 仅在调试时绕过剧本闸门', () => {
   }
 });
 
-console.log('register-direction: 7/7 passed');
+test('单元缺 audience_knows 时登记成功、但把缺项提示出来（机器不阻断，报给人工看）', () => {
+  const dir = project();
+  try {
+    const input = path.join(dir, 'draft.json');
+    fs.writeFileSync(input, draft([
+      { id: 'u1' },
+      { id: 'u2', audience_knows: '观众已看见猫踩翻花盆，她还在低头看手机' },
+    ]), 'utf8');
+    const r = run([path.join(dir, 'board.json'), '--input', input]);
+    assert.equal(r.status, 0, '缺字段不得阻断登记 —— 本工程的口径是「机器不阻断，唯一把关的是人工审阅」');
+    assert.match(r.stderr, /audience_knows/);
+    assert.match(r.stderr, /u1/);
+    assert.doesNotMatch(r.stderr, /u2/, '写了 audience_knows 的单元不该被点名');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+console.log('register-direction: 8/8 passed');

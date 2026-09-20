@@ -67,6 +67,20 @@ fs.mkdirSync(path.dirname(output), { recursive: true });
 if (path.resolve(output) !== inputPath) {
   fs.writeFileSync(output, JSON.stringify(direction, null, 2) + '\n', 'utf8');
 }
+
+// 契约要求每个单元写清「这一单元开始时，观众知道什么、角色知道什么」（`audience_knows`）。
+//
+// **只提示、不阻断** —— 这是刻意的：本工程已取消机器契约校验，「唯一把关的是人工审阅」。
+// 硬性必填会把闸门重新搬回机器手里，而这里真正要的只是**让缺项在登记这一刻被看见** ——
+// 悬念与因果在文本上读不出来，它唯一的落点就是导演稿的这一个字段。
+const missingKnows = (direction.units || [])
+  .map((u, i) => (!String(u?.audience_knows || '').trim() ? (u?.id || `units[${i}]`) : null))
+  .filter(Boolean);
+if (missingKnows.length) {
+  console.warn(`⚠ ${missingKnows.length} 个单元没写 audience_knows（观众/角色各自知道什么）：${missingKnows.join('、')}`);
+  console.warn('  它是「意外有没有来路、悬念成不成立」唯一的落点，契约见 references/director/schema.md 的 units[] 字段表。');
+}
+
 const receipt = writeAgentDirectionReceipt({
   directionPath: output, boardPath, storyPath, authoredBy: flag('authored-by') || 'agent',
 });

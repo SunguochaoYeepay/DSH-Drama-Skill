@@ -8,6 +8,15 @@
 
 剧本阶段**默认走 Agent 直写**：`cli/script.mjs register-agent --input <草稿> --out <项目/story.md>` —— 草稿由**当前对话的 Agent 自己写**，用户不满意改完重新登记即可，不绕付费模型，票据记 `agent_draft` 与 `drafted_by`。**"剧本必须用外部大模型写"这条旧约束已作废**：写剧本要的理解和判断当前对话模型就有，再调一次 `qwen3.8-max` 只是多绕一圈、多一个改一个字就要重跑的锁定成本。另两条来源：`cli/script.mjs generate --input <素材> --out <项目/story.md>` 走 `.env` 的 `AIH_SCRIPT_MODEL` 模型生成 —— **可选，只有用户明确要求"用模型写一版"时才用**；用户原稿仅经其明确确认后用 `register-user --input <原稿> --out <项目/story.md> --confirmed-by <确认者>` 登记。三者都留来源票，记录输入与剧本哈希。`generate` 与导演共用直连流式 Responses：只接受服务起始和完成事件中的相同模型、完整响应与非空正文；默认推理强度 `low`。文本请求超时及两阶段输出上限从根目录 `.env` 读取（见 `.env.example`）。来源票 `story.provenance.json` 记录输入与剧本哈希、请求及响应模型。不得代签、不得把历史未知来源补写成模型创作、不得把 Agent 直写稿标成模型产物。逐字阅读剧本后，用 `cli/review-gate.mjs approve --project <项目> --stage story` 记录人工票。旧 `src/board.mjs story/from-story` 已停用。
 
+**改剧本是一次全链路改动，不是改一个文件。** 用户明确授权修改剧本后，按顺序做四件事，漏一件就会出错：
+
+1. **备份并删掉 `story.md` 与 `story.provenance.json`** —— `register-agent` 拒绝覆盖已存在的剧本（"先人工审阅现有项目，不能静默覆盖"）。老剧本的备份留进项目 `.tmp`。
+2. **重新登记、重新人工确认** —— 剧本原文一变，`story` 票自动失效。
+3. **用 `init-board` 重建板子，不是"同步"** —— `board.json` 的索引镜头与**台词文本**都是从剧本编译出来的；只同步 Brief 的字段会让板子留着旧行号与旧台词，而下游的台词正是靠板子里那份文本搬运的。重建会清空已生成的资源槽位，所以先备份旧板子，重建后把 `characters[].portrait` / `identities[].sheet` / `scenes[].master` 三类槽位照抄回来（`pot_hit` 2026-09-20 实测：9 个槽位全部无损搬回）。
+4. **重算导演稿里的 `lines` 行号** —— 行号是剧本的**行序号**，插一句、删一句都会让后面整体移位。`pot_hit` 实测：加入小猫之后两句台词从 L15/L18 变成 **L18/L21**；照抄旧行号会让台词搬到**动作行**上去。
+
+另外：`cli/keyframes.mjs` 会读项目里的 `asset-design.json`（上一次 `design-assets` 的产物），**它不会跟着板子自动更新** —— 重建板子之后必须重跑 `cli/design-assets.mjs`，否则提示词里会混进过期的造型文本（详见 [`assets-and-keyframes.md`](assets-and-keyframes.md)）。
+
 按 [`board-brief.example.json`](board-brief.example.json) 准备已确认的剧名、项目 id、风格、画幅、人物设定及故事概述，再运行 `node cli/init-board.mjs --story <项目/story.md> --brief <项目/board-brief.json> --out <项目/board.json>`。此入口只做结构化解析和台词搬运，不代写 Brief、不代签人工票；索引镜头不替代导演方案。
 
 导演方案确认后**可选**运行 `node cli/design-assets.mjs <项目/board.json> --out <项目/asset-design.json>`。场景师只编译空间和光线，人物造型师只编译脸、妆发、服装和连续性；两者不能改剧情或镜头。
@@ -106,6 +115,7 @@
 
 送审时必须把实际产物呈现给用户，而不是只给路径或报告：
 
+- **剧本**：**不能只给剧本原文**。原文看不出因果缺口和物理错误（文字甚至可能是对的），所以要同时给一段**白话预演** —— 按**剧本的场面/段落**（不是导演稿的 shot，此刻导演稿还不存在）讲清楚：这一段画面上会看到什么、观众此刻知道什么、角色此刻知道什么。预演同时要回答 `SKILL.md` 里的故事三问（意外凭什么发生／谁先知情／物理是否自洽）—— **三问的答案就是这段预演本身**。`pot_hit`（2026-09-20）实测：只给文本时，「花盆没有掉落的原因」和「花盆从她身后飞上来」这两个洞在故事闸门上完全看不见，直到成片才被用户发现。
 - 图片：总览图加可打开的原图。
 - 视频：完整视频加多帧总览；需要判断衔接时再加首尾帧。
 - 音频：播放或提供完整视频实听，不能仅凭响度数字判断台词是否正常。
