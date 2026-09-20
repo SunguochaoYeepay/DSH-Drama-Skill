@@ -70,4 +70,16 @@ test('显式给 steps 会退回手动档且不再挂默认 LoRA', () => {
   assert.match(lines[0], /steps=20/);
 });
 
-console.log('asset-local-args: 3/3 passed');
+test('`--no-fast` 退回非蒸馏旧路径：20 步 cfg 4，且不挂任何 LoRA', () => {
+  // ⚠ 守的是一个反直觉陷阱：本仓若什么都不下发，provider 的 `fast` 默认为 true，
+  // 会落到**另一个加速档**（官方 Edit-4steps）而不是 20 步。所以必须显式给 20/4。
+  const lines = dryRun(makeProject(), ['--no-fast']);
+  assert.ok(lines.length >= 1);
+  for (const line of lines) {
+    assert.match(line, /steps=20 /);
+    assert.match(line, /cfg=4 /);
+    assert.doesNotMatch(line, /lora=/);
+  }
+});
+
+console.log('asset-local-args: 4/4 passed');

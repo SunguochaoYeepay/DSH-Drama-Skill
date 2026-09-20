@@ -44,7 +44,7 @@ import { provider as getProvider, assetProvider } from '../src/providers/index.m
 import { requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { dimensionsForAspect } from '../src/aspect.mjs';
-import { ASSET_IMAGE_MODEL, VOLCENGINE_IMAGE_MODEL, LOCAL_ASSET_FAST, LOCAL_ASSET_LORA, LOCAL_ASSET_STEPS, LOCAL_ASSET_CFG, LOCAL_ASSET_SIZE } from '../src/config.mjs';
+import { ASSET_IMAGE_MODEL, VOLCENGINE_IMAGE_MODEL, LOCAL_ASSET_FAST, LOCAL_ASSET_LORA, LOCAL_ASSET_STEPS, LOCAL_ASSET_CFG, LOCAL_ASSET_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG } from '../src/config.mjs';
 import { writeGenerationRecord } from '../src/generation-records.mjs';
 import { readCinematography } from '../src/cinematography.mjs';
 import { localStyle } from '../src/providers/comfyui.mjs';
@@ -77,6 +77,11 @@ const MANUAL_IMAGE = STEPS || CFG || LORA;
 if (MANUAL_IMAGE && !(STEPS && CFG && LORA)) {
   console.error('⚠ 步数/CFG/LoRA 只给了部分：剩下的交给通道兜底，可能凑出未验证的蒸馏档');
 }
+// `--no-fast` = 退回非蒸馏旧路径（20 步 + cfg 4，不带 LoRA），与 keyframes 口径一致。
+// ⚠ 光设 AIH_LOCAL_ASSET_FAST=0 是不够的：本仓什么都不下发时 provider 的 `fast`
+// 默认为 true，会落到**另一个加速档**（官方 Edit-4steps）而不是 20 步 —— 反直觉，
+// 所以必须有这个显式开关。
+const NO_FAST = argv.includes('--no-fast');
 const WRITE = !argv.includes('--no-write');
 const WORKSPACE = flag('ws', null);
 
@@ -170,6 +175,11 @@ function providerArgsFor(p, job, outDir, images) {
       if (STEPS) common.steps = Number(STEPS);
       if (CFG) common.cfg = Number(CFG);
       if (LORA) common.lora = LORA;
+    } else if (NO_FAST) {
+      // 非蒸馏旧路径：不带 LoRA，cfg 用 4（gen.py 非 fast 的默认值，这里显式给，
+      // 免得哪天上游改默认值时本仓的行为跟着漂）。
+      common.steps = Number(LOCAL_IMAGE_STEPS);
+      common.cfg = Number(LOCAL_IMAGE_CFG);
     } else if (LOCAL_ASSET_FAST) {
       // 成套下发：LoRA + 步数 + CFG 三者配套，错配会糊
       common.lora = LOCAL_ASSET_LORA;
