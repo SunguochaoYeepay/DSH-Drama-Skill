@@ -42,10 +42,22 @@ export const LOCAL_IMAGE_STEPS = setting('AIH_LOCAL_IMAGE_STEPS', '20');
 export const LOCAL_IMAGE_CFG = setting('AIH_LOCAL_IMAGE_CFG', '4');
 
 // ── 本地关键帧默认档（2026-09-20 no_chute 与 DramaClaw 对照实测后定）──────────
-// 过去关键帧走 20 步 + cfg4 的非蒸馏路径，画面系统性发灰/发黑；换成 DramaClaw 同款的
-// 「Lightning 4 步 LoRA + ModelSamplingAuraFlow(shift=3) + CFGNorm(1)」后脸与道具才出得来，
-// 而且更快。这里把它定为默认；`--no-fast` 可退回旧路径。
+// 旧默认 = 20 步 + cfg4 的非蒸馏路径，画面系统性发灰/发黑（g001 连出数版：脸全黑、
+// 两只包不可见）。换成 Lightning 加速栈后归位，`--no-fast` 可退回旧路径。
+// ⚠ 三件套必须成套给：LoRA / 步数 / CFG 是配对的，错配（例：8 步 LoRA 配 20 步）会糊。
 export const LOCAL_KEYFRAME_FAST = setting('AIH_LOCAL_KEYFRAME_FAST', '1') === '1';
+// ⚠ 这支 8 步 LoRA 文件名里没有 "Edit"，官方是给 Qwen-Image（t2i）配的，挂到
+//   Qwen-Image-Edit-2511 上属于**未经官方验证的组合**。2026-09-20 实测结论：跑得通、
+//   耗时与官方 Edit-4steps 同级（约 38 秒），画质明显更锐（脸/背包/服装材质），
+//   已由人工过审。它是"实测可用"不是"官方支持" —— 换 LoRA 文件、换模型版本
+//   或在别的剧目上，都要重新验一遍再信。
+export const LOCAL_KEYFRAME_LORA = setting('AIH_LOCAL_KEYFRAME_LORA', 'Qwen-Image-Lightning-8steps-V1.0.safetensors');
+export const LOCAL_KEYFRAME_STEPS = setting('AIH_LOCAL_KEYFRAME_STEPS', '8');
+export const LOCAL_KEYFRAME_CFG = setting('AIH_LOCAL_KEYFRAME_CFG', '1');
+if (!/^\d+$/.test(LOCAL_KEYFRAME_STEPS) || Number(LOCAL_KEYFRAME_STEPS) < 1) {
+  throw new Error('AIH_LOCAL_KEYFRAME_STEPS 必须是正整数');
+}
+if (!Number.isFinite(Number(LOCAL_KEYFRAME_CFG))) throw new Error('AIH_LOCAL_KEYFRAME_CFG 必须是数字');
 // 默认像素（短边x长边），实际宽高按剧目画幅排布 —— 横屏剧会自己排成 2048x1152。
 export const LOCAL_KEYFRAME_SIZE = setting('AIH_LOCAL_KEYFRAME_SIZE', '1152x2048');
 export const VIDEO_QUALITY = setting('AIH_VIDEO_QUALITY', 'normal');

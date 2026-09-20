@@ -34,7 +34,7 @@ import * as bailian from '../src/providers/bailian.mjs';
 import * as volcengine from '../src/providers/volcengine.mjs';
 import { bindHandoffKeyframe, requireHandoff } from '../src/continuity-handoff.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
-import { KEYFRAME_PROVIDER, KEYFRAME_IMAGE_MODEL, HUIMENG_IMAGE_MODEL, KEYFRAME_SIZE, BAILIAN_KEYFRAME_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG, LOCAL_KEYFRAME_FAST, LOCAL_KEYFRAME_SIZE } from '../src/config.mjs';
+import { KEYFRAME_PROVIDER, KEYFRAME_IMAGE_MODEL, HUIMENG_IMAGE_MODEL, KEYFRAME_SIZE, BAILIAN_KEYFRAME_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG, LOCAL_KEYFRAME_FAST, LOCAL_KEYFRAME_SIZE, LOCAL_KEYFRAME_LORA, LOCAL_KEYFRAME_STEPS, LOCAL_KEYFRAME_CFG } from '../src/config.mjs';
 import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
 import { withHandoffReference } from '../src/keyframe-references.mjs';
 import { writeGenerationRecord } from '../src/generation-records.mjs';
@@ -68,15 +68,20 @@ if (!['huimeng', 'local', 'bailian', 'volcengine'].includes(PROVIDER)) throw new
 const LOCAL_GEN = COMFY_GEN;
 const LOCAL_PY = COMFY_PYTHON;
 const LOCAL_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_local_v2'))));
-// 步数/CFG：**用户显式给了才传**，否则交给 gen.py 自己按模式定。
-// 这一点在 Lightning 档尤其要命 —— `--fast` 内部是「4 步 LoRA + cfg 1.0」，
-// 再显式塞一个 20 步/ cfg4 进去就成了没验证过的混合档（见 providers/comfyui.mjs 的纪律）。
+// 步数/CFG/LoRA：**用户显式给了才传**，否则交给 gen.py 自己按模式定。
+// 这一点在 Lightning 档尤其要命 —— 三者必须成套，错配（8 步 LoRA 配 20 步）会糊。
 const LOCAL_STEPS = flag('steps', null);
 const LOCAL_CFG = flag('cfg', null);
-// 🔁 关键帧默认档 = Lightning 加速栈（2026-09-20 与 DramaClaw 对照实测）。
-// 20 步非蒸馏路径下画面系统性发灰/发黑，是工程债不是模型问题。`--no-fast` 退回旧路径。
+const LOCAL_LORA = flag('lora', null);
+// 🔁 关键帧默认档 = Lightning 8 步加速栈（2026-09-20 与 DramaClaw 对照实测后定，
+// 见 config.mjs 注释）。给了任一手动参数就完全交还给调用方，不做半自动叠加；
+// `--no-fast` 退回 20 步非蒸馏旧路径。
+const MANUAL_IMAGE = LOCAL_STEPS || LOCAL_CFG || LOCAL_LORA;
 const FAST = !argv.includes('--no-fast')
-  && (argv.includes('--fast') || (LOCAL_KEYFRAME_FAST && !LOCAL_STEPS && !LOCAL_CFG));
+  && (argv.includes('--fast') || (LOCAL_KEYFRAME_FAST && !MANUAL_IMAGE));
+if (MANUAL_IMAGE && !(LOCAL_STEPS && LOCAL_CFG && LOCAL_LORA)) {
+  console.error('⚠ 步数/CFG/LoRA 只给了部分：剩下的交给 gen.py 兜底，可能凑出未验证的蒸馏档');
+}
 const BAILIAN_MODEL = String(flag('model', KEYFRAME_IMAGE_MODEL));
 const BAILIAN_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_bailian'))));
 const VOLCENGINE_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_volcengine'))));
@@ -350,6 +355,34 @@ function refsFor(shot, unit) {
   return refs;
 }
 
+// ── 本地通道真正下发给 gen.py 的 argv ───────────────────────────────────────
+// 干跑与实际出图共用这一个来源，保证「看到的」就是「跑的」。
+// 2026-09-20 排查"画面发黑"，根因之一正是当时看不到真正下发的参数。
+function localGenArgs(unit, refs, prompt) {
+  const a = [LOCAL_GEN, 'edit', '--prompt', prompt, '--ratio', ASPECT,
+    '--style', LOCAL_STYLE, '--out-dir', LOCAL_OUT,
+    '--result-file', path.join(LOCAL_OUT, `.${unit.id}.result.json`)];
+  if (FAST) {
+    // 成套下发：默认档具体用哪支 LoRA 由本仓说了算，不走上游 `--fast`
+    // （那里写死的是官方 Edit-4steps）。LoRA / 步数 / CFG 三者必须配对，错配会糊。
+    a.push('--steps', LOCAL_KEYFRAME_STEPS, '--cfg', LOCAL_KEYFRAME_CFG, '--lora', LOCAL_KEYFRAME_LORA);
+  } else {
+    if (LOCAL_STEPS) a.push('--steps', String(LOCAL_STEPS));
+    else a.push('--steps', LOCAL_IMAGE_STEPS);
+    if (LOCAL_CFG) a.push('--cfg', String(LOCAL_CFG));
+    else a.push('--cfg', LOCAL_IMAGE_CFG);
+    if (LOCAL_LORA) a.push('--lora', String(LOCAL_LORA));
+  }
+  // 输出尺寸：显式 --width/--height 优先，否则按 **剧目画幅** 排布默认像素
+  // （edit 默认不看目标尺寸，这里必须给，否则 FluxKontextImageScale 会把输出压到 ~1MP）。
+  const LW = flag('width', null), LH = flag('height', null);
+  const sizeArg = (LW && LH) ? `${LW}x${LH}` : dimensionsForAspect(LOCAL_KEYFRAME_SIZE, ASPECT);
+  const [outW, outH] = sizeArg.split('x');
+  a.push('--width', outW, '--height', outH);
+  for (const ref of refs) a.push('--image', ref.file);
+  return a;
+}
+
 // ---------------------------------------------------------------- 主流程
 
 console.log(`\n出关键帧　共 ${dir.units.length} 个单元`);
@@ -411,7 +444,19 @@ for (const unit of dir.units) {
   } else {
     console.log(`    ✓ 提示词自检通过：${audit.chars} 字`);
   }
-  if (DRY) continue;
+  if (DRY) {
+    if (PROVIDER === 'local') {
+      const argv = localGenArgs(unit, refs, modelPrompt).slice(1);
+      // 提示词整段已在上面打印过，这里用占位符，免得同一段话再铺一遍
+      const shown = argv.map((v, i) => (argv[i - 1] === '--prompt'
+        ? `<${modelPrompt.length} 字>`
+        : (String(v).includes(' ') ? `"${v}"` : v)));
+      console.log(`    gen.py argv（实际下发）：${shown.join(' ')}`);
+    } else {
+      console.log(`    通道：${PROVIDER}（非本地通道，不走 gen.py）`);
+    }
+    continue;
+  }
 
   let r;
   let got = false;
@@ -419,21 +464,8 @@ for (const unit of dir.units) {
   let txt = '';
   if (PROVIDER === 'local') {
     const resultFile = path.join(LOCAL_OUT, `.${unit.id}.result.json`);
-    const a = [LOCAL_GEN, 'edit', '--prompt', modelPrompt, '--ratio', ASPECT,
-      '--style', LOCAL_STYLE, '--out-dir', LOCAL_OUT, '--result-file', resultFile];
-    if (LOCAL_STEPS) a.push('--steps', String(LOCAL_STEPS));
-    else if (!FAST) a.push('--steps', LOCAL_IMAGE_STEPS);
-    if (LOCAL_CFG) a.push('--cfg', String(LOCAL_CFG));
-    else if (!FAST) a.push('--cfg', LOCAL_IMAGE_CFG);
-    // `--fast` = Lightning 4 步 LoRA + cfg 1.0（上游同配 ModelSamplingAuraFlow shift=3 + CFGNorm）。
-    if (FAST) a.push('--fast');
-    // 输出尺寸：显式 --width/--height 优先，否则按 **剧目画幅** 排布默认像素
-    // （edit 默认不看目标尺寸，这里必须给，否则 FluxKontextImageScale 会把输出压到 ~1MP）。
-    const LW = flag('width', null), LH = flag('height', null);
-    const sizeArg = (LW && LH) ? `${LW}x${LH}` : dimensionsForAspect(LOCAL_KEYFRAME_SIZE, ASPECT);
-    const [outW, outH] = sizeArg.split('x');
-    a.push('--width', outW, '--height', outH);
-    for (const ref of refs) a.push('--image', ref.file);
+    // 与干跑同源：真正跑的就是刚才打印的那一串
+    const a = localGenArgs(unit, refs, modelPrompt);
     const started = Date.now();
     r = spawnSync(LOCAL_PY, a, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 900000 });
     secs = String(Math.round((Date.now() - started) / 1000));
