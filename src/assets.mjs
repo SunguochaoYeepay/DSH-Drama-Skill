@@ -14,6 +14,8 @@
  *   prop_3v   道具三视图：正/侧/背，白底，无人，**禁止可读文字**
  */
 
+import { assetCinematography } from './cinematography.mjs';
+
 const AGE_CN = { child: '儿童', youth: '青年', middle: '中年', elder: '老年' };
 
 /**
@@ -79,6 +81,19 @@ export function regionAnchor(board) {
   return base;
 }
 
+/**
+ * 把摄影层拼回正文。
+ *
+ * 摄影层是自带标点的整块（「【风格排除】不得出现：水彩、线稿。」以句号收尾，
+ * 「【镜头】85mm」不收尾），直接进「，」拼接会造出「。，」这种连标点。
+ * 所以按前一块的收尾字符决定补不补逗号。
+ */
+function glue(head, rest) {
+  if (!head) return rest;
+  if (!rest) return head;
+  return /[。，；、！？]$/.test(head) ? head + rest : `${head}，${rest}`;
+}
+
 /** 已经写明了族裔就别重复，免得提示词啰嗦。 */
 function needsRegion(text) {
   return !/东亚|中国|亚洲|华人|汉人|East Asian|Asian/i.test(String(text || ''));
@@ -132,11 +147,14 @@ export function isHuman(ch) {
  * **故意不带风格圣经** —— 成片色调会把它拖进场景，就失去「锚」的意义了。
  * **故意不写服装** —— 服装属于造型层；写进来会让这张脸只适配一套衣服。
  */
-export function portraitPrompt(board, character) {
+export function portraitPrompt(board, character, contract = null) {
   const human = isHuman(character);
   const region = human && needsRegion(character.face_prompt) ? regionAnchor(board) : '';
-  return [
-    styleAnchor(board),
+  // 肖像只吃排除项与焦段，**不吃风格头和光**（`assetCinematography` 里有判据表）。
+  // 这两块自带标点和【】包裹，直接贴在风格锚后面，不进「，」拼接 —— 否则会出现「。，」。
+  const cine = assetCinematography(contract, 'portrait');
+  const head = `${styleAnchor(board)}${cine.negatives || ''}${cine.optics || ''}`;
+  return glue(head, [
     human ? (AGE_CN[character.age_group] || '青年') : '',
     region,
     character.face_prompt,
@@ -157,7 +175,7 @@ export function portraitPrompt(board, character) {
         + '**画面下边界必须切在锁骨上方**，画面里只有头部与颈部，**颈部和肩以下不允许出现任何衣物**。'
       : '【体表】**四足动物，不穿任何衣物、不佩戴任何配饰**，不拟人化、不直立；只有自然的毛发与体表特征。',
     '【禁止】画面里不许出现任何文字、水印、边框、色卡、标注，也不许出现道具和场景。',
-  ].filter(Boolean).join('，');
+  ].filter(Boolean).join('，'));
 }
 
 /**
@@ -174,12 +192,14 @@ export function portraitPrompt(board, character) {
  * **模型不会替你守版面。** 所以这里把**画幅、方向、等宽等高、留白、居中、背景**
  * 全部显式写出来，一条都不省。
  */
-export function sheetInstruction(board, identity) {
+export function sheetInstruction(board, identity, contract = null) {
   const ch = (board.characters || []).find((c) => c.id === identity.character);
   const human = isHuman(ch);
   const region = ch && human && needsRegion(ch.face_prompt) ? regionAnchor(board) : '';
-  return [
-    `${styleAnchor(board)}，`,
+  // 同肖像：只吃排除项与焦段，不吃风格头和光。这两块自带标点，直接贴在风格锚后。
+  const cine = assetCinematography(contract, 'sheet');
+  const head = `${styleAnchor(board)}${cine.negatives || ''}${cine.optics || ''}`;
+  return glue(head, [
     region ? `${region}，` : '',
     ch ? `${ch.face_prompt}，` : '',
     identity.appearance_details,
@@ -219,7 +239,7 @@ export function sheetInstruction(board, identity) {
     // 那张图要当参考图喂给关键帧，**烧进去的字会跟着污染画面**。
     '【禁止】**画面里不许出现任何文字、数字、标题、标注、色标、参数表、分隔线、边框或水印**，'
     + `也不许出现场景、道具、其他${human ? '人物' : '角色'} —— 只有这四个格子里的同一个角色。`,
-  ].join('');
+  ].join(''));
 }
 
 /**
@@ -238,11 +258,16 @@ export function sheetRefs(board, identity) {
  * 场景主图：**禁人、禁临时道具** —— 它是这个场景的风格锚。
  * 这里**带风格圣经** —— 场景要的就是成片色调。
  */
-export function masterPrompt(board, scene) {
-  return [
+export function masterPrompt(board, scene, contract = null) {
+  // 场景主图是**画面**，不是锚 —— 风格头、排除项、焦段、结构化光全吃。
+  // 它喂给全部关键帧，所以它长什么样，全片就长什么样。
+  const cine = assetCinematography(contract, 'master');
+  const head = `${cine.header || ''}${cine.negatives || ''}${cine.optics || ''}`;
+  return glue(head, [
     styleAnchor(board),
     board.meta?.style_prompt || '',
     scene.environment,
+    cine.lighting,
     // **必须写成"动物"而不只是"人"。** 实测：只写「没有任何人」时，
     // 一部猫片出的场景主图正中是一只腾空跳起的橘猫 —— 因为"猫不是人"，
     // 那条否定式根本没管住它。而场景主图是空镜、要喂给全部关键帧，
@@ -262,7 +287,7 @@ export function masterPrompt(board, scene) {
     + '光线与固定陈设，'
     + '看不到任何一个角色：没有人物、没有动物、没有宠物（**一个都不出现**），'
     + '没有任何临时道具，没有文字',
-  ].filter(Boolean).join('，');
+  ].filter(Boolean).join('，'));
 }
 
 /** 反向场景图：左右边缘必须与主图可缝合，否则换轴就穿帮。 */
@@ -302,11 +327,12 @@ export function propPrompt(prop) {
  * **引用必须执行时才解析。**
  */
 export function assetPlan(board, opts = {}) {
+  const contract = opts.contract ?? null;
   const plan = [];
   for (const c of board.characters || []) {
     plan.push({
       kind: 'portrait', id: c.id, slot: 'portrait',
-      mode: 'generate', prompt: portraitPrompt(board, c),
+      mode: 'generate', prompt: portraitPrompt(board, c, contract),
       size: '1:1', target: c,
       why: '脸部锚点：跨全片复用，所以要中性、要正面、要不带服装',
     });
@@ -314,7 +340,7 @@ export function assetPlan(board, opts = {}) {
   for (const x of board.identities || []) {
     plan.push({
       kind: 'sheet', id: x.id, slot: 'sheet',
-      mode: 'edit', instruction: sheetInstruction(board, x),
+      mode: 'edit', instruction: sheetInstruction(board, x, contract),
       refsFor: () => sheetRefs(board, x),
       // **身份图固定 16:9，不跟片子画幅走。** 它是参考图、不是画面：
       // 4 个面板横排需要横向空间，竖屏塞 4 个面板每个都太小。
@@ -326,7 +352,7 @@ export function assetPlan(board, opts = {}) {
   for (const s of board.scenes || []) {
     plan.push({
       kind: 'master', id: s.id, slot: 'master',
-      mode: 'generate', prompt: masterPrompt(board, s), size: board.meta?.aspect || '16:9', target: s,
+      mode: 'generate', prompt: masterPrompt(board, s, contract), size: board.meta?.aspect || '16:9', target: s,
       why: '场景风格锚：禁人禁临时道具，这样它才只描述"这个地方"',
     });
     // **这两个默认不生成了。**

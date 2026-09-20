@@ -51,6 +51,8 @@ node cli/review-gate.mjs ready-assemble --project <项目目录> --plan <render.
 
 合成前根据项目决定是否运行 `cli/desub.mjs` 过滤 H3 烧入字幕。必须保留原始片段，后处理产物使用新路径。
 
+**去字幕换了产物，就必须重批该段的 `clip` 票。** 票绑的是产物哈希，新路径上那张票不存在 —— 不重批，`assemble-units` 取到的仍是原片（带硬字幕），去字幕白做。重批方式：`node cli/review-gate.mjs approve --project <项目目录> --stage clip --id <单元 id> --artifacts <去字幕后的片段>`。
+
 ## 最终人工审阅
 
 展示完整成片并要求用户重点看：

@@ -18,4 +18,4 @@ const designs = [
 ];
 const receipt = designs.map((design) => designReceipt({ design, directorPath: path.join(project, 'board.direction.json'), boardPath }));
 fs.writeFileSync(out, JSON.stringify({ contract: 1, designs, receipt }, null, 2) + '\n', 'utf8');
-console.log(`资产专业方案：${out}\n场景 ${designs.filter((x) => x.kind === 'scene_design').length} 个，人物造型 ${designs.filter((x) => x.kind === 'character_design').length} 个\n状态：等待导演审核，未生成图片`);
+console.log(`资产专业方案（参谋，不是闸门）：${out}\n场景 ${designs.filter((x) => x.kind === 'scene_design').length} 个（供人工参考，不进提示词），人物造型 ${designs.filter((x) => x.kind === 'character_design').length} 个（只在关键帧阶段被消费）\n未生成图片；本步不需要人工票，资源阶段读 board.json，不读本文件`);

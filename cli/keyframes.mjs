@@ -40,6 +40,7 @@ import { withHandoffReference } from '../src/keyframe-references.mjs';
 import { writeGenerationRecord } from '../src/generation-records.mjs';
 import { readKeyframeOverride } from '../src/keyframe-overrides.mjs';
 import { compileCharacterDesign, compileDrawPlan } from '../src/draw-specialist.mjs';
+import { readCinematography, compileCinematography } from '../src/cinematography.mjs';
 
 installCliErrorHandler();
 
@@ -87,17 +88,21 @@ function applyCompositionOverride(prompt, override) {
 function executionShotSpec(shot, override) {
   const framing = FRAMING[shot.framing]?.rule?.replaceAll('**', '') || `景别：${shot.framing || '未指定'}`;
   const camera = shot.camera || '固定机位';
-  const overrideText = override
-    ? `执行层覆盖优先：${override}`
-    : '按导演分镜的景别与构图执行，不自行改变人物位置。';
-  const capture = override
-    ? '画面从床头的斜侧方向取景，完整看到床头板、枕头、女孩头部、肩膀、躯干、双手、双腿和床尾方向；保留人物从头到脚的纵向身体轴线，不裁掉床头或脚部。'
-    : framing;
+  // 覆盖启用时：**覆盖文本本身就是画面截取范围**，景别行仍写导演稿的景别供参照，
+  // 覆盖文本可以在散文里改写它，并显式声明优先。
+  //
+  // ⚠ 这里曾经硬编码过一段床戏取景（「画面从床头的斜侧方向取景…完整看到床头板、枕头…床尾方向」），
+  // 于是**任何非床戏场景一旦用覆盖，就会被注入「床头板、枕头、床尾」**。
+  // 覆盖是通用机制，不能只对一个剧目成立 —— 2026-09-20 在 pot_hit（老楼楼道口）实测踩到：
+  // 楼道口的双人关键帧需要压构图，却拿到一段床戏描述，只能放弃覆盖这条路。
+  const capture = override || framing;
   return [
-    `【景别】${override ? '斜侧中景（执行层覆盖原始景别）' : shot.framing}`,
+    `【景别】${shot.framing || '未指定'}`,
     `【画面截取范围】${capture}`,
-    `【机位/构图】${camera}；${overrideText}`,
-    '【空间关系】画面中的人物、承托物、床头/床尾、道具和镜面关系必须与导演首帧状态一致；不得新增人物、重复人物或改变头脚方向。',
+    `【机位/构图】${camera}；${override
+      ? '执行层覆盖优先：上面那段覆盖文本优先于任何默认构图规则。'
+      : '按导演分镜的景别与构图执行，不自行改变人物位置。'}`,
+    '【空间关系】画面中的人物、承托物、道具与空间关系必须与导演首帧状态一致；不得新增人物、重复人物或改变头脚方向。',
   ].join('\n');
 }
 
@@ -152,6 +157,8 @@ const NO_TEXT = '【禁止】画面里**不许出现任何文字、字幕、水�
 
 const dir = JSON.parse(fs.readFileSync(DIRECTION_PATH, 'utf8'));
 const board = JSON.parse(fs.readFileSync(BOARD_PATH, 'utf8'));
+// 摄影契约为可选：老剧目没有这个文件，行为与今天完全一致，不会凭空多出一层。
+const CINE = readCinematography(PROJ);
 const assetDesignPath = path.join(PROJ, 'asset-design.json');
 const assetDesign = fs.existsSync(assetDesignPath) ? JSON.parse(fs.readFileSync(assetDesignPath, 'utf8')) : { designs: [] };
 const ASPECT = aspectOf(board);
@@ -172,8 +179,9 @@ requireApproval(PROJ, 'direction', [path.join(PROJ, 'board.direction.json')], { 
 /** 造型 id → 角色 id（要拿角色的肖像当脸锚点） */
 const charOf = (identId) => (board.identities.find((x) => x.id === identId) || {}).character;
 
-function buildPrompt(unit, shot) {
+function buildPrompt(unit, shot, cine) {
   const f = FRAMING[shot.framing] || { rule: `【景别｜${shot.framing}】` };
+  const cineBlock = compileCinematography(cine, { shot, framing: shot.framing });
   const people = (unit.keyframe_cast || shot.on_screen || []).map((id) => {
     const cid = charOf(id);
     const c = board.characters.find((x) => x.id === cid);
@@ -182,10 +190,15 @@ function buildPrompt(unit, shot) {
   }).join('；');
 
   return [
+    cineBlock.header,                          // ← 锁定风格头永远在最前，逐字不改
+    cineBlock.negatives,
+    cineBlock.rules,                           // ← 全片物理规则（本镜可翻转）
+    cineBlock.optics,
     `【整体风格】${board.meta?.style_prompt || board.meta?.style || '与项目视觉风格一致'}。`,
-    f.rule,                                    // ← 景别硬约束放最前
+    f.rule,                                    // ← 景别硬约束紧跟其后
     `【人物】${people}`,
     `【关键帧起始姿态】${staticKeyframeStart(unit, shot)}`,
+    cineBlock.lighting,
     shot.lighting ? `【光】${shot.lighting}` : '',
     shot.camera && !/^固定/.test(shot.camera) ? `【运镜】${shot.camera}（这是一张静帧，只需体现这个机位的构图）` : '',
     NO_TEXT,
@@ -193,8 +206,9 @@ function buildPrompt(unit, shot) {
   ].filter(Boolean).join('\n');
 }
 
-function buildLocalPrompt(unit, shot, refs) {
+function buildLocalPrompt(unit, shot, refs, cine) {
   const f = FRAMING[shot.framing] || { rule: `景别：${shot.framing}` };
+  const cineBlock = compileCinematography(cine, { shot, framing: shot.framing });
   const anchoredIds = unit.keyframe_cast || shot.on_screen || [];
   const names = anchoredIds.map((id) => {
     const cid = charOf(id);
@@ -221,6 +235,10 @@ function buildLocalPrompt(unit, shot, refs) {
     return `图${i + 1}是${name}的身份参考，严格保持此人的脸、发型${r.role === 'sheet' ? '和服装' : ''}`;
   });
   return [
+    cineBlock.header,                          // ← 锁定风格头永远在最前，逐字不改
+    cineBlock.negatives,
+    cineBlock.rules,                           // ← 全片物理规则（本镜可翻转）
+    cineBlock.optics,
     `请把参考图中的${names.join('和')}放进同一个镜头，整体风格严格遵循：${board.meta?.style_prompt || board.meta?.style || '项目既定视觉风格'}。${bindings.join('；')}。`,
     supporting.length
       ? `画面必须出现${names.join('和')}，还必须出现次要主体${supporting.join('；')}；不得漏掉动作起点中写明的任何主体，也不得增加其他角色。`
@@ -238,6 +256,7 @@ function buildLocalPrompt(unit, shot, refs) {
     unit.continuity?.mode === 'continue_previous'
       ? `连续性交接：必须保持“${unit.continuity.handoff_state}”；只允许改变：${(unit.continuity.allowed_changes || []).join('、') || '无'}。`
       : '',
+    cineBlock.lighting,
     shot.lighting ? `光线：${shot.lighting}` : '',
     '保持参考图的角色身份、体型比例和体表材质。不得重设计脸部或头部特征、毛发、皮肤、服装与配饰。',
     `【生成前最终检查】${f.rule.replaceAll('**', '')}`,
@@ -318,8 +337,8 @@ for (const unit of dir.units) {
     ? `【参考图职责】${refs.map((r, i) => `图${i + 1}=${r.role === 'handoff' ? '上一段实际稳定尾帧，必须继承姿态与空间状态' : r.role === 'scene' ? '场景与构图环境' : r.role === 'portrait' ? '人物脸部' : r.role === 'prop' ? `道具${r.name || ''}` : '人物服装与身份'}`).join('；')}`
     : '';
   const prompt = PROVIDER === 'local' || PROVIDER === 'bailian' || PROVIDER === 'volcengine'
-    ? buildLocalPrompt(unit, shot, refs)
-    : [refGuide, buildPrompt(unit, shot)].filter(Boolean).join('\n');
+    ? buildLocalPrompt(unit, shot, refs, CINE)
+    : [refGuide, buildPrompt(unit, shot, CINE)].filter(Boolean).join('\n');
   const override = readKeyframeOverride(PROJ, unit.id);
   const drawPlan = compileDrawPlan({ unit, shot, override });
   const characterDesign = compileCharacterDesign({ designs: assetDesign.designs || [], unit, shot });

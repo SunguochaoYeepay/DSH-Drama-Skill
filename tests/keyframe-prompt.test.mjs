@@ -81,3 +81,14 @@ test('composition override removes the conflicting base framing clauses', () => 
   assert.doesNotMatch(out, /【生成前最终检查】/);
   assert.match(out, /斜侧中景/);
 });
+
+test('composition override is the capture itself and injects no bed-scene wording', () => {
+  // 回归守卫：这段取景曾经被硬编码成床戏描述（「画面从床头的斜侧方向取景…床尾方向」），
+  // 导致任何非床戏场景一用覆盖就被注入「床头板、枕头、床尾」。
+  // 覆盖是通用机制 —— 覆盖文本里没有的东西，提示词里也不许出现。
+  const text = '构图覆盖：中景，她站在台阶最下一级的水痕地面上，双手自然垂在身侧；矮桌在她身后的门洞里';
+  const out = dryRun(makeProject(text));
+  assert.match(out, new RegExp(`【画面截取范围】${text}`));
+  assert.doesNotMatch(out, /床头|枕头|床尾|镜面/);
+  assert.match(out, /楼道口|门洞/);
+});

@@ -10,7 +10,11 @@
 
 按 [`board-brief.example.json`](board-brief.example.json) 准备已确认的剧名、项目 id、风格、画幅、人物设定及故事概述，再运行 `node cli/init-board.mjs --story <项目/story.md> --brief <项目/board-brief.json> --out <项目/board.json>`。此入口只做结构化解析和台词搬运，不代写 Brief、不代签人工票；索引镜头不替代导演方案。
 
-导演方案确认后，先运行 `node cli/design-assets.mjs <项目/board.json> --out <项目/asset-design.json>`。场景师只编译空间和光线，人物造型师只编译脸、妆发、服装和连续性；两者不能改剧情或镜头。`asset-design.json` 必须先经导演审核，再进入资源生成和人工资源票。
+导演方案确认后**可选**运行 `node cli/design-assets.mjs <项目/board.json> --out <项目/asset-design.json>`。场景师只编译空间和光线，人物造型师只编译脸、妆发、服装和连续性；两者不能改剧情或镜头。
+
+**这一步是参谋，不是闸门。** 资源阶段读 `board.json`，不读 `asset-design.json`；关键帧只消费其中的人物造型条目（`compileCharacterDesign`），场景设计一条都不进提示词。`asset-design.json` 里 `status: 'director_review_pending'` 只写不读，没有入口检查它 —— 所以它**不需要导演审核，也不需要人工票**，跳过不会阻断后续任何步骤；资源阶段的人工资源票才是这道关。
+
+想改资源阶段的出图，改的是 `board.json`（`scene.environment`、`character.face_prompt`、`identity.appearance_details`）；想改全片镜头与光，改的是 `cinematography.json`。改设计方案对这两处都没有效果。
 
 导演稿有**两条合法来源，默认走第 2 条**，两条都必须按 [`director/brief.md`](director/brief.md) + [`director/schema.md`](director/schema.md) 的契约交付：
 

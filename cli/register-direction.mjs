@@ -11,11 +11,15 @@
  * 用法：
  *   node cli/register-direction.mjs <board.json> --input <导演稿草稿.json>
  *        [--out board.direction.json] [--story story.md] [--authored-by <标识>]
+ *        [--skip-gate]（**仅限调试**，跳过剧本人工确认）
  *   `--out` 与 `--input` 相同时只补票据，不搬文件。
+ *
+ * 与 `cli/direct.mjs` 一样**先查剧本人工票**：导演稿基于剧本，剧本没确认就写导演稿等于白干。
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { requireApproval } from '../src/human-gates.mjs';
 import { writeAgentDirectionReceipt } from '../src/direction-provenance.mjs';
 
 installCliErrorHandler();
@@ -41,6 +45,9 @@ const inputPath = path.resolve(inputArg);
 if (!fs.existsSync(boardPath)) throw new Error(`找不到板子：${boardPath}`);
 if (!fs.existsSync(storyPath)) throw new Error(`找不到剧本：${storyPath}`);
 if (!fs.existsSync(inputPath)) throw new Error(`找不到导演稿草稿：${inputPath}`);
+
+// 与 cli/direct.mjs 对齐：剧本未经人工确认，不得进入导演阶段。
+requireApproval(projectDir, 'story', [storyPath], { skip: argv.includes('--skip-gate') });
 
 const raw = fs.readFileSync(inputPath, 'utf8');
 let direction;

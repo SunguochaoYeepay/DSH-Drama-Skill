@@ -45,6 +45,7 @@ import { requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { ASSET_IMAGE_MODEL, LOCAL_IMAGE_STEPS, VOLCENGINE_IMAGE_MODEL } from '../src/config.mjs';
 import { writeGenerationRecord } from '../src/generation-records.mjs';
+import { readCinematography } from '../src/cinematography.mjs';
 
 installCliErrorHandler();
 
@@ -72,6 +73,11 @@ const PROVIDER_ARG = String(flag('provider', '')).toLowerCase();
 const PROVIDER_NAME = PROVIDER_ARG === 'local' ? 'comfyui' : PROVIDER_ARG;
 
 const board = JSON.parse(fs.readFileSync(BOARD_PATH, 'utf8'));
+
+// 摄影契约：没有这个文件就什么都不加（`readCinematography` 返回 null），
+// 老剧目的资产提示词一个字都不变。规则正本见 references/cinematography.md。
+const CONTRACT = readCinematography(PROJ);
+if (CONTRACT) console.log(`摄影契约：已载入 ${path.join(PROJ, 'cinematography.json')}（肖像/身份图取排除项与焦段；场景主图取全套）`);
 
 // ---------------------------------------------------------------- 闸门
 
@@ -169,7 +175,7 @@ function callProvider(p, job, outDir, images) {
 
 // ---------------------------------------------------------------- 主流程
 
-const plan = assetPlan(board, { sceneExtras: argv.includes('--with-scene-extras') });
+const plan = assetPlan(board, { sceneExtras: argv.includes('--with-scene-extras'), contract: CONTRACT });
 const jobs = ONLY.length
   ? plan.filter((j) => ONLY.includes(j.id) || ONLY.includes(`${j.kind}:${j.id}`))
   : plan;

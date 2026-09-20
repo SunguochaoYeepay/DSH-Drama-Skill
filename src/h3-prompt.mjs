@@ -1,4 +1,5 @@
 import { compileDirectorExecution } from './director-execution.mjs';
+import { compileCinematography } from './cinematography.mjs';
 
 const FACING_PHRASE = {
   left: 'facing the left side of the frame',
@@ -101,6 +102,10 @@ export function buildUnitPrompt(unit, ctx) {
   };
 
   const body = [];
+  // 锁定风格头与风格排除是**全片公共前缀**，不是某一镜的属性，所以放在逐镜描述之前。
+  const contractCine = compileCinematography(ctx.contract, { lang: 'en' });
+  if (contractCine.header) body.push(contractCine.header);
+  if (contractCine.negatives) body.push(contractCine.negatives);
   for (const [index, shot] of unit.shots.entries()) {
     const action = replaceAll(clean(shot.action), DEACT);
     const faces = Object.entries(shot.facing || {})
@@ -121,9 +126,14 @@ export function buildUnitPrompt(unit, ctx) {
     const people = (shot.on_screen || []).map(nameOf).join('与');
     if (people) segment.push(`of ${people}`);
     const looks = (shot.on_screen || []).map(appearanceOf).filter(Boolean).join('；');
-    const middle = [faces, directives, looks, action + camera, replaceAll(clean(shot.lighting), LIGHT)].filter(Boolean).join('，');
+    // 镜头与光是**每镜**属性，所以进这一镜的描述，而不是全片前缀。
+    const shotCine = compileCinematography(ctx.contract, { shot, framing: shot.framing, lang: 'en' });
+    const middle = [faces, directives, looks, action + camera, shotCine.optics, shotCine.lighting, replaceAll(clean(shot.lighting), LIGHT)].filter(Boolean).join('，');
     if (middle) segment.push(`—— ${middle}`);
     let text = segment.join(' ') + '。';
+    // 全片规则每镜都要带（否则这一镜就不受约束），但**按本镜的覆盖取值** ——
+    // 所以它跟 optics / lighting 一样是每镜属性，不是全片前缀。
+    if (shotCine.rules) text += `\n${shotCine.rules}`;
     for (const line of shot.lines || []) {
       const dialogue = lineText.get(line);
       if (!dialogue) { text += `（警告：第 ${line} 行没有台词原文）`; continue; }

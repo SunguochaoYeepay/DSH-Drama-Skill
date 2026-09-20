@@ -30,9 +30,12 @@ ai-images-harness/
 ├─ src/                      业务逻辑和提供方适配
 ├─ references/               按阶段加载的规则和模型提示
 │  ├─ preflight.md           开工前清单（环境体检、预算、提示词自检）
+│  ├─ story-craft.md         剧本工艺（节拍结构/人物动机/台词/自检清单）
+│  ├─ cinematography.md      摄影语言契约（镜头/光/风格头，立项定、全片共用）
 │  ├─ qa-and-review.md       人工送审规则（只有人工确认，没有机器审核）
 │  ├─ director/              导演 Brief 与输出结构
-│  └─ prompts/               故事与 storyboard 提示模板
+│  ├─ art/                   分题材视觉语言包（realistic / cartoon3d / …）
+│  └─ prompts/               故事与 storyboard 提示模板（已退役，仅历史契约）
 ├─ schema/                   Storyboard JSON Schema
 ├─ tests/                    确定性测试（含 tests/integration/ 活体验证）
 └─ plugins/                  UI 插件
@@ -178,7 +181,9 @@ node cli/animatic.mjs <board.json> --direction <board.direction.json>
 node cli/desub.mjs <视频>
 ```
 
-其他专项入口：`cli/huimeng.mjs` 调用绘梦生图，`cli/look-local.mjs` 检查本地造型。它们不是主流程入口。
+旁支入口（不在主流程里，按需单独调用）：`cli/look-local.mjs` 用本地 ollama 视觉模型看图（0 成本）。
+
+`cli/huimeng.mjs` **不是旁支入口** —— 它是 `--provider huimeng` 的执行后端，由 `cli/keyframes.mjs` 调用；绘梦只接公开 URL，参考图会自动经 Cloudinary 转链接。它也可以单独调来出单张图。
 
 发生模型、音频、字幕或 ComfyUI 问题时，读取 [references/troubleshooting.md](references/troubleshooting.md)。
 

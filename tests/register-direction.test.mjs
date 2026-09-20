@@ -8,17 +8,28 @@ import test from 'node:test';
 const NODE = process.execPath;
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '..');
 const CLI = path.join(root, 'cli', 'register-direction.mjs');
+const GATE = path.join(root, 'cli', 'review-gate.mjs');
 
 function run(args) {
   return spawnSync(NODE, [CLI, ...args], { cwd: root, encoding: 'utf8' });
 }
 
-/** 建一个最小项目：板子 + 剧本。本入口只做结构与留痕，不做契约校验。 */
-function project() {
+/** 预置一张人工票。登记入口现在与 cli/direct.mjs 一样查剧本闸门，测试必须先过这一关。 */
+function approve(dir, stage, artifacts = []) {
+  const args = [GATE, 'approve', '--project', dir, '--stage', stage];
+  if (artifacts.length) args.push('--artifacts', ...artifacts);
+  const r = spawnSync(NODE, args, { cwd: root, encoding: 'utf8' });
+  if (r.status !== 0) throw new Error(`预置 ${stage} 票失败：${r.stderr || r.stdout}`);
+}
+
+/** 建一个最小项目：板子 + 剧本（默认已批票）。本入口只做结构与留痕，不做契约校验。 */
+function project({ approveStory = true } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'direction-agent-'));
   fs.writeFileSync(path.join(dir, 'board.json'),
     JSON.stringify({ meta: { project: 'tmp' }, characters: [], identities: [], scenes: [], props: [], shots: [] }), 'utf8');
-  fs.writeFileSync(path.join(dir, 'story.md'), '第一场\n\n△ 她走过。\n', 'utf8');
+  const story = path.join(dir, 'story.md');
+  fs.writeFileSync(story, '第一场\n\n△ 她走过。\n', 'utf8');
+  if (approveStory) approve(dir, 'story', [story]);
   return dir;
 }
 const draft = (units) => JSON.stringify({ version: 6, units });
@@ -108,4 +119,32 @@ test('Agent 直写票据不得冒充模型产物', () => {
   }
 });
 
-console.log('register-direction: 5/5 passed');
+test('剧本没有人工票时拒绝登记（与 cli/direct.mjs 对齐）', () => {
+  const dir = project({ approveStory: false });
+  try {
+    const input = path.join(dir, 'draft.json');
+    fs.writeFileSync(input, draft([{ id: 'u1' }]), 'utf8');
+    const r = run([path.join(dir, 'board.json'), '--input', input]);
+    assert.notEqual(r.status, 0, '剧本未确认时不得登记导演稿');
+    assert.match(r.stderr, /人工闸门未通过：剧本/);
+    assert.equal(fs.existsSync(path.join(dir, 'board.direction.json')), false);
+    assert.equal(fs.existsSync(`${path.join(dir, 'board.direction.json')}.provenance.json`), false);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('--skip-gate 仅在调试时绕过剧本闸门', () => {
+  const dir = project({ approveStory: false });
+  try {
+    const input = path.join(dir, 'draft.json');
+    fs.writeFileSync(input, draft([{ id: 'u1' }]), 'utf8');
+    const r = run([path.join(dir, 'board.json'), '--input', input, '--skip-gate']);
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stderr, /--skip-gate/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+console.log('register-direction: 7/7 passed');

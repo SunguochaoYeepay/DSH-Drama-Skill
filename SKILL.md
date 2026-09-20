@@ -12,11 +12,10 @@ metadata:
 ## 核心流程
 
 ```text
-项目立项（风格 + 画幅 + 已有参考资产）
+项目立项（风格 + 画幅 + 摄影语言 + 已有参考资产）
   -> 故事/剧本
   -> 导演方案
-  -> 场景师 + 人物造型师方案
-  -> 导演审核资源方案
+  -> 设计参谋（可选：场景师 / 人物造型师，见下）
   -> 资源
   -> 关键帧
   -> 逐段视频
@@ -26,7 +25,9 @@ metadata:
   -> 知识回流（最终确认之后必须做，不执行不算收工）
 ```
 
-每个箭头都是闸门，不能因为文件已经生成或看起来差不多而跳过。**最后一个箭头同样是闸门：`final` 票记录之后，必须先完成知识回流，这一轮才算结束。**
+**除「设计参谋」这一步外，每个箭头都是闸门**，不能因为文件已经生成或看起来差不多而跳过。**最后一个箭头同样是闸门：`final` 票记录之后，必须先完成知识回流，这一轮才算结束。**
+
+设计参谋**不是闸门**：资源阶段读 `board.json`，不读 `asset-design.json`；关键帧只消费其中的人物造型条目，场景设计一条都不进提示词。整段跳过不会阻断后续任何步骤，也不需要人工票 —— 它的产出是给人和给契约的参考，不是给模型的提示词。
 
 ## 立项必问
 
@@ -34,6 +35,7 @@ metadata:
 
 1. **视觉风格**：例如写实电影、精致 3D 卡通、二维赛璐璐、水墨等。
 2. **画面比例**：例如 `9:16` 竖屏、`16:9` 横屏或 `1:1`。
+3. **摄影语言**：焦段、景深、机位高度、主光方向与光质、色温，以及要排除的风格（见 `references/cinematography.md`）。它决定"用什么机器拍"，与美术风格是两件事，不能混为一谈。
 
 如果用户已经提供核心人物图片，还必须确认：
 
@@ -43,7 +45,7 @@ metadata:
 
 如果用户已明确提供，就直接采用，不重复询问。目标平台、期望总时长、对白语言等只有在会影响当前决策且无法从上下文判断时再补问。
 
-风格、画幅和参考资产职责必须写入项目契约，并在剧本、资源、关键帧和视频阶段保持一致；不能沿用上一个项目的设置，也不能由 Agent 静默猜默认值。用户原图作为只读输入保存，不覆盖、不重绘后冒充原图。
+风格、画幅、摄影语言和参考资产职责必须写入项目契约，并在剧本、资源、关键帧和视频阶段保持一致；不能沿用上一个项目的设置，也不能由 Agent 静默猜默认值。摄影契约里没写的字段，一个字都不进提示词。用户原图作为只读输入保存，不覆盖、不重绘后冒充原图。
 
 ## 人工闸门
 
@@ -80,8 +82,11 @@ metadata:
 |---|---|
 | **新建项目或开始新一轮生成之前（开工前）** | `references/preflight.md` |
 | 新建项目、判断当前进度、恢复中断任务 | `references/workflow.md` |
+| **写新剧本或修改剧本** | `references/story-craft.md` |
 | 生成或修改导演方案、决定视频单元边界 | `references/directing.md` |
 | 生成角色/场景/道具资产或关键帧 | `references/assets-and-keyframes.md` |
+| 生成设计参谋方案（可选，产出不进提示词） | `references/scene-designer.md`、`references/character-designer.md` |
+| 立项定摄影语言、改镜头 / 光 / 风格头 | `references/cinematography.md`；题材取值参考 `references/art/<style>.md`（若存在） |
 | 生成 FastH3/H3 视频、选择时长和规格 | `references/video-h3.md` |
 | 人工送审、合成与终审 | `references/qa-and-review.md` |
 | **`final` 票已记录，准备收工** | `references/workflow.md` 的「收工与知识回流」 |
@@ -112,15 +117,18 @@ metadata:
 
 | 内容 | 唯一所有者 |
 |---|---|
+| 剧本工艺 | `references/story-craft.md` |
 | Storyboard 数据结构 | `schema/storyboard.schema.json` |
 | 导演输出结构 | `references/director/schema.md` |
 | 导演决策规则 | `references/director/brief.md` |
-| 场景师规则 | `references/scene-designer.md` |
-| 人物造型师规则 | `references/character-designer.md` |
+| 场景师规则（可选参谋，产出不进提示词） | `references/scene-designer.md` |
+| 人物造型师规则（产出只进关键帧） | `references/character-designer.md` |
 | 场景师 Skill 入口 | `skills/scene-designer/SKILL.md` |
 | 人物造型师 Skill 入口 | `skills/character-designer/SKILL.md` |
 | 流程与人工闸门 | `references/workflow.md` |
 | 资产和关键帧规则 | `references/assets-and-keyframes.md` |
+| 摄影语言契约（镜头 / 光 / 锁定风格头） | `references/cinematography.md` |
+| 分题材视觉语言（契约取值参考与契约外表演/造型语言） | `references/art/<style>.md` |
 | H3 执行参数 | `references/video-h3.md` |
 | 抽卡师：导演意图到生图语言的执行编译 | `references/draw-specialist.md` |
 | 人工送审规则 | `references/qa-and-review.md` |
@@ -140,7 +148,7 @@ node cli/register-direction.mjs <board.json> --input <草稿.json>   # 默认：
 node cli/direct.mjs <board.json> --story <story.md> --out <board.direction.json>   # 可选：调外部模型（不默认走）
 node cli/revise-unit.mjs <board.json> --unit <id> --feedback <reviews/revision.md>
 node cli/compile-units.mjs <board.direction.json> --out <render.plan.json>
-node cli/design-assets.mjs <board.json> --out <project/asset-design.json>
+node cli/design-assets.mjs <board.json> --out <project/asset-design.json>   # 可选参谋：场景条目无消费者，造型条目只进关键帧
 
 # 关键帧与单段视频
 node cli/assets.mjs <board.json> --provider bailian

@@ -34,6 +34,7 @@ import { spawnSync } from 'node:child_process';
 import { unitAssets } from '../src/asset-resolver.mjs';
 import { clipResultPath, planKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { buildUnitPrompt } from '../src/h3-prompt.mjs';
+import { readCinematography } from '../src/cinematography.mjs';
 import { COMFY_GEN, COMFY_PYTHON } from '../src/runtime-paths.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { requireHandoff } from '../src/continuity-handoff.mjs';
@@ -262,7 +263,9 @@ if (fitTo > 0 && natural > fitTo) {
   console.log(`  缩后的切点: ${unit.shots.map((s) => s.at.toFixed(2) + 's').join(' / ')}`);
 }
 
-const prompt = buildUnitPrompt(unit, { nameOf, lineText, board, scene, hasFirstFrame, refs: promptRefs });
+// 摄影契约为可选：老剧目没有这个文件，行为与今天完全一致。
+const CINE = readCinematography(projectDir);
+const prompt = buildUnitPrompt(unit, { nameOf, lineText, board, scene, hasFirstFrame, refs: promptRefs, contract: CINE });
 
 // `generation_duration_s` 是执行预算；导演内容时长不变，后期按
 // `content_duration_s` 裁回。`--seconds` 只用于显式对照实验。
