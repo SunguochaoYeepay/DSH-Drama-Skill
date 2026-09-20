@@ -73,7 +73,7 @@ E:\AI-Tool\DeepSeek\story2video\projects\cat_mouse\
 剧本必须由正式入口登记并留下来源票；已有完整用户原稿只能在用户明确确认后登记，不能代签：
 
 ```powershell
-node cli/script.mjs register-agent --input <草稿.md> [--material <素材.txt>] --out <项目/story.md>      # 默认：当前对话的 Agent 直写
+node cli/script.mjs register-agent --input <草稿.md> --out <项目/story.md>                             # 默认：当前对话的 Agent 直写
 node cli/script.mjs register-user --input <用户原稿> --out <项目/story.md> --confirmed-by <确认者>       # 用户原稿
 node cli/script.mjs generate --input <素材.txt> --out <项目/story.md>                                  # 可选：调外部模型（不默认走）
 ```
