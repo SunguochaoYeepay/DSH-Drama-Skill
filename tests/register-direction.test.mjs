@@ -23,10 +23,10 @@ function approve(dir, stage, artifacts = []) {
 }
 
 /** 建一个最小项目：板子 + 剧本（默认已批票）。本入口只做结构与留痕，不做契约校验。 */
-function project({ approveStory = true } = {}) {
+function project({ approveStory = true, scenes = [] } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'direction-agent-'));
   fs.writeFileSync(path.join(dir, 'board.json'),
-    JSON.stringify({ meta: { project: 'tmp' }, characters: [], identities: [], scenes: [], props: [], shots: [] }), 'utf8');
+    JSON.stringify({ meta: { project: 'tmp' }, characters: [], identities: [], scenes, props: [], shots: [] }), 'utf8');
   const story = path.join(dir, 'story.md');
   fs.writeFileSync(story, '第一场\n\n△ 她走过。\n', 'utf8');
   if (approveStory) approve(dir, 'story', [story]);
@@ -165,4 +165,27 @@ test('单元缺 audience_knows 时登记成功、但把缺项提示出来（机�
   }
 });
 
-console.log('register-direction: 8/8 passed');
+test('镜头写到的空间实体不在该场景描述里 → 提示可能落错场景（不阻断）', () => {
+  const scenes = [
+    { id: 'ext', name: '高空外景', environment: '高空，螺旋桨飞机外部，白天。机身朝画面左侧飞行，机身后方是白色云层。' },
+    { id: 'door', name: '舱门口', environment: '机舱内部朝敞开的门洞看：门洞是画面最亮的区域，门框与门板朝外翻开，脚下是防滑花纹铁皮地板。' },
+  ];
+  const dir = project({ scenes });
+  try {
+    const input = path.join(dir, 'draft.json');
+    fs.writeFileSync(input, draft([
+      // 复刻 no_chute 的事故：镜头站在门口，却把场景写成了"从机外看飞机"
+      { id: 'u1', audience_knows: '观众还不知道她没背伞', shots: [{ scene: 'ext', framing: '中景', action: '敞开的机舱门洞内两人并排站着' }] },
+      { id: 'u2', audience_knows: '观众和她都以为话说完了', shots: [{ scene: 'door', framing: '中景', action: '两人在门洞内对话，脚下是防滑铁皮地板' }] },
+    ]), 'utf8');
+    const r = run([path.join(dir, 'board.json'), '--input', input]);
+    assert.equal(r.status, 0, '只提示不阻断');
+    assert.match(r.stderr, /可能落错场景/);
+    assert.match(r.stderr, /u1/, '落错的那个必须被点名');
+    assert.doesNotMatch(r.stderr, /u2/, '场景与内容相符的不该被点名');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+console.log('register-direction: 9/9 passed');

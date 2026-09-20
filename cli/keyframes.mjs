@@ -34,12 +34,12 @@ import * as bailian from '../src/providers/bailian.mjs';
 import * as volcengine from '../src/providers/volcengine.mjs';
 import { bindHandoffKeyframe, requireHandoff } from '../src/continuity-handoff.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
-import { KEYFRAME_PROVIDER, KEYFRAME_IMAGE_MODEL, HUIMENG_IMAGE_MODEL, KEYFRAME_SIZE, BAILIAN_KEYFRAME_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG } from '../src/config.mjs';
+import { KEYFRAME_PROVIDER, KEYFRAME_IMAGE_MODEL, HUIMENG_IMAGE_MODEL, KEYFRAME_SIZE, BAILIAN_KEYFRAME_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG, LOCAL_KEYFRAME_FAST, LOCAL_KEYFRAME_SIZE } from '../src/config.mjs';
 import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
 import { withHandoffReference } from '../src/keyframe-references.mjs';
 import { writeGenerationRecord } from '../src/generation-records.mjs';
 import { readKeyframeOverride } from '../src/keyframe-overrides.mjs';
-import { compileCharacterDesign, compileDrawPlan } from '../src/draw-specialist.mjs';
+import { compileCharacterDesign, compileDrawPlan, auditPrompt, refinePrompt } from '../src/draw-specialist.mjs';
 import { readCinematography, compileCinematography } from '../src/cinematography.mjs';
 import { localStyle } from '../src/providers/comfyui.mjs';
 
@@ -68,8 +68,15 @@ if (!['huimeng', 'local', 'bailian', 'volcengine'].includes(PROVIDER)) throw new
 const LOCAL_GEN = COMFY_GEN;
 const LOCAL_PY = COMFY_PYTHON;
 const LOCAL_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_local_v2'))));
-const LOCAL_STEPS = String(flag('steps', LOCAL_IMAGE_STEPS));
-const LOCAL_CFG = String(flag('cfg', LOCAL_IMAGE_CFG));
+// 步数/CFG：**用户显式给了才传**，否则交给 gen.py 自己按模式定。
+// 这一点在 Lightning 档尤其要命 —— `--fast` 内部是「4 步 LoRA + cfg 1.0」，
+// 再显式塞一个 20 步/ cfg4 进去就成了没验证过的混合档（见 providers/comfyui.mjs 的纪律）。
+const LOCAL_STEPS = flag('steps', null);
+const LOCAL_CFG = flag('cfg', null);
+// 🔁 关键帧默认档 = Lightning 加速栈（2026-09-20 与 DramaClaw 对照实测）。
+// 20 步非蒸馏路径下画面系统性发灰/发黑，是工程债不是模型问题。`--no-fast` 退回旧路径。
+const FAST = !argv.includes('--no-fast')
+  && (argv.includes('--fast') || (LOCAL_KEYFRAME_FAST && !LOCAL_STEPS && !LOCAL_CFG));
 const BAILIAN_MODEL = String(flag('model', KEYFRAME_IMAGE_MODEL));
 const BAILIAN_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_bailian'))));
 const VOLCENGINE_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_volcengine'))));
@@ -115,17 +122,22 @@ function executionShotSpec(shot, override) {
  */
 export const FRAMING = {
   远景: {
+    // `visual` 是送生图模型的那一版：只有画面，没有解释。
+    // `rule` 保留给打印版（人要看出判据）与英文通道。
+    visual: '远景，人物在环境里只占很小一块，看不清脸部细节',
     rule: '【景别｜远景】画面以**环境为主**，人物只占很小一块（**不超过画面高度的 1/4**）。'
       + '能看到大片树林和整条古道。**不允许**人物占满画面，**不允许**能看清脸部细节。',
     en: 'extreme long shot, figures very small in a vast environment',
   },
   全景: {
+    visual: '全景，人物从头顶到脚底完整在画面内',
     rule: '【景别｜全景】画面**必须包含人物的完整身体** —— **从头顶一直到脚底（或裙摆落地处）都在画面内**，'
       + '人物高度约占画面高度的 1/2 到 2/3，四周留出环境。'
       + '**绝不允许裁掉脚部**，**也不允许**人物小到只占一角。',
     en: 'full shot, complete body head-to-toe visible, environment around',
   },
   中景: {
+    visual: '中景，画面下边界切在人物的腰部',
     // 竖幅双人中景本身可行；只有当人物间距、两侧留白、身体完整度和腰部下边界
     // 同时被锁死时才可能互斥。允许侧边裁切是一种候选构图，不是普遍定律。
     rule: '【景别｜中景】**画面下边界严格切在人物的腰部**（腰带/腰线位置），'
@@ -136,12 +148,14 @@ export const FRAMING = {
     en: 'medium shot, framed from head down to the waist ONLY; subjects may be cropped at the left and right frame edges, but never extend below the waist',
   },
   近景: {
+    visual: '近景，画面只取胸部以上',
     rule: '【景别｜近景】**画面只取胸部以上** —— 下边界在**胸口到腰之间、明显高于腰线**。'
       + '能看到肩膀和上胸，脸部占画面较大比例。'
       + '**绝不允许出现腰部以下**（那就成了中景），**也不允许只剩一个头**（那就成了特写）。',
     en: 'medium close-up, framed from head down to mid-chest ONLY',
   },
   特写: {
+    visual: '特写，画面里只有脸',
     rule: '【景别｜特写】**画面里只有脸** —— 从下巴下方一点点到头顶，**头部占满整个画面**。'
       + '**绝不允许出现肩膀或衣领**（那就不算特写），**也不允许只拍半张脸**。',
     en: 'extreme close-up, the face fills the entire frame, no shoulders visible',
@@ -170,10 +184,15 @@ const ASPECT = aspectOf(board);
  * 差别只在 t2i 有这张表）。上游已让 edit 也取预设，**这里必须显式传**，
  * 与 `cli/assets.mjs` 共用 `localStyle()`，别各写一份映射。
  */
-const LOCAL_STYLE = localStyle(board.meta?.style);
+// `--style` 可显式覆盖（如 `--style none` 用于对照实验）。⚠ 上游预设是**成对**给的：
+// `style=none` 时 positive 追加与 negative **两者皆空** —— 去掉自动追加句会同时撤掉负向防线，
+// 写实剧可能退回插画风。所以默认不覆盖，覆盖只用于有意的单变量实验。
+const LOCAL_STYLE = flag('style', null) || localStyle(board.meta?.style);
 const SKIP_GATE = argv.includes('--skip-gate');
 const approvedAssets = projectAssetFiles(board, BOARD_PATH, { workspace: flag('ws', null) });
 requireApproval(PROJ, 'assets', approvedAssets, { skip: SKIP_GATE });
+// 板子票（与 assets.mjs 同一条规矩）：board.json 决定场景清单与参考图来源，改了必须重新确认。
+requireApproval(PROJ, 'board', [BOARD_PATH], { skip: SKIP_GATE });
 // 🔁 **这张票原先绑的是 `render.plan.json`，与 `compile-units` 互斥**（2026-09-17 after_waking 复发）：
 //    `compile-units.mjs:28` 要求 `direction` 票绑**导演稿** `board.direction.json`；
 //    这里原先要求绑**执行计划** `--direction`。而票据只有一个 `artifact_hash` 槽位 ——
@@ -190,7 +209,8 @@ const charOf = (identId) => (board.identities.find((x) => x.id === identId) || {
 
 function buildPrompt(unit, shot, cine) {
   const f = FRAMING[shot.framing] || { rule: `【景别｜${shot.framing}】` };
-  const cineBlock = compileCinematography(cine, { shot, framing: shot.framing });
+  // 关键帧是**单帧静态图**：`still: true` 让标了 `still: false` 的规则（运动方向、时序）不进提示词。
+  const cineBlock = compileCinematography(cine, { shot, framing: shot.framing, still: true });
   const people = (unit.keyframe_cast || shot.on_screen || []).map((id) => {
     const cid = charOf(id);
     const c = board.characters.find((x) => x.id === cid);
@@ -217,7 +237,8 @@ function buildPrompt(unit, shot, cine) {
 
 function buildLocalPrompt(unit, shot, refs, cine) {
   const f = FRAMING[shot.framing] || { rule: `景别：${shot.framing}` };
-  const cineBlock = compileCinematography(cine, { shot, framing: shot.framing });
+  // 关键帧是**单帧静态图**：`still: true` 让标了 `still: false` 的规则（运动方向、时序）不进提示词。
+  const cineBlock = compileCinematography(cine, { shot, framing: shot.framing, still: true });
   const anchoredIds = unit.keyframe_cast || shot.on_screen || [];
   const names = anchoredIds.map((id) => {
     const cid = charOf(id);
@@ -356,6 +377,10 @@ for (const unit of dir.units) {
   const characterDesign = compileCharacterDesign({ designs: assetDesign.designs || [], unit, shot });
   const normalizedPrompt = applyCompositionOverride(prompt, override);
   const finalPrompt = `${normalizedPrompt}\n\n【抽卡师｜执行层执行编译】\n${executionShotSpec(shot, override)}\n${characterDesign.prompt}\n${drawPlan.prompt}`;
+  // 抽卡师最终整理。**送进生图模型的是 modelPrompt，不是 finalPrompt** ——
+  // 自检只报警不改写的话，规则就是纸上的（no_chute 连抽 8 张全废那次正是如此）。
+  const refined = refinePrompt(finalPrompt, { visualFraming: FRAMING[shot.framing]?.visual || null });
+  const modelPrompt = refined.text;
   const out = PROVIDER === 'local'
     ? path.join(LOCAL_OUT, `${unit.id}.png`)
     : PROVIDER === 'bailian'
@@ -369,8 +394,23 @@ for (const unit of dir.units) {
 
   console.log(`\n${'─'.repeat(68)}`);
   console.log(`  【${unit.id}】${shot.framing}　参考图 ${refs.length} 张`);
+  console.log('  ── 工程版（审计用，不送模型）');
   console.log(finalPrompt.split('\n').map((l) => '    ' + l).join('\n'));
   for (const conflict of drawPlan.conflicts) console.log(`    warning: 抽卡师发现约束冲突：${conflict}`);
+  console.log('  ── 抽卡师整理后 → 送生图模型');
+  console.log(modelPrompt.split('\n').map((l) => '    ' + l).join('\n'));
+  if (refined.dropped.length) {
+    console.log(`    抽卡师删掉 ${refined.dropped.length} 处：`);
+    for (const item of refined.dropped) console.log(`      - ${item}`);
+  }
+  // 提示词自检跑在**整理后**这一版上 —— 送进模型的是它，要审的也是它。
+  const audit = auditPrompt(modelPrompt);
+  if (audit.violations.length) {
+    console.log(`    ⚠ 提示词自检：${audit.chars} 字，${audit.violations.length} 项违规（见 references/prompt-rules.md）`);
+    for (const v of audit.violations) console.log(`      · [${v.rule}] ${v.hit}`);
+  } else {
+    console.log(`    ✓ 提示词自检通过：${audit.chars} 字`);
+  }
   if (DRY) continue;
 
   let r;
@@ -379,8 +419,20 @@ for (const unit of dir.units) {
   let txt = '';
   if (PROVIDER === 'local') {
     const resultFile = path.join(LOCAL_OUT, `.${unit.id}.result.json`);
-    const a = [LOCAL_GEN, 'edit', '--prompt', finalPrompt, '--ratio', ASPECT, '--steps', LOCAL_STEPS, '--cfg', LOCAL_CFG,
+    const a = [LOCAL_GEN, 'edit', '--prompt', modelPrompt, '--ratio', ASPECT,
       '--style', LOCAL_STYLE, '--out-dir', LOCAL_OUT, '--result-file', resultFile];
+    if (LOCAL_STEPS) a.push('--steps', String(LOCAL_STEPS));
+    else if (!FAST) a.push('--steps', LOCAL_IMAGE_STEPS);
+    if (LOCAL_CFG) a.push('--cfg', String(LOCAL_CFG));
+    else if (!FAST) a.push('--cfg', LOCAL_IMAGE_CFG);
+    // `--fast` = Lightning 4 步 LoRA + cfg 1.0（上游同配 ModelSamplingAuraFlow shift=3 + CFGNorm）。
+    if (FAST) a.push('--fast');
+    // 输出尺寸：显式 --width/--height 优先，否则按 **剧目画幅** 排布默认像素
+    // （edit 默认不看目标尺寸，这里必须给，否则 FluxKontextImageScale 会把输出压到 ~1MP）。
+    const LW = flag('width', null), LH = flag('height', null);
+    const sizeArg = (LW && LH) ? `${LW}x${LH}` : dimensionsForAspect(LOCAL_KEYFRAME_SIZE, ASPECT);
+    const [outW, outH] = sizeArg.split('x');
+    a.push('--width', outW, '--height', outH);
     for (const ref of refs) a.push('--image', ref.file);
     const started = Date.now();
     r = spawnSync(LOCAL_PY, a, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 900000 });
@@ -406,7 +458,7 @@ for (const unit of dir.units) {
     const channel = PROVIDER === 'bailian' ? bailian : volcengine;
     const res = await channel.edit({
       images: refs.map((ref) => ref.file),
-      instruction: finalPrompt,
+      instruction: modelPrompt,
       size: PROVIDER === 'bailian' ? dimensionsForAspect(BAILIAN_SIZE, ASPECT, '*') : '2K',
       n: 1,
       outDir: requestOut,
@@ -417,7 +469,7 @@ for (const unit of dir.units) {
     secs = String(Math.round((Date.now() - started) / 1000));
     txt = String(res.stdout || '') + String(res.stderr || '') + String(res.error || '');
     // `_request/` 留档：这一镜当时到底发了什么。正文 + 实际 argv 各存一份。
-    fs.writeFileSync(path.join(requestDir, 'prompt.txt'), finalPrompt, 'utf8');
+    fs.writeFileSync(path.join(requestDir, 'prompt.txt'), modelPrompt, 'utf8');
     fs.writeFileSync(path.join(requestDir, 'command.json'), JSON.stringify({ provider: PROVIDER, model: res.json?.model || null }, null, 2) + '\n', 'utf8');
     const produced = res.files[0];
     if (res.status === 0 && produced && fs.existsSync(produced)) {
@@ -425,7 +477,8 @@ for (const unit of dir.units) {
       got = true;
     }
   } else {
-    const a = ['cli/huimeng.mjs', '--prompt', prompt, '--ratio', ASPECT, '--resolution', SIZE,
+    // 同样送 `modelPrompt`：抽卡师整理不该只对本地/百炼通道成立。
+    const a = ['cli/huimeng.mjs', '--prompt', modelPrompt, '--ratio', ASPECT, '--resolution', SIZE,
       '--model', HUIMENG_IMAGE_MODEL];
     for (const ref of refs) a.push('--ref', ref.file);
     a.push('--out', out);

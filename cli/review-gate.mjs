@@ -14,7 +14,7 @@ const value = (name, fallback = null) => {
   return i >= 0 && argv[i + 1] ? argv[i + 1] : fallback;
 };
 const stage = value('stage');
-const stages = ['story', 'direction', 'assets', 'keyframes', 'handoff', 'clip', 'final'];
+const stages = ['story', 'board', 'direction', 'assets', 'keyframes', 'handoff', 'clip', 'final'];
 const project = path.resolve(value('project', '.'));
 const id = value('id');
 if (argv.includes('--variant')) throw new Error('片段不再区分轮次；请去掉 --variant，每段视频只确认当前产物');
@@ -30,6 +30,7 @@ if (stage === 'story') {
   const story = path.join(project, 'story.md');
   if (files.length !== 1 || files[0] !== story) throw new Error('剧本确认必须绑定本项目的 story.md');
 }
+if (!files.length && stage === 'board') files = [path.join(project, 'board.json')].filter(fs.existsSync);
 if (!files.length && stage === 'direction') files = [path.join(project, 'board.direction.json')].filter(fs.existsSync);
 if (!files.length && stage === 'assets') {
   const boardFile = path.resolve(value('board', path.join(project, 'board.json')));

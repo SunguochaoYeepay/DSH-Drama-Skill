@@ -64,7 +64,7 @@ export function requireApproval(projectDir, stage, files, { id = null, skip = fa
   }
   const status = approvalStatus(projectDir, stage, files, id);
   if (!status.ok) {
-    const labels = { story: '剧本', direction: '导演方案', assets: '资源', keyframes: '关键帧', final: '最终成片' };
+    const labels = { story: '剧本', board: '板子（场景清单/角色/道具）', direction: '导演方案', assets: '资源', keyframes: '关键帧', final: '最终成片' };
     const label = stage === 'clip' ? `视频片段 ${id}` : stage === 'handoff' ? `连续性交接 ${id}` : labels[stage] || stage;
     throw new Error(`人工闸门未通过：${label} ${status.reason}。`);
   }

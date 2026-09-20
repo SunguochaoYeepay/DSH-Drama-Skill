@@ -19,6 +19,8 @@
 
 按 [`board-brief.example.json`](board-brief.example.json) 准备已确认的剧名、项目 id、风格、画幅、人物设定及故事概述，再运行 `node cli/init-board.mjs --story <项目/story.md> --brief <项目/board-brief.json> --out <项目/board.json>`。此入口只做结构化解析和台词搬运，不代写 Brief、不代签人工票；索引镜头不替代导演方案。
 
+**板子建完要人工确认**：`node cli/review-gate.mjs approve --project <项目> --stage board`。场景清单、角色、造型、道具都住在 `board.json` 里，而它**此前全程无票**（`no_chute` 2026-09-20：按"机位里外"二分场景，漏掉了"舱门口/跳板"这个真正的叙事空间，一路绿灯到 g001 出图才发现——画面是一架门关着的飞机）。确认要点就一条：**剧本里每个需要人物处在某个位置的动作，那个位置在场景清单里有没有名字、有没有主图。** 改板子会让这张票失效，资源与关键帧入口都会拦。
+
 导演方案确认后**可选**运行 `node cli/design-assets.mjs <项目/board.json> --out <项目/asset-design.json>`。场景师只编译空间和光线，人物造型师只编译脸、妆发、服装和连续性；两者不能改剧情或镜头。
 
 **这一步是参谋，不是闸门。** 资源阶段读 `board.json`，不读 `asset-design.json`；关键帧只消费其中的人物造型条目（`compileCharacterDesign`），场景设计一条都不进提示词。`asset-design.json` 里 `status: 'director_review_pending'` 只写不读，没有入口检查它 —— 所以它**不需要导演审核，也不需要人工票**，跳过不会阻断后续任何步骤；资源阶段的人工资源票才是这道关。

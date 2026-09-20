@@ -81,6 +81,44 @@ if (missingKnows.length) {
   console.warn('  它是「意外有没有来路、悬念成不成立」唯一的落点，契约见 references/director/schema.md 的 units[] 字段表。');
 }
 
+// ── 镜头落错场景的启发式警告（2026-09-20 no_chute 事故）──────────────────────
+//
+// 事故：u1 的镜头内容是「敞开的机舱门洞内两人并排站着」，但 `shot.scene` 写的是
+// `altitude_ext`（高空、从机外看飞机）。板子只校验 `scene` id 存不存在，不校验语义，
+// 于是这一路绿灯走到出图：关键帧的基底图取的是「机外看飞机、门洞是暗的」那张，
+// 与「门洞最亮、人在门洞里」的要求正好相反 —— 结果画面是一架**门关着的飞机**。
+//
+// 根因是**场景清单里没有「舱门口」这个空间**，导演只能从已有清单里挑（`schema.md:118`
+// 明令"不能由执行器猜"），挑错了也没有任何提示。机器判不出语义，但**字面线索判得出**：
+// 镜头描述里写到的空间实体，若在该场景的环境描述里一个字都没有，就该让人去核对。
+//
+// ⚠ 这是**启发式，不是判定**：词表是通用的空间名词（不是某个剧目的专属措辞），
+// 命中只意味着"值得看一眼"。它抓不到"相近但错"（`altitude_ext` 也写了"舱门敞开着"），
+// 真正的防线是立项时把空间拆对 —— 见 SKILL.md 故事三问的第 4 问。
+const SPACE_WORDS = [
+  '门口', '门洞', '门框', '舱门', '跳板', '舱壁', '蒙皮', '肋条', '舷窗', '机翼', '螺旋桨',
+  '楼梯', '楼道', '走廊', '台阶', '天台', '屋顶', '阳台', '窗台', '院子',
+  '地板', '天花板', '桌面', '沙发', '床', '柜台', '收银台', '书架', '讲台', '看台',
+  '马路', '人行道', '天桥', '河堤', '沙滩', '甲板', '驾驶座', '后排',
+];
+const board = JSON.parse(fs.readFileSync(boardPath, 'utf8'));
+const envOf = new Map((board.scenes || []).map((s) => [s.id, `${s.name || ''}${s.environment || ''}`]));
+const offScene = [];
+for (const unit of direction.units || []) {
+  for (const shot of unit.shots || []) {
+    const env = envOf.get(shot.scene);
+    if (!env) continue;                       // scene 不存在由下游（asset-resolver）报错
+    const text = `${shot.action || ''}${shot.keyframe_start || ''}${unit.keyframe_start || ''}`;
+    const missing = SPACE_WORDS.filter((w) => text.includes(w) && !env.includes(w));
+    if (missing.length) offScene.push(`${unit.id}（场景 ${shot.scene}）：镜头写到了「${missing.join('、')}」，但 ${shot.scene} 的环境描述里没有它`);
+  }
+}
+if (offScene.length) {
+  console.warn(`⚠ ${offScene.length} 个镜头可能落错场景（场景清单见 board.json）：`);
+  for (const line of offScene) console.warn(`  · ${line}`);
+  console.warn('  判据只是字面：镜头里的空间实体在该场景描述里完全没出现。请确认它真的属于这个场景，而不是因为清单里缺这个空间才被就近安放的。');
+}
+
 const receipt = writeAgentDirectionReceipt({
   directionPath: output, boardPath, storyPath, authoredBy: flag('authored-by') || 'agent',
 });

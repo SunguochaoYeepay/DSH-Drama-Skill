@@ -85,6 +85,10 @@ if (CONTRACT) console.log(`摄影契约：已载入 ${path.join(PROJ, 'cinematog
 if (SKIP_GATE) {
   console.error('⚠ --skip-gate：仅限调试，已跳过资源阶段的上游人工确认');
 } else {
+  // 板子票：场景清单、角色、造型、道具都住在 board.json 里，而它**此前全程无票** ——
+  // 2026-09-20 no_chute 因此一路绿灯：场景清单把「舱门口」这个真正的叙事空间漏掉了，
+  // 直到 g001 出图（门关着的飞机）才暴露。场景清单决定了全片长什么样，不该是无人复核的。
+  requireApproval(PROJ, 'board', [BOARD_PATH]);
   const directionPath = path.join(PROJ, 'board.direction.json');
   requireApproval(PROJ, 'direction', [directionPath]);
 }

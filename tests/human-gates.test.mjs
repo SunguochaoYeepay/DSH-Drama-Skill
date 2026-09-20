@@ -13,6 +13,13 @@ approve(dir, 'direction', [a]);
 assert.equal(approvalStatus(dir, 'direction', [a]).ok, true);
 fs.writeFileSync(a, 'changed');
 assert.match(approvalStatus(dir, 'direction', [a]).reason, /失效/);
+// 板子票（2026-09-20 新增）：场景清单、角色、道具都住在 board.json 里，而它此前**全程无票** ——
+// no_chute 因此漏掉了「舱门口」这个叙事空间，一路绿灯到出图才暴露。改了 board 必须重新确认。
+approve(dir, 'board', [a]);
+assert.equal(approvalStatus(dir, 'board', [a]).ok, true);
+fs.writeFileSync(a, 'changed twice');
+assert.match(approvalStatus(dir, 'board', [a]).reason, /失效/);
+assert.throws(() => requireApproval(dir, 'board', [a]), /板子/);
 approve(dir, 'clip', [a], { id: 'g001' });
 assert.equal(approvalStatus(dir, 'clip', [a], 'g001').ok, true);
 approve(dir, 'clip', [b], { id: 'g001' });

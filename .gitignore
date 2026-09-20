@@ -44,5 +44,11 @@ Thumbs.db
 .vscode/
 .idea/
 .workbuddy/
-.tmp-*.mjs
 *.log
+
+# 临时产物 —— **绝不入库**
+# Agent 干活时把命令输出、探针结果、干跑日志转储成 `.tmp-*` 文件（一次会话就能堆出二十多个）。
+# 原来这里只写了 `.tmp-*.mjs`，挡不住 `.tmp-*.txt`，于是那批 txt 一直挂在 Changes 里等人误提交。
+# 改成前缀通配，一次覆盖所有后缀；`.tmp/` 是项目里那种临时目录。
+.tmp-*
+.tmp/

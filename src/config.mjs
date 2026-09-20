@@ -40,6 +40,14 @@ export const KEYFRAME_SIZE = setting('AIH_KEYFRAME_SIZE', '2k');
 export const BAILIAN_KEYFRAME_SIZE = setting('AIH_BAILIAN_KEYFRAME_SIZE', '1024*1792');
 export const LOCAL_IMAGE_STEPS = setting('AIH_LOCAL_IMAGE_STEPS', '20');
 export const LOCAL_IMAGE_CFG = setting('AIH_LOCAL_IMAGE_CFG', '4');
+
+// ── 本地关键帧默认档（2026-09-20 no_chute 与 DramaClaw 对照实测后定）──────────
+// 过去关键帧走 20 步 + cfg4 的非蒸馏路径，画面系统性发灰/发黑；换成 DramaClaw 同款的
+// 「Lightning 4 步 LoRA + ModelSamplingAuraFlow(shift=3) + CFGNorm(1)」后脸与道具才出得来，
+// 而且更快。这里把它定为默认；`--no-fast` 可退回旧路径。
+export const LOCAL_KEYFRAME_FAST = setting('AIH_LOCAL_KEYFRAME_FAST', '1') === '1';
+// 默认像素（短边x长边），实际宽高按剧目画幅排布 —— 横屏剧会自己排成 2048x1152。
+export const LOCAL_KEYFRAME_SIZE = setting('AIH_LOCAL_KEYFRAME_SIZE', '1152x2048');
 export const VIDEO_QUALITY = setting('AIH_VIDEO_QUALITY', 'normal');
 export const VIDEO_PROFILE = setting('AIH_VIDEO_PROFILE', 'fast');
 export const VIDEO_ATTENTION = setting('AIH_VIDEO_ATTENTION', 'vsa').toLowerCase();

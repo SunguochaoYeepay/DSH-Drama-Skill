@@ -177,14 +177,20 @@ export function negativesBlock(contract, extra = [], lang = 'zh') {
  * 规则**不进资产**。资产的参考板与空镜没有卡司，"老鼠不得超过猫的五分之一"
  * 这种句子写进空镜提示词，等于给模型递了一份"要画什么"的词表 ——
  * `masterPrompt` 里那只腾空跳起的橘猫就是这么来的。
+ *
+ * **`still: false` = 这条规则不适用于静态关键帧。** 运动方向、时序、"尚未发生"这类
+ * 规则在单帧图上根本不可见（no_chute 的 `motion`：飞机恒向左飞、云层相对向右流动 ——
+ * 一张静止的图里没有流向）。写进关键帧提示词只是占权重，但它对视频阶段仍然有效，
+ * 所以用标记隔离，而不是删掉规则。
  */
-export function rulesBlock(contract, shot, lang = 'zh') {
+export function rulesBlock(contract, shot, { lang = 'zh', still = false } = {}) {
   const rules = Array.isArray(contract?.rules) ? contract.rules : [];
   const overrides = shot?.rule_overrides || {};
   const kept = [];
   for (const rule of rules) {
     if (!rule || typeof rule !== 'object') continue;
     const id = text(rule.id);
+    if (still && rule.still === false) continue;
     // 没有 id 的规则不能被覆盖，也就不是一条"可被翻转的规则" —— 跳过而不是原样输出。
     if (!id) continue;
     const override = overrides[id];
@@ -252,11 +258,11 @@ export function assetCinematography(contract, kind, lang = 'zh') {
 }
 
 /** 一次性拿到全部四层，供提示词编译器按顺序拼装。 */
-export function compileCinematography(contract, { shot, framing, lang = 'zh', extraNegatives = [] } = {}) {
+export function compileCinematography(contract, { shot, framing, lang = 'zh', extraNegatives = [], still = false } = {}) {
   return {
     header: styleHeader(contract),
     negatives: negativesBlock(contract, extraNegatives, lang),
-    rules: rulesBlock(contract, shot, lang),
+    rules: rulesBlock(contract, shot, { lang, still }),
     optics: opticsBlock(contract, shot, framing, lang),
     lighting: lightingBlock(contract, shot, lang),
   };
