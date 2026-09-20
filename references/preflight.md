@@ -141,3 +141,4 @@
 
 1. **改了 board 就要重跑 `compile-units`** —— 不是因为会被拦，而是因为计划身份证记录着这份计划从哪份 board / story / 导演稿编译而来；不重编，这份计划的来源记录就是错的。
 2. **不要手改 `render.plan.json`** —— 计划身份证**只作留痕，不作闸门**（`assertPlanProvenance` 已随「去掉机器审核」移除，手改不会被代码拦住）。要改内容就改导演稿再重编；越过它没人拦你，代价是这份计划再也说不清是从哪来的。
+3. **改了 `cinematography.json` 就要重跑受影响产物、重批票** —— 契约是关键帧 / 视频提示词的输入，但票绑的是产物哈希、不绑契约；不重跑，旧票照样全绿、`ready-assemble` 照常放行，缝出两部戏到终审才暴露。只想改一镜的光 / 焦段？用 `shot.optics` / `shot.lighting_setup` 每镜覆盖，别动契约（规则正本见 [`cinematography.md`](cinematography.md) 文首警告块）。

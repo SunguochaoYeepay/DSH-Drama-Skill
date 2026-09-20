@@ -18,7 +18,7 @@ import fs from 'node:fs';
 import {
   assetPlan, portraitPrompt, sheetInstruction, sheetRefs,
   masterPrompt, propPrompt, keyframeRefs, keyframeInstruction,
-  shotPrompt, expandMarkers, styleAnchor, isHuman,
+  shotPrompt, expandMarkers, styleAnchor, isHuman, wearsClothes,
 } from '../src/assets.mjs';
 import { FIXTURE, fixtureOrArg } from './fixtures/index.mjs';
 
@@ -97,6 +97,11 @@ for (const c of board.characters) {
     check(`${c.id}：含年龄`, p.includes(c.age_group) || /儿童|青年|中年|老年/.test(p));
     check(`${c.id}：**带族裔锚点**（没有它，模型会默认画成白人）`, /东亚|East Asian/.test(p), p.slice(0, 60));
     check(`${c.id}：明确禁服装细节`, /服装细节/.test(p));
+  } else if (wearsClothes(board, c)) {
+    // 🔁 穿衣的非人类（fat_cat 2026-09-20，超人装的猫）：肖像仍是脸锚，
+    //    但不再断言「不穿任何衣物」——那是裸身配方的词，这只动物有服装。
+    check(`${c.id}：非人类（穿衣）**四足、不拟人化、本图不表现服装**`,
+      /四足动物/.test(p) && /不拟人化/.test(p) && /不表现服装/.test(p) && !/不穿任何衣物/.test(p), p.slice(0, 80));
   } else {
     check(`${c.id}：非人类**不带人类年龄档**`, !/儿童|青年|中年|老年/.test(p), p.slice(0, 60));
     check(`${c.id}：非人类**不带族裔锚点**（否则猫会被画成东亚人/拟人化）`, !/东亚|East Asian/.test(p), p.slice(0, 60));
@@ -147,16 +152,41 @@ for (const x of board.identities) {
 // 夹具里两个角色都是人类，所以这条分支原先**没有任何断言** ——
 // 结果非人类分支里残留了三处人类措辞（「四格人物高度一致」「五官、发型、领口」「其他人物」），
 // 会把一只狗的身份图往拟人化/穿衣服的方向推。这几条断言就是钉住它。
+//
+// 🔁 非人类分两种（fat_cat 2026-09-20）：**裸身动物**（identity 描述里没有衣物词）
+// 仍走「不穿衣」老配方；**穿衣动物**（超人装的猫——identity 描述里有衣物词）的服装
+// 归 appearance_details 所有，配方不再说「不穿衣」，否则会把导演写的紧身衣+披风盖掉。
 console.log('\n身份图（非人类分支）');
 {
   const animalBoard = structuredClone(board);
   const ch = animalBoard.characters[0];
   ch.species = 'dog';
   const ident = animalBoard.identities.find((y) => y.character === ch.id);
+
+  // 裸身动物：identity 描述里没有衣物词 → 老配方（不穿衣、不拟人化）必须保留
+  const nakedBoard = structuredClone(animalBoard);
+  const nakedIdent = nakedBoard.identities.find((y) => y.character === ch.id);
+  nakedIdent.appearance_details = '金黄色短毛，背部深色斑纹，立耳，体型圆润';
+  const insNaked = sheetInstruction(nakedBoard, nakedIdent);
+  check('非人类（裸身）：不出现「人物」措辞', !/人物/.test(insNaked), insNaked.slice(0, 80));
+  check('非人类（裸身）：不出现「发型／领口」等人类措辞', !/发型|领口/.test(insNaked), insNaked.slice(0, 80));
+  check('非人类（裸身）：点明四足、不穿衣、不拟人化',
+    /四足动物/.test(insNaked) && /不穿/.test(insNaked) && /不拟人化/.test(insNaked), insNaked.slice(0, 80));
+  const pNaked = portraitPrompt(nakedBoard, nakedBoard.characters[0]);
+  check('非人类（裸身）肖像：点明四足、不穿衣、不拟人化',
+    /四足动物/.test(pNaked) && /不穿任何衣物/.test(pNaked) && /不拟人化/.test(pNaked), pNaked.slice(0, 80));
+
+  // 穿衣动物：夹具角色的 identity 描述本身就是一身古装（长袍/外衫/软靴）→ 穿衣分支
   const ins = sheetInstruction(animalBoard, ident);
-  check('非人类：不出现「人物」措辞', !/人物/.test(ins), ins.slice(0, 80));
-  check('非人类：不出现「发型／领口」等人类措辞', !/发型|领口/.test(ins), ins.slice(0, 80));
-  check('非人类：点明四足、不穿衣、不拟人化', /四足动物/.test(ins) && /不穿/.test(ins) && /不拟人化/.test(ins), ins.slice(0, 80));
+  check('非人类（穿衣）：不出现「人物」措辞', !/人物/.test(ins), ins.slice(0, 80));
+  check('非人类（穿衣）：不出现「发型／领口」等人类措辞', !/发型|领口/.test(ins), ins.slice(0, 80));
+  check('非人类（穿衣）：服装以 appearance_details 为准、不再说「不穿衣」',
+    !/不穿衣|不穿任何衣物/.test(ins) && /服装一律以上面/.test(ins), ins.slice(0, 80));
+  check('非人类（穿衣）：仍是四足动物、不直立、不拟人化',
+    /四足动物/.test(ins) && /不直立/.test(ins) && /不拟人化/.test(ins), ins.slice(0, 80));
+  const pClothed = portraitPrompt(animalBoard, animalBoard.characters[0]);
+  check('非人类（穿衣）肖像：四足、不拟人化、本图不表现服装',
+    /四足动物/.test(pClothed) && /不拟人化/.test(pClothed) && /不表现服装/.test(pClothed) && !/不穿任何衣物/.test(pClothed), pClothed.slice(0, 80));
   check('非人类：一致性改成毛色与斑纹，不是同一套服装',
     /同一身毛色与斑纹/.test(ins) && !/同一套服装/.test(ins), ins.slice(0, 80));
   check('人类：仍保留「人物」与「发型、领口」措辞（不能被改回归）',

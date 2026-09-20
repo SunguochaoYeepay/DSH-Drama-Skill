@@ -74,6 +74,23 @@ export function styleAnchor(board) {
   return STYLE_ANCHOR[board.meta?.style] || STYLE_ANCHOR.realistic;
 }
 
+/**
+ * 场景主图用的媒介锚 —— styleAnchor 去掉**角色面部词汇**的版本。
+ *
+ * 🔁 已复发（fat_cat 2026-09-20）：STYLE_ANCHOR.cartoon3d 里「大眼睛、圆润饱满的
+ * 面部轮廓、简化并适度夸张的五官比例」是写给**有卡司**的画面的。场景主图是空镜，
+ * 把这串脸型描述喂进去，模型会尽职尽责地画一张脸贴在场景里（三次实测：探出窗的
+ * 卡通小孩）——而场景主图要喂给全部关键帧，这张脸会污染每一帧。
+ * 场景媒介只锁「渲染管线/光/配色/材质」，角色脸型归卡司参考图锁。
+ */
+const STYLE_ANCHOR_SCENE = {
+  cartoon3d: '欧美三维卡通动画长片风格的场景，三维渲染管线，柔和体积光与柔阴影，高饱和动画配色，玩具般的材质质感',
+};
+
+export function sceneAnchor(board) {
+  return STYLE_ANCHOR_SCENE[board.meta?.style] || styleAnchor(board);
+}
+
 export function regionAnchor(board) {
   const lang = String(board.meta?.language || 'zh-CN').toLowerCase();
   const key = lang.slice(0, 2);
@@ -143,6 +160,26 @@ export function isHuman(ch) {
 }
 
 /**
+ * 这只非人类角色有没有服装？
+ *
+ * 🔁 已复发（fat_cat 2026-09-20）：非人类配方硬编码「四足动物，不穿任何衣物、不拟人化」，
+ * 是为裸身萌宠剧写的。但萌宠/合家欢剧里有**穿衣服的非人类**（超人装的猫）——
+ * 身份图【一致性】条款里「不穿衣」会直接盖掉 appearance_details 的服装描述，
+ * 四个面板出成裸身或半穿半脱；关键帧层的「体表一致」也会漏掉服装漂移。
+ *
+ * 判据：**身份层 appearance_details 里出现衣物词 = 这只动物有服装**。
+ * 服装描述归身份层所有，配方只负责「别替导演编服装、也别否认导演写的服装」。
+ */
+const CLOTH_RE = /紧身衣|披风|斗篷|衣服|服装|上衣|外袍|长袍|裙|衫|靴|鞋|裤|袜|腰带|配饰|盔甲|围巾|帽子|马甲|背心/;
+export function wearsClothes(board, character) {
+  if (isHuman(character)) return false;
+  return (character.identities || []).some((id) => {
+    const x = (board.identities || []).find((v) => v.id === id);
+    return x && CLOTH_RE.test(x.appearance_details || '');
+  });
+}
+
+/**
  * 角色肖像（脸部锚点）。
  * **故意不带风格圣经** —— 成片色调会把它拖进场景，就失去「锚」的意义了。
  * **故意不写服装** —— 服装属于造型层；写进来会让这张脸只适配一套衣服。
@@ -173,7 +210,10 @@ export function portraitPrompt(board, character, contract = null) {
       ? '【服装】只穿**素色无花纹的上衣**（领口可见即可）；**不出现任何服装细节** —— 不要戏服、纹样、腰带、配饰。'
         + '**上衣必须是完全纯色的** —— 不要碎花、不要图案、不要印花、不要条纹、不要格子、不要蕾丝、不要刺绣。'
         + '**画面下边界必须切在锁骨上方**，画面里只有头部与颈部，**颈部和肩以下不允许出现任何衣物**。'
-      : '【体表】**四足动物，不穿任何衣物、不佩戴任何配饰**，不拟人化、不直立；只有自然的毛发与体表特征。',
+      : (wearsClothes(board, character)
+        ? '【体表】**四足动物，不拟人化、不直立**；只有自然的毛发与体表特征。'
+          + '**本图不表现服装**（服装归造型层的身份图负责），画面下边界切在胸口上方，不出现服装细节。'
+        : '【体表】**四足动物，不穿任何衣物、不佩戴任何配饰**，不拟人化、不直立；只有自然的毛发与体表特征。'),
     '【禁止】画面里不许出现任何文字、水印、边框、色卡、标注，也不许出现道具和场景。',
   ].filter(Boolean).join('，'));
 }
@@ -233,8 +273,11 @@ export function sheetInstruction(board, identity, contract = null) {
     human
       ? '**参考图只用于锁定长相（脸型、五官）；参考图里的发型与衣着都必须完全忽略，'
         + '四个面板的发型与服装一律以上面那段描述为准**'
-      : '**参考图只用于锁定长相（脸型、五官、毛色与斑纹）；参考图里出现的任何衣着都必须完全忽略，'
-        + '四个面板的体表以上面那段描述为准；角色是四足动物，不穿衣、不拟人化**',
+      : (wearsClothes(board, ch)
+        ? '**参考图只用于锁定长相（脸型、五官、毛色与斑纹）；参考图里出现的任何衣着都必须完全忽略，'
+          + '四个面板的服装一律以上面 appearance_details 描述为准；角色仍是四足动物，不直立、不拟人化**'
+        : '**参考图只用于锁定长相（脸型、五官、毛色与斑纹）；参考图里出现的任何衣着都必须完全忽略，'
+          + '四个面板的体表以上面那段描述为准；角色是四足动物，不穿衣、不拟人化**'),
     // 另一条实测教训：模型会自作主张加上"角色设定图 / 年龄 / 门派 / 服装配色"那套排版文字。
     // 那张图要当参考图喂给关键帧，**烧进去的字会跟着污染画面**。
     '【禁止】**画面里不许出现任何文字、数字、标题、标注、色标、参数表、分隔线、边框或水印**，'
@@ -264,7 +307,14 @@ export function masterPrompt(board, scene, contract = null) {
   const cine = assetCinematography(contract, 'master');
   const head = `${cine.header || ''}${cine.negatives || ''}${cine.optics || ''}`;
   return glue(head, [
-    styleAnchor(board),
+    // **正向的空镜定义必须放在场景细节之前。**
+    // 🔁 已复发（fat_cat 2026-09-20）：只靠句尾的整类别否定（「没有人物、没有动物」），
+    //    场景描述里的「敞开的窗」连续两次把角色吸进画面（探出窗往外看的卡通小孩）。
+    //    教训同下面【空镜】块：正向陈述 > 否定式 —— 先钉死"画面唯一主体是场景本身"，
+    //    再给它场景细节；句尾的否定块保留作兜底。
+    '**空镜摄影**：画面的唯一主体是这个场景本身 —— 它的空间、固定陈设、材质与光线，'
+    + '没有任何角色作为画面主体或视觉焦点',
+    sceneAnchor(board),
     board.meta?.style_prompt || '',
     scene.environment,
     cine.lighting,
@@ -493,9 +543,17 @@ export function keyframeInstruction(board, shot, series) {
       const c = x ? (board.characters || []).find((v) => v.id === x.character) : null;
       return isHuman(c);
     });
+    // 穿衣的非人类（超人装的猫）：服装一致性必须显式锚住，否则披风/紧身衣逐镜漂移
+    const anyClothed = !allHuman && (shot.cast || []).some((id) => {
+      const x = (board.identities || []).find((v) => v.id === id);
+      const c = x ? (board.characters || []).find((v) => v.id === x.character) : null;
+      return wearsClothes(board, c);
+    });
     parts.push(allHuman
       ? `画面里的人以${who.join('、')}为准，长相与服装保持完全一致（${looks.map((s) => s.label).join('、')}）`
-      : `画面里的角色以${who.join('、')}为准，长相与体表（毛色、斑纹、体型）保持完全一致（${looks.map((s) => s.label).join('、')}）`);
+      : (anyClothed
+        ? `画面里的角色以${who.join('、')}为准，长相、体表（毛色、斑纹、体型）与服装保持完全一致（${looks.map((s) => s.label).join('、')}）`
+        : `画面里的角色以${who.join('、')}为准，长相与体表（毛色、斑纹、体型）保持完全一致（${looks.map((s) => s.label).join('、')}）`));
   }
 
   // ③ 造型 + 运镜 + 动作（`shot.prompt` 里本来就有景别和运镜，**不要再加一遍**，会重复）
