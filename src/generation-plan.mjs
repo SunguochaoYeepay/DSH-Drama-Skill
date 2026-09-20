@@ -50,6 +50,9 @@ function finalize(group, index, boundaryReason, forcedDuration = null) {
       : {}),
     props: [...new Set(group.flatMap((x) => x.shot.props || []))],
     ...(director.why ? { why: director.why } : {}),
+    // 知情状态要跟着计划走到出片阶段。它**不进关键帧**（静帧靠 keyframe_start 就够，而关键帧提示词
+    // 本来就有字数压力），但**进视频提示词**：观众与角色的知情错位是表演与视线的依据。
+    ...(director.audience_knows ? { audience_knows: director.audience_knows } : {}),
     ...(director.duration_reason ? { duration_reason: director.duration_reason } : {}),
     ...(director.keyframe_start ? { keyframe_start: director.keyframe_start } : {}),
     ...(director.keyframe_cast ? { keyframe_cast: [...director.keyframe_cast] } : {}),

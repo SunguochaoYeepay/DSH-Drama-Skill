@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { createHandoffRecord, writeHandoff } from '../src/continuity-handoff.mjs';
+import { allowedChangesList, createHandoffRecord, writeHandoff } from '../src/continuity-handoff.mjs';
 import { clipResultPath, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 
@@ -43,7 +43,7 @@ const record = createHandoffRecord({ projectDir: project, unit, sourceUnit, sour
 const recordFile = writeHandoff(project, record);
 const note = writeReviewNote(project, `handoff-${unitId}`, [
   `# 连续性交接 ${sourceUnit} -> ${unitId}`, '',
-  `导演要求继承：${unit.continuity.handoff_state}`, `只允许变化：${(unit.continuity.allowed_changes || []).join('、') || '无'}`, '',
+  `导演要求继承：${unit.continuity.handoff_state}`, `只允许变化：${allowedChangesList(unit.continuity.allowed_changes).join('、') || '无'}`, '',
   `稳定尾帧：${frame}`, `交接凭证：${recordFile}`, '',
   '请人工确认该帧能代表上一段结束的稳定状态。确认后，才生成下一关键帧。',
   `确认命令：node cli/review-gate.mjs approve --project "${project}" --stage handoff --id ${unitId} --artifacts "${frame}"`,

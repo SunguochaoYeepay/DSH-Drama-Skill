@@ -45,8 +45,8 @@
 | 等满超时才失败，错误信息是「bl 退出码 null」，stderr 为空 | 同上；`shell: true` 启动了 PowerShell 但子进程没起来 |
 | 图片通道能跑、导演通道不能跑 | 两个通道的调用方式不一致 —— 图片走 `runBailian`，导演曾走 `spawn('bl', {shell:true})` |
 | 导演调用跑满 5–6 分钟后报 `max_output_tokens`，没有任何产物 | **只在显式调 `cli/direct.mjs` 时会遇到**（默认由当前对话 Agent 直写，不走这条路径）。单次输出的额度被耗尽。**两条路都实测过**：① `node cli/direct.mjs <board.json> --batched` —— 先紧凑规划单元、再逐单元设计，走 JSON Schema 结构化输出，`mimi_bone`（2026-09-19）实测 **29 秒成功**；② 加大 `--max-tokens` —— `ant_crumb_20260919`（同日）用 `--max-tokens 30000`、**276 秒成功**。**优先 ①**：更快更省，且不必把额度翻倍；见 [`workflow.md`](workflow.md) 的「导演分批模式」|
-
 | 长任务报「退出码 1」，但它其实成功了 | **不要用过滤后的管道退出码判断长任务成败。** `… \| Select-String <模式>` 在没有匹配时自己返回 1；`Select-Object -First N` 还可能提前掐断上游进程。`pot_hit`（2026-09-20）因这一次误判，**把一次已经成功的关键帧生成当成失败**，差点白白重跑。判长任务只看**产物文件 + 它自己的输出**，不看管道退出码。 |
+| `cli/keyframes.mjs` 报「人工闸门未通过：**板子（场景清单/角色/道具）** 尚未人工确认」 | **`board` 是后加的一档票**（`src/human-gates.mjs` 的 `stages` 里排在 `story` 之后）。`keyframes.mjs` 现在要**三张**票：`assets` + `board` + `direction`（`cli/keyframes.mjs:198-210`）。**2026-09-20 之前建的四个项目一个都没签过它**（`pot_hit` / `bike_stare` / `mimi_bone` / `no_chute` 的 `review.approvals.json` 里都没有 `board`），所以在老项目上重出关键帧一定会撞到 —— 补签即可：`node cli/review-gate.mjs approve --project <项目> --stage board`（默认产物就是 `board.json`）。⚠ **面板上没有这一档的按钮**，只能命令行签；且它和 `assets` 是两张独立的票，签了 `assets` 不等于签了它。 |
 
 ### 票据「产物已变化」但文件没动
 

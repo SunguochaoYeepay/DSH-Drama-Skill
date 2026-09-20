@@ -75,6 +75,20 @@ test('画外音使用固定短语并要求嘴唇闭合', () => {
   assert.match(prompt, /嘴唇始终完全闭合/);
 });
 
+// 知情状态是**单元级**前提：它进提示词（作为表演依据），缺字段时不得留下空标签。
+// 依据：pot_hit 2026-09-20 —— 没人写这一句时，"观众已知、角色未知"的错位会被调度拍丢。
+test('audience_knows 作为单元级前提进入提示词，缺字段时不出现空标签', () => {
+  const withKnows = structuredClone(unit);
+  withKnows.audience_knows = '观众已经看见猫踩翻了花盆；她还低着头什么都不知道。';
+  const prompt = buildUnitPrompt(withKnows, { ...ctx, refs: [] });
+  assert.match(prompt, /audience_knows/);
+  assert.match(prompt, /观众已经看见猫踩翻了花盆/);
+  assert.match(prompt, /不是画面文字/);
+
+  const without = buildUnitPrompt(unit, { ...ctx, refs: [] });
+  assert.doesNotMatch(without, /audience_knows/);
+});
+
 // 实测来自 mosquito_tattoo/g001：action 里写「脸颊涨红」、导演约束里写「脸颊泛红」，
 // 两处都没被去夸张词表拦住，模型把末镜画成了两块腮红 + 亮红唇。
 test('「脸颊+红」必须换成不带颜色词的表演描述，且 action 与导演约束两条路径都要过', () => {

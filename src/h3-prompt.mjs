@@ -106,6 +106,16 @@ export function buildUnitPrompt(unit, ctx) {
   const contractCine = compileCinematography(ctx.contract, { lang: 'en' });
   if (contractCine.header) body.push(contractCine.header);
   if (contractCine.negatives) body.push(contractCine.negatives);
+  // 单元级的知情状态：它管的是「观众与角色的知情错位」，是**表演与视线**的依据，
+  // 不是某一镜的属性 —— 所以放在逐镜描述之前，作为这一单元的前提。
+  //
+  // 为什么值得进提示词：`pot_hit`（2026-09-20）实测过 —— 没人问这一句时，调度会把
+  // "观众已知、角色未知"的错位拍丢：花盆从角色身后飞上来、开场先说人再给飞机。
+  // 两者的根因都是"0 秒首帧的约束改写了叙事顺序"，而这一行是把叙事顺序写进生成提示词的落点。
+  const knows = clean(unit.audience_knows);
+  if (knows) {
+    body.push(`audience_knows（这一单元开始时观众与角色各自知道什么；用作表演与视线的依据，不是画面文字）：${knows}`);
+  }
   for (const [index, shot] of unit.shots.entries()) {
     const action = replaceAll(clean(shot.action), DEACT);
     const faces = Object.entries(shot.facing || {})

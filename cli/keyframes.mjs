@@ -32,7 +32,7 @@ import { planKeyframeFiles, requireApproval, writeReviewNote } from '../src/huma
 import { COMFY_GEN, COMFY_PYTHON, NODE } from '../src/runtime-paths.mjs';
 import * as bailian from '../src/providers/bailian.mjs';
 import * as volcengine from '../src/providers/volcengine.mjs';
-import { bindHandoffKeyframe, requireHandoff } from '../src/continuity-handoff.mjs';
+import { allowedChangesList, bindHandoffKeyframe, requireHandoff } from '../src/continuity-handoff.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { KEYFRAME_PROVIDER, KEYFRAME_IMAGE_MODEL, HUIMENG_IMAGE_MODEL, KEYFRAME_SIZE, BAILIAN_KEYFRAME_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG, LOCAL_KEYFRAME_FAST, LOCAL_KEYFRAME_SIZE, LOCAL_KEYFRAME_LORA, LOCAL_KEYFRAME_STEPS, LOCAL_KEYFRAME_CFG } from '../src/config.mjs';
 import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
@@ -283,13 +283,18 @@ function buildLocalPrompt(unit, shot, refs, cine) {
           + (TIGHT_FRAMINGS.has(shot.framing)
             ? '两人的脸都必须清楚可辨；构图拥挤时，依次尝试缩短人物间距、前后错位、轻微侧边裁切，'
               + '不要为了保留横向留白而放松景别。'
-            : '两个人都必须清楚可见。')
+            // 宽景别（远景/全景）里人本来就很小，再说「清楚可见」就和景别规则互搏，
+            // 模型会往「把人放大」的方向妥协（no_chute_v2 2026-09-20 实测：两连抽人都被放大、
+            // 还被挪到机身上）。宽景别只要求「在画面里、位置对」。
+            : shot.framing === '远景'
+              ? '两个人都出现在画面里即可，位置与大小以关键帧起始姿态为准，这个景别下看不清脸部细节是正常的。'
+              : '两个人都必须清楚可见。')
         : '',
     `构图要求：${f.rule.replaceAll('**', '')}`,
     scaleRule,
     `关键帧起始姿态：${staticKeyframeStart(unit, shot)}`,
     unit.continuity?.mode === 'continue_previous'
-      ? `连续性交接：必须保持“${unit.continuity.handoff_state}”；只允许改变：${(unit.continuity.allowed_changes || []).join('、') || '无'}。`
+      ? `连续性交接：必须保持“${unit.continuity.handoff_state}”；只允许改变：${allowedChangesList(unit.continuity.allowed_changes).join('、') || '无'}。`
       : '',
     cineBlock.lighting,
     shot.lighting ? `光线：${shot.lighting}` : '',

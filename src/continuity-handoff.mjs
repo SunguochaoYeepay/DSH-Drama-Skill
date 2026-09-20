@@ -8,6 +8,20 @@ export function fileSha256(file) {
   return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 }
 
+/**
+ * 把导演稿里的 `continuity.allowed_changes` 归一成字符串数组。
+ * 契约示例写的是数组，但手写导演稿很容易写成一句中文（「景别从全景收到中景、机位…」）。
+ * 直接对字符串做 `[...str]` 会静默拆成单字符数组并写进交接凭证；`.join()` 则会当场抛错。
+ * 两者都不该发生，所以统一在这里收口。
+ */
+export function allowedChangesList(value) {
+  if (Array.isArray(value)) return value.map((x) => String(x).trim()).filter(Boolean);
+  if (typeof value === 'string') {
+    return value.split(/[、,，;；]|\s+and\s+/).map((x) => x.trim()).filter(Boolean);
+  }
+  return [];
+}
+
 export function handoffPath(projectDir, unitId) {
   return path.join(projectDir, 'handoffs', `${unitId}.handoff.json`);
 }
@@ -30,7 +44,7 @@ export function createHandoffRecord({ projectDir, unit, sourceUnit, sourceClip, 
     unit: unit.id,
     source_unit: sourceUnit,
     handoff_state: unit.continuity.handoff_state,
-    allowed_changes: [...(unit.continuity.allowed_changes || [])],
+    allowed_changes: allowedChangesList(unit.continuity.allowed_changes),
     source_clip: path.resolve(sourceClip),
     source_clip_sha256: fileSha256(sourceClip),
     stable_frame: path.resolve(stableFrame),

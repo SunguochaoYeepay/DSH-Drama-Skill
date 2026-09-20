@@ -104,3 +104,48 @@ test('composition override is the capture itself and injects no bed-scene wordin
   assert.doesNotMatch(out, /床头|枕头|床尾|镜面/);
   assert.match(out, /楼道口|门洞/);
 });
+
+/** 两人 fixture：远景/中景的多人措辞行为要用两个角色才能触发。 */
+function makeTwoPersonProject(framing) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-keyframe-prompt2-'));
+  const png = path.join(dir, 'portrait.png');
+  fs.writeFileSync(png, 'stub');
+  fs.writeFileSync(path.join(dir, 'board.json'), JSON.stringify({
+    meta: { project: 'keyframe-prompt', aspect: '9:16', style_prompt: '暖色调绘本风格' },
+    characters: [
+      { id: 'c_a', name: '甲', face_prompt: '圆脸', portrait: png },
+      { id: 'c_b', name: '乙', face_prompt: '方脸', portrait: png },
+    ],
+    identities: [
+      { id: 'i_a', character: 'c_a', appearance_details: '红衣', sheet: png },
+      { id: 'i_b', character: 'c_b', appearance_details: '蓝衣', sheet: png },
+    ],
+    scenes: [{ id: 's_room', name: '卧室', master: png }],
+    props: [],
+  }));
+  fs.writeFileSync(path.join(dir, 'render.plan.json'), JSON.stringify({
+    units: [{
+      id: 'g001',
+      keyframe_start: '0秒时：甲和乙并排站着',
+      shots: [{ framing, action: '甲和乙并排站着', scene: 's_room', on_screen: ['i_a', 'i_b'] }],
+    }],
+  }));
+  return dir;
+}
+
+test('wide framing does not demand clearly visible faces for two-person casts', () => {
+  // 回归守卫（2026-09-20 no_chute_v2）：远景里人本来就不到画面 1/4，
+  // 再追加「两个人都必须清楚可见」与景别规则正面互搏，模型往「把人放大」妥协——
+  // 两连抽人都被挪出应有位置。宽景别只要求「在画面里、位置对」。
+  const out = dryRun(makeTwoPersonProject('远景'));
+  assert.doesNotMatch(out, /两个人都必须清楚可见/);
+  assert.match(out, /两个人都出现在画面里即可/);
+});
+
+test('non-wide framing keeps the clearly-visible requirement for two-person casts', () => {
+  // 中景/近景/特写走 TIGHT_FRAMINGS 分支（「脸都必须清楚可辨」）；
+  // 这里用全景验证非宽非紧景别仍保留「清楚可见」。
+  const out = dryRun(makeTwoPersonProject('全景'));
+  assert.match(out, /两个人都必须清楚可见/);
+  assert.doesNotMatch(out, /两个人都出现在画面里即可/);
+});

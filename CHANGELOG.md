@@ -2,6 +2,35 @@
 
 记录工程级行为变化。具体剧目的抽卡结果、耗时和逐帧评价留在对应项目目录，不写入这里。
 
+## 2026-09-20 - allowed_changes 写成了整句会让交接链直接崩掉
+
+首个 `reference_previous` 单元跑到 `prepare-handoff` 时当场抛 `.join is not a function`——
+导演契约要求 `continuity.allowed_changes` 是列表，但手写导演稿极自然就会写成一整句中文
+（「景别从全景收到中景、机位从舱内正面移到他侧后方；服装与身份不变」）。两处消费方各以一种坏法处理：
+
+- `cli/prepare-handoff.mjs`：`(x || []).join()` 直接崩，来不及生成交接尾帧。
+- `src/continuity-handoff.mjs`：`[...str]` **不崩**，但会把凭证填成 `["景","别","从",…]`
+  一串单字符，交接哈希照样算出来，错误被静默写进产物——比崩溃更糟。
+
+修法：在 `continuity-handoff.mjs` 新增导出的 `allowedChangesList()`（数组原样返回 / 字符串按
+`、`，;；` 切分去空 / 空值返回 `[]`），三处调用方（`prepare-handoff`、`createHandoffRecord`、
+`cli/keyframes.mjs` 的提示词行）统一走它。测试新增 2 条：整句中文不会被拆成单字符、
+凭证里的字段归一成词数组（合计 158 条）。
+
+教训：`independent` 模式的单元永远走不到这些分支，**新模式的第一次实跑才是真正的测试**。
+
+## 2026-09-20 - audience_knows 下发到视频提示词（不进关键帧）
+
+单元级的「观众/角色各自知道什么」此前只活在导演稿里，出片阶段丢。`src/generation-plan.mjs`
+把它透传到 `render.plan.json`，`src/h3-prompt.mjs` 在逐镜描述**之前**插一行 `audience_knows`
+（它是整单元的前提，不是某一镜的属性）。关键帧不收——静帧靠 `keyframe_start` 够了，且关键帧
+提示词本来就有字数压力。
+
+动机：`pot_hit`（2026-09-20）里"观众已知、角色未知"的错位被拍丢——花盆从角色身后飞上来、
+开场先说人再给飞机。两者根因都是 0 秒首帧的约束改写了叙事顺序，而这一行是唯一能把它写回生成
+提示词的落点。`references/directing.md` 同批补了两条判据（建立镜头与 0 秒首帧冲突怎么办、
+`end_state` 不被 `unit.mjs`/`h3-prompt.mjs` 读取所以约束必须落在 `action`/`visible_behavior`）。
+
 ## 2026-09-19 - 干跑改打印真实命令，装配层终于有行为测试
 
 之前 `--dry-run` 在**构造参数之前**就退出了，干跑只能复述一遍变量（`PROFILE` / `ATTENTION` / `VIDEO_TIMEOUT_SECONDS`）——
