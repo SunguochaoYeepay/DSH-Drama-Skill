@@ -127,12 +127,20 @@ function dropNoisyClauses(line, dropped) {
   for (const sentence of line.split(/(?<=[。；])/u).map((s) => s.trim()).filter(Boolean)) {
     if (/^[。；]+$/u.test(sentence)) continue;   // 拼接疤痕（原文里的「。。」）留下的空句
     if (matchesAny(sentence, STRATEGY) || matchesAny(sentence, EXPLAIN)
-      || matchesAny(sentence, UNSEEN) || matchesAny(sentence, EMPTY_REF)) {
+      || matchesAny(sentence, EMPTY_REF)) {
       dropped.push(`[噪声句] ${sentence.slice(0, 36)}`);
       continue;
     }
     const tail = /[。；]$/u.test(sentence) ? sentence.slice(-1) : '。';
     const parts = sentence.split(/，/u).map((x) => x.trim()).filter(Boolean).filter((part) => {
+      // UNSEEN（「尚未/还没」类）也走子句级：整句里常常混着"当下状态 + 尚未"，
+      // 整句删会把可画、甚至是连续性锚点的部分连坐删掉（2026-09-20 g002 实测：
+      // 「教练站在画面左侧，一只手已经握住门框，身体尚未完全转向她、尚未开口」
+      // 被整句删，握门框这个状态是 g003/g004 承接的起点）。
+      if (matchesAny(part, UNSEEN)) {
+        dropped.push(`[噪声子句] ${part.slice(0, 36)}`);
+        return false;
+      }
       if (matchesAny(part, NEGATION) && !matchesAny(part, NEGATION_ALLOW)) {
         dropped.push(`[否定子句] ${part.slice(0, 36)}`);
         return false;
