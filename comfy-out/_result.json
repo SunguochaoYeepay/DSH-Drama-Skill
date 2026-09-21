@@ -1,0 +1,37 @@
+{
+  "ok": true,
+  "mode": "t2i",
+  "kind": "image",
+  "prompt_id": "7aa612a1-669f-4b8d-a8a2-3d491367cbe5",
+  "params": {
+    "mode": "t2i",
+    "width": 576,
+    "height": 1024,
+    "image_model": "qwen21",
+    "steps": 25,
+    "cfg": 1.0,
+    "ref_resolution": 1024
+  },
+  "seed_used": 1638558893,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\img\\Qwen_image_2.1_00024_.png",
+      "filename": "Qwen_image_2.1_00024_.png",
+      "subfolder": "img",
+      "type": "output",
+      "kind": "image",
+      "exists": true,
+      "bytes": 892189,
+      "url": "http://127.0.0.1:8188/view?filename=Qwen_image_2.1_00024_.png&subfolder=img&type=output",
+      "local_path": "D:\\DeepSeek\\ai-images-harness\\comfy-out\\t2i_20260921-163159.png"
+    }
+  ],
+  "local_files": [
+    "D:\\DeepSeek\\ai-images-harness\\comfy-out\\t2i_20260921-163159.png"
+  ],
+  "out_dir": "D:\\DeepSeek\\ai-images-harness\\comfy-out",
+  "prompt_used": "一位二十出头的东亚年轻女性，正面半身肖像。她微微侧脸、视线看向镜头之外，神情自然放松；妆面干净通透，浅杏色腮红与自然唇色，黑色长直发自然垂在肩前；穿一件米白色针织小高领上衣，肩线利落。窗边自然侧光从画面左侧照进来，柔和过渡，右颊留一点浅影；背景是浅灰色水泥墙，轻微虚化但保留墙面颗粒与细纹。85mm 定焦，机位与视线齐平，浅景深；皮肤保留真实毛孔与细小绒毛，不磨皮成塑料质感。画面里不出现任何文字、水印、logo、边框；双手不入画。9:16 竖构图，人物居中偏左，头顶留少量空间。",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 8.0
+}

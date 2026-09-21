@@ -1,0 +1,37 @@
+{
+  "ok": true,
+  "mode": "t2i",
+  "kind": "image",
+  "prompt_id": "7aa612a1-669f-4b8d-a8a2-3d491367cbe5",
+  "params": {
+    "mode": "t2i",
+    "width": 576,
+    "height": 1024,
+    "image_model": "qwen21",
+    "steps": 25,
+    "cfg": 1.0,
+    "ref_resolution": 1024
+  },
+  "seed_used": 1638558893,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\img\\Qwen_image_2.1_00024_.png",
+      "filename": "Qwen_image_2.1_00024_.png",
+      "subfolder": "img",
+      "type": "output",
+      "kind": "image",
+      "exists": true,
+      "bytes": 892189,
+      "url": "http://127.0.0.1:8188/view?filename=Qwen_image_2.1_00024_.png&subfolder=img&type=output",
+      "local_path": "D:\\DeepSeek\\ai-images-harness\\comfy-out\\t2i_20260921-163159.png"
+    }
+  ],
+  "local_files": [
+    "D:\\DeepSeek\\ai-images-harness\\comfy-out\\t2i_20260921-163159.png"
+  ],
+  "out_dir": "D:\\DeepSeek\\ai-images-harness\\comfy-out",
+  "prompt_used": "\u4e00\u4f4d\u4e8c\u5341\u51fa\u5934\u7684\u4e1c\u4e9a\u5e74\u8f7b\u5973\u6027\uff0c\u6b63\u9762\u534a\u8eab\u8096\u50cf\u3002\u5979\u5fae\u5fae\u4fa7\u8138\u3001\u89c6\u7ebf\u770b\u5411\u955c\u5934\u4e4b\u5916\uff0c\u795e\u60c5\u81ea\u7136\u653e\u677e\uff1b\u5986\u9762\u5e72\u51c0\u901a\u900f\uff0c\u6d45\u674f\u8272\u816e\u7ea2\u4e0e\u81ea\u7136\u5507\u8272\uff0c\u9ed1\u8272\u957f\u76f4\u53d1\u81ea\u7136\u5782\u5728\u80a9\u524d\uff1b\u7a7f\u4e00\u4ef6\u7c73\u767d\u8272\u9488\u7ec7\u5c0f\u9ad8\u9886\u4e0a\u8863\uff0c\u80a9\u7ebf\u5229\u843d\u3002\u7a97\u8fb9\u81ea\u7136\u4fa7\u5149\u4ece\u753b\u9762\u5de6\u4fa7\u7167\u8fdb\u6765\uff0c\u67d4\u548c\u8fc7\u6e21\uff0c\u53f3\u988a\u7559\u4e00\u70b9\u6d45\u5f71\uff1b\u80cc\u666f\u662f\u6d45\u7070\u8272\u6c34\u6ce5\u5899\uff0c\u8f7b\u5fae\u865a\u5316\u4f46\u4fdd\u7559\u5899\u9762\u9897\u7c92\u4e0e\u7ec6\u7eb9\u300285mm \u5b9a\u7126\uff0c\u673a\u4f4d\u4e0e\u89c6\u7ebf\u9f50\u5e73\uff0c\u6d45\u666f\u6df1\uff1b\u76ae\u80a4\u4fdd\u7559\u771f\u5b9e\u6bdb\u5b54\u4e0e\u7ec6\u5c0f\u7ed2\u6bdb\uff0c\u4e0d\u78e8\u76ae\u6210\u5851\u6599\u8d28\u611f\u3002\u753b\u9762\u91cc\u4e0d\u51fa\u73b0\u4efb\u4f55\u6587\u5b57\u3001\u6c34\u5370\u3001logo\u3001\u8fb9\u6846\uff1b\u53cc\u624b\u4e0d\u5165\u753b\u30029:16 \u7ad6\u6784\u56fe\uff0c\u4eba\u7269\u5c45\u4e2d\u504f\u5de6\uff0c\u5934\u9876\u7559\u5c11\u91cf\u7a7a\u95f4\u3002",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 8.0
+}
