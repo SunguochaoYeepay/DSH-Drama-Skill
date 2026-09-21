@@ -100,7 +100,7 @@ metadata:
 |---|---|
 | **新建项目或开始新一轮生成之前（开工前）** | `references/preflight.md` |
 | 新建项目、判断当前进度、恢复中断任务 | `references/workflow.md` |
-| **写新剧本或修改剧本** | `references/story-craft.md` |
+| **写新剧本或修改剧本** | `references/story-craft.md`（入口；钩子/落点/对抗/题材/动作戏的专项类型学按需读其 `story-craft/` 子文件） |
 | 生成或修改导演方案、决定视频单元边界 | `references/directing.md` |
 | 生成角色/场景/道具资产或关键帧 | `references/assets-and-keyframes.md` |
 | 生成设计参谋方案（可选，产出不进提示词） | `references/scene-designer.md`、`references/character-designer.md` |
@@ -135,7 +135,7 @@ metadata:
 
 | 内容 | 唯一所有者 |
 |---|---|
-| 剧本工艺 | `references/story-craft.md` |
+| 剧本工艺 | `references/story-craft.md`（入口）+ `references/story-craft/`（hooks / payoff / antagonist / genres / action） |
 | Storyboard 数据结构 | `schema/storyboard.schema.json` |
 | 导演输出结构 | `references/director/schema.md` |
 | 导演决策规则 | `references/director/brief.md` |

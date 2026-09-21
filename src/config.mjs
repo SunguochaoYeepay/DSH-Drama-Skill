@@ -41,6 +41,32 @@ export const BAILIAN_KEYFRAME_SIZE = setting('AIH_BAILIAN_KEYFRAME_SIZE', '1024*
 export const LOCAL_IMAGE_STEPS = setting('AIH_LOCAL_IMAGE_STEPS', '20');
 export const LOCAL_IMAGE_CFG = setting('AIH_LOCAL_IMAGE_CFG', '4');
 
+// ── 本地图像模型家族（2026-09-21 起，用户拍板）─────────────────────────────
+// 默认 **Qwen Image 2.1**（qwen21）：25 步 cfg1，参考图最多 16 张、以 VAE latent
+// 拼进序列，edit 的输出画幅由 EmptyLatentImage 说了算 —— 旧链路「画幅跟随参考图
+// 被焊死 ~1MP」的坑在结构上不存在了。上游 gen.py 已把 2.1 设为默认（--image-model），
+// 这里显式写一份，防上游哪天改默认值时本仓行为跟着漂。
+// `qwen` = 旧 Qwen-Image / Qwen-Image-Edit 2511 链路（Lightning 8 步等），逃生口。
+// ⚠ 2.1 **没有**蒸馏/加速 LoRA，`LOCAL_KEYFRAME_FAST` / `*_LORA` 那套三件套只对
+//   legacy 家族有意义 —— 21 家族下传 LoRA 会被上游直接拒绝（骨架错配）。
+export const LOCAL_IMAGE_MODEL = setting('AIH_LOCAL_IMAGE_MODEL', 'qwen21').toLowerCase();
+if (!['qwen21', 'qwen'].includes(LOCAL_IMAGE_MODEL)) {
+  throw new Error('AIH_LOCAL_IMAGE_MODEL 只能是 qwen21 / qwen');
+}
+// 2.1 家族的步数/CFG：官方模板默认 25 步 cfg 1。想快减 steps（画质同步下降）。
+export const LOCAL_KEYFRAME_STEPS_21 = setting('AIH_LOCAL_KEYFRAME_STEPS_21', '25');
+export const LOCAL_KEYFRAME_CFG_21 = setting('AIH_LOCAL_KEYFRAME_CFG_21', '1');
+if (!/^\d+$/.test(LOCAL_KEYFRAME_STEPS_21) || Number(LOCAL_KEYFRAME_STEPS_21) < 1) {
+  throw new Error('AIH_LOCAL_KEYFRAME_STEPS_21 必须是正整数');
+}
+if (!Number.isFinite(Number(LOCAL_KEYFRAME_CFG_21))) throw new Error('AIH_LOCAL_KEYFRAME_CFG_21 必须是数字');
+export const LOCAL_ASSET_STEPS_21 = setting('AIH_LOCAL_ASSET_STEPS_21', LOCAL_KEYFRAME_STEPS_21);
+export const LOCAL_ASSET_CFG_21 = setting('AIH_LOCAL_ASSET_CFG_21', LOCAL_KEYFRAME_CFG_21);
+if (!/^\d+$/.test(LOCAL_ASSET_STEPS_21) || Number(LOCAL_ASSET_STEPS_21) < 1) {
+  throw new Error('AIH_LOCAL_ASSET_STEPS_21 必须是正整数');
+}
+if (!Number.isFinite(Number(LOCAL_ASSET_CFG_21))) throw new Error('AIH_LOCAL_ASSET_CFG_21 必须是数字');
+
 // ── 本地关键帧默认档（2026-09-20 no_chute 与 DramaClaw 对照实测后定）──────────
 // 旧默认 = 20 步 + cfg4 的非蒸馏路径，画面系统性发灰/发黑（g001 连出数版：脸全黑、
 // 两只包不可见）。换成 Lightning 加速栈后归位，`--no-fast` 可退回旧路径。

@@ -2,6 +2,130 @@
 
 记录工程级行为变化。具体剧目的抽卡结果、耗时和逐帧评价留在对应项目目录，不写入这里。
 
+## 2026-09-21 - 本地生图默认家族切到 Qwen Image 2.1（上游 + 本仓）
+
+用户拍板：comfy-studio 上游与本仓都接入 2.1，**默认使用**。
+
+- **上游 comfy-studio**（`graphs.py`/`gen.py`）：新增 `build_image21()` —— t2i 与 edit
+  共用一张图（`ComfySwitchNode` 切 latent 来源）；文本编码换成单节点
+  `TextEncodeQwenImage21`（同时出 positive/negative/latent，参考图以 VAE latent 拼进序列）；
+  参考图上限 3→16；参考图缩放交给节点自带 `resolution`；默认 25 步 cfg 1 +
+  `QwenImage21Cache`。**刻意不追加 style 正向句**（旧链路「。，」拼接疤痕与
+  自检口径失真的根源），负向条件由 `--style` 预设 + `--negative` 合并，edit 且非
+  `--style none` 时负向为空直接拒绝。`--image-model qwen` 保留旧 2511 链路作逃生口；
+  2.1 下传 `--lora` 直接报错（骨架错配）。
+- **本仓**：`config.mjs` 新增 `AIH_LOCAL_IMAGE_MODEL`（默认 `qwen21`）与 21 家族自己的
+  步数/CFG 常量；`cli/keyframes.mjs` 与 `cli/assets.mjs` 的本地参数按家族分发
+  （21 → `--image-model qwen21 --steps 25 --cfg 1`，绝不挂 LoRA；legacy 三件套不变）；
+  `src/providers/comfyui.mjs` 的 `generate()/edit()` 接受 `imageModel` 并在 21 下拒绝 LoRA、
+  忽略 `fast`。generation record 的 model 记为 `local-comfyui/<家族>`。
+- **参考图上限保持 3 张不动**：2.1 支持 16 张，但"参考图变多后画面受不受干扰"是
+  行为决策，等 3 张 vs 全给的同镜对照再放开。
+- 实测：同镜同提示词同参考图，2.1（25 步）**17–18 秒**出 1152×2048，比旧 8 步
+  Lightning（29 秒）更快；构图/物件/光线明显更好（手悬空位置、屏幕亮起都对上）。
+- 测试：`keyframe-local-args`/`asset-local-args`/`generation-config` 按新默认改写并
+  新增 legacy 家族反例，41/41 全绿。
+
+## 2026-09-21 - 关键帧提示词：清掉四处"没用的成分"（有人物的镜头一字未变）
+
+起因：not_awake g002（柜面近景、无人）提示词 615 字报超字数。查下来字数不是病，
+**病是三类无效/反向成分被硬套进了不适用场景**。清理后同一份导演稿降到 481 字自检通过。
+
+- `cli/keyframes.mjs` **无人镜头不再产出残句**：模板 `请把参考图中的${names}放进同一个镜头`
+  在 `names` 为空时拼出「请把参考图中的放进同一个镜头」，且它是提示词第一句。
+  现在无人时只交代风格与参考图职责。
+- `cli/keyframes.mjs` **身份保持句按参考图裁剪**：「保持参考图的角色身份…不得重设计脸部」
+  只在真的挂了身份/肖像/尾帧参考图时出现；只有场景图时它是一句无对象的话。
+- `src/draw-specialist.mjs` **约束冲突不再下发给模型**：`conflicts` 是给人看的诊断，过去经
+  `prompt` 进了模型，等于在近景镜头里告诉模型「应改用中景或斜侧中景」——与我们的意图相反。
+  现在 `compileDrawPlan` 仍返回 conflicts 供 CLI 打终端，`prompt` 里没有它。
+- `src/draw-specialist.mjs` **禁鞋禁站立句要求画面里有人**：过去只要文本含"床/枕头/被褥"就追加，
+  柜面特写上会出现"不要把身份图中的鞋履…复制过来"。现在要求 `ids` 非空。
+- `cli/keyframes.mjs` 关键帧审阅票据 `reviews/keyframes.md` 增加**抽卡师删减留档**
+  （每单元送模型字数、自检违规则、被删条目、冲突提示）。人是照 `keyframe_start` 审图的，
+  而模型看的是删后版——现在这两份的差异看得见。
+- 行为测试 5 条（draw-specialist 2 + keyframe-prompt 3），含"有人镜头必须照旧带上身份锚"的
+  反向守卫。全量 41/41 绿。有人有身份图的 g001/g003 提示词一字未变。
+
+## 2026-09-21 - director-skills 吸收：动作戏工艺 + 首帧空间审计 + 音效三层（纯文档）
+
+- 新增 `references/story-craft/action.md`：动作戏工艺（2–3 秒时序拆段对齐单元切镜、动作
+  因果链防瞬移穿模、打击感四环、硬碰硬四步、运镜节奏供料、生成友好约束——群战降级/
+  武器立项/动作段台词 3 字每秒/战后状态分层/追逐空间账）。来源 action-fight-prompt（MIT）。
+- `assets-and-keyframes.md` 人工审阅加**首帧空间审计**四问（前景/中景/背景盘点、机位
+  可达性、规定时长内动作物理可完成、无进入路径的元素不得凭空出现）。来源 travel-skill。
+- `video-h3.md` soundscape 指引补**音效三层**（力量/材质/生物），动作戏三层都要有。
+- 接线：story-craft.md 路由表 + 自检清单 12 条、genres.md 战神行挂链、SKILL.md、README。
+  纯文档层，无代码变更。
+
+## 2026-09-21 - H3 提示词修复第 3 条 + assemble 响度统一（两遍式 loudnorm）
+
+- 切镜时间戳对齐官方格式：`[Shot 2] At 00:03.500, the camera cuts to`（MM:SS.mmm），
+  不再是 `At 03.50 seconds`。
+- `cli/assemble-units.mjs` 每段转码前做**两遍式 loudnorm**：第一遍测量（print_format=json）、
+  第二遍 linear 应用；默认 -16 LUFS / TP -2 dB / LRA 11，`AIH_ASSEMBLE_LUFS /
+  AIH_ASSEMBLE_TP_DB / AIH_ASSEMBLE_LRA` 可覆盖；测量解析失败退回单遍动态模式；无音轨段跳过。
+  依据：外部实证单遍 loudnorm 偏离目标 3.7 dB；逐段归一后 concat，段间响度差不再进成片。
+- 行为测试：夹具两段原始响度差 24 LU，归一后段间差 ≤3 LU（assemble-review.test.mjs）；
+  时间戳格式测试进 h3-prompt.test.mjs。全量 41/41 绿。video-h3.md 偏差清单同步。
+
+## 2026-09-21 - H3 提示词修复偏差清单第 1、2 条：说话人首现音色 + 不说话者唇闭合
+
+依据：官方原典（MiniMax-AI/MiniMax-H3 `skills/h3-prompt-writing`）与外部实证（drama-skills
+RUN-LOG：口型落脸 3 次实测 2 次落错、明写闭合后 3/3 全对）。要点：
+
+- 说话人首次出现带音色描述：`characters[].voice` 描述文本直用（TTS voice ID 跳过），
+  否则 `age_group` + 性别线索推导；非人类角色不套人类声线。同一说话人只交代一次。
+- 本镜有人开口时，其余画内角色追加 `（某某不出声，嘴唇保持完全闭合。）`；
+  单人镜头不追加；画外音说话者台词自带闭合句，不重复点名。
+- 性别线索抽出为 `orchestrate.genderOf()`，TTS 兜底与 H3 提示词共用同一套（单一事实源）。
+- 新增 3 个行为测试（首现音色不重复 / voice ID 不外漏 / 唇闭合兜底），全量 41/41 绿。
+  `references/video-h3.md` 偏差清单同步标记 1、2 为已修。
+
+## 2026-09-21 - H3 方言对官方原典校准 + 剪辑音床预警（文档层，代码未动）
+
+对比 github.com/zenstory-ai/drama-skills（同赛道全链路 skill 合集）后定位出四个真缺口，本批吸收其中
+文档层部分；官方一手源首次引入：MiniMax-AI/MiniMax-H3 仓库的 `skills/h3-prompt-writing`
+（base-en.txt 三段结构 / ref-en.txt 六段结构）——此前我们只靠二手与自撞。
+
+- `references/video-h3.md`：
+  - 新增「说话人与对白」官方语法节：说话人稳定 ID、`<d>` 内外分工、画外音固定短语、
+    `<scenetrans>`/`<cutoff>`、**口型落在最显眼正脸**的外部实证（3 次实测）与调度优先的处置。
+  - 对白容量口径修正：4–5 字/秒 → **4 字/秒**（H3 实测约 4.1 可发声字/秒且偶有赶词）。
+    `story-craft.md` 台词工艺同步。
+  - 新增「声音三字段」：`non_diegetic_music: N/A` 必须显式写空（留空出过模型自动补配乐）。
+  - 新增 r2v full-reference 六段官方语义：Subject/Picture/Video/Audio 标签分工、
+    summary 任务类型前缀、保留强度词汇、标签编号=挂图顺序契约；标注"实验路径，本地未逐项验证"。
+  - 新增「合成音床与响度」：逐段独立音床 concat 接缝断层、单遍 loudnorm 偏离 3.7 dB、
+    无响度统一——构造性风险预警（外部实跑教训）。
+  - 新增「代码层偏差清单」：`h3-prompt.mjs` 对照官方原典的 7 项偏差（说话人缺音色描述、
+    普通对白无嘴唇闭合兜底、时间戳格式、r2v summary 前缀/retention 词汇/Subject 折叠、
+    中英混排开放问题），全部待用户拍板，未改代码。
+- `references/assets-and-keyframes.md`：参考图职责补「槽位作用域」三段式（用途/控制/不得控制），
+  每张图只负责一件事；判据是"送哪张/它负责什么/正文里叫哪个标签"三问。
+- `references/qa-and-review.md`：终审清单加"戴耳机逐接缝听声音"（音床断层 + 响度差是构造性风险）。
+- 无代码变更；测试不受影响（tests/ 无对这些文档的引用）。
+
+## 2026-09-21 - 剧本工艺吸收：短剧编剧方法论进门，按生成流水线改造
+
+对比 github.com/0xsline/short-drama（纯 Markdown 商业化微短剧编剧 skill）后确认：我们的全链路
+生成能力对方为零，真实差距只在剧本创作工艺的深度。本批吸收其叙事方法论，全部按我们的哲学改造：
+
+- 新增 `references/story-craft/` 四个专项类型学（`story-craft.md` 保持入口，按需加载）：
+  - `hooks.md`：开场六式（钩子拍模板）+ 结尾钩五型。单集默认不用结尾钩（定格收束）；
+    每式补"第一张关键帧画什么"，画不出来的钩子改写成画面可见的信息。
+  - `payoff.md`：压抑→释放公式映射到节拍表（升级拍=蓄力、落点拍=兑现）+ 五大爽点类型。
+    60–90 秒单集一个大爽点；压抑不够砍爽点不砍压抑。
+  - `antagonist.md`：反派三问（并入动机最小集）+ 层级分档（单集最多 1 层对手）+ 伏笔埋设。
+    只有画面伏笔算数，文字伏笔等于没埋。
+  - `genres.md`：13 题材速查 + 叠加规则 + **生成成本分档**（原方法论没有、对我们生死攸关的一列）。
+- 生成友好硬约束是本批的主增量，四份文件各带一节：钩子道具先立项、群演降级为 1–2 个
+  具名角色反应、屏幕文字揭露改实物道具（H3 烧字不稳）、时间跳转先数资产账。
+- **明确不吸收**：五维评分体系（机器审核，2026-09-19 已废，只保留人工自跑清单形态）、
+  付费卡点与分阶段钩子配置（多集商业运营，转系列剧时再说）、出海格式与合规（另行立项）。
+- `story-craft.md` 自检清单 8 条扩到 11 条；SKILL.md 路由表与所有权表、README 目录树同步。
+- 无代码变更，无测试变更。
+
 ## 2026-09-20 - allowed_changes 写成了整句会让交接链直接崩掉
 
 首个 `reference_previous` 单元跑到 `prepare-handoff` 时当场抛 `.join is not a function`——

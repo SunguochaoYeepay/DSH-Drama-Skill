@@ -10,6 +10,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { COMFY_GEN, COMFY_PYTHON, WINGET_PACKAGES } from '../runtime-paths.mjs';
+import { LOCAL_IMAGE_MODEL } from '../config.mjs';
 
 const PY = COMFY_PYTHON;
 const GEN = COMFY_GEN;
@@ -63,6 +64,7 @@ export function localStyle(style) {
  *
  * 实测：直接喂 2688×1536 的身份图，单张关键帧要 **121 秒**。
  * 参考图不需要那么大 —— 缩到 1024 长边，编码快很多，而一致性靠的是内容不是像素。
+ * （2.1 家族节点自带 `resolution` 缩放，这里仍先缩 —— 上传字节少、历史行为不变。）
  * @returns {{files: string[], cleanup: () => void}}
  */
 function shrinkRefs(images, maxEdge = 1024, fit = null) {
@@ -121,32 +123,43 @@ function normalizeImages(files, target) {
 }
 
 /** 文生图。`--batch` 是 gen.py 的批量参数（**只对 t2i/music 有效**）。 */
-export async function generate({ prompt, ratio = '16:9', n = 1, outDir, prefix = 'img', style, fast = true, width, height, steps, cfg, lora, timeoutMs = 900000 }) {
+export async function generate({ prompt, ratio = '16:9', n = 1, outDir, prefix = 'img', style, fast = true, width, height, steps, cfg, lora, imageModel = LOCAL_IMAGE_MODEL, timeoutMs = 900000 }) {
   fs.mkdirSync(outDir, { recursive: true });
   const before = snapshot(outDir);
   const args = ['t2i', '--prompt', prompt, '--batch', String(n), '--out-dir', outDir];
   // 画幅：显式宽高优先，其次 ratio。**不传的话走 IMAGE_DEFAULT = (1024,576) 横屏。**
   if (width && height) args.push('--width', String(width), '--height', String(height));
   else args.push('--ratio', ratio);
-  args.push(...stepArgs({ steps, cfg, lora, fast }));
+  args.push(...imageModelArg(imageModel));
+  args.push(...stepArgs({ steps, cfg, lora, fast, imageModel }));
   if (style) args.push('--style', style);
   const r = run(args, timeoutMs);
   return { files: newFiles(outDir, before), status: r.status, stderr: r.stderr, json: r.json };
 }
 
 /**
- * 步数 / `--fast` / LoRA 的取舍。
+ * 步数 / `--fast` / LoRA 的取舍 —— **按图像模型家族分开**。
  *
- * gen.py 里：`steps = args.steps ?? (4 if args.fast else 20)`，
- * 而 `--fast` 同时会**挂上通道默认的 4 步 Lightning LoRA，并把 cfg 默认拉到 1.0**。
- *
- * 所以三种情况分开处理：
- *   · **给了 lora** → 成套下发 lora + steps + cfg（配错，比如 8 步 LoRA 配 20 步，会糊）；
- *   · **给了 steps/cfg 但没给 lora** → 按“跑 N 步基础模型”处理，**不挂 `--fast`**，
- *     否则是"4 步 LoRA + N 步 + cfg 1.0"这种谁都没验证过的组合；
- *   · **都没给** → `--fast` 让上游挂通道自己的默认 LoRA。
+ * 两个家族的采样参数完全不同：
+ *   · `qwen21`（Qwen Image 2.1，默认）：官方档 25 步 cfg 1，**没有**蒸馏/加速 LoRA
+ *     （骨架与旧 Qwen 不同，挂旧 LoRA 是错配 —— 上游会直接拒绝，这里提前拦并说清楚）。
+ *     想快只能减 steps，画质同步下降。
+ *   · `qwen`（旧 Qwen-Image / Qwen-Image-Edit 2511）：三种情况分开处理：
+ *     - **给了 lora** → 成套下发 lora + steps + cfg（配错，比如 8 步 LoRA 配 20 步，会糊）；
+ *     - **给了 steps/cfg 但没给 lora** → 按“跑 N 步基础模型”处理，**不挂 `--fast`**，
+ *       否则是"4 步 LoRA + N 步 + cfg 1.0"这种谁都没验证过的组合；
+ *     - **都没给** → `--fast` 让上游挂通道自己的默认 LoRA。
  */
-function stepArgs({ steps, cfg, lora, fast }) {
+function stepArgs({ steps, cfg, lora, fast, imageModel }) {
+  if ((imageModel || LOCAL_IMAGE_MODEL) === 'qwen21') {
+    if (lora) {
+      throw new Error('Qwen Image 2.1 没有可用的蒸馏/加速 LoRA（骨架与旧 Qwen 不同）；要更快请减小 steps，或退回 imageModel="qwen"');
+    }
+    const out = [];
+    if (steps) out.push('--steps', String(steps));
+    if (cfg) out.push('--cfg', String(cfg));
+    return out; // 2.1 无 --fast 档，fast 被忽略
+  }
   if (lora) {
     return ['--lora', lora, '--steps', String(steps ?? 20), '--cfg', String(cfg ?? 4)];
   }
@@ -155,6 +168,13 @@ function stepArgs({ steps, cfg, lora, fast }) {
   if (cfg) out.push('--cfg', String(cfg));
   if (fast && !steps) out.push('--fast');
   return out;
+}
+
+/** 家族值必须显式校验：拼错只会落到上游 argparse 的报错，晚而且难读。 */
+function imageModelArg(imageModel) {
+  const v = String(imageModel || LOCAL_IMAGE_MODEL).toLowerCase();
+  if (!['qwen21', 'qwen'].includes(v)) throw new Error(`imageModel 只能是 qwen21 / qwen，收到 ${v}`);
+  return ['--image-model', v];
 }
 
 /**
@@ -172,7 +192,7 @@ function stepArgs({ steps, cfg, lora, fast }) {
  * `realistic` 的负向词「CG感，卡通，动漫」一直正常。上游已改成 edit 也取预设，
  * 这里负责把它送过去。**不传 = 落回 gen.py 的默认 realistic**，显式传才与项目风格一致。
  */
-export async function edit({ images, instruction, n = 1, outDir, prefix = 'edit', fast = true, ratio, width, height, steps, cfg, lora, style, timeoutMs = 900000 }) {
+export async function edit({ images, instruction, n = 1, outDir, prefix = 'edit', fast = true, ratio, width, height, steps, cfg, lora, style, imageModel = LOCAL_IMAGE_MODEL, timeoutMs = 900000 }) {
   fs.mkdirSync(outDir, { recursive: true });
   const ratioSize = {
     '16:9': { w: 1024, h: 576 },
@@ -191,13 +211,13 @@ export async function edit({ images, instruction, n = 1, outDir, prefix = 'edit'
       args.push('--prompt', instruction, '--out-dir', outDir);
       // **画幅一定要传，而且要传宽高、不能只传 ratio。**
       //
-      // 实测：`edit` 模式下**输出画幅跟着参考图走，`--ratio` 被忽略** ——
-      // 喂 16:9 的身份图出 1328×800，喂 1:1 的肖像出 1024×1024，
-      // 四张竖屏关键帧**一张都没落位**（工程的画幅核对拦下的）。
-      // 只有显式宽高能定住它。不传的话 gen.py 走 `IMAGE_DEFAULT=(1024,576)` 横屏。
+      // 旧家族（qwen）：edit 输出画幅跟着参考图走，`--ratio` 被忽略 ——
+      // 只有显式宽高能定住它。2.1（qwen21）没有这个问题（画布由 EmptyLatentImage
+      // 决定），但显式传无害且与旧家族行为一致。
       if (target) args.push('--width', String(target.w), '--height', String(target.h));
       else if (ratio) args.push('--ratio', ratio);
-      args.push(...stepArgs({ steps, cfg, lora, fast }));
+      args.push(...imageModelArg(imageModel));
+      args.push(...stepArgs({ steps, cfg, lora, fast, imageModel }));
       if (style) args.push('--style', style);
       if (n > 1) args.push('--seed', String(1000 + i * 7919));   // 固定但互不相同的种子：可复现
       const r = run(args, timeoutMs);

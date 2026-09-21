@@ -224,9 +224,12 @@ export function compileDrawPlan({ unit, shot, override = '' }) {
   // `executionShotSpec()` 已把 override 放进【画面截取范围】，这里再拼一次就是同一段话出现两次，
   // 正好是上面那条注释要治的病。抽卡师不复述上游 —— 需要 override 参与判定时（如 onSurface）
   // 直接读它，不要输出它。
+  // ⚠ `conflicts` 是**给人看的诊断**，绝不能进模型（2026-09-21 not_awake g002 实测灾难）：
+  // g002 是柜面近景（脸本就不该在画面里），提示词里却带着「抽卡师提示：…应改用中景或斜侧中景」，
+  // 模型收到的是与我们意图**相反**的构图指令，同时触发「元标签」违规。
+  // conflicts 只经 `cli/keyframes.mjs` 打到终端供人复核，送模型的一律不带。
   const prompt = [
     onSurface ? '空间几何：人物重心必须落在承托表面上；身体朝向、四肢位置和承托物的长宽方向必须一致，禁止悬空、横置或斜向穿过空间。' : '',
-    conflicts.length ? `抽卡师提示：${conflicts.join('；')}` : '',
   ].filter(Boolean).join('\n');
   return { source, conflicts, prompt };
 }
@@ -236,7 +239,11 @@ export function compileCharacterDesign({ designs = [], unit, shot }) {
   const relevant = designs.filter((item) => item.kind === 'character_design' && ids.has(item.identity_id));
   const keep = relevant.flatMap((item) => [item.locked?.face, item.locked?.appearance].filter(Boolean));
   const bed = /躺|床|枕头|被褥|睡眠|刚醒|睡醒/u.test(`${shot.action || ''} ${unit.keyframe_start || ''}`);
-  const exclude = bed
+  // 禁鞋禁站立是卧室戏的教训，但它描述的是**有人的躺卧镜头**：画面里连一个人都没有时
+  // （g002 柜面近景，只有一只手从画外伸进来），"不要把身份图中的鞋履和站立姿势复制过来"
+  // 是一句无对象的话，反而把"鞋""站立"这些实体字眼硬塞进画面（2026-09-21 not_awake g002）。
+  const people = ids.size > 0;
+  const exclude = bed && people
     ? ['当前镜头不应出现鞋子、拖鞋或站立姿态；不要把身份图中的鞋履和站立姿势复制到床上躺卧镜头。']
     : [];
   return { keep, exclude, prompt: [

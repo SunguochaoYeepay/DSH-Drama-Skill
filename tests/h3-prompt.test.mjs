@@ -41,7 +41,7 @@ test('纯 I2V 使用 integrated 字段并保留首帧、台词和声音契约', 
   assert.match(prompt, /integrated_multimodal_description:/);
   assert.doesNotMatch(prompt, /detailed_description:/);
   assert.match(prompt, /<d>\[Chinese\] 谁在外面？<\/d>/);
-  assert.match(prompt, /\(S1\)/);
+  assert.match(prompt, /\(S1，/);
   // 负例词不能原样进入提示词；已知类别应转换成正向表演边界。
   assert.doesNotMatch(prompt, /禁止表现为/);
   assert.doesNotMatch(prompt, /微笑/);
@@ -73,6 +73,72 @@ test('画外音使用固定短语并要求嘴唇闭合', () => {
   const prompt = buildUnitPrompt(voiceover, { ...ctx, lineText, refs: [] });
   assert.match(prompt, /says in an off-screen voiceover:/);
   assert.match(prompt, /嘴唇始终完全闭合/);
+});
+
+// 官方 base-en：说话人**首次出现**要交代年龄/性别/音色，之后只用稳定 ID。
+// 首现没交代，模型对 S1/S2 的声音只能靠猜。
+test('说话人首现带音色描述（age_group + 性别线索推导），同一说话人不重复', () => {
+  const b = structuredClone(board);
+  b.characters[0].age_group = 'youth';
+  b.characters[0].face_prompt = '圆脸，黑色长发，少女感';
+  const two = structuredClone(unit);
+  two.shots[0].lines = [3, 4];
+  const lineText = new Map([
+    [3, { who: 'c1_home', text: '谁在外面？', emotion: '警觉', kind: 'dialogue' }],
+    [4, { who: 'c1_home', text: '别躲了。', emotion: '警觉', kind: 'dialogue' }],
+  ]);
+  const prompt = buildUnitPrompt(two, { ...ctx, board: b, lineText, refs: [] });
+  assert.match(prompt, /\(S1，年轻女声\)/);
+  assert.equal(prompt.match(/年轻女声/g).length, 1);
+});
+
+// 官方切镜时间戳格式：MM:SS.mmm（如 At 00:03.500），不是 At 03.50 seconds。
+test('切镜时间戳用官方 MM:SS.mmm 格式', () => {
+  const two = structuredClone(unit);
+  two.shots.push({ ...two.shots[0], at: 3.5, lines: [] });
+  const prompt = buildUnitPrompt(two, { ...ctx, refs: [] });
+  assert.match(prompt, /\[Shot 2\] At 00:03\.500, the camera cuts to/);
+  assert.doesNotMatch(prompt, /At 03\.50 seconds/);
+  const overMinute = structuredClone(two);
+  overMinute.shots[1].at = 63.2;
+  assert.match(buildUnitPrompt(overMinute, { ...ctx, refs: [] }), /\[Shot 2\] At 01:03\.200/);
+});
+
+test('voice 字段填描述文本时直接使用，填 TTS voice ID 时跳过不外漏', () => {
+  const b = structuredClone(board);
+  b.characters[0].voice = '低沉沙哑的女声';
+  const withText = buildUnitPrompt(unit, { ...ctx, board: b, refs: [] });
+  assert.match(withText, /\(S1，低沉沙哑的女声\)/);
+
+  const b2 = structuredClone(board);
+  b2.characters[0].voice = 'longhua_v3';
+  const withId = buildUnitPrompt(unit, { ...ctx, board: b2, refs: [] });
+  assert.doesNotMatch(withId, /longhua/);
+});
+
+// 口型落脸实证（外部 3 次实测 2 次落错、明写闭合后 3/3 全对）：H3 会把口型给画面里
+// 最显眼的正脸 —— 本镜有人开口时，其余画内角色必须明写嘴唇闭合。
+test('同镜不说话的画内角色有嘴唇闭合兜底；单人镜头与说话者本人不出现', () => {
+  const twoBoard = {
+    meta: { music: null },
+    characters: [
+      { id: 'c1', name: '阿宁', face_prompt: '圆脸，黑色长发' },
+      { id: 'c2', name: '阿川', face_prompt: '方脸，短发' },
+    ],
+    identities: [
+      { id: 'c1_home', character: 'c1', appearance_details: '蓝色家居服' },
+      { id: 'c2_home', character: 'c2', appearance_details: '灰色外套' },
+    ],
+  };
+  const nameOf2 = (id) => (id === 'c1_home' ? '阿宁' : id === 'c2_home' ? '阿川' : id);
+  const twoPeople = structuredClone(unit);
+  twoPeople.shots[0].on_screen = ['c1_home', 'c2_home'];
+  const prompt = buildUnitPrompt(twoPeople, { ...ctx, board: twoBoard, nameOf: nameOf2, refs: [] });
+  assert.match(prompt, /（阿川不出声，嘴唇保持完全闭合。）/);
+  assert.doesNotMatch(prompt, /阿宁不出声/);
+
+  const single = buildUnitPrompt(unit, { ...ctx, board: twoBoard, nameOf: nameOf2, refs: [] });
+  assert.doesNotMatch(single, /不出声/);
 });
 
 // 知情状态是**单元级**前提：它进提示词（作为表演依据），缺字段时不得留下空标签。

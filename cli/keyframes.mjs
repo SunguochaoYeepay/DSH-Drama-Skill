@@ -34,7 +34,7 @@ import * as bailian from '../src/providers/bailian.mjs';
 import * as volcengine from '../src/providers/volcengine.mjs';
 import { allowedChangesList, bindHandoffKeyframe, requireHandoff } from '../src/continuity-handoff.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
-import { KEYFRAME_PROVIDER, KEYFRAME_IMAGE_MODEL, HUIMENG_IMAGE_MODEL, KEYFRAME_SIZE, BAILIAN_KEYFRAME_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG, LOCAL_KEYFRAME_FAST, LOCAL_KEYFRAME_SIZE, LOCAL_KEYFRAME_LORA, LOCAL_KEYFRAME_STEPS, LOCAL_KEYFRAME_CFG } from '../src/config.mjs';
+import { KEYFRAME_PROVIDER, KEYFRAME_IMAGE_MODEL, HUIMENG_IMAGE_MODEL, KEYFRAME_SIZE, BAILIAN_KEYFRAME_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG, LOCAL_KEYFRAME_FAST, LOCAL_KEYFRAME_SIZE, LOCAL_KEYFRAME_LORA, LOCAL_KEYFRAME_STEPS, LOCAL_KEYFRAME_CFG, LOCAL_IMAGE_MODEL, LOCAL_KEYFRAME_STEPS_21, LOCAL_KEYFRAME_CFG_21 } from '../src/config.mjs';
 import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
 import { withHandoffReference } from '../src/keyframe-references.mjs';
 import { writeGenerationRecord } from '../src/generation-records.mjs';
@@ -68,6 +68,14 @@ if (!['huimeng', 'local', 'bailian', 'volcengine'].includes(PROVIDER)) throw new
 const LOCAL_GEN = COMFY_GEN;
 const LOCAL_PY = COMFY_PYTHON;
 const LOCAL_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_local_v2'))));
+// 图像模型家族：qwen21（Qwen Image 2.1，默认）/ qwen（旧 2511 链路，逃生口）。
+// 两族的采样参数完全不同 —— 21 没有蒸馏 LoRA，`FAST` 三件套只对 legacy 生效。
+const IMAGE_MODEL = (() => {
+  const v = String(flag('image-model', LOCAL_IMAGE_MODEL)).toLowerCase();
+  if (!['qwen21', 'qwen'].includes(v)) throw new Error('--image-model 只能是 qwen21 / qwen');
+  return v;
+})();
+const IS_QWEN21 = IMAGE_MODEL === 'qwen21';
 // 步数/CFG/LoRA：**用户显式给了才传**，否则交给 gen.py 自己按模式定。
 // 这一点在 Lightning 档尤其要命 —— 三者必须成套，错配（8 步 LoRA 配 20 步）会糊。
 const LOCAL_STEPS = flag('steps', null);
@@ -77,6 +85,8 @@ const LOCAL_LORA = flag('lora', null);
 // 见 config.mjs 注释）。给了任一手动参数就完全交还给调用方，不做半自动叠加；
 // `--no-fast` 退回 20 步非蒸馏旧路径。
 const MANUAL_IMAGE = LOCAL_STEPS || LOCAL_CFG || LOCAL_LORA;
+// FAST（Lightning 三件套）只对 legacy 家族（--image-model qwen）有意义；
+// 2.1 没有蒸馏档，`localGenArgs` 在 qwen21 分支完全不读它。
 const FAST = !argv.includes('--no-fast')
   && (argv.includes('--fast') || (LOCAL_KEYFRAME_FAST && !MANUAL_IMAGE));
 if (MANUAL_IMAGE && !(LOCAL_STEPS && LOCAL_CFG && LOCAL_LORA)) {
@@ -269,12 +279,22 @@ function buildLocalPrompt(unit, shot, refs, cine) {
     const name = (board.characters.find((x) => x.id === cid) || {}).name || cid;
     return `图${i + 1}是${name}的身份参考，严格保持此人的脸、发型${r.role === 'sheet' ? '和服装' : ''}`;
   });
+  // 无人镜头（柜面近景、空镜、只有一只手入画）不能再说「请把参考图中的某某放进同一个镜头」——
+  // `names` 为空时会拼出一句主语缺失的残句「请把参考图中的放进同一个镜头」，而它是提示词的第一句
+  // （2026-09-21 not_awake g002 实测）。没有要放进镜头的人，就只交代风格与参考图职责。
+  const STYLE = board.meta?.style_prompt || board.meta?.style || '项目既定视觉风格';
+  const refSentence = bindings.length ? `${bindings.join('；')}。` : '';
+  // 「保持身份/不得重设计脸部」是对着**身份参考图**说的。没有身份图时它是一句无对象的话，
+  // 还会把「重新设计脸部」这样的动作词带进画面描述。
+  const hasPersonRef = refs.some((r) => ['portrait', 'sheet', 'handoff'].includes(r.role));
   return [
     cineBlock.header,                          // ← 锁定风格头永远在最前，逐字不改
     cineBlock.negatives,
     cineBlock.rules,                           // ← 全片物理规则（本镜可翻转）
     cineBlock.optics,
-    `请把参考图中的${names.join('和')}放进同一个镜头，整体风格严格遵循：${board.meta?.style_prompt || board.meta?.style || '项目既定视觉风格'}。${bindings.join('；')}。`,
+    names.length
+      ? `请把参考图中的${names.join('和')}放进同一个镜头，整体风格严格遵循：${STYLE}。${refSentence}`
+      : `整体风格严格遵循：${STYLE}。${refSentence}`,
     supporting.length
       ? `画面必须出现${names.join('和')}，还必须出现次要主体${supporting.join('；')}；不得漏掉动作起点中写明的任何主体，也不得增加其他角色。`
       : names.length > 1
@@ -298,7 +318,7 @@ function buildLocalPrompt(unit, shot, refs, cine) {
       : '',
     cineBlock.lighting,
     shot.lighting ? `光线：${shot.lighting}` : '',
-    '保持参考图的角色身份、体型比例和体表材质。不得重设计脸部或头部特征、毛发、皮肤、服装与配饰。',
+    hasPersonRef ? '保持参考图的角色身份、体型比例和体表材质。不得重设计脸部或头部特征、毛发、皮肤、服装与配饰。' : '',
     // ⚠ 这里曾经还有一行「【生成前最终检查】${f.rule}」，与上面「构图要求：」逐字重复。
     // 2026-09-20 对照实验：景别规则说三遍（构图要求 / 生成前检查 / 抽卡师截取范围）
     // 不会让它更被遵守，只会把「两个人」「伞包」这类关键实体的字面权重稀释掉 —— 五连抽全废。
@@ -366,8 +386,20 @@ function refsFor(shot, unit) {
 function localGenArgs(unit, refs, prompt) {
   const a = [LOCAL_GEN, 'edit', '--prompt', prompt, '--ratio', ASPECT,
     '--style', LOCAL_STYLE, '--out-dir', LOCAL_OUT,
-    '--result-file', path.join(LOCAL_OUT, `.${unit.id}.result.json`)];
-  if (FAST) {
+    '--result-file', path.join(LOCAL_OUT, `.${unit.id}.result.json`),
+    // 家族显式下发，不依赖上游默认值（上游改默认时本仓行为不能跟着漂）。
+    '--image-model', IMAGE_MODEL];
+  if (IS_QWEN21) {
+    // 2.1：官方档 25 步 cfg 1，**没有**蒸馏 LoRA。MANUAL 覆盖仍然逐项尊重 ——
+    // 其中 --lora 上游会直接拒绝（骨架错配），那个报错是故意的，别在本仓吞掉它。
+    if (MANUAL_IMAGE) {
+      if (LOCAL_STEPS) a.push('--steps', String(LOCAL_STEPS));
+      if (LOCAL_CFG) a.push('--cfg', String(LOCAL_CFG));
+      if (LOCAL_LORA) a.push('--lora', String(LOCAL_LORA));
+    } else {
+      a.push('--steps', LOCAL_KEYFRAME_STEPS_21, '--cfg', LOCAL_KEYFRAME_CFG_21);
+    }
+  } else if (FAST) {
     // 成套下发：默认档具体用哪支 LoRA 由本仓说了算，不走上游 `--fast`
     // （那里写死的是官方 Edit-4steps）。LoRA / 步数 / CFG 三者必须配对，错配会糊。
     a.push('--steps', LOCAL_KEYFRAME_STEPS, '--cfg', LOCAL_KEYFRAME_CFG, '--lora', LOCAL_KEYFRAME_LORA);
@@ -393,6 +425,7 @@ function localGenArgs(unit, refs, prompt) {
 console.log(`\n出关键帧　共 ${dir.units.length} 个单元`);
 let failures = 0;
 
+const trims = [];
 for (const unit of dir.units) {
   if (ONLY.length && !ONLY.includes(unit.id)) continue;
   let handoff = null;
@@ -449,6 +482,7 @@ for (const unit of dir.units) {
   } else {
     console.log(`    ✓ 提示词自检通过：${audit.chars} 字`);
   }
+  trims.push({ id: unit.id, dropped: refined.dropped, conflicts: drawPlan.conflicts, chars: audit.chars, violations: audit.violations.map((v) => `[${v.rule}] ${v.hit}`) });
   if (DRY) {
     if (PROVIDER === 'local') {
       const argv = localGenArgs(unit, refs, modelPrompt).slice(1);
@@ -551,7 +585,7 @@ if (failures) {
   const generated = planKeyframeFiles(PROJ, dir);
   const generationRecord = writeGenerationRecord(PROJ, 'keyframes', {
     provider: PROVIDER,
-    model: PROVIDER === 'local' ? 'local-comfyui' : PROVIDER === 'bailian' ? BAILIAN_MODEL : PROVIDER === 'volcengine' ? process.env.AIH_VOLCENGINE_IMAGE_MODEL : HUIMENG_IMAGE_MODEL,
+    model: PROVIDER === 'local' ? `local-comfyui/${IMAGE_MODEL}` : PROVIDER === 'bailian' ? BAILIAN_MODEL : PROVIDER === 'volcengine' ? process.env.AIH_VOLCENGINE_IMAGE_MODEL : HUIMENG_IMAGE_MODEL,
     requested_provider: PROVIDER_SETTING || null,
     artifacts: generated,
     plan: DIRECTION_PATH,
@@ -563,6 +597,16 @@ if (failures) {
     '# 关键帧人工审阅', '',
     '机器检查只能判定是否可送审。请逐张查看人物身份、体型比例、构图、动作起点和场景连续性。', '',
     ...generated.map((f) => `- ${path.basename(f)}: ${f}`), '',
+    // 抽卡师删了什么必须留档：人是照着 `keyframe_start` 审图的，而模型看的是删后版。
+    // 这两份不一致时，第 1 问「和起始姿态对得上吗」审的是一份模型没收到过的稿。
+    '## 送模型的提示词与 `keyframe_start` 的差异（抽卡师删减留档）', '',
+    ...trims.map((t) => [
+      `- **${t.id}**：送模型 ${t.chars} 字${t.violations.length ? `，⚠ ${t.violations.join('；')}` : '，自检通过'}`,
+      ...t.conflicts.map((c) => `  - 约束冲突（只提示人，已不下发给模型）：${c}`),
+      ...(t.dropped.length
+        ? [`  - 抽卡师删掉 ${t.dropped.length} 处：`, ...t.dropped.map((d) => `    - ${d}`)]
+        : ['  - 抽卡师未删减']),
+    ]).flat(), '',
     `生成记录：${generationRecord}`,
     `确认命令：node cli/review-gate.mjs approve --project "${PROJ}" --stage keyframes --plan "${DIRECTION_PATH}"`,
   ]);

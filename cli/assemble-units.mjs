@@ -40,9 +40,50 @@ fs.mkdirSync(tmp, { recursive: true });
 fs.mkdirSync(path.dirname(output), { recursive: true });
 const normalized = [];
 
+// 响度统一（两遍式 loudnorm）。外部实证：单遍 loudnorm 偏离目标 3.7 dB——loudnorm 的
+// 设计就是两遍（第一遍测量、第二遍 linear 应用），单遍是动态模式，会漂。逐段归一到
+// 同一目标后 concat，段间响度差不再原样进成片。目标值可用环境变量覆盖。
+const LOUD = {
+  I: String(process.env.AIH_ASSEMBLE_LUFS || '-16'),
+  TP: String(process.env.AIH_ASSEMBLE_TP_DB || '-2'),
+  LRA: String(process.env.AIH_ASSEMBLE_LRA || '11'),
+};
+for (const key of ['I', 'TP', 'LRA']) {
+  if (!/^-?\d+(\.\d+)?$/.test(LOUD[key])) throw new Error(`响度参数 ${key} 必须是数字，收到 ${LOUD[key]}`);
+}
+
 function run(args, label) {
   const result = spawnSync('ffmpeg', args, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
   if (result.status !== 0) throw new Error(`${label} 失败：${String(result.stderr || '').slice(-1200)}`);
+}
+
+function hasAudioStream(input) {
+  const probe = spawnSync('ffprobe', ['-v', 'error', '-select_streams', 'a', '-show_entries',
+    'stream=index', '-of', 'csv=p=0', input], { encoding: 'utf8' });
+  if (probe.status !== 0) return false;
+  return probe.stdout.trim().length > 0;
+}
+
+/** 第一遍：只测量，不写文件。拿到的实测值喂给第二遍的 linear 模式。 */
+function measureLoudness(input, label) {
+  const r = spawnSync('ffmpeg', ['-v', 'info', '-i', input, '-af',
+    `loudnorm=I=${LOUD.I}:TP=${LOUD.TP}:LRA=${LOUD.LRA}:print_format=json`, '-f', 'null', '-'],
+  { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+  if (r.status !== 0) throw new Error(`${label} 响度测量失败：${String(r.stderr || '').slice(-1200)}`);
+  const start = r.stderr.lastIndexOf('{');
+  const end = r.stderr.lastIndexOf('}');
+  if (start < 0 || end <= start) return null;
+  try { return JSON.parse(r.stderr.slice(start, end + 1)); } catch { return null; }
+}
+
+/** 第二遍：linear 模式应用。测量失败（如静音段打出 -inf）时退回单遍动态模式，好过不做。 */
+function loudnessFilterArgs(measured) {
+  const base = `I=${LOUD.I}:TP=${LOUD.TP}:LRA=${LOUD.LRA}`;
+  if (!measured) return ['-af', `loudnorm=${base}`];
+  const { input_i, input_tp, input_lra, input_thresh, target_offset } = measured;
+  return ['-af', `loudnorm=${base}:measured_I=${input_i}:measured_TP=${input_tp}`
+    + `:measured_LRA=${input_lra}:measured_thresh=${input_thresh}`
+    + `:offset=${target_offset}:linear=true:print_format=summary`];
 }
 
 for (const [index, unit] of plan.units.entries()) {
@@ -62,11 +103,14 @@ for (const [index, unit] of plan.units.entries()) {
   // 否则按 content_duration_s 裁切会把一句话的尾字物理截断。
   const hasDialogue = (unit.shots || []).some((shot) => (shot.lines || []).length > 0);
   const trimArgs = hasDialogue ? [] : ['-t', Number(unit.content_duration_s).toFixed(3)];
+  // 响度统一只对有音轨的段生效；无音轨段照常转码（loudnorm 会把无音频段直接弄失败）。
+  const loudArgs = hasAudioStream(input) ? loudnessFilterArgs(measureLoudness(input, unit.id)) : [];
   run(['-y', '-v', 'error', '-i', input, ...trimArgs,
     '-vf', `scale=${width}:${height}:flags=lanczos,fps=24,format=yuv420p`,
+    ...loudArgs,
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '18',
     '-c:a', 'aac', '-ar', '44100', '-ac', '2', '-b:a', '192k', '-movflags', '+faststart', out], unit.id);
-  console.log(`  ${unit.id}: ${hasDialogue ? '含台词，保留完整生成时长' : `无台词，裁到 ${unit.content_duration_s.toFixed(2)}s`}`);
+  console.log(`  ${unit.id}: ${hasDialogue ? '含台词，保留完整生成时长' : `无台词，裁到 ${unit.content_duration_s.toFixed(2)}s`}${loudArgs.length ? `，响度归一 ${LOUD.I} LUFS` : '（无音轨，跳过响度归一）'}`);
   normalized.push(out);
 }
 

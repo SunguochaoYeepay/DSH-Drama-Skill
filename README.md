@@ -30,7 +30,8 @@ ai-images-harness/
 ├─ src/                      业务逻辑和提供方适配
 ├─ references/               按阶段加载的规则和模型提示
 │  ├─ preflight.md           开工前清单（环境体检、预算、提示词自检）
-│  ├─ story-craft.md         剧本工艺（节拍结构/人物动机/台词/自检清单）
+│  ├─ story-craft.md         剧本工艺入口（节拍/动机/台词/自检）
+│  ├─ story-craft/           剧本专项类型学（钩子/爽感/对抗/题材/动作戏）
 │  ├─ cinematography.md      摄影语言契约（镜头/光/风格头，立项定、全片共用）
 │  ├─ qa-and-review.md       人工送审规则（只有人工确认，没有机器审核）
 │  ├─ director/              导演 Brief 与输出结构

@@ -124,11 +124,14 @@ test('dry-run prints the argv that will really be handed to gen.py', () => {
 // 事实没错，但我们因此不给图生图传它 —— 而 edit 的 negative 是**硬编码空串**，
 // 于是身份图与全部关键帧拿到空的负向条件，写实剧被系统性画成插画（no_chute 实测）。
 // 上游已让 edit 也取画质预设，**图生图不带 style = 插画化复发**，所以这里是 match 不是 doesNotMatch。
+//
+// 2026-09-21 默认家族切到 qwen21：步数 env 也换成该家族自己的 `AIH_LOCAL_ASSET_STEPS_21`
+// （`AIH_LOCAL_IMAGE_STEPS` 只管 legacy 家族的 `--no-fast` 路径，别再在这里断言它）。
 test('asset dry-run prints real provider args: env steps, mapped style on both t2i and edit', () => {
   const dir = makeAssetProject();
   const result = runCli('assets.mjs', [path.join(dir, 'board.json'), '--dry-run', '--skip-gate'], {
     AIH_ASSET_PROVIDER: 'comfyui',
-    AIH_LOCAL_IMAGE_STEPS: '8',
+    AIH_LOCAL_ASSET_STEPS_21: '13',
   });
   assert.equal(result.status, 0, result.stderr);
   const lines = result.stdout.split('\n').filter((line) => line.includes('通道参数'));
@@ -136,7 +139,7 @@ test('asset dry-run prints real provider args: env steps, mapped style on both t
 
   const t2i = lines.find((line) => line.includes('style='));
   assert.ok(t2i, '文生图必须带 style');
-  assert.match(t2i, /steps=8/);        // env 的步数真的进了通道参数
+  assert.match(t2i, /steps=13/);       // env 的步数真的进了通道参数
   assert.match(t2i, /style=anime/);    // cartoon3d → anime（本地没有 3D 卡通档）
 
   const edit = lines.find((line) => line.includes('images='));

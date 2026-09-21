@@ -504,7 +504,10 @@ export function keyframeRefs(board, shot) {
     const p = (board.props || []).find((v) => v.id === id);
     if (p && p.ref_image) { refs.push(p.ref_image); series.push({ kind: 'prop', label: `道具「${p.name}」`, index: refs.length }); }
   }
-  const MAX = 3;   // Qwen-Image-Edit 上限 3 张
+  // 保守上限 3 张。Qwen Image 2.1（默认家族）其实支持 16 张 —— 放开是"参考图
+  // 变多后画面受不受干扰"的行为决策，等实测（同镜 3 张 vs 全给对照）再动，
+  // 别顺手放开：legacy 家族（qwen）的硬上限仍是 3，这里截断对两个家族都必须安全。
+  const MAX = 3;
   return { refs: refs.slice(0, MAX), series: series.filter((s) => s.index <= MAX) };
 }
 

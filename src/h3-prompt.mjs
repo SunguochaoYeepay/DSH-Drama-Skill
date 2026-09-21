@@ -1,5 +1,30 @@
 import { compileDirectorExecution } from './director-execution.mjs';
 import { compileCinematography } from './cinematography.mjs';
+import { genderOf } from './orchestrate.mjs';
+
+const AGE_VOICE = { child: '孩童', youth: '年轻', middle: '中年', elder: '年长' };
+
+/**
+ * 说话人首现的音色描述。官方 base-en 要求每个说话人**第一次出现**时交代年龄/性别/音高，
+ * 之后只用稳定 ID —— 首现没交代，模型对 S1/S2 的声音只能靠猜。
+ *
+ * 取值顺序：board 上 `characters[].voice` 填的**描述文本**直接用；填的是 TTS voice ID
+ * （longhua_v3 之类）则跳过 —— 那是给 TTS 用的，不是给 H3 看的声线描述；
+ * 否则从 age_group + 性别线索推导（线索与 TTS 兜底同一套，见 orchestrate.genderOf）。
+ * 非人类角色不套人类声线：物种叫声交给外观描述自己表达，硬造「成年人声」只会误导。
+ */
+function voiceDescriptorOf(character) {
+  if (!character) return null;
+  const species = String(character.species || 'human').trim();
+  if (species && species !== 'human') return null;
+  const raw = String(character.voice || '').trim();
+  if (raw && !/^(long|loong)[a-z0-9_]*$/i.test(raw)) return raw;
+  const gender = genderOf(character);
+  const age = AGE_VOICE[character.age_group] || '成年';
+  return gender === 'female' ? `${age}女声`
+    : gender === 'male' ? `${age}男声`
+    : `${age}人声`;
+}
 
 const FACING_PHRASE = {
   left: 'facing the left side of the frame',
@@ -51,6 +76,14 @@ function clean(text) {
   return String(text || '').replace(/[。．.]+$/, '').trim();
 }
 
+/** 官方切镜时间戳格式：MM:SS.mmm（如 00:03.500）。 */
+function mmss(t) {
+  const total = Math.max(0, Number(t) || 0);
+  const m = Math.floor(total / 60);
+  const s = total - m * 60;
+  return `${String(m).padStart(2, '0')}:${s.toFixed(3).padStart(6, '0')}`;
+}
+
 /** The single production owner for FastH3 unit prompts. */
 export function buildUnitPrompt(unit, ctx) {
   const { nameOf, lineText, board, scene } = ctx;
@@ -86,6 +119,7 @@ export function buildUnitPrompt(unit, ctx) {
   }
 
   const speakerIds = new Map();
+  const voiceAnnounced = new Set();
   let nextSpeaker = 0;
   for (const shot of unit.shots) {
     for (const line of shot.lines || []) {
@@ -94,10 +128,14 @@ export function buildUnitPrompt(unit, ctx) {
     }
   }
 
-  const appearanceOf = (identityId) => {
+  const characterOf = (identityId) => {
     const identity = (board.identities || []).find((item) => item.id === identityId);
     const characterId = identity ? identity.character : String(identityId).replace(/_default.*$/, '');
-    const character = (board.characters || []).find((item) => item.id === characterId);
+    return (board.characters || []).find((item) => item.id === characterId) || null;
+  };
+  const appearanceOf = (identityId) => {
+    const identity = (board.identities || []).find((item) => item.id === identityId);
+    const character = characterOf(identityId);
     return [character?.face_prompt, identity?.appearance_details].filter(Boolean).join('；');
   };
 
@@ -130,7 +168,7 @@ export function buildUnitPrompt(unit, ctx) {
     const camera = shot.camera && !/^固定/.test(shot.camera) ? `，摄影机${clean(shot.camera)}` : '';
     const segment = [];
     segment.push(index > 0
-      ? `[Shot ${index + 1}] At ${shot.at.toFixed(2).padStart(5, '0')} seconds, the camera cuts to`
+      ? `[Shot ${index + 1}] At ${mmss(shot.at)}, the camera cuts to`
       : '[Shot 1]');
     segment.push(`a ${FRAMING_EN[shot.framing] || shot.framing}`);
     const people = (shot.on_screen || []).map(nameOf).join('与');
@@ -144,14 +182,30 @@ export function buildUnitPrompt(unit, ctx) {
     // 全片规则每镜都要带（否则这一镜就不受约束），但**按本镜的覆盖取值** ——
     // 所以它跟 optics / lighting 一样是每镜属性，不是全片前缀。
     if (shotCine.rules) text += `\n${shotCine.rules}`;
+    const lineSpeakers = new Set();
     for (const line of shot.lines || []) {
       const dialogue = lineText.get(line);
       if (!dialogue) { text += `（警告：第 ${line} 行没有台词原文）`; continue; }
+      lineSpeakers.add(dialogue.who);
       const speaker = speakerIds.get(dialogue.who);
-      const identity = `${nameOf(dialogue.who)}${speaker ? ` (${speaker})` : ''}`;
+      // 官方 base-en：说话人**首现**交代音色（年龄/性别），之后只用稳定 ID。
+      let voiceNote = '';
+      if (speaker && !voiceAnnounced.has(dialogue.who)) {
+        voiceAnnounced.add(dialogue.who);
+        const descriptor = voiceDescriptorOf(characterOf(dialogue.who));
+        if (descriptor) voiceNote = `，${descriptor}`;
+      }
+      const identity = `${nameOf(dialogue.who)}${speaker ? ` (${speaker}${voiceNote})` : ''}`;
       text += dialogue.kind === 'voiceover'
         ? ` ${identity} says in an off-screen voiceover: <d>[Chinese] ${dialogue.text}</d>，嘴唇始终完全闭合。`
         : ` ${identity}${dialogue.emotion ? `，${dialogue.emotion}` : ''}，说道：<d>[Chinese] ${dialogue.text}</d>。`;
+    }
+    // 口型落脸兜底（外部实证 3 次里 2 次口型落在不说话者的正脸上，明写闭合后 3/3 全对）：
+    // H3 会把口型给画面里最显眼的正脸。本镜只要有人开口，其余画内角色一律明写嘴唇闭合
+    // —— 不说话者交代的优先级高于"最显眼的正脸"。画外音说话者若在画内，其台词自带闭合句。
+    if (lineSpeakers.size) {
+      const silent = (shot.on_screen || []).filter((id) => !lineSpeakers.has(id));
+      if (silent.length) text += `（${silent.map(nameOf).join('与')}不出声，嘴唇保持完全闭合。）`;
     }
     body.push(text);
   }

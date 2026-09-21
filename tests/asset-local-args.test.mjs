@@ -4,8 +4,9 @@
  * ## 守什么
  * 资产通道曾经一直在跑 20 步非蒸馏路径：`assets.mjs` 写了 `flag('steps', LOCAL_IMAGE_STEPS)`
  * 当默认值，那个 20 恒为真 → 永远下发 steps=20 → provider 里 `fast=true` 的默认从未生效。
- * 同型入口漏接在 keyframes.mjs 已犯过一次。这条测试守的是「资产默认档 = Lightning 加速栈
- * （LoRA + 步数 + CFG 成套）+ 按资产比例排布的显式尺寸」——三者任何一个退回旧默认都会红。
+ * 同型入口漏接在 keyframes.mjs 已犯过一次。这条测试守的是「资产默认档跟着家族走」：
+ * 2026-09-21 起默认家族 = qwen21（25 步 cfg 1，无 LoRA）；
+ * legacy（--image-model qwen）= Lightning 加速栈三件套 + 按资产比例排布的显式尺寸。
  */
 import assert from 'node:assert/strict';
 import test from 'node:test';
@@ -41,14 +42,26 @@ function dryRun(dir, extra = []) {
   return String(result.stdout).split('\n').filter((l) => l.includes('通道参数'));
 }
 
-test('资产默认档是 Lightning 加速栈，LoRA/步数/CFG 成套', () => {
+test('资产默认家族是 qwen21：25 步 cfg 1，绝不挂 LoRA', () => {
   const lines = dryRun(makeProject());
   assert.ok(lines.length >= 1, `至少应有一个资产任务：${lines}`);
   for (const line of lines) {
+    assert.match(line, /imageModel=qwen21/);
+    assert.match(line, /steps=25 /);
+    assert.match(line, /cfg=1 /);
+    assert.doesNotMatch(line, /lora=/);
+    assert.doesNotMatch(line, /steps=20/);
+  }
+});
+
+test('legacy 家族（--image-model qwen）是 Lightning 加速栈，三件套成套', () => {
+  const lines = dryRun(makeProject(), ['--image-model', 'qwen']);
+  assert.ok(lines.length >= 1);
+  for (const line of lines) {
+    assert.match(line, /imageModel=qwen/);
     assert.match(line, /lora=Qwen-Image-Lightning-8steps-V1\.0\.safetensors/);
     assert.match(line, /steps=8 /);
     assert.match(line, /cfg=1 /);
-    assert.doesNotMatch(line, /steps=20/);
   }
 });
 
@@ -70,10 +83,10 @@ test('显式给 steps 会退回手动档且不再挂默认 LoRA', () => {
   assert.match(lines[0], /steps=20/);
 });
 
-test('`--no-fast` 退回非蒸馏旧路径：20 步 cfg 4，且不挂任何 LoRA', () => {
-  // ⚠ 守的是一个反直觉陷阱：本仓若什么都不下发，provider 的 `fast` 默认为 true，
-  // 会落到**另一个加速档**（官方 Edit-4steps）而不是 20 步。所以必须显式给 20/4。
-  const lines = dryRun(makeProject(), ['--no-fast']);
+test('`--no-fast`（legacy 家族）退回非蒸馏旧路径：20 步 cfg 4，且不挂任何 LoRA', () => {
+  // ⚠ 守的是一个反直觉陷阱：legacy 家族下本仓若什么都不下发，provider 的 `fast`
+  // 默认为 true，会落到**另一个加速档**（官方 Edit-4steps）而不是 20 步。
+  const lines = dryRun(makeProject(), ['--image-model', 'qwen', '--no-fast']);
   assert.ok(lines.length >= 1);
   for (const line of lines) {
     assert.match(line, /steps=20 /);
@@ -82,4 +95,4 @@ test('`--no-fast` 退回非蒸馏旧路径：20 步 cfg 4，且不挂任何 LoRA
   }
 });
 
-console.log('asset-local-args: 4/4 passed');
+console.log('asset-local-args: 5/5 passed');

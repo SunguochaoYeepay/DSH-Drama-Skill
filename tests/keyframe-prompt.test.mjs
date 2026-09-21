@@ -50,16 +50,19 @@ function makeProject(override) {
   return dir;
 }
 
-function dryRun(dir) {
+// ⚠ `units` 必须与 fixture 里单元的 id 一致：不一致时 CLI 只是静默跳过（不报错、不打印），
+// 断言「不存在某句」会假绿、断言「存在某句」才红（2026-09-21 加无人镜头用例时踩过）。
+function dryRun(dir, units = 'g001') {
   const result = spawnSync(process.execPath, [
     path.join(root, 'cli', 'keyframes.mjs'),
     path.join(dir, 'board.json'),
     '--direction', path.join(dir, 'render.plan.json'),
-    '--units', 'g001',
+    '--units', units,
     '--dry-run',
     '--skip-gate',
   ], { encoding: 'utf8' });
   assert.equal(result.status, 0, `干跑应成功：${result.stderr}`);
+  assert.ok(result.stdout.includes(`【${units}】`), `干跑应真的编译了 ${units}，实际输出没有它`);
   return result.stdout;
 }
 
@@ -67,6 +70,55 @@ test('timeline wording is stripped from the static keyframe pose', () => {
   const out = dryRun(makeProject(null));
   assert.match(out, /关键帧起始姿态：女孩坐在床边/);
   assert.doesNotMatch(out, /0秒时/);
+});
+
+/**
+ * 无人镜头的 fixture：画面里只有柜面和一只从画外伸进来的手，没有可锚定的人。
+ *
+ * 2026-09-21 not_awake g002 就是这个形态，当时 templates 拼出
+ * 「请把参考图中的放进同一个镜头」——一句主语缺失的残句，还是提示词的第一句。
+ */
+function makeNoPeopleProject() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-keyframe-nobody-'));
+  const png = path.join(dir, 'portrait.png');
+  fs.writeFileSync(png, 'stub');
+  fs.writeFileSync(path.join(dir, 'board.json'), JSON.stringify({
+    meta: { project: 'keyframe-prompt', aspect: '9:16', style_prompt: '暖色调绘本风格' },
+    characters: [{ id: 'c_girl', name: '女孩', face_prompt: '圆脸', portrait: png }],
+    identities: [{ id: 'i_girl', character: 'c_girl', appearance_details: '白裙', sheet: png }],
+    scenes: [{ id: 's_bedside', name: '床头柜', master: png }],
+    props: [],
+  }));
+  fs.writeFileSync(path.join(dir, 'render.plan.json'), JSON.stringify({
+    units: [{
+      id: 'g002',
+      cast: [],
+      keyframe_start: '0秒时：近景取床头柜柜面，她的右手从画面右下方的被子边缘伸进来，五指张开悬在白搪瓷杯上方',
+      shots: [{ framing: '近景', action: '手在柜面上移动', scene: 's_bedside', on_screen: [] }],
+    }],
+  }));
+  return dir;
+}
+
+test('no-people shot gets no dangling "把参考图中的" sentence', () => {
+  const out = dryRun(makeNoPeopleProject(), 'g002');
+  assert.doesNotMatch(out, /参考图中的放进同一个镜头/);
+  // 风格与参考图职责仍然要交代，只是不再要求把谁「放进镜头」
+  assert.match(out, /整体风格严格遵循：暖色调绘本风格/);
+  assert.match(out, /图1是场景参考/);
+});
+
+test('no-people shot drops the identity-anchor sentence aimed at a missing portrait', () => {
+  const out = dryRun(makeNoPeopleProject(), 'g002');
+  assert.doesNotMatch(out, /保持参考图的角色身份、体型比例和体表材质/);
+  // 有人有身份图的常规镜头必须照旧带上，不能被这次裁剪误伤
+  assert.match(dryRun(makeProject(null)), /保持参考图的角色身份、体型比例和体表材质/);
+});
+
+test('no-people shot keeps out bed-scene footwear exclusion', () => {
+  // 起始姿态里出现「被子」会命中椅子内的寝具正则；但画面里没有人，禁鞋禁站立没有对象。
+  const out = dryRun(makeNoPeopleProject(), 'g002');
+  assert.doesNotMatch(out, /鞋履|站立姿态/);
 });
 
 test('framing rule appears exactly once when there is no composition override', () => {

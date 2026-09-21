@@ -36,6 +36,18 @@ const FEMALE_HINT = /女|妹|姐|娘|妃|后|婆|姑|嫂|母|丫鬟|少女/;
 const MALE_HINT = /男|兄|弟|爷|帝|王|公子|少年|大叔|师父|父亲|和尚/;
 
 /**
+ * 从名字/脸描述/音色字段里推性别线索（'female' | 'male' | null）。
+ * 单一事实源：TTS 音色兜底（resolveVoice）和 H3 提示词的说话人音色描述（h3-prompt.mjs）
+ * 共用同一套线索，避免两处各猜各的。
+ */
+export function genderOf(character) {
+  const hay = `${(character && character.name) || ''} ${(character && character.face_prompt) || ''} ${String((character && character.voice) || '')}`;
+  if (FEMALE_HINT.test(hay)) return 'female';
+  if (MALE_HINT.test(hay)) return 'male';
+  return null;
+}
+
+/**
  * 本地估算一句话要念多久 —— **不用调线上 TTS 去量**。
  *
  * 来历：原先 `doTts` 会调线上 cosyvoice 合成音频、ffprobe 量出秒数、写进 `duration_s`，
@@ -78,9 +90,9 @@ export function estimateSpeechSeconds(text) {
 export function resolveVoice(board, character) {
   const v = String((character && character.voice) || '').trim();
   if (/^(long|loong)[a-z0-9_]*$/i.test(v)) return { voice: v, why: 'board 上指定的' };
-  const hay = `${(character && character.name) || ''} ${(character && character.face_prompt) || ''} ${v}`;
-  if (FEMALE_HINT.test(hay)) return { voice: DEFAULT_VOICES.female, why: '名字/描述里是女性线索（兜底音色）' };
-  if (MALE_HINT.test(hay)) return { voice: DEFAULT_VOICES.male, why: '名字/描述里是男性线索（兜底音色）' };
+  const gender = genderOf(character);
+  if (gender === 'female') return { voice: DEFAULT_VOICES.female, why: '名字/描述里是女性线索（兜底音色）' };
+  if (gender === 'male') return { voice: DEFAULT_VOICES.male, why: '名字/描述里是男性线索（兜底音色）' };
   return { voice: DEFAULT_VOICES.male, why: '没有线索，用兜底男声' };
 }
 

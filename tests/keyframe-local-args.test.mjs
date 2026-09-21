@@ -5,11 +5,13 @@
  * `cli/keyframes.mjs` 是脚本式入口，这些变量出不来；源码正则又只能证明"写了这行字"。
  * 干跑打印的 argv 与真正 spawn 的是**同一个来源**（`localGenArgs()`），断言它就是断言行为。
  *
- * ## 守的四条
- *   1. 默认档 = Lightning 加速栈，且 LoRA/步数/CFG **成套**（错配会糊，2026-09-20 实测）；
- *   2. 必须显式给输出尺寸 —— edit 通道不看目标尺寸，不给就会被压回 ~1MP，画面发黑；
- *   3. `--no-fast` 能退回 20 步非蒸馏旧路径，且不带任何 LoRA；
- *   4. 参考图顺序与提示词里的「图1/图2/图3」编号同源（图1 是场景基底）。
+ * ## 守的五条（2026-09-21 默认家族切到 Qwen Image 2.1）
+ *   1. 默认家族 = qwen21（25 步 cfg 1，无 LoRA —— 2.1 没有蒸馏档）；
+ *   2. legacy 家族（--image-model qwen）= Lightning 加速栈，且 LoRA/步数/CFG **成套**
+ *      （错配会糊，2026-09-20 实测）；
+ *   3. 必须显式给输出尺寸 —— 旧家族的 edit 通道不看目标尺寸，不给就会被压回 ~1MP；
+ *   4. `--no-fast`（legacy）能退回 20 步非蒸馏旧路径，且不带任何 LoRA；
+ *   5. 参考图顺序与提示词里的「图1/图2/图3」编号同源（图1 是场景基底）。
  */
 import assert from 'node:assert/strict';
 import test from 'node:test';
@@ -59,9 +61,18 @@ function dryRun(dir, extra = []) {
   return line;
 }
 
-test('默认档是 Lightning 加速栈，且 LoRA / 步数 / CFG 成套下发', () => {
+test('默认家族是 qwen21：25 步 cfg 1，且绝不挂 LoRA（2.1 没有蒸馏档）', () => {
   const { dir } = makeProject();
   const line = dryRun(dir);
+  assert.match(line, /--image-model qwen21/);
+  assert.match(line, /--steps 25 /);
+  assert.match(line, /--cfg 1 /);
+  assert.doesNotMatch(line, /--lora /);
+});
+
+test('legacy 家族（--image-model qwen）走 Lightning 加速栈，且三件套成套下发', () => {
+  const { dir } = makeProject();
+  const line = dryRun(dir, ['--image-model', 'qwen']);
   // 三者必须同在这一版上：8 步 LoRA 配 20 步会糊，而这也是过去画面发黑的成因之一。
   assert.match(line, /--steps 8 /);
   assert.match(line, /--cfg 1 /);
@@ -85,9 +96,9 @@ test('画幅不同则尺寸跟着排布，不是写死的竖屏', () => {
   assert.match(dryRun(dir), /--width 2048 --height 1152/);
 });
 
-test('--no-fast 退回 20 步非蒸馏旧路径且不带 LoRA', () => {
+test('--no-fast（legacy 家族）退回 20 步非蒸馏旧路径且不带 LoRA', () => {
   const { dir } = makeProject();
-  const line = dryRun(dir, ['--no-fast']);
+  const line = dryRun(dir, ['--image-model', 'qwen', '--no-fast']);
   assert.match(line, /--steps 20 /);
   assert.match(line, /--cfg 4 /);
   assert.doesNotMatch(line, /--lora /);
@@ -103,4 +114,4 @@ test('参考图顺序与提示词编号同源：场景主图在最前当基底',
   assert.equal(images[1], sheet);
 });
 
-console.log('keyframe-local-args: 5/5 passed');
+console.log('keyframe-local-args: 6/6 passed');

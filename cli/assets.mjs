@@ -44,7 +44,7 @@ import { provider as getProvider, assetProvider } from '../src/providers/index.m
 import { requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { dimensionsForAspect } from '../src/aspect.mjs';
-import { ASSET_IMAGE_MODEL, VOLCENGINE_IMAGE_MODEL, LOCAL_ASSET_FAST, LOCAL_ASSET_LORA, LOCAL_ASSET_STEPS, LOCAL_ASSET_CFG, LOCAL_ASSET_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG } from '../src/config.mjs';
+import { ASSET_IMAGE_MODEL, VOLCENGINE_IMAGE_MODEL, LOCAL_ASSET_FAST, LOCAL_ASSET_LORA, LOCAL_ASSET_STEPS, LOCAL_ASSET_CFG, LOCAL_ASSET_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG, LOCAL_IMAGE_MODEL, LOCAL_ASSET_STEPS_21, LOCAL_ASSET_CFG_21 } from '../src/config.mjs';
 import { writeGenerationRecord } from '../src/generation-records.mjs';
 import { readCinematography } from '../src/cinematography.mjs';
 import { localStyle } from '../src/providers/comfyui.mjs';
@@ -82,6 +82,13 @@ if (MANUAL_IMAGE && !(STEPS && CFG && LORA)) {
 // 默认为 true，会落到**另一个加速档**（官方 Edit-4steps）而不是 20 步 —— 反直觉，
 // 所以必须有这个显式开关。
 const NO_FAST = argv.includes('--no-fast');
+// 图像模型家族：qwen21（Qwen Image 2.1，默认）/ qwen（旧 2511 链路，逃生口）。
+const IMAGE_MODEL = (() => {
+  const v = String(flag('image-model', LOCAL_IMAGE_MODEL)).toLowerCase();
+  if (!['qwen21', 'qwen'].includes(v)) throw new Error('--image-model 只能是 qwen21 / qwen');
+  return v;
+})();
+const IS_QWEN21 = IMAGE_MODEL === 'qwen21';
 const WRITE = !argv.includes('--no-write');
 const WORKSPACE = flag('ws', null);
 
@@ -165,13 +172,24 @@ function localStyleFor(job) {
 function providerArgsFor(p, job, outDir, images) {
   const ratio = job.size || '1:1';
   if (p.name === 'comfyui') {
-    const common = { ratio, n: N, outDir, prefix: job.id };
+    const common = { ratio, n: N, outDir, prefix: job.id, imageModel: IMAGE_MODEL };
     // 尺寸按**该资产自己的比例**排布（肖像 1:1、身份图 16:9、主图跟剧目画幅）；
     // 不留默认值 —— 默认会退回 IMAGE_RATIO_MAP 的 ~1MP。
     const [w, h] = dimensionsForAspect(LOCAL_ASSET_SIZE, ratio).split('x');
     common.width = Number(w);
     common.height = Number(h);
-    if (MANUAL_IMAGE) {
+    if (IS_QWEN21) {
+      // 2.1：官方档 25 步 cfg 1，没有蒸馏 LoRA（给了上游会直接拒绝）。
+      // MANUAL 覆盖仍然逐项尊重。
+      if (MANUAL_IMAGE) {
+        if (STEPS) common.steps = Number(STEPS);
+        if (CFG) common.cfg = Number(CFG);
+        if (LORA) common.lora = LORA;
+      } else {
+        common.steps = Number(LOCAL_ASSET_STEPS_21);
+        common.cfg = Number(LOCAL_ASSET_CFG_21);
+      }
+    } else if (MANUAL_IMAGE) {
       if (STEPS) common.steps = Number(STEPS);
       if (CFG) common.cfg = Number(CFG);
       if (LORA) common.lora = LORA;
