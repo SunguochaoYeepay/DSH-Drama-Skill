@@ -36,6 +36,9 @@ ai-images-harness/
 │  ├─ qa-and-review.md       人工送审规则（只有人工确认，没有机器审核）
 │  ├─ director/              导演 Brief 与输出结构
 │  ├─ art/                   分题材视觉语言包（realistic / cartoon3d / …）
+│  ├─ draw-specialist.md     抽卡师岗位规范（LLM 直写制，2026-09-21 起）
+│  ├─ prompt-rules.md        生图提示词禁令与正向工艺（双闸执行）
+│  ├─ draw-vocabulary.md     生图正向词汇库（光照/镜头/材质/姿态）
 │  └─ prompts/               故事与 storyboard 提示模板（已退役，仅历史契约）
 ├─ schema/                   Storyboard JSON Schema
 ├─ tests/                    确定性测试（含 tests/integration/ 活体验证）

@@ -1,23 +1,21 @@
 /**
- * keyframes.mjs — 按导演的设计出关键帧（绘梦 / 本地 Qwen / 百炼）。
+ * keyframes.mjs — 按导演的设计出关键帧（本地 Qwen / 百炼 / 火山 / 绘梦）。
  *
- * ## 为什么要有这个工具，而不是临时编提示词
+ * ## 提示词来源：LLM 直写制（2026-09-21 起，工程拼装退役）
  *
- * 第一版我是**临时手编提示词**的，结果：
- * ```
- * u2 要「中景（腰部以上）」→ 出成切在大腿
- * u3 要「特写（只有脸）」  → 出成近景，肩部入画
- * ```
- * 质检两条都判了不合格。**根因和三视图一样：景别只写了软描述，没写硬边界。**
+ * 每个单元的提示词由 LLM 抽卡师按 `references/draw-specialist.md` 直写，落盘在
+ * `<项目>/keyframe-prompts/<unit-id>.txt`，本工具**逐字**送进模型 —— 不再拼装、
+ * 不再删减（历史上的 buildLocalPrompt / refinePrompt / 构图覆盖那条代码链已删）。
  *
- * 所以这里把**每个景别翻译成硬约束**（下边界切在哪、不许出现什么），
- * 写在提示词最前面，而且**每条都要指名"不允许"的那一侧** ——
- * 因为模型会往两边都偏。
+ * 缺该文件直接报错（报错里会列出本次挂载的参考图与编号，照着写就行）。
+ * `auditPrompt` 机器审计保留：跑在直写文件上，只报告不阻断（废机器审核的既定边界）。
  *
- * ## 参考图
+ * ## 参考图编号约定（写提示词时必须对齐）
  *
- * 脸从**肖像**锁、服装从**身份图**锁、环境从**场景 master** 锁。
- * 绘梦不支持 base64，`huimeng.mjs` 会自动传 Cloudinary 换公开 URL。
+ * - 本地通道：图1 = 场景主图（latent 基底），图2… = 身份图（一人一张，优先 sheet）；
+ * - 百炼/火山：身份图在前，场景主图在最后；
+ * - 交接单元会追加上一段稳定尾帧。
+ * 实际编号以每次运行打印的「参考图」行为准 —— 那行与真正挂载的图片同源。
  *
  * 用法：
  *   node cli/keyframes.mjs <board.json> --direction <render.plan.json> [--units g001,g002] [--size 2k] [--bailian-size 1024*1792] [--dry-run]
@@ -38,9 +36,7 @@ import { KEYFRAME_PROVIDER, KEYFRAME_IMAGE_MODEL, HUIMENG_IMAGE_MODEL, KEYFRAME_
 import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
 import { withHandoffReference } from '../src/keyframe-references.mjs';
 import { writeGenerationRecord } from '../src/generation-records.mjs';
-import { readKeyframeOverride } from '../src/keyframe-overrides.mjs';
-import { compileCharacterDesign, compileDrawPlan, auditPrompt, refinePrompt } from '../src/draw-specialist.mjs';
-import { readCinematography, compileCinematography } from '../src/cinematography.mjs';
+import { auditPrompt } from '../src/draw-specialist.mjs';
 import { localStyle } from '../src/providers/comfyui.mjs';
 
 installCliErrorHandler();
@@ -96,101 +92,8 @@ const BAILIAN_MODEL = String(flag('model', KEYFRAME_IMAGE_MODEL));
 const BAILIAN_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_bailian'))));
 const VOLCENGINE_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_volcengine'))));
 
-function staticKeyframeStart(unit, shot) {
-  const text = String(unit.keyframe_start || shot.action || '').trim();
-  return text.replace(/^0\s*秒(?:时|时刻)?[：:，,\s]*/u, '');
-}
-
-function applyCompositionOverride(prompt, override) {
-  if (!/构图覆盖|斜侧中景|中景/u.test(override)) return prompt;
-  return prompt.split('\n')
-    .filter((line) => !line.startsWith('构图要求：'))
-    .join('\n');
-}
-
-function executionShotSpec(shot, override) {
-  const camera = shot.camera || '固定机位';
-  // 覆盖启用时：**覆盖文本本身就是画面截取范围**，并显式声明优先于默认构图规则。
-  // 没有覆盖时这一整行不输出（见下面 capture 处的注释）。
-  //
-  // ⚠ 这里曾经硬编码过一段床戏取景（「画面从床头的斜侧方向取景…完整看到床头板、枕头…床尾方向」），
-  // 于是**任何非床戏场景一旦用覆盖，就会被注入「床头板、枕头、床尾」**。
-  // 覆盖是通用机制，不能只对一个剧目成立 —— 2026-09-20 在 pot_hit（老楼楼道口）实测踩到：
-  // 楼道口的双人关键帧需要压构图，却拿到一段床戏描述，只能放弃覆盖这条路。
-  return [
-    `【景别】${shot.framing || '未指定'}`,
-    // 无覆盖时**不再复述景别规则**：正式描述区的「构图要求：」已经说过一遍，
-    // 这里再说就是第三遍。只有覆盖文本才需要这一行（覆盖优先于默认构图）。
-    override ? `【画面截取范围】${override}` : '',
-    `【机位/构图】${camera}；${override
-      ? '执行层覆盖优先：上面那段覆盖文本优先于任何默认构图规则。'
-      : '按导演分镜的景别与构图执行，不自行改变人物位置。'}`,
-    '【空间关系】画面中的人物、承托物、道具与空间关系必须与导演首帧状态一致；不得新增人物、重复人物或改变头脚方向。',
-  ].filter(Boolean).join('\n');
-}
-
-/**
- * ## 景别 → 硬边界
- *
- * **软描述没用。** 第一版写「中景（腰部以上）」，出来切在大腿。
- * 所以每条都写清三件事：**上边界、下边界、以及两侧不允许出现的**。
- */
-export const FRAMING = {
-  远景: {
-    // `visual` 是送生图模型的那一版：只有画面，没有解释。
-    // `rule` 保留给打印版（人要看出判据）与英文通道。
-    visual: '远景，人物在环境里只占很小一块，看不清脸部细节',
-    rule: '【景别｜远景】画面以**环境为主**，人物只占很小一块（**不超过画面高度的 1/4**）。'
-      + '能看到大片树林和整条古道。**不允许**人物占满画面，**不允许**能看清脸部细节。',
-    en: 'extreme long shot, figures very small in a vast environment',
-  },
-  全景: {
-    visual: '全景，人物从头顶到脚底完整在画面内',
-    rule: '【景别｜全景】画面**必须包含人物的完整身体** —— **从头顶一直到脚底（或裙摆落地处）都在画面内**，'
-      + '人物高度约占画面高度的 1/2 到 2/3，四周留出环境。'
-      + '**绝不允许裁掉脚部**，**也不允许**人物小到只占一角。',
-    en: 'full shot, complete body head-to-toe visible, environment around',
-  },
-  中景: {
-    visual: '中景，画面下边界切在人物的腰部',
-    // 竖幅双人中景本身可行；只有当人物间距、两侧留白、身体完整度和腰部下边界
-    // 同时被锁死时才可能互斥。允许侧边裁切是一种候选构图，不是普遍定律。
-    rule: '【景别｜中景】**画面下边界严格切在人物的腰部**（腰带/腰线位置），'
-      + '画面里只有**头顶到腰部**这一段。'
-      + '**绝不允许出现大腿或膝盖**（那就成了全景），**也绝不允许只到胸口**（那就成了近景）。'
-      + '若人物间距和留白导致构图拥挤，可缩短人物间距、改为前后错位，或允许外侧肩臂轻微出画；'
-      + '不得为了保留所有横向留白而把下边界放到大腿。',
-    en: 'medium shot, framed from head down to the waist ONLY; subjects may be cropped at the left and right frame edges, but never extend below the waist',
-  },
-  近景: {
-    visual: '近景，画面只取胸部以上',
-    rule: '【景别｜近景】**画面只取胸部以上** —— 下边界在**胸口到腰之间、明显高于腰线**。'
-      + '能看到肩膀和上胸，脸部占画面较大比例。'
-      + '**绝不允许出现腰部以下**（那就成了中景），**也不允许只剩一个头**（那就成了特写）。',
-    en: 'medium close-up, framed from head down to mid-chest ONLY',
-  },
-  特写: {
-    visual: '特写，画面里只有脸',
-    rule: '【景别｜特写】**画面里只有脸** —— 从下巴下方一点点到头顶，**头部占满整个画面**。'
-      + '**绝不允许出现肩膀或衣领**（那就不算特写），**也不允许只拍半张脸**。',
-    en: 'extreme close-up, the face fills the entire frame, no shoulders visible',
-  },
-};
-
-/**
- * 紧景别遇到多人、宽间距和大量留白时更容易发生约束冲突。
- * 允许侧边裁切只是兜底选项，优先由构图关系解决。
- */
-const TIGHT_FRAMINGS = new Set(['中景', '近景', '特写']);
-
-const NO_TEXT = '【禁止】画面里**不许出现任何文字、字幕、水印、logo、边框、色卡**。';
-
 const dir = JSON.parse(fs.readFileSync(DIRECTION_PATH, 'utf8'));
 const board = JSON.parse(fs.readFileSync(BOARD_PATH, 'utf8'));
-// 摄影契约为可选：老剧目没有这个文件，行为与今天完全一致，不会凭空多出一层。
-const CINE = readCinematography(PROJ);
-const assetDesignPath = path.join(PROJ, 'asset-design.json');
-const assetDesign = fs.existsSync(assetDesignPath) ? JSON.parse(fs.readFileSync(assetDesignPath, 'utf8')) : { designs: [] };
 const ASPECT = aspectOf(board);
 /**
  * 关键帧走 gen.py 的 `edit` 分支 —— 而 edit 过去把 negative **硬编码成空串**且不接受
@@ -218,114 +121,6 @@ requireApproval(PROJ, 'board', [BOARD_PATH], { skip: SKIP_GATE });
 //
 //    现在机器不再反证计划来源：票就绑导演稿，与 compile-units 对齐，不再有第二套哈希。
 requireApproval(PROJ, 'direction', [path.join(PROJ, 'board.direction.json')], { skip: SKIP_GATE });
-
-/** 造型 id → 角色 id（要拿角色的肖像当脸锚点） */
-const charOf = (identId) => (board.identities.find((x) => x.id === identId) || {}).character;
-
-function buildPrompt(unit, shot, cine) {
-  const f = FRAMING[shot.framing] || { rule: `【景别｜${shot.framing}】` };
-  // 关键帧是**单帧静态图**：`still: true` 让标了 `still: false` 的规则（运动方向、时序）不进提示词。
-  const cineBlock = compileCinematography(cine, { shot, framing: shot.framing, still: true });
-  const people = (unit.keyframe_cast || shot.on_screen || []).map((id) => {
-    const cid = charOf(id);
-    const c = board.characters.find((x) => x.id === cid);
-    const i = board.identities.find((x) => x.id === id);
-    return `${c ? c.name || c.id : cid}（${c ? c.face_prompt : ''}；服装：${i ? i.appearance_details : ''}）`;
-  }).join('；');
-
-  return [
-    cineBlock.header,                          // ← 锁定风格头永远在最前，逐字不改
-    cineBlock.negatives,
-    cineBlock.rules,                           // ← 全片物理规则（本镜可翻转）
-    cineBlock.optics,
-    `【整体风格】${board.meta?.style_prompt || board.meta?.style || '与项目视觉风格一致'}。`,
-    f.rule,                                    // ← 景别硬约束紧跟其后
-    `【人物】${people}`,
-    `【关键帧起始姿态】${staticKeyframeStart(unit, shot)}`,
-    cineBlock.lighting,
-    shot.lighting ? `【光】${shot.lighting}` : '',
-    shot.camera && !/^固定/.test(shot.camera) ? `【运镜】${shot.camera}（这是一张静帧，只需体现这个机位的构图）` : '',
-    NO_TEXT,
-    '【一致性】角色身份外观必须与参考图完全一致；脸部或头部特征、体型、毛发/皮肤/材质、服装与配饰均不得重新设计。',
-  ].filter(Boolean).join('\n');
-}
-
-function buildLocalPrompt(unit, shot, refs, cine) {
-  const f = FRAMING[shot.framing] || { rule: `景别：${shot.framing}` };
-  // 关键帧是**单帧静态图**：`still: true` 让标了 `still: false` 的规则（运动方向、时序）不进提示词。
-  const cineBlock = compileCinematography(cine, { shot, framing: shot.framing, still: true });
-  const anchoredIds = unit.keyframe_cast || shot.on_screen || [];
-  const names = anchoredIds.map((id) => {
-    const cid = charOf(id);
-    return (board.characters.find((x) => x.id === cid) || {}).name || cid;
-  });
-  const supporting = (shot.on_screen || []).filter((id) => !anchoredIds.includes(id)).map((id) => {
-    const cid = charOf(id);
-    const character = board.characters.find((x) => x.id === cid) || {};
-    const identity = board.identities.find((x) => x.id === id) || {};
-    return `${character.name || cid}（${character.face_prompt || ''}；${identity.appearance_details || ''}）`;
-  });
-  const species = (shot.on_screen || []).map((id) => {
-    const cid = charOf(id);
-    return (board.characters.find((x) => x.id === cid) || {}).species;
-  });
-  const scaleRule = species.includes('cat') && species.includes('mouse')
-    ? '【体型比例硬约束】小老鼠的站立身高不得超过猫站立身高的五分之一；老鼠必须位于猫脚边，绝不能接近猫的腰部或胸口高度。'
-    : '';
-  const bindings = refs.map((r, i) => {
-    if (r.role === 'handoff') return `图${i + 1}是上一段视频的实际稳定尾帧，必须继承其中的角色姿态、位置、朝向和空间关系，只能改变导演明确允许的项目`;
-    if (r.role === 'scene') return `图${i + 1}是场景参考，只参考环境、光线和色调`;
-    const cid = r.character;
-    const name = (board.characters.find((x) => x.id === cid) || {}).name || cid;
-    return `图${i + 1}是${name}的身份参考，严格保持此人的脸、发型${r.role === 'sheet' ? '和服装' : ''}`;
-  });
-  // 无人镜头（柜面近景、空镜、只有一只手入画）不能再说「请把参考图中的某某放进同一个镜头」——
-  // `names` 为空时会拼出一句主语缺失的残句「请把参考图中的放进同一个镜头」，而它是提示词的第一句
-  // （2026-09-21 not_awake g002 实测）。没有要放进镜头的人，就只交代风格与参考图职责。
-  const STYLE = board.meta?.style_prompt || board.meta?.style || '项目既定视觉风格';
-  const refSentence = bindings.length ? `${bindings.join('；')}。` : '';
-  // 「保持身份/不得重设计脸部」是对着**身份参考图**说的。没有身份图时它是一句无对象的话，
-  // 还会把「重新设计脸部」这样的动作词带进画面描述。
-  const hasPersonRef = refs.some((r) => ['portrait', 'sheet', 'handoff'].includes(r.role));
-  return [
-    cineBlock.header,                          // ← 锁定风格头永远在最前，逐字不改
-    cineBlock.negatives,
-    cineBlock.rules,                           // ← 全片物理规则（本镜可翻转）
-    cineBlock.optics,
-    names.length
-      ? `请把参考图中的${names.join('和')}放进同一个镜头，整体风格严格遵循：${STYLE}。${refSentence}`
-      : `整体风格严格遵循：${STYLE}。${refSentence}`,
-    supporting.length
-      ? `画面必须出现${names.join('和')}，还必须出现次要主体${supporting.join('；')}；不得漏掉动作起点中写明的任何主体，也不得增加其他角色。`
-      : names.length > 1
-        ? `画面必须同时出现且只出现${names.join('和')}两个人，不得漏掉任何一人。`
-          // 紧景别多人构图可能拥挤，给模型一组有序的可行解，避免约束冲突时随机妥协。
-          + (TIGHT_FRAMINGS.has(shot.framing)
-            ? '两人的脸都必须清楚可辨；构图拥挤时，依次尝试缩短人物间距、前后错位、轻微侧边裁切，'
-              + '不要为了保留横向留白而放松景别。'
-            // 宽景别（远景/全景）里人本来就很小，再说「清楚可见」就和景别规则互搏，
-            // 模型会往「把人放大」的方向妥协（no_chute_v2 2026-09-20 实测：两连抽人都被放大、
-            // 还被挪到机身上）。宽景别只要求「在画面里、位置对」。
-            : shot.framing === '远景'
-              ? '两个人都出现在画面里即可，位置与大小以关键帧起始姿态为准，这个景别下看不清脸部细节是正常的。'
-              : '两个人都必须清楚可见。')
-        : '',
-    `构图要求：${f.rule.replaceAll('**', '')}`,
-    scaleRule,
-    `关键帧起始姿态：${staticKeyframeStart(unit, shot)}`,
-    unit.continuity?.mode === 'continue_previous'
-      ? `连续性交接：必须保持“${unit.continuity.handoff_state}”；只允许改变：${allowedChangesList(unit.continuity.allowed_changes).join('、') || '无'}。`
-      : '',
-    cineBlock.lighting,
-    shot.lighting ? `光线：${shot.lighting}` : '',
-    hasPersonRef ? '保持参考图的角色身份、体型比例和体表材质。不得重设计脸部或头部特征、毛发、皮肤、服装与配饰。' : '',
-    // ⚠ 这里曾经还有一行「【生成前最终检查】${f.rule}」，与上面「构图要求：」逐字重复。
-    // 2026-09-20 对照实验：景别规则说三遍（构图要求 / 生成前检查 / 抽卡师截取范围）
-    // 不会让它更被遵守，只会把「两个人」「伞包」这类关键实体的字面权重稀释掉 —— 五连抽全废。
-    // 景别**只说一次**：正式描述区的「构图要求：」，执行层不再复述。
-    '画面中不要出现文字、字幕、水印、logo、边框或拼图。',
-  ].filter(Boolean).join('\n');
-}
 
 function refsFor(shot, unit) {
   const assetUnit = unit.keyframe_cast ? { ...unit, cast: unit.keyframe_cast } : unit;
@@ -437,21 +232,28 @@ for (const unit of dir.units) {
   const shot = unit.shots[0];
   let refs = refsFor(shot, unit);
   if (handoff) refs = withHandoffReference(refs, handoff.stable_frame, PROVIDER);
-  const refGuide = PROVIDER === 'local' || PROVIDER === 'bailian' || PROVIDER === 'volcengine'
-    ? `【参考图职责】${refs.map((r, i) => `图${i + 1}=${r.role === 'handoff' ? '上一段实际稳定尾帧，必须继承姿态与空间状态' : r.role === 'scene' ? '场景与构图环境' : r.role === 'portrait' ? '人物脸部' : r.role === 'prop' ? `道具${r.name || ''}` : '人物服装与身份'}`).join('；')}`
-    : '';
-  const prompt = PROVIDER === 'local' || PROVIDER === 'bailian' || PROVIDER === 'volcengine'
-    ? buildLocalPrompt(unit, shot, refs, CINE)
-    : [refGuide, buildPrompt(unit, shot, CINE)].filter(Boolean).join('\n');
-  const override = readKeyframeOverride(PROJ, unit.id);
-  const drawPlan = compileDrawPlan({ unit, shot, override });
-  const characterDesign = compileCharacterDesign({ designs: assetDesign.designs || [], unit, shot });
-  const normalizedPrompt = applyCompositionOverride(prompt, override);
-  const finalPrompt = `${normalizedPrompt}\n\n【抽卡师｜执行层执行编译】\n${executionShotSpec(shot, override)}\n${characterDesign.prompt}\n${drawPlan.prompt}`;
-  // 抽卡师最终整理。**送进生图模型的是 modelPrompt，不是 finalPrompt** ——
-  // 自检只报警不改写的话，规则就是纸上的（no_chute 连抽 8 张全废那次正是如此）。
-  const refined = refinePrompt(finalPrompt, { visualFraming: FRAMING[shot.framing]?.visual || null });
-  const modelPrompt = refined.text;
+  // 参考图表：与真正挂载的图片同源（refsFor / withHandoffReference 的产物）。
+  // LLM 抽卡师写提示词时的「图N=职责」编号必须对齐这一行 —— 看到的就是跑的。
+  const REF_ROLE_LABEL = {
+    handoff: '上一段实际稳定尾帧（继承姿态与空间状态）',
+    scene: '场景参考（环境、光线、色调）',
+    portrait: '人物脸部参考',
+    sheet: '人物身份参考（脸、发型、服装）',
+    prop: '道具参考',
+  };
+  const refTable = refs.map((r, i) => `图${i + 1}=${REF_ROLE_LABEL[r.role] || r.role}${r.name ? `（${r.name}）` : ''} ${path.basename(r.file)}`).join('；');
+  // ── 提示词来源：LLM 直写文件（2026-09-21 起，工程拼装退役）──────────────
+  // 直写文件逐字送模型：没有拼装、没有删减。缺文件是硬错误 —— 提示词不存在就没有
+  // 什么可跑的，静默回退工程拼装等于让「废弃」永远不生效。
+  const promptFile = path.join(PROJ, 'keyframe-prompts', `${unit.id}.txt`);
+  if (!fs.existsSync(promptFile)) {
+    throw new Error([
+      `${unit.id}: 缺少 LLM 直写提示词 keyframe-prompts/${unit.id}.txt`,
+      '工程拼装已于 2026-09-21 退役，本工具不再代写提示词。请按 references/draw-specialist.md 直写后重跑。',
+      `本次将挂载的参考图（提示词里的图N 编号必须与此一致）：${refTable}`,
+    ].join('\n'));
+  }
+  const modelPrompt = fs.readFileSync(promptFile, 'utf8').trim();
   const out = PROVIDER === 'local'
     ? path.join(LOCAL_OUT, `${unit.id}.png`)
     : PROVIDER === 'bailian'
@@ -464,17 +266,10 @@ for (const unit of dir.units) {
   fs.mkdirSync(path.dirname(out), { recursive: true });
 
   console.log(`\n${'─'.repeat(68)}`);
-  console.log(`  【${unit.id}】${shot.framing}　参考图 ${refs.length} 张`);
-  console.log('  ── 工程版（审计用，不送模型）');
-  console.log(finalPrompt.split('\n').map((l) => '    ' + l).join('\n'));
-  for (const conflict of drawPlan.conflicts) console.log(`    warning: 抽卡师发现约束冲突：${conflict}`);
-  console.log('  ── 抽卡师整理后 → 送生图模型');
+  console.log(`  【${unit.id}】${shot.framing}　参考图 ${refs.length} 张：${refTable}`);
+  console.log(`  ── LLM 直写提示词（keyframe-prompts/${unit.id}.txt，逐字送模型）`);
   console.log(modelPrompt.split('\n').map((l) => '    ' + l).join('\n'));
-  if (refined.dropped.length) {
-    console.log(`    抽卡师删掉 ${refined.dropped.length} 处：`);
-    for (const item of refined.dropped) console.log(`      - ${item}`);
-  }
-  // 提示词自检跑在**整理后**这一版上 —— 送进模型的是它，要审的也是它。
+  // 机器审计跑在直写文件上 —— 送进模型的是它，要审的也是它。只报告不阻断（废机器审核的边界）。
   const audit = auditPrompt(modelPrompt);
   if (audit.violations.length) {
     console.log(`    ⚠ 提示词自检：${audit.chars} 字，${audit.violations.length} 项违规（见 references/prompt-rules.md）`);
@@ -482,7 +277,7 @@ for (const unit of dir.units) {
   } else {
     console.log(`    ✓ 提示词自检通过：${audit.chars} 字`);
   }
-  trims.push({ id: unit.id, dropped: refined.dropped, conflicts: drawPlan.conflicts, chars: audit.chars, violations: audit.violations.map((v) => `[${v.rule}] ${v.hit}`) });
+  trims.push({ id: unit.id, file: path.relative(PROJ, promptFile), chars: audit.chars, violations: audit.violations.map((v) => `[${v.rule}] ${v.hit}`) });
   if (DRY) {
     if (PROVIDER === 'local') {
       const argv = localGenArgs(unit, refs, modelPrompt).slice(1);
@@ -589,23 +384,21 @@ if (failures) {
     requested_provider: PROVIDER_SETTING || null,
     artifacts: generated,
     plan: DIRECTION_PATH,
-    execution_overrides: dir.units
-      .filter((unit) => readKeyframeOverride(PROJ, unit.id))
-      .map((unit) => unit.id),
+    // 2026-09-21 LLM 直写制：记录每个单元实际使用的直写提示词文件，
+    // 替代旧的 execution_overrides（构图覆盖机制随工程拼装一同退役）。
+    prompt_files: dir.units
+      .filter((unit) => !ONLY.length || ONLY.includes(unit.id))
+      .map((unit) => `keyframe-prompts/${unit.id}.txt`),
   });
   const note = writeReviewNote(PROJ, 'keyframes', [
     '# 关键帧人工审阅', '',
     '机器检查只能判定是否可送审。请逐张查看人物身份、体型比例、构图、动作起点和场景连续性。', '',
     ...generated.map((f) => `- ${path.basename(f)}: ${f}`), '',
-    // 抽卡师删了什么必须留档：人是照着 `keyframe_start` 审图的，而模型看的是删后版。
-    // 这两份不一致时，第 1 问「和起始姿态对得上吗」审的是一份模型没收到过的稿。
-    '## 送模型的提示词与 `keyframe_start` 的差异（抽卡师删减留档）', '',
+    // 直写制留档：审图时要能对上「模型到底收到了什么」—— 提示词不再由代码生成，
+    // 它就是 keyframe-prompts/ 下的直写文件本身，审它=审送模型的东西。
+    '## 送模型的提示词（LLM 直写文件，逐字送模型）', '',
     ...trims.map((t) => [
-      `- **${t.id}**：送模型 ${t.chars} 字${t.violations.length ? `，⚠ ${t.violations.join('；')}` : '，自检通过'}`,
-      ...t.conflicts.map((c) => `  - 约束冲突（只提示人，已不下发给模型）：${c}`),
-      ...(t.dropped.length
-        ? [`  - 抽卡师删掉 ${t.dropped.length} 处：`, ...t.dropped.map((d) => `    - ${d}`)]
-        : ['  - 抽卡师未删减']),
+      `- **${t.id}**：${t.file}，送模型 ${t.chars} 字${t.violations.length ? `，⚠ ${t.violations.join('；')}` : '，自检通过'}`,
     ]).flat(), '',
     `生成记录：${generationRecord}`,
     `确认命令：node cli/review-gate.mjs approve --project "${PROJ}" --stage keyframes --plan "${DIRECTION_PATH}"`,

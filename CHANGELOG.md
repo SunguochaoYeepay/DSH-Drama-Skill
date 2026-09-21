@@ -2,6 +2,37 @@
 
 记录工程级行为变化。具体剧目的抽卡结果、耗时和逐帧评价留在对应项目目录，不写入这里。
 
+## 2026-09-21 - 关键帧提示词改制：LLM 直写为唯一正路，工程拼装退役
+
+用户拍板（g001 A/B 出图对照 + 文字层对照后）：LLM 能迭代进化，工程拼装只能覆盖已知场景。
+
+- **提示词来源**：`<项目>/keyframe-prompts/<unit-id>.txt`，LLM 抽卡师按 `references/draw-specialist.md`
+  直写，`cli/keyframes.mjs` **逐字**送模型——不再拼装、删减、改写。
+- **删除**：`buildLocalPrompt` / `buildPrompt`（huimeng 旧通道拼装）/ `refinePrompt` 调用链 /
+  `executionShotSpec` / `FRAMING` 景别映射 / 构图覆盖机制（`keyframe-overrides.json` 读取）。
+  `src/draw-specialist.mjs` 的 `refinePrompt`/`compileDrawPlan` 等模块 API 保留（零引用 ≠ 僵尸）。
+- **保留**：`auditPrompt` 机器审计跑在直写文件上（只报告不阻断）；闸门、参考图挂载、argv 全不变；
+  "干跑=实跑"承诺延续（直写文件就是送模型的东西）。
+- **缺直写文件是硬错误**：报错里列出本次挂载的参考图编号表（写提示词的人照着就能写）。
+- 已知代价（用户知情）：同板同计划不再保证同提示词——提示词质量责任从代码转移到写稿的 LLM；
+  旧剧目的 keyframe-overrides.json 不再生效，重跑关键帧需按新制补写直写文件。
+- 测试：`keyframe-prompt.test.mjs` 重写为直写制行为测试（逐字送模型/缺文件报错/审计报告/参考图
+  编号同源）；`keyframe-local-args.test.mjs` 夹具补直写文件。全量 41/41 绿。
+
+## 2026-09-21 - 抽卡师改制：LLM 直写为主线，工程编译器退为审计与保底
+
+用户拍板：LLM 能随教训进化、能综合导演信息，硬编码编译器只能锁场景。三份文档重整：
+- `draw-specialist.md` 全文重写为 LLM 抽卡师岗位规范：输入合同（导演传递什么）、
+  五步工作流（读全→综合转译→组装→双闸自检→留痕送审）、正向工艺、红线（物种感知/
+  多主体归属/无人物不派主语从事故日志提炼为原则）、抽卡闭环（判断/停止/记录归 LLM）。
+- `prompt-rules.md` 从纯禁令目录扩为三层：机制（保留）/ 八类禁令（保留，条条实测）/
+  新增正向工艺节（只写画得出的、转译表、结构模板）与盲区清单（正则拦不住的隐性否定/
+  速度词/语义重复，LLM 精神闸负责）、双闸执行（机器闸 auditPrompt 不可关 + 精神闸留痕）。
+- 新建 `draw-vocabulary.md`：光照/镜头/材质/姿态四类正向词库（吸收 awesome-gpt-image-2
+  语料，CC BY 4.0），含通道警示（负面词不进正向、中文直写、字数预算约束）。
+- 机器层不退场：`auditPrompt()` 改跑在 LLM 产出上；实测三件套（参考图职责/身份锚/禁字行）
+  为必含骨架行；`cli/keyframes.mjs` 编译器保留为保底与 A/B 基线。代码零变更。
+
 ## 2026-09-21 - AIComicBuilder 吸收：禁比喻 / 战斗编舞 / 覆盖自检 / 场景判定（文档层）
 
 来源 `github.com/LingyiChen-AI/AIComicBuilder`（Apache 2.0，Next.js 漫剧生成器，Seedance/即梦

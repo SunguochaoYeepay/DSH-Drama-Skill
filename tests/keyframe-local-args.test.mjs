@@ -43,6 +43,11 @@ function makeProject() {
       shots: [{ framing: '中景', action: '女孩站在门边', scene: 's_room', on_screen: ['i_girl'] }],
     }],
   }));
+  // 2026-09-21 LLM 直写制：提示词来源是 keyframe-prompts/<unit>.txt（工程拼装已退役）。
+  // 这里只验证 argv，提示词内容随便给一段合法文本即可。
+  fs.mkdirSync(path.join(dir, 'keyframe-prompts'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'keyframe-prompts', 'g001.txt'),
+    '女孩站在门边，中景。图1是场景参考；图2是女孩的身份参考。', 'utf8');
   return { dir, master, sheet };
 }
 
