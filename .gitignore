@@ -52,3 +52,10 @@ Thumbs.db
 # 改成前缀通配，一次覆盖所有后缀；`.tmp/` 是项目里那种临时目录。
 .tmp-*
 .tmp/
+
+# 生成产物落点：comfy-studio 的硬契约是"产物必须落进会话工作区"（默认 <工作区>\comfy-out）。
+# 里面是图片/视频，加上每次调用的 result JSON 与 stdout/stderr 诊断 —— 全都不该入库。
+# ⚠ `*.png` / `*.mp4` 早就挡住了，漏出来的是 result JSON 与 .txt；
+# 更要紧的是 comfy-out/_result.json、_stdout.txt、_stderr.txt **已经被跟踪过**，
+# 所以光加这条规则不够，还得 git rm --cached 把它们从索引里摘出来。
+comfy-out/
