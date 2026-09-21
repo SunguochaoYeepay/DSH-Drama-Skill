@@ -186,7 +186,17 @@ node cli/review-gate.mjs approve --project <项目目录> --stage assets
 node cli/review-gate.mjs approve --project <项目目录> --stage keyframes --plan <render.plan.json>
 node cli/review-gate.mjs approve --project <项目目录> --stage clip --id g001 --artifacts <g001.mp4>
 node cli/review-gate.mjs ready-assemble --project <项目目录> --plan <render.plan.json>
+
+# 排查与体检（不产出资产，只回答"实际发生了什么"）
+node cli/dump-payload.mjs --project <项目目录> --unit <单元 id>   # 摊开这次生图真正提交给 ComfyUI 的原文
+node cli/dump-payload.mjs <result.json 路径>                      # 同上，直接给 result.json
+node cli/audit-audio.mjs --project <项目目录> --units g001,g002   # 按时域切片量音轨（响不响、什么时候响）
+node cli/audit-audio.mjs <视频...>
 ```
+
+排查工具只在怀疑"送进去的和想的不一样"时才跑，不是每阶段的必经步骤。
+`dump-payload` 的数据来自 ComfyUI 自己的 `/history/<prompt_id>`（或 `--history <文件>`），
+不是本地复现 —— 本仓 `--prompt` 不是最终稿，上游还会追加正向句、替换负向条件。
 
 资产和关键帧开始生成前，必须先向用户确认本次通道（本地预览或线上生成）；不得把环境默认值当作用户选择。生成完成后先展示整组结果，并把每个产物的绝对路径交给用户（对话中用可打开的本地文件链接）；只有用户人工确认并登记对应闸门票据，才能进入下一阶段。每次生成会在项目 `reviews/<stage>.generation.json` 留下实际 provider、模型和产物清单。
 
