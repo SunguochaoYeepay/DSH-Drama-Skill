@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import test from 'node:test';
 import { checkBoard } from '../src/board.mjs';
 import { parseScript, spokenLines } from '../src/parse-script.mjs';
+import { auditPrompt, PROMPT_MAX_CHARS } from '../src/draw-specialist.mjs';
 
 /**
  * examples/demo-show 是**给别人看的样板**，所以它必须真的成立 ——
@@ -44,11 +45,11 @@ test('剧本来源票自证：票里的哈希等于 story.md 现在的哈希', (
   assert.equal(receipt.story_sha256, sha256(story), '剧本被改过但来源票没更新 —— 票据已经失去意义');
 });
 
-test('导演稿草稿：每句台词恰好被某一镜引用一次，且引用的是真实行号', () => {
+test('导演稿：每句台词恰好被某一镜引用一次，且引用的是真实行号', () => {
   const parsed = parseScript(read('story.md'));
   const expected = spokenLines(parsed).map((l) => l.no).sort((a, b) => a - b);
 
-  const draft = readJson('board.direction.draft.json');
+  const draft = readJson('board.direction.json');
   assert.equal(draft.version, 6, '导演协议版本必须是 6');
 
   const used = draft.units.flatMap((u) => u.shots.flatMap((s) => s.lines || []));
@@ -59,8 +60,8 @@ test('导演稿草稿：每句台词恰好被某一镜引用一次，且引用�
   );
 });
 
-test('导演稿草稿：单元时长与镜头排布符合引擎硬约束', () => {
-  const draft = readJson('board.direction.draft.json');
+test('导演稿：单元时长与镜头排布符合引擎硬约束', () => {
+  const draft = readJson('board.direction.json');
   for (const unit of draft.units) {
     let prevAt = -1;
     unit.shots.forEach((shot, i) => {
@@ -83,6 +84,77 @@ test('导演稿草稿：单元时长与镜头排布符合引擎硬约束', () =>
       }
     });
   }
+});
+
+test('导演稿已登记：有正本，也有自证的来源票', () => {
+  const receipt = readJson('board.direction.json.provenance.json');
+  assert.equal(receipt.provider, 'agent_draft', '来源票必须写明是 Agent 直写');
+  assert.equal(receipt.model, null, 'Agent 直写的稿子不许冒充模型产物');
+  assert.equal(
+    receipt.direction_sha256,
+    sha256(read('board.direction.json')),
+    '导演稿被改过但来源票没更新',
+  );
+});
+
+test('生成计划：每个单元都在引擎上限内，且关键帧落点指向计划里的单元', () => {
+  const plan = readJson('render.plan.json');
+  const units = plan.groups || plan.units || [];
+  assert.ok(units.length >= 1, '计划里至少要有一个单元');
+  for (const unit of units) {
+    assert.ok(unit.id, '单元缺 id');
+    assert.ok(
+      unit.generation_duration_s > 0 && unit.generation_duration_s <= 15,
+      `${unit.id} 的生成时长 ${unit.generation_duration_s}s 超出引擎上限`,
+    );
+  }
+});
+
+test('关键帧提示词：每个计划单元都有一份，且零违规、不超字数', () => {
+  const plan = readJson('render.plan.json');
+  const units = plan.groups || plan.units || [];
+  for (const unit of units) {
+    const file = path.join(DEMO, 'keyframe-prompts', `${unit.id}.txt`);
+    assert.ok(fs.existsSync(file), `缺 ${unit.id} 的关键帧提示词 —— 直写制下它是唯一来源`);
+    const text = fs.readFileSync(file, 'utf8').trim();
+    assert.ok(text.length > 0, `${unit.id} 的提示词是空的`);
+    assert.ok(text.length <= PROMPT_MAX_CHARS, `${unit.id} 提示词 ${text.length} 字，超过 ${PROMPT_MAX_CHARS} 上限`);
+    const { violations } = auditPrompt(text);
+    assert.deepEqual(
+      violations,
+      [],
+      `${unit.id} 提示词违规：\n${violations.map((v) => `  [${v.rule}] ${v.detail}`).join('\n')}`,
+    );
+  }
+});
+
+test('人工票是真的：story 与 direction 两道闸都已由人签过', () => {
+  const { approvals } = readJson('review.approvals.json');
+  for (const stage of ['story', 'direction']) {
+    const ticket = approvals[stage];
+    assert.ok(ticket, `${stage} 闸没签 —— 示例不该给人看一条没过闸的链`);
+    assert.ok(ticket.at, `${stage} 票缺时间`);
+    assert.ok(ticket.by, `${stage} 票缺签字人`);
+    assert.ok(ticket.artifact_hash, `${stage} 票缺产物哈希`);
+  }
+});
+
+test('示例不含本机绝对路径 —— 它是要发到 GitHub 的', () => {
+  // 票里原本记的是 `D:\…\examples\demo-show\story.md`（review-gate 写绝对路径）。
+  // 源码已经不猜别人的机器了，示例里躺着本机的盘符同样是破绽。
+  const bad = [];
+  (function walk(dir) {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) { walk(p); continue; }
+      if (!/\.(json|md|txt)$/.test(e.name)) continue;
+      fs.readFileSync(p, 'utf8').split('\n').forEach((line, i) => {
+        const m = line.match(/(?<![A-Za-z:/])[A-Za-z]:[/\\]/g);
+        if (m) bad.push(`${path.relative('.', p)}:${i + 1}  ${line.trim().slice(0, 80)}`);
+      });
+    }
+  })(DEMO);
+  assert.deepEqual(bad, [], `示例里出现了本机绝对路径：\n${bad.join('\n')}`);
 });
 
 test('示例不含任何媒体产物 —— 仓库里不该出现图音视频', () => {

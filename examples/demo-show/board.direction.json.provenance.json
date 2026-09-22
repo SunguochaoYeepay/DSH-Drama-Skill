@@ -1,0 +1,12 @@
+{
+  "contract": 1,
+  "provider": "agent_draft",
+  "model": null,
+  "response_model": null,
+  "authored_by": "agent",
+  "board_sha256": "f56db1ead38567206b25309620ee3a85c69293478300d5a5574b96d8ff9a8658",
+  "board_identity_sha256": "30c1824f8361838994f0eff046c1674db2ff542d83effd39f4eea369be496c5a",
+  "story_sha256": "13e4f3f3b3b92a7ca276becc01762a1931b9ee3fe40e26edfe6d7053e872cc2f",
+  "direction_sha256": "ead21d79df7756b17d2638bef7c47bde1fafc09af952661203daf9140a967014",
+  "recorded_at": "2026-09-22T08:52:40.106Z"
+}

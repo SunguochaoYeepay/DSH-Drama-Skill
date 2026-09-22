@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "approvals": {
+    "clips": {},
+    "story": {
+      "at": "2026-09-22T08:50:45.497Z",
+      "by": "用户",
+      "artifact_hash": "737b7b30c7fee854efdead44ce7107b022aa473675fcbac0d07ca4050e792d54",
+      "artifacts": [
+        "examples/demo-show/story.md"
+      ]
+    },
+    "direction": {
+      "at": "2026-09-22T08:53:31.432Z",
+      "by": "用户",
+      "artifact_hash": "f432c9f1f8077c24eef23d73a119fa964916014d57e886878d81a153b8027758",
+      "artifacts": [
+        "examples/demo-show/board.direction.json"
+      ]
+    }
+  }
+}

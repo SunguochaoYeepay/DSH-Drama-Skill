@@ -10,7 +10,7 @@
     "style_prompt": null,
     "total_duration_s": 17,
     "stage": "story",
-    "created_at": "2026-09-22T07:01:37.896Z",
+    "created_at": "2026-09-22T08:52:26.619Z",
     "approvals": {
       "story": null,
       "shots": null,
@@ -80,7 +80,7 @@
     {
       "id": "s_bus_night",
       "name": "末班公交车厢",
-      "environment": "雨夜的末班公交车厢，顶灯是暖黄色，车窗挂满水珠，外面是被雨糊成一片的路灯光斑",
+      "environment": "雨夜的末班公交车厢，顶灯是暖黄色，车窗挂满水珠，外面是被雨糊成一片的路灯光斑；车厢里有两排乘客座椅与黄色扶手杆，前段是驾驶座与方向盘，司机坐在驾驶座上只露后背，中段是前后车门与刷卡机",
       "scene_no": 1
     }
   ],
