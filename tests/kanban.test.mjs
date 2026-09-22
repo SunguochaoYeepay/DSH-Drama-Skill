@@ -115,9 +115,11 @@ test('服务：页面 / 清单 / 快照 / 媒体 / 防穿越', async () => {
   const { server, port } = await startServer({ root: ROOT, port: 0 });
   const base = `http://127.0.0.1:${port}`;
   try {
-    // 页面
+    // 页面 —— Content-Type 必须是 text/html：曾因 MIME 缺失退化成
+    // application/octet-stream，浏览器不渲染直接白页
     const page = await fetch(base + '/');
     assert.equal(page.status, 200);
+    assert.match(page.headers.get('content-type') || '', /^text\/html/);
     assert.ok((await page.text()).includes('分镜确认表'));
 
     // 剧目清单

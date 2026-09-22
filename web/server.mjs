@@ -36,6 +36,9 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 function mimeOf(p) {
   const ext = path.extname(p).toLowerCase().slice(1);
   const map = {
+    html: 'text/html; charset=utf-8', css: 'text/css; charset=utf-8',
+    js: 'text/javascript; charset=utf-8', mjs: 'text/javascript; charset=utf-8',
+    json: 'application/json; charset=utf-8',
     png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif',
     webp: 'image/webp', svg: 'image/svg+xml',
     mp4: 'video/mp4', m4v: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime',
