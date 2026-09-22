@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from 'react';
 /** 拖动时给 <body> 挂的类：全窗口变 col-resize 光标、禁止选中文字。 */
 const RESIZING = 'kanban-resizing';
 
-export default function Splitter({ side, onResize, onReset, title }) {
+export default function Splitter({ side, onStart, onResize, onReset, title }) {
   const [active, setActive] = useState(false);
   const start = useRef(0);
 

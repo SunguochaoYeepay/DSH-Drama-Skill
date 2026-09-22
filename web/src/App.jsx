@@ -362,7 +362,6 @@ export default function App() {
             </button>
           </div>
         </div>
-   
       </header>
 
       <div className="flex min-h-0 flex-1">

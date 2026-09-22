@@ -2,6 +2,18 @@
 
 记录工程级行为变化。具体剧目的抽卡结果、耗时和逐帧评价留在对应项目目录，不写入这里。
 
+## 2026-09-22 - 看板分隔条拖动修复；工程更名「逐格」
+
+- **修 bug**：`web/src/Splitter.jsx` 的 props 解构少写 `onStart`，而第 43 行写着 `onStart?.(side)`
+  —— 裸标识符不是"防 undefined"，是全局引用。真浏览器实测（无头 Chrome + CDP）：每次按下分隔条
+  抛 `Uncaught ReferenceError: onStart is not defined`；父组件的 `onStartResize` 永不执行，
+  `dragBase.current` 停在挂载时的宽度 → 第二次拖动被拉回初始值再算。
+  实测位移 160 → 260 → **210**（本应 310）；修复后 236 → 336 → 386，未捕获异常 0 条。
+- 前端没有 lint / 类型检查，构建也不拦未声明标识符 —— 这类错只能靠"真点一次"发现。
+- **更名**：工程代号「逐格」（一格一格地拍，逐段生成、逐段确认）。落在 `README.md` 标题、
+  `SKILL.md` 标题、看板页面标题（`web/index.html`、`App.jsx` 顶栏默认标题）。skill 名 / npm 包名 /
+  目录名未动 —— 那是 id 级改动，会牵连 DSH 工作区路径，另案处理。
+
 ## 2026-09-22 - 清掉源码里的本机路径：工程不再猜你的机器在哪
 
 起因：上一轮把仓库收拾干净后复查代码，发现 `.env.example`、`src/runtime-paths.mjs`、
