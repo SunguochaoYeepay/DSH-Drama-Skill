@@ -51,19 +51,25 @@ export function isValidProjectName(name) {
 }
 
 /**
- * 剧目的创建时间：**board.json 的 mtime**，读不到退回目录 mtime，再退回 null。
+ * 剧目的创建时间，三级取值：
+ * 1. `board.json` 的 **`meta.created_at`** —— 立项时由 `cli/init-board.mjs` 写死，
+ *    之后任何阶段都不许改。这是正主。
+ * 2. 退回 **board.json 的 mtime** —— 老剧目没这个字段（本 CLI 之前不写）。
+ *    为什么不用目录时间（2026-09-22 实测踩过）：22 个剧目从 E 盘拷进仓库时
+ *    **目录是新建的**，21 个目录的 birthtime/mtime 全被抹成同一刻，拿它排等于乱排；
+ *    而**文件**的 mtime 会被 `copyFileSync` 带过来（Windows CopyFile 保留
+ *    LastWriteTime），所以它是迁移后唯一活着的信号。
+ *    ⚠ 它的语义是「板子最后一次写入」，改板会前移 —— 只是推断，不是事实。
+ * 3. 再退回**目录 mtime**，都读不到给 null（界面按「无时间」排最后）。
  *
- * 为什么不能用目录的 birthtime/mtime（2026-09-22 实测踩过）：22 个剧目从 E 盘
- * 拷进仓库时，**目录是新建的**，全部 21 个目录的 birthtime 与 mtime 都被抹成
- * 拷贝那一刻（02:16），拿它排序等于乱排。而**文件**的 mtime 会被
- * `copyFileSync` 带过来（Windows 的 CopyFile 保留 LastWriteTime），所以
- * board.json 的时间是完好的 —— 这是唯一还活着的创建时间信号。
- *
- * 语义提醒：它是「板子最后一次写入」的时间，改板会让它前移。对找剧目来说
- * 这个语义比严格的立项时间更好用（最近动过的排在前面）。
  * @returns {string|null} ISO 字符串。
  */
-function createdAtOf(dir) {
+function createdAtOf(dir, board) {
+  const explicit = board?.meta?.created_at;
+  if (typeof explicit === 'string') {
+    const t = Date.parse(explicit);
+    if (Number.isFinite(t)) return new Date(t).toISOString();   // 写歪了就当没有，往下退
+  }
   const boardFile = path.join(dir, 'board.json');
   try {
     if (fs.existsSync(boardFile)) return fs.statSync(boardFile).mtime.toISOString();
@@ -101,7 +107,7 @@ export function listProjects(root) {
     out.push({
       name: e.name,
       title: String(board.meta?.title || '').trim() || e.name,
-      createdAt: createdAtOf(path.join(root, e.name)),
+      createdAt: createdAtOf(path.join(root, e.name), board),
     });
   }
   const rank = (p) => (p.createdAt ? Date.parse(p.createdAt) : 0);

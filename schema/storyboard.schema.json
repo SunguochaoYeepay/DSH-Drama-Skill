@@ -92,6 +92,11 @@
         "created_by": {
           "type": "string"
         },
+        "created_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}",
+          "description": "项目创建时间（立项那一刻，ISO 8601）。由 cli/init-board.mjs 在生成板子时写入，之后**不再改动** —— 看板按它倒序排列剧目。缺失时看板退回 board.json 的 mtime 推断（老剧目迁移进仓库时目录时间会被抹平，只有文件 mtime 活着）。"
+        },
         "stage": {
           "enum": [
             "story",

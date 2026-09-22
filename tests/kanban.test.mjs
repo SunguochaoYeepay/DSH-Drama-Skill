@@ -107,6 +107,35 @@ test('listProjects：按创建时间倒序，时间相同的按目录名升序',
   for (const n of ['older_a', 'newest', 'older_c']) fs.rmSync(path.join(ROOT, n), { recursive: true, force: true });
 });
 
+test('listProjects：meta.created_at 是正主，优先于 mtime（改板不该让剧目前移）', () => {
+  const d = path.join(ROOT, 'explicit_time');
+  fs.mkdirSync(d, { recursive: true });
+  const f = path.join(d, 'board.json');
+  fs.writeFileSync(f, JSON.stringify({
+    meta: { title: '显式时间剧', created_at: '2026-01-02T03:04:05.000Z' },
+  }));
+  // 板子 mtime 故意设成"今天" —— 显式字段必须赢，改板不该改变剧目顺序
+  const today = new Date();
+  fs.utimesSync(f, today, today);
+
+  const found = listProjects(ROOT).find((p) => p.name === 'explicit_time');
+  assert.equal(found.createdAt, '2026-01-02T03:04:05.000Z');
+  fs.rmSync(d, { recursive: true, force: true });
+});
+
+test('listProjects：created_at 写歪（非法时间）时退回 mtime，不当成 0 排到最后', () => {
+  const d = path.join(ROOT, 'bad_time');
+  fs.mkdirSync(d, { recursive: true });
+  const f = path.join(d, 'board.json');
+  fs.writeFileSync(f, JSON.stringify({ meta: { title: '坏时间剧', created_at: '昨天下午' } }));
+  const when = new Date('2026-09-19T08:00:00Z');
+  fs.utimesSync(f, when, when);
+
+  const found = listProjects(ROOT).find((p) => p.name === 'bad_time');
+  assert.equal(found.createdAt, when.toISOString());
+  fs.rmSync(d, { recursive: true, force: true });
+});
+
 test('listProjects：板子 mtime 读不到时退回目录 mtime，不抛也不乱排', () => {
   const d = path.join(ROOT, 'no_board_time');
   fs.mkdirSync(d, { recursive: true });

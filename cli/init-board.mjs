@@ -37,6 +37,10 @@ const seed = {
     genre: meta.genre || '', language: meta.language || 'zh-CN',
     aspect: meta.aspect, style: meta.style, style_prompt: meta.style_prompt || null,
     total_duration_s: 0, stage: 'story',
+    // 项目创建时间 = 立项那一刻。**只在这里写一次** —— 后续改板、出片都不许改它，
+    // 看板按它倒序排剧目。老剧目没有这个字段（本 CLI 之前不写），由看板退回
+    // board.json 的 mtime 推断；迁移剧目时可以用 mtime 回填。
+    created_at: new Date().toISOString(),
     approvals: { story: null, shots: null, assets: null, keyframes: null },
     music: meta.music || null, final_video: null,
   },

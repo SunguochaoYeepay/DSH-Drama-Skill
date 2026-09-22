@@ -128,6 +128,8 @@ node cli/review-gate.mjs approve --project <项目目录> --stage story
 node cli/init-board.mjs --story <项目/story.md> --brief <项目/board-brief.json> --out <项目/board.json>
 ```
 
+立项这一步会往 `board.json` 的 `meta.created_at` **写死项目创建时间**（ISO 8601）。之后任何阶段都不许改它 —— 看板按它把剧目倒序排列。老剧目没有这个字段时，看板退回 `board.json` 的 mtime 推断（剧目目录迁进仓库时目录时间会被文件系统抹平，只有文件 mtime 活着）。
+
 Brief 不可由执行 Agent 擅自补写；角色脸部和服装若仍是“待补”，必须在付费生图前补齐并送审。画幅可为 `9:16`、`16:9` 或 `1:1`，关键帧、视频和合成均按 `board.meta.aspect` 使用对应形状。
 
 检查 Storyboard：

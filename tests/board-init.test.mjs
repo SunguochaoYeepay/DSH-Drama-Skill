@@ -30,6 +30,14 @@ test('registered story plus confirmed brief creates a valid board without model 
   assert.equal(board.meta.project, 'fixture_project');
   assert.ok(board.shots.some((shot) => shot.dialogue.length));
   assert.equal(board.meta.approvals.story, null);
+
+  // 项目创建时间：**立项那一刻写死**，看板按它倒序排剧目
+  const createdAt = board.meta.created_at;
+  assert.equal(typeof createdAt, 'string', '立项必须写下 created_at');
+  const at = Date.parse(createdAt);
+  assert.ok(Number.isFinite(at), `created_at 必须是合法时间，实际 ${createdAt}`);
+  assert.ok(Math.abs(Date.now() - at) < 120000, 'created_at 应是刚立项的时刻');
+
   const repeated = spawnSync(process.execPath, command, { encoding: 'utf8' });
   assert.notEqual(repeated.status, 0);
   assert.match(repeated.stderr, /拒绝覆盖/);

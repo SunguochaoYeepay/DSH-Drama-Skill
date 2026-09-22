@@ -2,6 +2,17 @@
 
 记录工程级行为变化。具体剧目的抽卡结果、耗时和逐帧评价留在对应项目目录，不写入这里。
 
+## 2026-09-22 - 项目创建时间显式化：meta.created_at 成为排序的正主
+
+起因：剧目清单按时间倒序时，只能用 `board.json` 的 mtime 推断 —— 那只是「板子最后写入」，改板会让剧目前移，且剧目目录迁进仓库时目录时间已被文件系统抹平（22 个目录同一时刻）。推断终究不是事实。
+
+- `schema/storyboard.schema.json` 的 `meta` 新增可选字段 `created_at`（ISO 8601，带 pattern）。schema 是 `additionalProperties:false`，不加就写不进去
+- `cli/init-board.mjs` 立项时写入 `created_at = 此刻`，**只写一次**；它是唯一写 board.json 的入口，不会被后续阶段冲掉
+- `src/board-data.mjs` 的创建时间改成三级取值：显式字段 → board.json mtime → 目录 mtime。显式字段写歪（非法时间）也往下退，绝不静默当成 0
+- 存量 20 个剧目已回填（取值 = board.json mtime，写回后把 mtime 复原，免得回填污染推断信号）。回填后 `checkBoard` 逐个复核，契约零破损
+- 看板排序与显示不变，但依据从「推断」变成「事实」
+- 测试：init-board 端到端断言 created_at 是刚立项的时刻；数据层钉住「显式字段优先于 mtime」与「写歪时退回 mtime」两条
+
 ## 2026-09-22 - 看板新增管理动作：归档 / 恢复 / 删除（回收站）与到期自动清理
 
 用户拍板：项目可归档可删除；删除必须回填中文项目名；归档满一周自动删；归档可恢复。
