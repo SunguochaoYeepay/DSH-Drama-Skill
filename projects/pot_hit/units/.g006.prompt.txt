@@ -1,9 +1,0 @@
-For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.
-
-integrated_multimodal_description: [Shot 1] a medium close-up shot of 女生 —— 女生的可见表演：下巴收紧、眉头上拧，指尖捏起碎叶时指节绷紧，随后把碎叶弹掉、手掌在吊带上拍了两下，肩膀放松；视线：看向自己胸前那片污渍；表演边界：嘴角形态服从上述可见表演，不额外改变情绪方向，二十多岁的东亚女性；鹅蛋脸偏长，五官立体，眼睛偏长、双眼皮明显；鼻梁挺直；嘴唇偏薄；眉形上扬；皮肤白皙、有真实毛孔与自然油光。；牛仔热裤 + 低胸细吊带背心 + 细跟高跟鞋；长直黑发披肩；无首饰、无外搭。全片衣着本身不变。，她低头盯着自己吊带前襟上那一大片湿泥，眉头慢慢拧起来，伸手把嵌在泥里的一片碎叶捏起来看了看，说出那句话；说完把碎叶弹掉，手掌在吊带上拍了两下，同前，平光；吊带上的湿泥反出一点暗光。 女生 (S1)，说道：<d>[Chinese] 靠！我的衣服！</d>。
-
-overall_soundscape: 衣料被手掌拍打的轻响，她说话时台阶下有一点回声
-
-non_diegetic_music: N/A
-
-on_screen_text: none. No subtitles, no captions, no text overlays of any kind.

@@ -1,9 +1,0 @@
-For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.
-
-integrated_multimodal_description: [Shot 1] a medium shot of 大师兄与小师妹 —— 大师兄 facing away from the camera，小师妹 facing the left side of the frame，东亚男性，约二十二岁，剑眉星目，鼻梁挺直，唇形偏薄，下颌线条利落，皮肤白皙；黑长发以青玉冠束起，鬓角利落，眉眼清冷，神情端正；月白色交领长袍，外罩一层浅青色薄纱外衫，腰束深青色宽幅布带，衣摆及踝微扬；背负一柄青铜剑鞘的长剑，脚下白布软靴；东亚女性，约二十岁，鹅蛋脸偏圆，杏眼清澈眼尾微挑，鼻尖小巧，唇形饱满，脸颊自然透红；黑长直发，头顶挽成双螺髻，两侧垂落青色发带；浅青色齐胸襦裙，白色交领内衬，肩臂披一层同色薄纱披帛，腰间束白色绫带打结，裙摆轻盈垂坠及地，足下浅色绣花鞋，大师兄步伐不停，神色平淡地说出回应；小师妹听完后表情逐渐凝住，晨光侧洒，人物边缘有薄光。 大师兄 (S1)，语气平淡，一丝不苟，说道：<d>[Chinese] 举手之劳，不用谢。把我救你耗用的材料补给我就行。</d>。
-
-overall_soundscape: 脚步声、树叶轻响
-
-non_diegetic_music: N/A
-
-on_screen_text: none. No subtitles, no captions, no text overlays of any kind.

@@ -1,9 +1,0 @@
-For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.
-
-integrated_multimodal_description: [Shot 1] a medium close-up shot of 灰豆 —— 灰棕色小老鼠，尖尖鼻子，圆溜溜黑眼睛，大圆耳朵，细长尾巴，个头很小；自然灰棕色短毛，不穿衣服，身体小巧，细尾巴，小爪子，卡通可爱不恐怖，灰豆挺起小胸脯，圆眼瞪向画面左侧，尖细着嗓子逞强开口，大耳朵随语气抖动，暖黄室内光。 灰豆 (S1)，尖细逞强，说道：<d>[Chinese] 喊什么喊！吃你一块破饼干怎么了！</d>。
-
-overall_soundscape: 沙发边轻微布料声
-
-non_diegetic_music: 轻快温馨的卡通喜剧配乐
-
-on_screen_text: none. No subtitles, no captions, no text overlays of any kind.

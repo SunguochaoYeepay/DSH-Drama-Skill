@@ -65,26 +65,12 @@ web/dist/
 # 所以光加这条规则不够，还得 git rm --cached 把它们从索引里摘出来。
 comfy-out/
 
-# ── 剧目目录（2026-09-22 起剧目进仓：契约链入库，媒体产物不入库）─────────────
-# 目标：别人 clone 仓库就拿到全部剧目的剧本/板子/导演稿/计划/票/提示词/请求档案
-# （审计链完整），但 2.4GB 的图/视频/二进制不进 git。
-# 做法：先整体忽略 projects/，再放行**目录**（不放行目录，git 不会往下走）
-# 与三类文本扩展名；其余扩展名（png/mp4/jpg/exe/mjs/ps1/…）一律留在忽略里。
-# 实测依据（E 盘 22 个剧目盘点）：.json 434 / .md 190 / .txt 157 是契约链，
-# .png 1057 / .mp4 241 / .jpg 6 是产物，fat_cat/.tmp/bin/ffmpeg.exe 85MB 是误放的二进制。
-projects/**/*
-!projects/**/
-!projects/**/*.json
-!projects/**/*.md
-!projects/**/*.txt
-# 运行态/账本：上面的放行会翻掉全局忽略（同文件后走全局顺序的话），
-# 这里把已知运行态按更具体的模式压回去 —— 它们是流水线的"当前指针/花费账本"，不是契约。
-projects/**/costs.json
-projects/**/current.json
-projects/**/.gen-result.json
-projects/**/*.filter.txt
-projects/**/_concat.txt
-projects/**/__pycache__/
-# 归档区：归档 = 退出主线（也不再被 git 跟踪），恢复时文件自然回到白名单。
-# 放在白名单之后压住它 —— 否则 !projects/**/ 会把归档目录重新翻进来。
-projects/_archive/
+# ── 剧目目录（2026-09-22 起整体退库：剧的产物只在本地）─────────────────────
+# 拍板（用户 2026-09-22）：剧目内容一律不进 git —— 仓库只放工具，别人 clone
+# 拿到的是能跑的流水线，不是我的剧。此前「媒体不进、文本契约进」的分层作废。
+# 做法：`projects/**` 全忽略，只留这份 README 说明目录用途；
+# 已跟踪过的文件用 `git rm -r --cached projects` 从索引摘出（磁盘不动）。
+# 历史提交里仍有旧版本 —— 要翻某个剧目的历史，`git log --oneline -- projects/<名>`。
+projects/**
+!projects/
+!projects/README.md

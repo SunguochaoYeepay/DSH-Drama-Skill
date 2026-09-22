@@ -1,9 +1,0 @@
-For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.
-
-integrated_multimodal_description: [Shot 1] a medium close-up shot of 小师妹 —— 东亚女性，约二十岁，鹅蛋脸偏圆，杏眼清澈眼尾微挑，鼻尖小巧，唇形饱满，脸颊自然透红；黑长直发，头顶挽成双螺髻，两侧垂落青色发带；浅青色齐胸襦裙，白色交领内衬，肩臂披一层同色薄纱披帛，腰间束白色绫带打结，裙摆轻盈垂坠及地，足下浅色绣花鞋，她低下头小声嘟囔，眉眼间带着肉疼和委屈，柔和的大面积散射光，面部受光均匀、阴影很浅照亮脸颊，叶影轻微晃动。 小师妹 (S1)，语气闷闷，小声嘟囔，说道：<d>[Chinese] ……好嘛。</d>。
-
-overall_soundscape: 衣料轻擦、远处鸟鸣
-
-non_diegetic_music: N/A
-
-on_screen_text: none. No subtitles, no captions, no text overlays of any kind.

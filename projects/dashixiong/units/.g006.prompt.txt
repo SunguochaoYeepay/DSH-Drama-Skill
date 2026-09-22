@@ -1,9 +1,0 @@
-For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.
-
-integrated_multimodal_description: [Shot 1] a close-up shot of 小师妹 —— facing the left side of the frame，东亚女性，约二十岁，鹅蛋脸偏圆，杏眼清澈眼尾微挑，鼻尖小巧，唇形饱满，脸颊自然透红；黑长直发，头顶挽成双螺髻，两侧垂落青色发带；浅青色齐胸襦裙，白色交领内衬，肩臂披一层同色薄纱披帛，腰间束白色绫带打结，裙摆轻盈垂坠及地，足下浅色绣花鞋，她眉眼微蹙、嘴唇微微张开，语速发紧地连续追问，双手无措地攥着衣角，晨光打在脸侧，耳尖泛红清晰可见。 小师妹 (S1)，语气慌张，手足无措，说道：<d>[Chinese] 昏死？那我的衣服……是你给我穿的？那你、那你有没有对我做什么？</d>。
-
-overall_soundscape: 轻微风声、衣角摩擦声
-
-non_diegetic_music: N/A
-
-on_screen_text: none. No subtitles, no captions, no text overlays of any kind.

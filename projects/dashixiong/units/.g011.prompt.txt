@@ -1,9 +1,0 @@
-For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.
-
-integrated_multimodal_description: [Shot 1] a medium shot of 大师兄 —— 东亚男性，约二十二岁，剑眉星目，鼻梁挺直，唇形偏薄，下颌线条利落，皮肤白皙；黑长发以青玉冠束起，鬓角利落，眉眼清冷，神情端正；月白色交领长袍，外罩一层浅青色薄纱外衫，腰束深青色宽幅布带，衣摆及踝微扬；背负一柄青铜剑鞘的长剑，脚下白布软靴，他步伐平稳地继续前行，神情依旧清冷，内心旁白响起，晨光透过枝叶落在肩背与剑鞘上。 大师兄 (S1) says in an off-screen voiceover: <d>[Chinese] 救人耗材需核算清楚，邪祟内丹变卖的银两刚好可以补偿师妹受惊之苦，也算公允。</d>，嘴唇始终完全闭合。
-
-overall_soundscape: 脚步声、远处鸟鸣、树叶轻响
-
-non_diegetic_music: N/A
-
-on_screen_text: none. No subtitles, no captions, no text overlays of any kind.
