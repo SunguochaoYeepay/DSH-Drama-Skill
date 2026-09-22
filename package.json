@@ -5,7 +5,11 @@
   "scripts": {
     "test": "node tests/run-all.mjs",
     "kanban": "node web/server.mjs",
-    "doctor": "node cli/doctor.mjs"
+    "doctor": "node cli/doctor.mjs",
+    "web:install": "npm --prefix web install",
+    "web:build": "npm --prefix web run build",
+    "web:setup": "npm run web:install && npm run web:build",
+    "web:dev": "npm --prefix web run dev"
   },
   "dependencies": {
     "bailian-cli": "1.26.0"

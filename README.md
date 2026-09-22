@@ -44,7 +44,7 @@ ai-images-harness/
 ├─ tests/                    确定性测试（含 tests/integration/ 活体验证）
 ├─ plugins/                  UI 插件
 ├─ vendor/                   外部工具快照（comfy-studio 的 gen.py 等，随仓库分发）
-├─ web/                      独立看板服务（server.mjs + index.html，不依赖 DSH）
+├─ web/                      独立看板（server.mjs 零依赖服务 + src/ 前端源码，不依赖 DSH）
 └─ projects/                 剧目目录（契约链入 git，媒体产物被 .gitignore 挡住）
 ```
 
@@ -87,13 +87,18 @@ projects/<剧名>\
 4. 参照 [`.env.example`](.env.example) 配置本机 `.env`（模型、通道与规格；`.env` 不入库）。
 5. 自检：`npm run doctor` —— 逐项报有/缺，必需项全绿即可跑。
 
-看板（分镜确认表，独立服务，不需要 DSH）：
+看板（链路画布：阶段与单元连成节点图、关键帧缩略图直接上节点、闸门票挂在节点上、点节点看实际产物；独立服务，不需要 DSH）：
 
 ```powershell
+npm run web:setup       # 首次：安装前端依赖并构建（React + Vite + React Flow，装在 web/ 子包）
 npm run kanban          # http://127.0.0.1:8787
 ```
 
-可选参数：`node web/server.mjs --root <剧目根> --port <端口>`（环境变量 `AIH_PROJECTS_ROOT` / `AIH_KANBAN_PORT` 同名覆盖）。看板**只读**：人工票仍由 `cli/review-gate.mjs` 在用户明确说「通过」之后落笔。
+- 不跑 `web:setup` 服务也能起，但页面只会给构建引导；`npm run doctor` 会把这一项标成可选缺失。
+- 开发前端：`npm run web:dev`（5173 端口，/api 与 /media 自动反代到 8787，改前端不用重启服务）。
+- 深链：`http://127.0.0.1:8787/?p=<剧目名>&node=unit:g003` 直接落到某剧目的某个节点。
+- 可选参数：`node web/server.mjs --root <剧目根> --port <端口>`（环境变量 `AIH_PROJECTS_ROOT` / `AIH_KANBAN_PORT` / `AIH_WEB_DIST` 同名覆盖）。
+- 看板**只读**：人工票仍由 `cli/review-gate.mjs` 在用户明确说「通过」之后落笔，看板不代签。
 
 ## 基本用法
 

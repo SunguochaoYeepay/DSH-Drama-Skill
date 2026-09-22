@@ -44,8 +44,11 @@ fs.writeFileSync(path.join(PROJ, 'board.direction.json'), JSON.stringify({
   }],
 }));
 fs.writeFileSync(path.join(PROJ, 'render.plan.json'), JSON.stringify({
-  units: [{ id: 'g001', content_duration_s: 5.2, keyframe: 'keyframes_render/g001.png',
+  units: [{ id: 'g001', source_units: ['u1'], content_duration_s: 5.2, generation_duration_s: 5.17,
+    scene: 'sc1', cast: ['su_wan'], audience_knows: '观众已知门开着', why: '同一段连续时空',
+    keyframe: 'keyframes_render/g001.png',
     shots: [{ source: { unit: 'g001', shot: 's01' } }, { source: { unit: 'g001', shot: 's02' } }] }],
+  totals: { content_duration_s: 5.2 },
 }));
 fs.writeFileSync(path.join(PROJ, 'review.approvals.json'), JSON.stringify({
   approvals: { direction: { artifact_hash: 'h1' }, clips: { g001: { artifact_hash: 'h2' } } },
@@ -60,6 +63,12 @@ fs.writeFileSync(path.join(PROJ, 'units', 'g001.result.json'), JSON.stringify({
 fs.writeFileSync(path.join(PROJ, 'keyframes_render', 'g001.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
 fs.writeFileSync(path.join(PROJ, 'units', 'g001_clip_v1.mp4'), Buffer.from([0x00, 0x00, 0x00, 0x18]));
 fs.writeFileSync(path.join(PROJ, 'out', 'final.mp4'), Buffer.from([0x00, 0x00, 0x00, 0x20]));
+
+// 前端产物夹具：服务应托管 dist 里的文件，且 Content-Type 正确
+const DIST = path.join(ROOT, 'webdist');
+fs.mkdirSync(path.join(DIST, 'assets'), { recursive: true });
+fs.writeFileSync(path.join(DIST, 'index.html'), '<!DOCTYPE html><title>KANBAN_DIST_MARKER</title><div id="root"></div>');
+fs.writeFileSync(path.join(DIST, 'assets', 'app.js'), 'console.log(1)');
 
 test.after(() => {
   fs.rmSync(ROOT, { recursive: true, force: true });
@@ -85,6 +94,21 @@ test('loadProject：单元/关键帧/片段/票/资产一次给齐', () => {
   // 票
   assert.equal(snap.tickets.approvals.direction.artifact_hash, 'h1');
   assert.equal(snap.tickets.approvals.clips.g001.artifact_hash, 'h2');
+  // 闸门摘要：clips 是按单元一张，所以单独按分母算
+  assert.equal(snap.gates.direction.signed, true);
+  assert.equal(snap.gates.story.signed, false);
+  assert.deepEqual(snap.gates.clips.perUnit, { g001: true });
+  assert.equal(snap.gates.clips.signed, true);
+  assert.equal(snap.gates.clips.signedCount, 1);
+  // 导演单元：lines 的行号已解成台词正文（前端不重复实现这套规则）
+  assert.equal(snap.directionUnits.length, 1);
+  assert.equal(snap.directionUnits[0].id, 'u1');
+  assert.deepEqual(snap.directionUnits[0].shots[0].lines, [{ n: 2, text: '你别走' }]);
+  assert.deepEqual(snap.directionUnits[0].shots[1].lines, [{ n: 3, text: '门关上了' }]);
+  // 单元带上计划里的场景/出场/切分理由
+  assert.equal(snap.units[0].scene, 'sc1');
+  assert.deepEqual(snap.units[0].cast, ['su_wan']);
+  assert.equal(snap.units[0].generationDuration, 5.17);
   // 文件就位标记
   assert.deepEqual(snap.files, {
     'story.md': true, 'board.direction.json': true, 'render.plan.json': true, 'review.approvals.json': true,
@@ -111,16 +135,30 @@ test('lineTextOf：去「说话人（提示）：」前缀，取不到行给 nul
   assert.equal(lineTextOf(story, 99), null);
 });
 
-test('服务：页面 / 清单 / 快照 / 媒体 / 防穿越', async () => {
-  const { server, port } = await startServer({ root: ROOT, port: 0 });
+test('服务：前端产物 / 清单 / 快照 / 媒体 / 防穿越', async () => {
+  const { server, port } = await startServer({ root: ROOT, port: 0, webDist: DIST });
   const base = `http://127.0.0.1:${port}`;
   try {
-    // 页面 —— Content-Type 必须是 text/html：曾因 MIME 缺失退化成
+    // 前端产物：Content-Type 必须是 text/html —— 曾因 MIME 缺失退化成
     // application/octet-stream，浏览器不渲染直接白页
     const page = await fetch(base + '/');
     assert.equal(page.status, 200);
     assert.match(page.headers.get('content-type') || '', /^text\/html/);
-    assert.ok((await page.text()).includes('分镜确认表'));
+    assert.ok((await page.text()).includes('KANBAN_DIST_MARKER'));
+
+    // dist 内的静态资源按真实扩展名给 MIME
+    const js = await fetch(base + '/assets/app.js');
+    assert.equal(js.status, 200);
+    assert.match(js.headers.get('content-type') || '', /javascript/);
+
+    // 单页应用：dist 里没有的路径回退 index.html，而不是 404
+    const deep = await fetch(base + '/some/deep/route');
+    assert.equal(deep.status, 200);
+    assert.ok((await deep.text()).includes('KANBAN_DIST_MARKER'));
+
+    // 穿越企图不得读到 dist 外的文件
+    const escaped = await fetch(base + '/..%2F..%2Fboard.json');
+    assert.ok((await escaped.text()).includes('KANBAN_DIST_MARKER'), '越界路径应回退首页，不吐露文件');
 
     // 剧目清单
     const projects = await (await fetch(base + '/api/projects')).json();
@@ -147,6 +185,24 @@ test('服务：页面 / 清单 / 快照 / 媒体 / 防穿越', async () => {
 
     // 不存在的媒体
     assert.equal((await fetch(base + '/media/alpha/nope.png')).status, 404);
+  } finally {
+    server.close();
+  }
+});
+
+test('服务：前端没构建时给构建引导页，不是白页也不是 500', async () => {
+  const missing = path.join(ROOT, 'no-such-dist');
+  const { server, port } = await startServer({ root: ROOT, port: 0, webDist: missing });
+  const base = `http://127.0.0.1:${port}`;
+  try {
+    const r = await fetch(base + '/');
+    assert.equal(r.status, 200);
+    assert.match(r.headers.get('content-type') || '', /^text\/html/);
+    const html = await r.text();
+    assert.ok(html.includes('尚未构建'));
+    assert.ok(html.includes('npm run web:setup'), '引导页要给出确切命令');
+    // 前端缺失不影响 API
+    assert.equal((await fetch(base + '/api/projects')).status, 200);
   } finally {
     server.close();
   }

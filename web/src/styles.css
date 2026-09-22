@@ -1,0 +1,67 @@
+@import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
+
+/* 深色主题令牌（Tailwind v4 的 @theme 会据此生成 bg-ink-900 / text-ink-300 这类工具类） */
+@theme {
+  --color-ink-950: #0e1114;
+  --color-ink-900: #14181c;
+  --color-ink-850: #191e23;
+  --color-ink-800: #20262c;
+  --color-ink-700: #2b333b;
+  --color-ink-600: #3d4750;
+  --color-ink-500: #586572;
+  --color-ink-400: #7b8794;
+  --color-ink-300: #a3aeb9;
+  --color-ink-200: #cdd6de;
+  --color-ink-100: #e9eef3;
+  --color-accent: #4f8ff7;
+  --color-ok: #35b26a;
+  --color-warn: #d99a2b;
+  --color-bad: #e0655f;
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--color-ink-950);
+  color: var(--color-ink-100);
+  font: 13px/1.6 system-ui, "Segoe UI", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 细滚动条，免得面板里出现宽条 */
+* { scrollbar-width: thin; scrollbar-color: var(--color-ink-700) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: var(--color-ink-700); border-radius: 5px; border: 3px solid transparent; background-clip: content-box; }
+*::-webkit-scrollbar-thumb:hover { background: var(--color-ink-600); background-clip: content-box; }
+
+/* ── React Flow 深色适配 ───────────────────────────────────────── */
+.react-flow__background { background: var(--color-ink-950); }
+.react-flow__attribution { display: none; }
+.react-flow__handle {
+  width: 7px; height: 7px;
+  background: var(--color-ink-600);
+  border: 1px solid var(--color-ink-900);
+}
+.react-flow__edge-path { stroke: var(--color-ink-600); }
+.react-flow__handle-bottom { bottom: -4px; }
+.react-flow__handle-top { top: -4px; }
+.react-flow__node { cursor: pointer; }
+.react-flow__controls button {
+  background: var(--color-ink-850);
+  border-bottom: 1px solid var(--color-ink-800);
+  color: var(--color-ink-300);
+  fill: currentColor;
+}
+.react-flow__controls button:hover { background: var(--color-ink-800); }
+.react-flow__minimap { background: var(--color-ink-900); border-radius: 8px; }
+.react-flow__minimap-mask { fill: rgba(0, 0, 0, .55); }
+
+/* 选中节点：卡片描边亮起（不动 RF 自己的 box-shadow 轮廓线） */
+.react-flow__node.selected .card { border-color: var(--color-accent); }
+
+/* 剧本正文：行号表格布局，行号对齐、正文换行缩进 */
+.story-line { display: grid; grid-template-columns: 48px 1fr; gap: 8px; padding: 1px 0; border-radius: 4px; }
+.story-line > b { color: var(--color-ink-500); font-weight: 400; text-align: right; font-variant-numeric: tabular-nums; }
+.story-line.hit { background: rgba(79, 143, 247, .14); }
+.story-line.hit > b { color: var(--color-accent); }

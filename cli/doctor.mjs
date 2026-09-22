@@ -92,6 +92,12 @@ const checks = [
       return { ok: true, detail: `${dirs} 个剧目目录` };
     },
   }),
+  check({
+    name: '看板前端已构建 web/dist',
+    hint: '跑一次 npm run web:setup（安装前端依赖 + 构建）；不构建的话看板只出构建引导页',
+    required: false,
+    test: () => fileExists(path.join(PROJECT_ROOT, 'web', 'dist', 'index.html')),
+  }),
 ];
 
 const failed = checks.filter((c) => c.required && c.status !== 'ok');

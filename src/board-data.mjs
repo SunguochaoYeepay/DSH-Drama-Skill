@@ -14,6 +14,9 @@
  * - review.approvals.json     人工票据（direction/assets/keyframes/final/clips）
  * - units/<id>.result.json    视频片段（files[].local_path）
  * - out/final.mp4             成片（约定路径）
+ *
+ * 2026-09-22 增补：`gates`（各阶段票状态）与 `directionUnits`（行号已解成台词）。
+ * 画布要按「阶段 / 单元」画节点、按票判卡点，这两块是它的一等输入。
  */
 
 import fs from 'node:fs';
@@ -76,6 +79,46 @@ export function isVideoPath(p) {
 }
 
 /**
+ * 阶段闸门（人工票）的顺序，与 `references/workflow.md` 的阶段序一致。
+ * `handoffs` 不在内 —— 它是交接记录，不是阶段闸门。
+ */
+export const GATE_STAGES = ['story', 'board', 'direction', 'assets', 'keyframes', 'clips', 'final'];
+
+/**
+ * 把 `review.approvals.json` 摊成「每阶段签没签」。
+ *
+ * 形状差异：除 `clips` 外都是单个票据对象（{at, by, artifact_hash}）；
+ * `clips` 是**按单元**一张（{g001: {...}}），所以单独算计数。
+ * 缺票一律 `signed:false`，不抛 —— 老剧目本来就缺。
+ *
+ * @param {object|null} tickets review.approvals.json 的内容
+ * @param {string[]} unitIds 计划单元 id（算 clips 的分母）
+ */
+export function gateSummary(tickets, unitIds = []) {
+  const approvals = (tickets && typeof tickets === 'object' && tickets.approvals) || {};
+  const one = (key) => {
+    const v = approvals[key];
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return { signed: false };
+    return { signed: true, at: v.at || null, by: v.by || null, hash: v.artifact_hash || null };
+  };
+  const out = {};
+  for (const key of GATE_STAGES) {
+    if (key !== 'clips') out[key] = one(key);
+  }
+  const clipsRaw = approvals.clips && typeof approvals.clips === 'object' ? approvals.clips : {};
+  const perUnit = {};
+  for (const id of unitIds) perUnit[id] = Boolean(clipsRaw[id]);
+  const signedCount = unitIds.filter((id) => perUnit[id]).length;
+  out.clips = {
+    signed: unitIds.length > 0 && signedCount === unitIds.length,
+    signedCount,
+    total: unitIds.length,
+    perUnit,
+  };
+  return out;
+}
+
+/**
  * 读一个单元的视频片段路径（units/<id>.result.json 的 files[].local_path）。
  * 多条时优先**项目内路径**（result.json 同时记着 ComfyUI 原始路径与项目内路径）。
  *
@@ -129,8 +172,38 @@ export function loadProject(root, name) {
     id: u.id,
     shotCount: (u.shots || []).length,
     contentDuration: u.content_duration_s ?? null,
+    generationDuration: u.generation_duration_s ?? null,
+    scene: u.scene || '',
+    cast: Array.isArray(u.cast) ? u.cast : [],
+    audienceKnows: u.audience_knows || '',
+    why: u.why || '',
     keyframe: u.keyframe ? relInside(dir, u.keyframe) : null,
     clip: clipOf(dir, u.id),
+  }));
+
+  // 导演单元：**行号就地解成台词正文**（导演稿的 lines 只有行号，原文在剧本里）。
+  // 前端不重复实现这套规则 —— 解行号只有一个所有者，就是这个函数。
+  const resolveShot = (s) => ({
+    n: s.n ?? null,
+    at: s.at ?? null,
+    duration_s: s.duration_s ?? null,
+    framing: s.framing || '',
+    camera: s.camera || '',
+    scene: s.scene || '',
+    action: s.action || '',
+    lighting: s.lighting || '',
+    audio: typeof s.audio === 'string' ? s.audio : '',
+    cut: s.cut || '',
+    emotion_analysis: Array.isArray(s.emotion_analysis) ? s.emotion_analysis : [],
+    lines: (Array.isArray(s.lines) ? s.lines : []).map((no) => ({ n: no, text: lineTextOf(story, no) })),
+  });
+  const directionUnits = dirUnits.map((u) => ({
+    id: u.id,
+    keyframe_start: u.keyframe_start || '',
+    why: u.why || '',
+    duration_reason: u.duration_reason || '',
+    audience_knows: u.audience_knows || '',
+    shots: (u.shots || []).map(resolveShot),
   }));
 
   // 资产清单（tab 归属与面板一致：资源阶段的归 ③ 资源，生成阶段的归 ④）
@@ -174,6 +247,8 @@ export function loadProject(root, name) {
     plan,
     tickets,
     units,
+    directionUnits,
+    gates: gateSummary(tickets, units.map((u) => u.id)),
     assets,
     finalRel,
     files: {
