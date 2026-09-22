@@ -2,6 +2,16 @@
 
 记录工程级行为变化。具体剧目的抽卡结果、耗时和逐帧评价留在对应项目目录，不写入这里。
 
+## 2026-09-22 - ffmpeg 兜底不再写死版本目录名
+
+`src/runtime-paths.mjs` 的 winget 兜底把 `ffmpeg-7.1.1-full_build` 整个写死 —— winget 一升级
+（`ffmpeg-8.x-full_build`）就**静默落空**，退回 PATH 上的 `ffmpeg`（本机不在 PATH），
+症状是"昨天还好好的，今天 ffmpeg 找不到"。改成扫 `Gyan.FFmpeg_*` 包下的 `ffmpeg-*` 子目录，
+取排序最后一份；半个安装（有版本目录但 `bin\ffmpeg.exe` 不在）不算可用。
+
+- 测试：`tests/runtime-paths.test.mjs` 新增两条行为断言（换版本目录名仍命中；没有 exe 时退回 PATH）。
+- 本机复核：`cli/doctor.mjs` 仍指向真实的 `ffmpeg-7.1.1-full_build\bin\ffmpeg.exe`。
+
 ## 2026-09-22 - 项目位置口径统一：只留「仓库内 projects/」一种说法
 
 上一轮（「清掉源码里的本机路径」）的 CHANGELOG 声称 `SKILL.md` 的项目位置已改为「仓库根是唯一工作根」，

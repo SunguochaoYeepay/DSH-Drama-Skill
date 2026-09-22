@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -87,4 +89,21 @@ test('生图入口默认落在仓内 vendor（不依赖任何本机 Gen 路径�
   assert.ok(!/^[A-Za-z]:\\Users\\/.test(r.value), '不该出现任何人的用户目录');
 });
 
-console.log('runtime-paths: 5 passed');
+test('ffmpeg 兜底认 winget 包目录，且**不认版本号**（升级后仍找得到）', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-winget-'));
+  const exe = path.join(root, 'Gyan.FFmpeg_Microsoft.Winget.Source_abc', 'ffmpeg-9.9.9-full_build', 'bin', 'ffmpeg.exe');
+  fs.mkdirSync(path.dirname(exe), { recursive: true });
+  fs.writeFileSync(exe, '');
+  const r = evalIn({ AIH_FFMPEG: '', AIH_WINGET_PACKAGES: root }, '(m) => m.FFMPEG');
+  assert.deepEqual(r, { value: exe }, '版本目录名换了也应当找到它');
+});
+
+test('winget 目录里没有可用的 ffmpeg 时，退回 PATH 上的 ffmpeg（不抛错）', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-winget-'));
+  // 有包目录、有版本目录，但 bin/ 里没有 exe —— 只算半个安装，不该被当成可用。
+  fs.mkdirSync(path.join(root, 'Gyan.FFmpeg_x', 'ffmpeg-9.9.9-full_build', 'bin'), { recursive: true });
+  const r = evalIn({ AIH_FFMPEG: '', AIH_WINGET_PACKAGES: root }, '(m) => m.FFMPEG');
+  assert.deepEqual(r, { value: 'ffmpeg' });
+});
+
+console.log('runtime-paths: 7 passed');

@@ -63,12 +63,26 @@ export const FFPROBE = process.env.AIH_FFPROBE
   || FFMPEG.replace(/ffmpeg(\.exe)?$/i, 'ffprobe$1');
 
 function resolveFfmpeg() {
+  // ⚠ 不写死版本目录名：winget 装的是 `ffmpeg-7.1.1-full_build`，一升级就变成
+  // `ffmpeg-8.x-full_build` —— 写死会在升级后**静默落空**（退回 PATH，而本机 ffmpeg
+  // 不在 PATH），症状是"昨天还好好的，今天 ffmpeg 找不到"。所以扫 `Gyan.FFmpeg_*`
+  // 包目录下的 `ffmpeg-*` 子目录，取排序最后一份（有多份时选一个是确定的）。
   try {
-    for (const dir of fs.readdirSync(WINGET_PACKAGES)) {
-      if (!dir.startsWith('Gyan.FFmpeg_')) continue;
-      const c = path.join(WINGET_PACKAGES, dir, 'ffmpeg-7.1.1-full_build', 'bin', 'ffmpeg.exe');
-      if (fs.existsSync(c)) return c;
+    const found = [];
+    for (const pkg of fs.readdirSync(WINGET_PACKAGES)) {
+      if (!pkg.startsWith('Gyan.FFmpeg_')) continue;
+      const pkgDir = path.join(WINGET_PACKAGES, pkg);
+      let subs;
+      try {
+        subs = fs.readdirSync(pkgDir);
+      } catch { continue; }
+      for (const sub of subs) {
+        if (!sub.startsWith('ffmpeg-')) continue;
+        const exe = path.join(pkgDir, sub, 'bin', 'ffmpeg.exe');
+        if (fs.existsSync(exe)) found.push(exe);
+      }
     }
+    if (found.length) return found.sort().at(-1);
   } catch { /* winget 目录不存在 → 退回 PATH */ }
   return 'ffmpeg';
 }
