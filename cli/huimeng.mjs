@@ -17,7 +17,10 @@ import crypto from 'node:crypto';
 import { HUIMENG_IMAGE_MODEL } from '../src/config.mjs';
 
 const BASE = process.env.HUIMENGI_BASE_URL || 'https://api.huimengi.com';
-const DRAMACLAW_ENV = process.env.DRAMACLAW_ENV || 'E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\.env';
+// 外部 .env 的路径**工程不猜**（曾在默认值里写死某台机器的 E 盘路径）。
+// 两条路：① 设 DRAMACLAW_ENV 指向它；② 更省事 —— 凭据直接写本工程 `.env`
+// （`readEnvKey` 先看进程环境变量，而 config.mjs 已把本工程 .env 装进来了）。
+const DRAMACLAW_ENV = process.env.DRAMACLAW_ENV || '';
 const argv = process.argv.slice(2);
 const flag = (n, d) => { const i = argv.indexOf(`--${n}`); return i < 0 ? d : (argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : true); };
 
@@ -33,7 +36,11 @@ export function readEnvKey(name, envPath = DRAMACLAW_ENV) {
 
 export function readKey() {
   const k = readEnvKey('HUIMENGI_API_KEY');
-  if (!k) throw new Error('找不到 HUIMENGI_API_KEY（环境变量或 --env <路径>）');
+  if (!k) {
+    throw new Error(
+      '找不到 HUIMENGI_API_KEY：写进本工程 .env，或设 DRAMACLAW_ENV 指向外部 .env（见 .env.example）',
+    );
+  }
   return k;
 }
 

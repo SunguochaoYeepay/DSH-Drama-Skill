@@ -27,7 +27,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { projectAssetFiles, unitAssets } from '../src/asset-resolver.mjs';
 import { planKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
-import { COMFY_GEN, COMFY_PYTHON, NODE } from '../src/runtime-paths.mjs';
+import { COMFY_GEN, NODE, requireComfyPython } from '../src/runtime-paths.mjs';
 import * as bailian from '../src/providers/bailian.mjs';
 import * as volcengine from '../src/providers/volcengine.mjs';
 import { allowedChangesList, bindHandoffKeyframe, requireHandoff } from '../src/continuity-handoff.mjs';
@@ -62,7 +62,8 @@ const PROVIDER_SETTING = String(flag('provider', KEYFRAME_PROVIDER)).toLowerCase
 const PROVIDER = PROVIDER_SETTING === 'comfyui' ? 'local' : PROVIDER_SETTING;
 if (!['huimeng', 'local', 'bailian', 'volcengine'].includes(PROVIDER)) throw new Error('--provider 只能是 huimeng / local / bailian / volcengine / comfyui');
 const LOCAL_GEN = COMFY_GEN;
-const LOCAL_PY = COMFY_PYTHON;
+// 只在真要走本地时才解 Python —— 没配 AIH_PYTHON 但走线上通道的用户不该被这里卡住。
+const LOCAL_PY = () => requireComfyPython();
 const LOCAL_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_local_v2'))));
 // 图像模型家族：qwen21（Qwen Image 2.1，默认）/ qwen（旧 2511 链路，逃生口）。
 // 两族的采样参数完全不同 —— 21 没有蒸馏 LoRA，`FAST` 三件套只对 legacy 生效。
@@ -305,7 +306,7 @@ for (const unit of dir.units) {
     // 与干跑同源：真正跑的就是刚才打印的那一串
     const a = localGenArgs(unit, refs, modelPrompt);
     const started = Date.now();
-    r = spawnSync(LOCAL_PY, a, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 900000 });
+    r = spawnSync(LOCAL_PY(), a, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 900000 });
     secs = String(Math.round((Date.now() - started) / 1000));
     txt = String(r.stdout || '') + String(r.stderr || '');
     try {

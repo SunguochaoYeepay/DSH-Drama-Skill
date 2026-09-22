@@ -2,6 +2,30 @@
 
 记录工程级行为变化。具体剧目的抽卡结果、耗时和逐帧评价留在对应项目目录，不写入这里。
 
+## 2026-09-22 - 清掉源码里的本机路径：工程不再猜你的机器在哪
+
+起因：上一轮把仓库收拾干净后复查代码，发现 `.env.example`、`src/runtime-paths.mjs`、
+`plugins/dsh-storyboard/lib/client.js` 等七处仍写死了本机用户名与盘符路径
+（`C:\Users\…`、`E:\AI-Image\…`、`E:\AI-Tool\…`）。这些会随代码一起公开，而且对 clone 者毫无意义。
+
+**改法**：一律改成「环境变量优先、不猜、缺就是缺」。
+
+| 位置 | 改前 | 改后 |
+|---|---|---|
+| `src/runtime-paths.mjs` | 三处本机路径兜底 | 只有 env；新增 `requireComfyPython()`，没配就抛**人话**（点名 `AIH_PYTHON`、指出配在哪、建议跑 doctor） |
+| `.env.example` | 直接写着本机 python.exe 路径 | 拆出「必填 / 逃生口 / 线上凭据」三段，示例全是 `<你的 …>` 占位 |
+| `cli/huimeng.mjs` | 默认读某台机器的 DramaClaw `.env` | 默认不猜，报错时给出两条路 |
+| `plugins/…/client.js` | 默认指向某块盘的 projects | 默认空，面板提示用 directoryPicker 选一次 |
+| `vendor/comfy-studio/gen.py` | `COMFYUI_ROOT` 默认值是本机路径 | 空串（唯一一处偏离上游，已在 `vendor/comfy-studio/README.md` 备案） |
+| `SKILL.md` 项目位置 | 「建在仓库外那套副本的 projects 下」 | 「仓库根是唯一工作根」 |
+
+**没崩，因为本机 `.env` 早就写好了 `AIH_PYTHON`** —— 源码那几个兜底一直是冗余的。
+验证过两条路径：本机 `cli/doctor.mjs` 全绿；`AIH_PYTHON=` 时明确报「(空) + 怎么配」，exit 1。
+
+> 顺带修了一条会随机红的测试：`tests/kanban-actions.test.mjs` 的夹具不给 `board.json` 写
+> `created_at`，排序只好退回文件 mtime —— 那等于让断言去赌文件系统时间戳粒度，负载一变顺序就翻。
+> 夹具改成显式写同一时刻的 `created_at`，顺序由「同刻按名升序」这条真规则决定。
+
 ## 2026-09-22 - 仓库瘦身与门面整理：工具进 GitHub，剧留在本地
 
 起因：要把仓库公开出去。之前它是「能跑但谁也看不懂」的状态 —— 根目录躺着 2.1GB 剧目产物、41MB 的

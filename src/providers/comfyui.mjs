@@ -9,10 +9,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { COMFY_GEN, COMFY_PYTHON, WINGET_PACKAGES } from '../runtime-paths.mjs';
+import { COMFY_GEN, WINGET_PACKAGES, requireComfyPython } from '../runtime-paths.mjs';
 import { LOCAL_IMAGE_MODEL } from '../config.mjs';
 
-const PY = COMFY_PYTHON;
 const GEN = COMFY_GEN;
 
 const FFMPEG = (() => {
@@ -101,7 +100,8 @@ function snapshot(dir) {
 }
 
 function run(args, timeoutMs) {
-  const r = spawnSync(PY, [GEN, ...args], { encoding: 'utf8', timeout: timeoutMs, maxBuffer: 32 * 1024 * 1024 });
+  const py = requireComfyPython();
+  const r = spawnSync(py, [GEN, ...args], { encoding: 'utf8', timeout: timeoutMs, maxBuffer: 32 * 1024 * 1024 });
   let parsed = null;
   try { parsed = JSON.parse((r.stdout || '').trim().split('\n').pop()); } catch { /* 非 JSON 输出就忽略 */ }
   return { status: r.status, stderr: r.stderr || '', json: parsed };

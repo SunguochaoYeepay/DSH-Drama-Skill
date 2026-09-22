@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { requireApproval } from './human-gates.mjs';
 import { parseScenes, sceneMenu } from './parse-scenes.mjs';
 import { compileLiteral } from './literal.mjs';
-import { COMFY_GEN, COMFY_PYTHON } from './runtime-paths.mjs';
+import { COMFY_GEN, requireComfyPython } from './runtime-paths.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 /** 工程根（导演简报在那儿）。 */
@@ -39,7 +39,9 @@ const GATE_LABEL = { story: '故事', shots: '分镜表', assets: '资产', keyf
 const GATES = ['story', 'shots', 'assets', 'keyframes'];
 
 // comfy-studio 的唯一入口（见该 skill 的硬契约）
-const PY = COMFY_PYTHON;
+// 惰性求值：plan / 校验这些只读命令不该被 Python 配置卡住，
+// 只有真要拼出执行计划时才要求 AIH_PYTHON（防护见 runtime-paths 的 requireComfyPython）。
+const PY = () => requireComfyPython();
 const GEN = COMFY_GEN;
 
 const SHOT_MAX_S = 15; // H3 单条上限
@@ -633,7 +635,7 @@ function renderPlan(b, outDir) {
   const L = [];
   L.push('# 由 board.mjs plan 生成：分镜 JSON → 生成命令清单');
   L.push('# 资产走线上（绘梦 image2 / qwen-image-3.0，要一致性），关键帧走本地（要便宜快）');
-  L.push(`$py = ${JSON.stringify(PY)}`);
+  L.push(`$py = ${JSON.stringify(PY())}`);
   L.push(`$gs = "${GEN}"`);
   L.push(`$out = "${dir}"`);
   L.push('');

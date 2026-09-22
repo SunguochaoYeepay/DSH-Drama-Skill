@@ -31,15 +31,19 @@ window.__ModuleLoader__.load({
 		const POINTER_PATH = "current.json";
 		/** 用户选过的文件记在这里，换标签、换会话都还在。 */
 		const STORAGE_KEY = "dsh-storyboard.boardPath";
-		/**
-		 * 剧目工作区根（绝对路径）。
-		 *
-		 * **为什么需要它**：真实项目按 `README.md` 的规定落在仓库外，
-		 * 而 `workspaceFiles.list` **只在会话工作区根内**可用 —— 所以"发现剧目"不能用它，
-		 * 要用 `directoryPicker.list`（收绝对路径）。`workspaceFiles.readAll` 收绝对路径，
-		 * 所以选中剧目后直接读它的文件即可，不必把项目复制进工作区。
-		 */
-		const PROJECTS_ROOT_DEFAULT = "E:\\AI-Tool\\DeepSeek\\story2video\\projects";
+	/**
+	 * 剧目工作区根（绝对路径）。
+	 *
+	 * **为什么需要它**：`workspaceFiles.list` **只在会话工作区根内**可用 —— 所以
+	 * "发现剧目"不能用它，要用 `directoryPicker.list`（收绝对路径）。
+	 * `workspaceFiles.readAll` 收绝对路径，所以选中剧目后直接读它的文件即可，
+	 * 不必把项目复制进工作区。
+	 *
+	 * **默认空**：这个插件跑在别人的机器上，工程不知道仓库在哪 —— 空串表示
+	 * "还没选过"，面板会给出提示让用户用 directoryPicker 选一次，
+	 * 选择结果存在 {@link ROOT_KEY} 里，之后跟着会话走。
+	 */
+	const PROJECTS_ROOT_DEFAULT = "";
 		/** 剧目根的覆盖键（换机器时改它）。 */
 		const ROOT_KEY = "dsh-storyboard.projectsRoot";
 		/** 当前选中的剧目名。 */
@@ -511,6 +515,12 @@ window.__ModuleLoader__.load({
 				let alive = true;
 				const controller = new AbortController();
 				setProjects(null);
+				// 默认空（不是某台机器的写死路径）：先给引导，别拿空串去问宿主列目录。
+				if (!projectsRoot) {
+					setProjects([]);
+					setProjectNote("还没设剧目工作区根 —— 点右侧「根」按钮选一次（通常是仓库里的 projects 目录）");
+					return function () { alive = false; controller.abort(); };
+				}
 				(async function () {
 					const found = await listProjects(sessionId, projectsRoot, controller.signal);
 					if (!alive) return;
@@ -784,13 +794,13 @@ window.__ModuleLoader__.load({
 					onClick: function () { setScanToken(scanToken + 1); }
 				}, boards === null ? "扫描中…" : "扫描"));
 
-			// ② 剧目下拉：真实项目在仓库外，靠 directoryPicker 列目录发现。
+			// ② 剧目下拉：靠 directoryPicker 列剧目工作区根下的目录来发现。
 			// **只在用户真正选择时才改板子路径**，否则会抢掉文件选择器里的手选。
 			const projectPicker = React.createElement("div", { style: S.picker },
 				React.createElement("select", {
 					value: project,
 					style: S.select,
-					title: "选择剧目（" + projectsRoot + "）",
+					title: "选择剧目（" + (projectsRoot || "尚未设置工作区根") + "）",
 					onChange: function (event) {
 						const next = event.target.value;
 						setProject(next);
@@ -817,7 +827,7 @@ window.__ModuleLoader__.load({
 					type: "button", style: S.btn, title: "改剧目工作区根（绝对路径）",
 					onClick: function () {
 						const next = window.prompt("剧目工作区根（绝对路径）", projectsRoot);
-						if (next) { setProjectsRoot(next); storeKey(ROOT_KEY, next === PROJECTS_ROOT_DEFAULT ? "" : next); }
+						if (next) { setProjectsRoot(next); storeKey(ROOT_KEY, next); }
 					}
 				}, "根"));
 
@@ -847,8 +857,8 @@ window.__ModuleLoader__.load({
 						React.createElement("p", { style: S.bad }, "读不到分镜文件"),
 						React.createElement("p", { style: S.note }, view.message),
 						React.createElement("p", { style: S.note }, project
-							? "剧目：" + project + "　根：" + projectsRoot
-							: "没选剧目。真实项目按 README 规定落在仓库外，workspaceFiles 只在工作区根内列举 —— 用下面的剧目下拉（走 directoryPicker），或点「根」改工作区根。"),
+							? "剧目：" + project + "　根：" + (projectsRoot || "（未设置）")
+							: "没选剧目。workspaceFiles 只在会话工作区根内列举 —— 所以用剧目下拉（走 directoryPicker 收绝对路径），或点「根」指定剧目工作区根（通常是仓库里的 projects 目录）。"),
 						projectNote ? React.createElement("p", { style: S.bad }, projectNote) : null,
 						picker,
 						projectPicker));

@@ -35,7 +35,7 @@ import { unitAssets } from '../src/asset-resolver.mjs';
 import { clipResultPath, planKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { buildUnitPrompt } from '../src/h3-prompt.mjs';
 import { readCinematography } from '../src/cinematography.mjs';
-import { COMFY_GEN, COMFY_PYTHON } from '../src/runtime-paths.mjs';
+import { COMFY_GEN, requireComfyPython } from '../src/runtime-paths.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { requireHandoff } from '../src/continuity-handoff.mjs';
 import { VIDEO_QUALITY, VIDEO_PROFILE, VIDEO_ATTENTION, VIDEO_NORMAL_SIZE, VIDEO_HIGH_SIZE, VIDEO_TIMEOUT_SECONDS } from '../src/config.mjs';
@@ -280,7 +280,8 @@ const seconds = legalFrames / 24;
 // ---------------------------------------------------------------- 输出
 
 const GEN = COMFY_GEN;
-const PY = COMFY_PYTHON;
+// 惰性求值：干跑也要能跑，只有真要调 gen.py 才要求配好了 AIH_PYTHON。
+const PY = () => requireComfyPython();
 
 console.log(`\n单元 ${unit.id}　${unit.shots.length} 镜　${seconds.toFixed(1)}s　${PROFILE} / ${MODE} / ${QUALITY} / ${ATTENTION}`);
 if (unit.why) console.log(`  导演的理由：${unit.why}`);
@@ -369,7 +370,7 @@ console.log(`\n出片（${PROFILE} / ${MODE} / ${QUALITY} / ${ATTENTION}，${sec
 
 const startedAt = Date.now();
 // gen.py 负责在 10 分钟时写出可读的超时结果；外层多留 30 秒做异常兜底。
-const r = spawnSync(PY, args, {
+const r = spawnSync(PY(), args, {
   encoding: 'utf8',
   maxBuffer: 32 * 1024 * 1024,
   timeout: (VIDEO_TIMEOUT_SECONDS + 30) * 1000,

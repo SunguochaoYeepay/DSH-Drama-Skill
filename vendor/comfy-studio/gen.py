@@ -42,7 +42,10 @@ import graphs  # noqa: E402  (local module, needs the path insert above)
 import routes  # noqa: E402  (local module)
 
 DEFAULT_URL = os.environ.get("COMFYUI_URL", "http://127.0.0.1:8188")
-DEFAULT_ROOT = os.environ.get("COMFYUI_ROOT", r"E:\AI-Image\ComfyUI-aki-v1.4")
+# 本机才知道 ComfyUI 装在哪，这里不写死任何人的盘符。
+# 只在"定位 ComfyUI 自己的产物目录"时用；缺省就是当前目录，不会让调用崩掉。
+# Note for vendored snapshot: upstream had a machine-specific default here.
+DEFAULT_ROOT = os.environ.get("COMFYUI_ROOT", "")
 
 VIDEO_EXTS = {".mp4", ".webm", ".mov", ".mkv", ".gif"}
 AUDIO_EXTS = {".flac", ".mp3", ".wav", ".ogg", ".opus", ".m4a"}

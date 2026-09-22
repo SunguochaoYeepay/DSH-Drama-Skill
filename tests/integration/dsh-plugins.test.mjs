@@ -21,12 +21,15 @@
  * 别靠放宽断言把它压绿。（实测：profile 里那份还是 9/15 的，仓库源码是 9/17 的，
  * 于是"请求路径 / 目录扫描 / 默认选中"三条红，其余 59 条绿。）
  */
+import os from 'node:os';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const PROFILE_DIR = 'C:\\Users\\Administrator\\.dsh\\profiles\\web';
+// DSH profile 的位置每台机器不同 —— 环境变量优先，其次按当前用户推，不写死某个用户名。
+const PROFILE_DIR = process.env.DSH_PROFILE_DIR
+  || path.join(os.homedir(), '.dsh', 'profiles', 'web');
 /** 默认验证仓库源码；置 1 才检查当前机器已安装的 DSH 插件。 */
 const FROM_WORKSPACE = process.env.VERIFY_INSTALLED !== '1';
 const WORKSPACE_PLUGIN_DIR = path.resolve(
@@ -73,7 +76,9 @@ const EXPECT = {
     mustCoverExtensions: ['mp4', 'mp3'],
     /** 拿一个假 mp4 跑一遍组件，必须产出 <video src="blob:...">。 */
     probe: {
-      address: 'dsh-resource://file/absolute/E:/AI-Tool/DeepSeek/story2video/projects/example/units/g001.mp4',
+      // 只要长得像"仓库外某个绝对路径"即可 —— 测的是 host 怎么解析这个 URI，
+      // 不是那台机器的盘符本身，所以别把真实用户名/盘符钉在这儿。
+      address: 'dsh-resource://file/absolute/Z:/elsewhere/projects/example/units/g001.mp4',
       expectTag: 'video',
       expectMime: 'video/mp4',
     },

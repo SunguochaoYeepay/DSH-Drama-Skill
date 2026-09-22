@@ -42,9 +42,17 @@ function req(base, { method = 'GET', route = '/', headers = {}, body } = {}) {
 
 function newRoot() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-actions-'));
+  // 两个剧目**同一时刻**立项：这样排序落到"同刻按剧目名升序"，清单顺序写死
+  // 就是 alpha→beta。曾经这里不写 created_at，排序退回 board.json 的 mtime ——
+  // 那等于让断言去赌文件系统时间戳的粒度（负载一变就跨毫秒，顺序就翻），
+  // 这条测试于是时不时地红。工程早就定了"创建时间显式写"，夹具也得跟上。
+  const createdAt = new Date().toISOString();
   for (const [name, title] of [['alpha', '试拍剧'], ['beta', '此路是我开']]) {
     fs.mkdirSync(path.join(root, name), { recursive: true });
-    fs.writeFileSync(path.join(root, name, 'board.json'), JSON.stringify({ meta: { title } }));
+    fs.writeFileSync(
+      path.join(root, name, 'board.json'),
+      JSON.stringify({ meta: { title, created_at: createdAt } }),
+    );
   }
   return root;
 }
