@@ -1,7 +1,24 @@
 {
   "version": 1,
   "approvals": {
-    "clips": {},
+    "clips": {
+      "g001": {
+        "at": "2026-09-22T09:43:40.316Z",
+        "by": "用户",
+        "artifact_hash": "c905950bb69f91a75558264172450dec180ee83f6eaec7ce7b6c46c4b87263ac",
+        "artifacts": [
+          "examples\\demo-show\\units\\i2v_20260922-173609.mp4"
+        ]
+      },
+      "g002": {
+        "at": "2026-09-22T09:43:40.625Z",
+        "by": "用户",
+        "artifact_hash": "ca4efc46b03f20608a13d9a4ca8cf7e54f68295496f51f40ae0a0c925fb94772",
+        "artifacts": [
+          "examples\\demo-show\\units\\i2v_20260922-173910.mp4"
+        ]
+      }
+    },
     "story": {
       "at": "2026-09-22T08:50:45.497Z",
       "by": "用户",
@@ -17,6 +34,67 @@
       "artifacts": [
         "examples/demo-show/board.direction.json"
       ]
+    },
+    "board": {
+      "at": "2026-09-22T09:43:30.233Z",
+      "by": "用户",
+      "artifact_hash": "42a38f87e9849cf166ac2b2627e415ba6a0201b1f5743e10c5b6344297c95d41",
+      "artifacts": [
+        "examples\\demo-show\\board-brief.json",
+        "examples\\demo-show\\board.json"
+      ]
+    },
+    "assets": {
+      "at": "2026-09-22T09:43:35.477Z",
+      "by": "用户",
+      "artifact_hash": "e20fb036166c112ecf857df1be2d42db562621b2af5040ed8adbb51d6582dfc0",
+      "artifacts": [
+        "examples\\demo-show\\assets\\c_driver_portrait.png",
+        "examples\\demo-show\\assets\\c_passenger_portrait.png",
+        "examples\\demo-show\\assets\\i_driver_default_sheet.png",
+        "examples\\demo-show\\assets\\i_passenger_default_sheet.png",
+        "examples\\demo-show\\assets\\s_bus_night_master.png"
+      ],
+      "generation": {
+        "version": 1,
+        "stage": "assets",
+        "at": "2026-09-22T09:32:53.375Z",
+        "provider": "comfyui",
+        "model": "local-comfyui",
+        "requested_provider": null,
+        "artifacts": [
+          "examples\\demo-show\\assets\\c_driver_portrait.png",
+          "examples\\demo-show\\assets\\c_passenger_portrait.png",
+          "examples\\demo-show\\assets\\i_driver_default_sheet.png",
+          "examples\\demo-show\\assets\\i_passenger_default_sheet.png",
+          "examples\\demo-show\\assets\\s_bus_night_master.png"
+        ]
+      }
+    },
+    "keyframes": {
+      "at": "2026-09-22T09:43:35.801Z",
+      "by": "用户",
+      "artifact_hash": "7ac762441ec05d27b95a02f059b942df22d120c9db192d524fa771b3879931b7",
+      "artifacts": [
+        "examples\\demo-show\\keyframes_local_v2\\g002.png",
+        "examples\\demo-show\\keyframes_render\\g001.png"
+      ],
+      "generation": {
+        "version": 1,
+        "stage": "keyframes",
+        "at": "2026-09-22T09:37:42.413Z",
+        "provider": "local",
+        "model": "local-comfyui/qwen21",
+        "requested_provider": "comfyui",
+        "artifacts": [
+          "examples\\demo-show\\keyframes_render\\g001.png",
+          "examples\\demo-show\\keyframes_local_v2\\g002.png"
+        ],
+        "plan": "examples\\demo-show\\render.plan.json",
+        "prompt_files": [
+          "keyframe-prompts/g002.txt"
+        ]
+      }
     }
   }
 }

@@ -56,7 +56,17 @@ __pycache__/
 # ── 剧目目录：用户数据，一律不入库 ───────────────────────────────────
 # 2026-09-22 拍板：仓库只放工具。clone 下来拿到的是能跑的流水线，不是我的剧。
 # 历史提交里仍有旧版本，要翻某个剧目的历史：`git log --oneline -- projects/<名>`。
-# 对外示例剧目在 examples/，走另一套规则（入库，且不含任何媒体）。
+# 对外示例剧目在 examples/，走另一套规则（入库）：只入库契约文本（剧本/板子/导演稿/
+# 计划/关键帧提示词/人工票）；运行态（生成记录、审阅单、交接凭证、媒体）不入库 ——
+# 它们由 CLI 写本机绝对路径，且媒体一律不进仓库。
+/examples/demo-show/.tmp/
+/examples/demo-show/units/
+/examples/demo-show/keyframes_render/
+/examples/demo-show/keyframes_local_v2/
+/examples/demo-show/handoffs/
+/examples/demo-show/reviews/
+/examples/demo-show/out/
+/examples/demo-show/assets/
 /projects/**
 !/projects/
 !/projects/README.md

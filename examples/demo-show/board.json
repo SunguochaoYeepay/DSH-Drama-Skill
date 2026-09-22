@@ -50,7 +50,8 @@
       "face_prompt": "东亚男性，约三十五岁，方脸，眉眼平直，鼻梁偏宽，唇线平实，皮肤偏黄；短发略乱，额前有几绺碎发",
       "identities": [
         "i_driver_default"
-      ]
+      ],
+      "portrait": "assets/c_driver_portrait.png"
     },
     {
       "id": "c_passenger",
@@ -59,7 +60,8 @@
       "face_prompt": "东亚女性，约二十六岁，鹅蛋脸，眉细而淡，眼尾略垂，鼻梁小巧，唇色偏淡，皮肤偏白；黑色中长发微湿，几缕贴在颊侧，眼下有明显倦意",
       "identities": [
         "i_passenger_default"
-      ]
+      ],
+      "portrait": "assets/c_passenger_portrait.png"
     }
   ],
   "identities": [
@@ -67,13 +69,15 @@
       "id": "i_driver_default",
       "name": "工装制服",
       "character": "c_driver",
-      "appearance_details": "深蓝色公交司机工装外套，肩部略褪为灰蓝，内里白色衬衫领口微敞，左胸别一枚褪色工牌；深色长裤，黑色胶底鞋"
+      "appearance_details": "深蓝色公交司机工装外套，肩部略褪为灰蓝，内里白色衬衫领口微敞，左胸别一枚褪色工牌；深色长裤，黑色胶底鞋",
+      "sheet": "assets/i_driver_default_sheet.png"
     },
     {
       "id": "i_passenger_default",
       "name": "通勤装",
       "character": "c_passenger",
-      "appearance_details": "米白色针织开衫，肩头一片被雨打湿的深色水痕，内搭浅灰衬衫；黑色直筒长裤，白色运动鞋，左肩挎一只深灰色帆布通勤包"
+      "appearance_details": "米白色针织开衫，肩头一片被雨打湿的深色水痕，内搭浅灰衬衫；黑色直筒长裤，白色运动鞋，左肩挎一只深灰色帆布通勤包",
+      "sheet": "assets/i_passenger_default_sheet.png"
     }
   ],
   "scenes": [
@@ -81,7 +85,8 @@
       "id": "s_bus_night",
       "name": "末班公交车厢",
       "environment": "雨夜的末班公交车厢，顶灯是暖黄色，车窗挂满水珠，外面是被雨糊成一片的路灯光斑；车厢里有两排乘客座椅与黄色扶手杆，前段是驾驶座与方向盘，司机坐在驾驶座上只露后背，中段是前后车门与刷卡机",
-      "scene_no": 1
+      "scene_no": 1,
+      "master": "assets/s_bus_night_master.png"
     }
   ],
   "props": [],

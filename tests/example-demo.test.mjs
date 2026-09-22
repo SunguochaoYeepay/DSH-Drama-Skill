@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import test from 'node:test';
+import { spawnSync } from 'node:child_process';
 import { checkBoard } from '../src/board.mjs';
 import { parseScript, spokenLines } from '../src/parse-script.mjs';
 import { auditPrompt, PROMPT_MAX_CHARS } from '../src/draw-specialist.mjs';
@@ -16,10 +17,18 @@ import { auditPrompt, PROMPT_MAX_CHARS } from '../src/draw-specialist.mjs';
  */
 
 const DEMO = path.resolve('examples', 'demo-show');
+const root = path.resolve('.');
 const read = (f) => fs.readFileSync(path.join(DEMO, f), 'utf8');
 const readJson = (f) => JSON.parse(read(f));
 
 const sha256 = (text) => crypto.createHash('sha256').update(text).digest('hex');
+
+/** git 当前跟踪的示例文件（仓库相对路径）。 */
+function gitTrackedDemoFiles() {
+  const r = spawnSync('git', ['ls-files', '--', 'examples/demo-show'], { encoding: 'utf8' });
+  if (r.status !== 0) throw new Error(`git ls-files 失败：${r.stderr}`);
+  return r.stdout.split('\n').map((s) => s.trim()).filter(Boolean);
+}
 
 test('示例板子通过 Storyboard 契约校验，零 error', () => {
   const board = readJson('board.json');
@@ -139,32 +148,23 @@ test('人工票是真的：story 与 direction 两道闸都已由人签过', () 
   }
 });
 
-test('示例不含本机绝对路径 —— 它是要发到 GitHub 的', () => {
-  // 票里原本记的是 `D:\…\examples\demo-show\story.md`（review-gate 写绝对路径）。
-  // 源码已经不猜别人的机器了，示例里躺着本机的盘符同样是破绽。
+test('入库的示例文件不含本机绝对路径 —— 它是要发到 GitHub 的', () => {
+  // 运行态产物（生成记录/审阅单/交接凭证）不入库，但 CLI 会往里写本机绝对路径，
+  // 所以这条断言只对 **git 跟踪的文件** 生效（.gitignore 已挡运行态目录）。
+  const tracked = gitTrackedDemoFiles();
   const bad = [];
-  (function walk(dir) {
-    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-      const p = path.join(dir, e.name);
-      if (e.isDirectory()) { walk(p); continue; }
-      if (!/\.(json|md|txt)$/.test(e.name)) continue;
-      fs.readFileSync(p, 'utf8').split('\n').forEach((line, i) => {
-        const m = line.match(/(?<![A-Za-z:/])[A-Za-z]:[/\\]/g);
-        if (m) bad.push(`${path.relative('.', p)}:${i + 1}  ${line.trim().slice(0, 80)}`);
-      });
-    }
-  })(DEMO);
+  for (const rel of tracked) {
+    if (!/\.(json|md|txt)$/.test(rel)) continue;
+    fs.readFileSync(path.join(root, rel), 'utf8').split('\n').forEach((line, i) => {
+      const m = line.match(/(?<![A-Za-z:/])[A-Za-z]:[/\\]/g);
+      if (m) bad.push(`${rel}:${i + 1}  ${line.trim().slice(0, 80)}`);
+    });
+  }
   assert.deepEqual(bad, [], `示例里出现了本机绝对路径：\n${bad.join('\n')}`);
 });
 
-test('示例不含任何媒体产物 —— 仓库里不该出现图音视频', () => {
-  const bad = [];
-  (function walk(dir) {
-    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-      const p = path.join(dir, e.name);
-      if (e.isDirectory()) walk(p);
-      else if (/\.(png|jpe?g|webp|mp4|mov|mp3|wav|srt)$/i.test(e.name)) bad.push(p);
-    }
-  })(DEMO);
-  assert.deepEqual(bad, [], `示例里混进了媒体文件：\n${bad.join('\n')}`);
+test('git 不跟踪示例里的任何媒体产物 —— 仓库里不该出现图音视频', () => {
+  // 磁盘上允许有（生成必然产生媒体），但 .gitignore 必须把它们全部挡住。
+  const media = gitTrackedDemoFiles().filter((f) => /\.(png|jpe?g|webp|mp4|mov|mp3|wav|srt)$/i.test(f));
+  assert.deepEqual(media, [], `示例媒体混进了 git：\n${media.join('\n')}`);
 });
