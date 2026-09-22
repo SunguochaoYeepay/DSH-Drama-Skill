@@ -267,3 +267,39 @@ export function compileCinematography(contract, { shot, framing, lang = 'zh', ex
     lighting: lightingBlock(contract, shot, lang),
   };
 }
+
+// ------------------------------------------------------- 契约 rules 的写前自检
+
+/**
+ * 规则文本里**不写否定式名词**：否定句在扩散模型那边等于正向递词。
+ *
+ * `rulesBlock()` 把每条规则逐字放进 H3 提示词，所以「不出现第二只杯子」这种句子
+ * 实际是把「第二只杯子」送进语义空间 —— desk_quake（2026-09-22）实测：g001 视频里
+ * 真的多出一只杯子；改成正向唯一性陈述后消失。同一条教训见 `video-h3.md` 的妆面污染。
+ *
+ * **只报告、不阻断**（与 `auditPrompt()` 同一条边界：机器只把违规摆到明面上）。
+ * @returns {{violations: Array<{id:string,hit:string}>, checked:number}}
+ */
+const RULE_NEGATIONS = [
+  /不得[^。；\n]{0,20}/u,
+  /不要[^。；\n]{0,20}/u,
+  /不出现[^。；\n]{0,20}/u,
+  /不应[^。；\n]{0,20}/u,
+  /不许[^。；\n]{0,20}/u,
+  /禁止[^。；\n]{0,20}/u,
+  /避免[^。；\n]{0,20}/u,
+];
+
+export function auditContractRules(contract) {
+  const rules = Array.isArray(contract?.rules) ? contract.rules : [];
+  const violations = [];
+  for (const rule of rules) {
+    const text = String(rule?.text || '');
+    if (!text.trim()) continue;
+    for (const re of RULE_NEGATIONS) {
+      const m = text.match(re);
+      if (m) violations.push({ id: String(rule.id || ''), hit: m[0].trim().slice(0, 40) });
+    }
+  }
+  return { violations, checked: rules.length };
+}

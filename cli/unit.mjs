@@ -34,7 +34,7 @@ import { spawnSync } from 'node:child_process';
 import { unitAssets } from '../src/asset-resolver.mjs';
 import { clipResultPath, planKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { buildUnitPrompt } from '../src/h3-prompt.mjs';
-import { readCinematography } from '../src/cinematography.mjs';
+import { auditContractRules, readCinematography } from '../src/cinematography.mjs';
 import { COMFY_GEN, requireComfyPython } from '../src/runtime-paths.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { requireHandoff } from '../src/continuity-handoff.mjs';
@@ -265,6 +265,15 @@ if (fitTo > 0 && natural > fitTo) {
 
 // 摄影契约为可选：老剧目没有这个文件，行为与今天完全一致。
 const CINE = readCinematography(projectDir);
+// 契约 rules 会逐字进 H3 提示词：否定式写法等于把那个名词递给模型（只报告，不阻断）。
+{
+  const audit = auditContractRules(CINE);
+  if (audit.violations.length) {
+    console.error(`⚠ 摄影契约的 rules 里有 ${audit.violations.length} 处否定式写法（等于把该词递进语义空间）：`);
+    for (const v of audit.violations) console.error(`  · ${v.id}：${v.hit}`);
+    console.error('  规则只写正向复现约束，见 references/cinematography.md 的「五条规矩」。');
+  }
+}
 const prompt = buildUnitPrompt(unit, { nameOf, lineText, board, scene, hasFirstFrame, refs: promptRefs, contract: CINE });
 
 // `generation_duration_s` 是执行预算；导演内容时长不变，后期按
