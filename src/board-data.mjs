@@ -51,10 +51,40 @@ export function isValidProjectName(name) {
 }
 
 /**
+ * 剧目的创建时间：**board.json 的 mtime**，读不到退回目录 mtime，再退回 null。
+ *
+ * 为什么不能用目录的 birthtime/mtime（2026-09-22 实测踩过）：22 个剧目从 E 盘
+ * 拷进仓库时，**目录是新建的**，全部 21 个目录的 birthtime 与 mtime 都被抹成
+ * 拷贝那一刻（02:16），拿它排序等于乱排。而**文件**的 mtime 会被
+ * `copyFileSync` 带过来（Windows 的 CopyFile 保留 LastWriteTime），所以
+ * board.json 的时间是完好的 —— 这是唯一还活着的创建时间信号。
+ *
+ * 语义提醒：它是「板子最后一次写入」的时间，改板会让它前移。对找剧目来说
+ * 这个语义比严格的立项时间更好用（最近动过的排在前面）。
+ * @returns {string|null} ISO 字符串。
+ */
+function createdAtOf(dir) {
+  const boardFile = path.join(dir, 'board.json');
+  try {
+    if (fs.existsSync(boardFile)) return fs.statSync(boardFile).mtime.toISOString();
+  } catch { /* 读不到就往下退 */ }
+  try {
+    return fs.statSync(dir).mtime.toISOString();
+  } catch {
+    return null;
+  }
+}
+
+/**
  * 列出剧目根下的剧目：读得出 board.json 的目录才算，空壳目录不进下拉
  * （与 dsh-storyboard 的判据一致：能读出板子 = 是剧目）。
  * 排除点开头（系统/隐藏）与**归档区** —— 归档剧目走 listArchived，不混进主线。
- * @returns {Array<{name:string,title:string}>} 按目录名排序。
+ *
+ * **按创建时间倒序**（新的在前）；时间相同（或都读不到）时按目录名升序，
+ * 保证顺序稳定、不会因为文件系统返回顺序抖动。排序只在数据层做一次 ——
+ * 左侧列表与顶栏下拉用的是同一个数组，不会各排各的。
+ *
+ * @returns {Array<{name:string,title:string,createdAt:string|null}>}
  */
 export function listProjects(root) {
   const out = [];
@@ -68,9 +98,14 @@ export function listProjects(root) {
     if (!e.isDirectory() || e.name.startsWith('.') || e.name === ARCHIVE_DIRNAME) continue;
     const board = readJson(path.join(root, e.name, 'board.json'));
     if (!board) continue;
-    out.push({ name: e.name, title: String(board.meta?.title || '').trim() || e.name });
+    out.push({
+      name: e.name,
+      title: String(board.meta?.title || '').trim() || e.name,
+      createdAt: createdAtOf(path.join(root, e.name)),
+    });
   }
-  return out.sort((a, b) => a.name.localeCompare(b.name));
+  const rank = (p) => (p.createdAt ? Date.parse(p.createdAt) : 0);
+  return out.sort((a, b) => rank(b) - rank(a) || a.name.localeCompare(b.name));
 }
 
 /**

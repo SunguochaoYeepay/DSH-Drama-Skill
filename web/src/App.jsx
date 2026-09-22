@@ -20,6 +20,16 @@ import ConfirmModal from './ConfirmModal.jsx';
 /** 顶栏票序（clips 单独按单元计数，不走这里）。 */
 const HEAD_GATES = ['story', 'board', 'direction', 'assets', 'keyframes', 'final'];
 
+/** 剧目创建时间 → `09-21`（跨年显示 `2025-12-30`）。读不到返回空串。 */
+function fmtDay(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const p = (n) => String(n).padStart(2, '0');
+  const md = `${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  return d.getFullYear() === new Date().getFullYear() ? md : `${d.getFullYear()}-${md}`;
+}
+
 /* ── 画布 ───────────────────────────────────────────────── */
 
 function CanvasView({ nodes, edges, selectedId, onSelect }) {
@@ -224,11 +234,14 @@ export default function App() {
             title="选择剧目"
           >
             <option value="">（选择剧目）</option>
-            {projects.map((p) => (
-              <option key={p.name} value={p.name}>
-                {p.title === p.name ? p.name : `${p.title} · ${p.name}`}
-              </option>
-            ))}
+            {projects.map((p) => {
+              const day = fmtDay(p.createdAt);
+              return (
+                <option key={p.name} value={p.name}>
+                  {p.title === p.name ? p.name : `${p.title} · ${p.name}`}{day ? `（${day}）` : ''}
+                </option>
+              );
+            })}
           </select>
 
           <span className="text-[14px] font-medium">{snapshot ? snapshot.title : '分镜看板'}</span>
@@ -307,7 +320,10 @@ export default function App() {
                 className="min-w-0 flex-1 px-2 py-1.5 text-left"
               >
                 <div className={`truncate text-[12.5px] ${p.name === name ? 'text-ink-100' : 'text-ink-200'}`}>{p.title}</div>
-                <div className="truncate text-[10.5px] text-ink-500">{p.name}</div>
+                <div className="flex items-center gap-1.5 text-[10.5px] text-ink-500">
+                  <span className="truncate">{p.name}</span>
+                  {fmtDay(p.createdAt) && <span className="ml-auto shrink-0 tabular-nums">{fmtDay(p.createdAt)}</span>}
+                </div>
               </button>
               <div className="flex shrink-0 items-center gap-0.5 pr-1.5">
                 <button

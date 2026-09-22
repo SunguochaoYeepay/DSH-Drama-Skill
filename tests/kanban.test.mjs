@@ -76,7 +76,46 @@ test.after(() => {
 
 test('listProjects：有板子的进下拉，空壳不进', () => {
   const projects = listProjects(ROOT);
-  assert.deepEqual(projects, [{ name: 'alpha', title: '试拍剧' }]);
+  assert.equal(projects.length, 1);
+  assert.equal(projects[0].name, 'alpha');
+  assert.equal(projects[0].title, '试拍剧');
+  assert.ok(projects[0].createdAt, '带创建时间（板子 mtime），供界面按时间倒序排');
+});
+
+test('listProjects：按创建时间倒序，时间相同的按目录名升序', () => {
+  // 三个剧目，板子 mtime 分别 3 天前 / 今天 / 3 天前（与 c 撞同一刻）
+  const base = Date.parse('2026-09-20T10:00:00Z');
+  const mk = (name, mtime) => {
+    const d = path.join(ROOT, name);
+    fs.mkdirSync(d, { recursive: true });
+    const f = path.join(d, 'board.json');
+    fs.writeFileSync(f, JSON.stringify({ meta: { title: `剧${name}` } }));
+    fs.utimesSync(f, new Date(mtime), new Date(mtime));
+    return d;
+  };
+  mk('older_a', base - 86400000);
+  mk('newest', base);
+  mk('older_c', base - 86400000);   // 与 older_a 同一刻 → 按名字排 a 在 c 前
+
+  const names = listProjects(ROOT).map((p) => p.name);
+  assert.deepEqual(
+    names.filter((n) => n !== 'alpha'),
+    ['newest', 'older_a', 'older_c'],
+    '新的在前；同刻的按目录名升序保证顺序稳定',
+  );
+
+  for (const n of ['older_a', 'newest', 'older_c']) fs.rmSync(path.join(ROOT, n), { recursive: true, force: true });
+});
+
+test('listProjects：板子 mtime 读不到时退回目录 mtime，不抛也不乱排', () => {
+  const d = path.join(ROOT, 'no_board_time');
+  fs.mkdirSync(d, { recursive: true });
+  fs.writeFileSync(path.join(d, 'board.json'), JSON.stringify({ meta: { title: '无时间剧' } }));
+  const list = listProjects(ROOT);
+  const found = list.find((p) => p.name === 'no_board_time');
+  assert.ok(found, '仍要进清单');
+  assert.ok(found.createdAt, '退回目录 mtime，不该是 null');
+  fs.rmSync(d, { recursive: true, force: true });
 });
 
 test('loadProject：单元/关键帧/片段/票/资产一次给齐', () => {
@@ -162,7 +201,11 @@ test('服务：前端产物 / 清单 / 快照 / 媒体 / 防穿越', async () =>
 
     // 剧目清单
     const projects = await (await fetch(base + '/api/projects')).json();
-    assert.deepEqual(projects.projects, [{ name: 'alpha', title: '试拍剧' }]);
+    assert.deepEqual(
+      projects.projects.map((p) => `${p.name}|${p.title}`),
+      ['alpha|试拍剧'],
+    );
+    assert.ok(projects.projects[0].createdAt, '清单带创建时间，界面按它倒序');
 
     // 快照
     const snap = await (await fetch(base + '/api/project?name=alpha')).json();
