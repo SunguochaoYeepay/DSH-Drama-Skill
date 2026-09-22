@@ -184,8 +184,8 @@ window.__ModuleLoader__.load({
 		 *
 		 * **为什么必须做这一步**：板子里的 `portrait` / `sheet` / `master` / `ref_image` /
 		 * `first_frame` 都是**相对路径**（`assets/xxx.png`），而 `workspaceFiles` 会把相对路径
-		 * 按**会话工作区根**解析 —— 剧目在仓库外时（本项目就是这样）永远找不到，
-		 * 表现是资源带全是裂图、没有报错。所以相对路径要拼到**剧目目录**上。
+		 * 按**会话工作区根**解析 —— 剧目根是用户自己选的绝对路径，未必落在会话工作区里，
+		 * 于是永远找不到，表现是资源带全是裂图、没有报错。所以相对路径要拼到**剧目目录**上。
 		 *
 		 * 已经是绝对路径（`C:\…` / `\\server\…` / `/…`）的原样返回。
 		 *
@@ -265,7 +265,8 @@ window.__ModuleLoader__.load({
 		 * 列出剧目工作区根下的剧目目录，并**给每个剧目配上中文剧名**。
 		 *
 		 * **必须走 `directoryPicker.list`，不能走 `workspaceFiles.list`** ——
-		 * 后者的 `list` 只在会话工作区根内可用，而真实项目按 `README.md` 规定落在仓库外。
+		 * 后者的 `list` 只在会话工作区根内可用，而剧目根是用户自己选的绝对路径
+		 * （仓库内的 `projects/` 也走这条绝对路径），未必就等于会话工作区。
 		 * 该动词只在 `browse` 后端组合下存在（`native` 后端只有系统选目录框），
 		 * 缺失时**优雅降级**：返回失败原因，由调用方提示用户手动填根路径，而不是让插件整体崩掉。
 		 *
@@ -491,7 +492,7 @@ window.__ModuleLoader__.load({
 			const [boardState, setBoardState] = React.useState({ kind: "loading" });
 			const [picked, setPicked] = React.useState(0);
 			const [asset, setAsset] = React.useState({ kind: "none" });
-			// 剧目工作区（真实项目在仓库外，靠 directoryPicker 发现）
+			// 剧目工作区（剧目根由用户选定，靠 directoryPicker 发现）
 			const [projectsRoot, setProjectsRoot] = React.useState(function () {
 				return readKey(ROOT_KEY, PROJECTS_ROOT_DEFAULT);
 			});
@@ -536,7 +537,7 @@ window.__ModuleLoader__.load({
 			 * 产物目录：**按实际选中的板子路径推导**。
 			 *
 			 * - 相对路径（工作区内的板子）→ 保持相对，让 `workspaceFiles` 按工作区根解析。
-			 * - 绝对路径（剧目下拉给的仓库外板子）→ 取同目录的绝对前缀。
+			 * - 绝对路径（剧目下拉给的剧目板子）→ 取同目录的绝对前缀。
 			 */
 			const fileBase = (function () {
 				const at = Math.max(boardPath.lastIndexOf("\\"), boardPath.lastIndexOf("/"));
@@ -1605,7 +1606,7 @@ window.__ModuleLoader__.load({
 		 * 需要的浏览器服务：槽位注册表、右侧栏 tab 注册表、Remote 载体及其命名空间。
 		 *
 		 * `remote.directoryPicker` 用来**列举剧目目录**（收绝对路径）——
-		 * `workspaceFiles.list` 只在会话工作区根内可用，而真实项目按 `README.md` 规定在仓库外。
+		 * `workspaceFiles.list` 只在会话工作区根内可用，而剧目根由用户选定（见 `PROJECTS_ROOT_DEFAULT`）。
 		 */
 		const inject = ["slots", "sidebarRightTabs", "remote", "remote.workspaceFiles", "remote.directoryPicker"];
 

@@ -2,6 +2,20 @@
 
 记录工程级行为变化。具体剧目的抽卡结果、耗时和逐帧评价留在对应项目目录，不写入这里。
 
+## 2026-09-22 - 项目位置口径统一：只留「仓库内 projects/」一种说法
+
+上一轮（「清掉源码里的本机路径」）的 CHANGELOG 声称 `SKILL.md` 的项目位置已改为「仓库根是唯一工作根」，
+但只改到第 39 / 41 行的位置说明，**第 139 行的全局约束还写着「真实项目和生成媒体必须在仓库外」** ——
+同一份文件里两条规则互相打脸，而执行 Agent 读的正是它。
+
+- `SKILL.md` 全局约束改为：「剧目的产物只在本机 `projects\` 下（该目录整体不入 git）；确定性测试只使用
+  仓库内 `tests/fixtures/` 的最小夹具，不依赖某个用户项目。」—— 保留原句"测试自带输入"的本意。
+- 同类表述扫干净（**只改注释与说明，不动行为**）：`plugins/dsh-storyboard/lib/client.js` 5 处、
+  `tests/integration/dsh-plugins.test.mjs` 2 处、`tests/fixtures/README.md` 表格 1 处。
+  插件机制（用户用 directoryPicker 选剧目根、走绝对路径）本来就跟项目在不在库内无关，错的是
+  「按 README 规定在仓库外」这句 —— clone 者手上没有别的盘。
+- 全量 `npm test` 52/52 通过。
+
 ## 2026-09-22 - 看板分隔条拖动修复；工程更名「逐格」
 
 - **修 bug**：`web/src/Splitter.jsx` 的 props 解构少写 `onStart`，而第 43 行写着 `onStart?.(side)`

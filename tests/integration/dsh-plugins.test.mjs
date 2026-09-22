@@ -40,7 +40,7 @@ const WORKSPACE_PLUGIN_DIR = path.resolve(
 /** 每个包各自的期望值。 */
 const EXPECT = {
   'dsh-storyboard': {
-    // 面板要列工作区外的剧目（真实项目按 README 规定在仓库外），
+    // 面板要列剧目目录（剧目根由用户选定，可能是仓库里的 projects/），
     // 而 workspaceFiles.list 只在工作区根内可用 —— 列剧目目录走 directoryPicker。
     clientServices: ['slots', 'sidebarRightTabs', 'remote', 'remote.workspaceFiles', 'remote.directoryPicker'],
     tabTypes: 1,
@@ -371,7 +371,7 @@ for (const name of targets) {
       check('调用了 workspaceFiles.list', listCalls.length > 0, listCalls.map((c) => c.path).join(', '));
       const selects = findTags(tree, 'select');
       // 两个下拉：**第一个是文件选择器**（工作区内的板子，走 workspaceFiles），
-      // 第二个是剧目下拉（仓库外的真实项目，走 directoryPicker + 绝对路径）。
+      // 第二个是剧目下拉（用户选定剧目根下的剧目，走 directoryPicker + 绝对路径）。
       // 这里钉住的是**文件选择器**的契约没被新功能改坏。
       check('渲染出两个下拉（文件选择器 + 剧目下拉）', selects.length === 2, `实际 ${selects.length}`);
       const options = selects.length ? findTags(selects[0], 'option') : [];
