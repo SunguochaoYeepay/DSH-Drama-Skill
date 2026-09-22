@@ -7,11 +7,15 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ReactFlow, Background, BackgroundVariant, Controls, MiniMap, MarkerType, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from '@xyflow/react';
-import { RefreshCw, CircleAlert } from 'lucide-react';
-import { fetchProjects, fetchProject, mediaUrl, isVideo } from './api.js';
+import { RefreshCw, CircleAlert, Archive, Trash2, ChevronRight, RotateCcw } from 'lucide-react';
+import {
+  fetchProjects, fetchProject, fetchArchived, mediaUrl, isVideo,
+  archiveProject, restoreProject, deleteProject,
+} from './api.js';
 import { buildGraph, GATE_LABELS } from './graph.js';
 import { nodeTypes } from './nodes.jsx';
 import DetailPanel from './DetailPanel.jsx';
+import ConfirmModal from './ConfirmModal.jsx';
 
 /** 顶栏票序（clips 单独按单元计数，不走这里）。 */
 const HEAD_GATES = ['story', 'board', 'direction', 'assets', 'keyframes', 'final'];
@@ -81,6 +85,9 @@ function Lightbox({ project, rel, label, onClose }) {
 
 export default function App() {
   const [projects, setProjects] = useState([]);
+  const [archived, setArchived] = useState([]);
+  const [retentionDays, setRetentionDays] = useState(7);
+  const [showArchived, setShowArchived] = useState(false);
   const [name, setName] = useState('');
   const [snapshot, setSnapshot] = useState(null);
   const [selected, setSelected] = useState(null);
@@ -88,17 +95,35 @@ export default function App() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
+  // 管理动作（归档 / 恢复 / 删除）—— 它们不是闸门动作，柜门票仍然只读
+  const [pending, setPending] = useState(null);   // {kind:'archive'|'delete', name, title, archived?}
+  const [acting, setActing] = useState(false);
+  const [actError, setActError] = useState('');
+  const [notice, setNotice] = useState('');
+
+  /** 拉主线清单 + 归档清单；返回主线清单（调用方要拿它判断当前剧目还在不在）。 */
   const loadList = useCallback(async () => {
     try {
-      const list = await fetchProjects();
+      const [list, arch] = await Promise.all([fetchProjects(), fetchArchived()]);
       setProjects(list);
+      setArchived(arch.archived);
+      setRetentionDays(arch.retentionDays);
       setError('');
+      return list;
     } catch (e) {
       setError(e.message);
+      return null;
     }
   }, []);
 
   useEffect(() => { loadList(); }, [loadList]);
+
+  // 提示条自散（4 秒）
+  useEffect(() => {
+    if (!notice) return undefined;
+    const t = setTimeout(() => setNotice(''), 4000);
+    return () => clearTimeout(t);
+  }, [notice]);
 
   const load = useCallback(async (n) => {
     setName(n);
@@ -143,6 +168,42 @@ export default function App() {
       })),
     };
   }, [snapshot, selected]);
+
+  /**
+   * 执行管理动作：成功后刷新两份清单；若当前打开的剧目已不在主线（被归档或被删），
+   * 顺手把画布清掉 —— 别留一个指向不存在剧目的画面。
+   */
+  const runAction = useCallback(async (fn, okText) => {
+    setActing(true);
+    setActError('');
+    try {
+      await fn();
+      const list = await loadList();
+      if (name && !(list || []).some((p) => p.name === name)) {
+        setName('');
+        setSnapshot(null);
+        setSelected(null);
+        window.history.replaceState(null, '', '/');
+      }
+      setPending(null);
+      setNotice(okText);
+    } catch (e) {
+      setActError(e.message);        // 就地显示在弹窗里，让人能改了确认名再试
+    } finally {
+      setActing(false);
+    }
+  }, [loadList, name]);
+
+  const confirmAction = useCallback((typed) => {
+    if (!pending) return;
+    const { kind, name: n, title, archived: isArchived } = pending;
+    if (kind === 'archive') {
+      runAction(() => archiveProject(n), `《${title}》已归档，在左侧「已归档」里可以恢复`);
+    } else if (kind === 'delete') {
+      // 确认名由人**逐字手打**；服务端还会再校验一次
+      runAction(() => deleteProject(n, typed, Boolean(isArchived)), `《${title}》已移入系统回收站`);
+    }
+  }, [pending, runAction]);
 
   const openMedia = useCallback((rel, label) => setLightbox({ rel, label }), []);
 
@@ -230,22 +291,84 @@ export default function App() {
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <nav className="w-[212px] shrink-0 overflow-y-auto border-r border-ink-800 bg-ink-900/60 px-2 py-2">
+        <nav className="w-[236px] shrink-0 overflow-y-auto border-r border-ink-800 bg-ink-900/60 px-2 py-2">
           <div className="px-2 pb-1.5 text-[11px] text-ink-500">剧目 · {projects.length}</div>
           {projects.map((p) => (
-            <button
+            <div
               key={p.name}
-              type="button"
-              onClick={() => load(p.name)}
               className={[
-                'mb-0.5 block w-full rounded-md px-2 py-1.5 text-left',
+                'mb-0.5 flex items-center rounded-md',
                 p.name === name ? 'bg-ink-800' : 'hover:bg-ink-850',
               ].join(' ')}
             >
-              <div className={`truncate text-[12.5px] ${p.name === name ? 'text-ink-100' : 'text-ink-200'}`}>{p.title}</div>
-              <div className="truncate text-[10.5px] text-ink-500">{p.name}</div>
-            </button>
+              <button
+                type="button"
+                onClick={() => load(p.name)}
+                className="min-w-0 flex-1 px-2 py-1.5 text-left"
+              >
+                <div className={`truncate text-[12.5px] ${p.name === name ? 'text-ink-100' : 'text-ink-200'}`}>{p.title}</div>
+                <div className="truncate text-[10.5px] text-ink-500">{p.name}</div>
+              </button>
+              <div className="flex shrink-0 items-center gap-0.5 pr-1.5">
+                <button
+                  type="button"
+                  title="归档（可恢复，满 7 天自动清理）"
+                  onClick={() => { setActError(''); setPending({ kind: 'archive', name: p.name, title: p.title }); }}
+                  className="rounded p-1 text-ink-600 hover:bg-ink-800 hover:text-ink-200"
+                >
+                  <Archive size={13} />
+                </button>
+                <button
+                  type="button"
+                  title="删除（移入系统回收站，要填中文名确认）"
+                  onClick={() => { setActError(''); setPending({ kind: 'delete', name: p.name, title: p.title }); }}
+                  className="rounded p-1 text-ink-600 hover:bg-ink-800 hover:text-bad"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            </div>
           ))}
+
+          {archived.length > 0 && (
+            <div className="mt-3 border-t border-ink-800 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowArchived((v) => !v)}
+                className="flex w-full items-center gap-1 rounded px-2 py-1 text-[11px] text-ink-400 hover:bg-ink-850"
+              >
+                <ChevronRight size={11} className={`transition ${showArchived ? 'rotate-90' : ''}`} />
+                已归档 · {archived.length}
+                <span className="ml-auto text-[10px] text-ink-600">{retentionDays} 天自动清理</span>
+              </button>
+              {showArchived && archived.map((a) => (
+                <div key={a.name} className="mb-0.5 rounded-md px-2 py-1.5 hover:bg-ink-850">
+                  <div className="truncate text-[12px] text-ink-300">{a.title}</div>
+                  <div className="flex items-center gap-1">
+                    <span className={`truncate text-[10.5px] ${a.expired ? 'text-bad' : 'text-ink-500'}`}>
+                      {a.expired ? '已到清理期' : `${a.daysLeft} 天后自动清理`}
+                    </span>
+                    <button
+                      type="button"
+                      title="恢复回主线"
+                      onClick={() => runAction(() => restoreProject(a.name), `《${a.title}》已恢复到主线`)}
+                      className="ml-auto inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[10.5px] text-ink-400 hover:bg-ink-800 hover:text-ok"
+                    >
+                      <RotateCcw size={10} /> 恢复
+                    </button>
+                    <button
+                      type="button"
+                      title="删除（移入系统回收站）"
+                      onClick={() => { setActError(''); setPending({ kind: 'delete', name: a.name, title: a.title, archived: true }); }}
+                      className="rounded p-0.5 text-ink-600 hover:bg-ink-800 hover:text-bad"
+                    >
+                      <Trash2 size={11} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </nav>
 
         <main className="relative min-w-0 flex-1">
@@ -269,6 +392,24 @@ export default function App() {
       </div>
 
       {lightbox && <Lightbox project={name} rel={lightbox.rel} label={lightbox.label} onClose={() => setLightbox(null)} />}
+
+      {pending && (
+        <ConfirmModal
+          kind={pending.kind}
+          target={pending}
+          retentionDays={retentionDays}
+          busy={acting}
+          error={actError}
+          onCancel={() => { if (!acting) { setPending(null); setActError(''); } }}
+          onConfirm={confirmAction}
+        />
+      )}
+
+      {notice && (
+        <div className="pointer-events-none fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-md border border-ok/40 bg-ink-900 px-3 py-1.5 text-[12px] text-ok shadow-xl">
+          {notice}
+        </div>
+      )}
     </div>
   );
 }

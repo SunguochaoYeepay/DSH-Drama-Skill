@@ -33,9 +33,27 @@ function readJson(file) {
   }
 }
 
+/** 归档区目录名：归档剧目住这里，不进主线清单。 */
+export const ARCHIVE_DIRNAME = '_archive';
+
+/**
+ * 剧目名必须是**单层路径段**：拒 `..`、盘符、路径分隔符、`.` 与归档区名。
+ * 服务端路由、归档、删除共用这一份 —— 路径校验只有一个所有者。
+ */
+export function isValidProjectName(name) {
+  return typeof name === 'string'
+    && name.length > 0
+    && !/[\\/]/.test(name)
+    && !name.includes('..')
+    && !/^[A-Za-z]:/.test(name)
+    && name !== '.'
+    && name !== ARCHIVE_DIRNAME;
+}
+
 /**
  * 列出剧目根下的剧目：读得出 board.json 的目录才算，空壳目录不进下拉
  * （与 dsh-storyboard 的判据一致：能读出板子 = 是剧目）。
+ * 排除点开头（系统/隐藏）与**归档区** —— 归档剧目走 listArchived，不混进主线。
  * @returns {Array<{name:string,title:string}>} 按目录名排序。
  */
 export function listProjects(root) {
@@ -47,7 +65,7 @@ export function listProjects(root) {
     return out;
   }
   for (const e of entries) {
-    if (!e.isDirectory() || e.name.startsWith('.')) continue;
+    if (!e.isDirectory() || e.name.startsWith('.') || e.name === ARCHIVE_DIRNAME) continue;
     const board = readJson(path.join(root, e.name, 'board.json'));
     if (!board) continue;
     out.push({ name: e.name, title: String(board.meta?.title || '').trim() || e.name });

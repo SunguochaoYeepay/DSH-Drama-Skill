@@ -85,3 +85,6 @@ projects/**/.gen-result.json
 projects/**/*.filter.txt
 projects/**/_concat.txt
 projects/**/__pycache__/
+# 归档区：归档 = 退出主线（也不再被 git 跟踪），恢复时文件自然回到白名单。
+# 放在白名单之后压住它 —— 否则 !projects/**/ 会把归档目录重新翻进来。
+projects/_archive/

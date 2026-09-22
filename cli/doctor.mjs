@@ -18,6 +18,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { COMFY_PYTHON, COMFY_GEN, FFMPEG, BAILIAN_ENTRY } from '../src/runtime-paths.mjs';
 import { PROJECT_ROOT } from '../src/config.mjs';
+import { listArchived, ARCHIVE_DIRNAME } from '../src/archive.mjs';
 
 const JSON_MODE = process.argv.includes('--json');
 const PROJECTS_ROOT = path.join(PROJECT_ROOT, 'projects');
@@ -90,6 +91,20 @@ const checks = [
       const dirs = fs.readdirSync(PROJECTS_ROOT, { withFileTypes: true })
         .filter((e) => e.isDirectory()).length;
       return { ok: true, detail: `${dirs} 个剧目目录` };
+    },
+  }),
+  check({
+    name: '归档区 projects/_archive/',
+    hint: '归档剧目满 7 天自动清进系统回收站 —— 看板服务开着时执行',
+    required: false,
+    test: () => {
+      if (!fs.existsSync(path.join(PROJECTS_ROOT, ARCHIVE_DIRNAME))) {
+        return { ok: true, detail: '没有归档剧目' };
+      }
+      const items = listArchived(PROJECTS_ROOT);
+      const expired = items.filter((x) => x.expired).length;
+      const tail = expired ? `，其中 ${expired} 个已到期（看板服务一起来就会清）` : '';
+      return { ok: true, detail: items.length ? `${items.length} 个归档剧目${tail}` : '空' };
     },
   }),
   check({
