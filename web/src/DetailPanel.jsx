@@ -124,7 +124,7 @@ function Thumb({ project, rel, label, onOpen, big = false }) {
       title={`${label} · ${rel}`}
     >
       {isVideo(rel) ? (
-        <video src={`${mediaUrl(project, rel)}#t=0.1`} preload="metadata" muted playsInline className="h-full w-full object-cover" />
+        <video src={`${mediaUrl(project, rel)}#t=0.1`} preload="metadata" muted playsInline {...videoLog('缩略图', rel)} className="h-full w-full object-cover" />
       ) : (
         <img src={mediaUrl(project, rel)} alt={label} loading="lazy" className="h-full w-full object-cover" />
       )}
@@ -378,7 +378,7 @@ function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine }) {
       <Section title="视频片段" right={unit.clip ? '' : '未生成'}>
         {unit.clip ? (
           play ? (
-            <video src={mediaUrl(project, unit.clip)} controls autoPlay playsInline className="w-full rounded-lg bg-black" />
+            <video src={mediaUrl(project, unit.clip)} controls autoPlay playsInline {...videoLog('片段', unit.clip)} className="w-full rounded-lg bg-black" />
           ) : (
             <button type="button" onClick={() => setPlay(true)} className="block w-full">
               <Thumb project={project} rel={unit.clip} label={`${unitId} 片段`} onOpen={onOpen} big />
@@ -419,7 +419,7 @@ function FinalView({ snapshot, project }) {
   if (!snapshot.finalRel) return <Box className="text-ink-500">还没有成片（约定路径：out/final.mp4）</Box>;
   return (
     <Section title="成片" right={snapshot.finalRel}>
-      <video src={mediaUrl(project, snapshot.finalRel)} controls playsInline className="w-full rounded-lg bg-black" />
+      <video src={mediaUrl(project, snapshot.finalRel)} controls playsInline {...videoLog('成片', snapshot.finalRel)} className="w-full rounded-lg bg-black" />
     </Section>
   );
 }

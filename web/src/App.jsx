@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ReactFlow, Background, BackgroundVariant, Controls, MiniMap, MarkerType, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from '@xyflow/react';
 import { RefreshCw, CircleAlert, Archive, Trash2, ChevronRight, RotateCcw } from 'lucide-react';
 import {
-  fetchProjects, fetchProject, fetchArchived, mediaUrl, isVideo,
+  fetchProjects, fetchProject, fetchArchived, mediaUrl, isVideo, videoLog,
   archiveProject, restoreProject, deleteProject,
 } from './api.js';
 import { buildGraph, GATE_LABELS } from './graph.js';
@@ -116,7 +116,7 @@ function Lightbox({ project, rel, label, onClose }) {
       onClick={onClose}
     >
       {isVideo(rel)
-        ? <video src={mediaUrl(project, rel)} controls autoPlay playsInline className="max-h-[82vh] max-w-[92vw] rounded-lg bg-black" />
+        ? <video src={mediaUrl(project, rel)} controls autoPlay playsInline {...videoLog('灯箱', rel)} className="max-h-[82vh] max-w-[92vw] rounded-lg bg-black" />
         : <img src={mediaUrl(project, rel)} alt={label} className="max-h-[82vh] max-w-[92vw] rounded-lg" />}
       <div className="text-[12px] text-ink-400">{label} · {rel}</div>
     </div>

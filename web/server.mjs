@@ -313,7 +313,12 @@ function sendFile(res, file) {
   res.end(data);
 }
 
-/** 媒体路由：解码 → 限制在剧目目录内 → 落盘读取。穿越企图直接 403。 */
+/** 媒体路由：解码 → 限制在剧目目录内 → 落盘读取。穿越企图直接 403。
+ *
+ * 视频必须支持 Range（206）：浏览器 <video> 加载元数据/拖进度条都发
+ * `Range: bytes=…`，服务端只会回 200 全量时，部分 Chromium 媒体栈直接
+ * 摆烂（进度条 0:00、播放键无响应）。所以这里按 RFC 7233 实现单区间。
+ */
 function sendMedia(res, root, raw) {
   let rel;
   try {
@@ -330,11 +335,40 @@ function sendMedia(res, root, raw) {
     return sendJson(res, { error: '拒绝：路径越出剧目目录' }, 403);
   }
   if (!fs.existsSync(file)) return sendJson(res, { error: '文件不存在' }, 404);
-  res.writeHead(200, {
+  const size = fs.statSync(file).size;
+  const base = {
     'Content-Type': mimeOf(file),
-    'Content-Length': fs.statSync(file).size,
+    'Accept-Ranges': 'bytes',
+    'Cache-Control': 'no-cache',
+  };
+
+  const range = /^bytes=(\d*)-(\d*)$/.exec(String(res.req?.headers?.range || ''));
+  if (!range || (!range[1] && !range[2])) {
+    res.writeHead(200, { ...base, 'Content-Length': size });
+    return fs.createReadStream(file).pipe(res);
+  }
+
+  // 单区间解析：bytes=a-b / bytes=a- / bytes=-suffix。start > size 是真越界；
+  // start === size 的空区间按 416 回（Chromium 探测尾字节时会发这种）。
+  let start, end;
+  if (range[1] === '') {
+    const suffix = Number(range[2]);
+    start = Math.max(0, size - suffix);
+    end = size - 1;
+  } else {
+    start = Number(range[1]);
+    end = range[2] === '' ? size - 1 : Math.min(Number(range[2]), size - 1);
+  }
+  if (start > end || start >= size) {
+    res.writeHead(416, { 'Content-Range': `bytes */${size}` });
+    return res.end();
+  }
+  res.writeHead(206, {
+    ...base,
+    'Content-Range': `bytes ${start}-${end}/${size}`,
+    'Content-Length': end - start + 1,
   });
-  fs.createReadStream(file).pipe(res);
+  fs.createReadStream(file, { start, end }).pipe(res);
 }
 
 // ── 作为脚本直跑时才监听；被 import（测试）时不占端口 ──────────────────────

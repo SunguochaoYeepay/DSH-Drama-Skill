@@ -43,6 +43,26 @@ export function isVideo(p) {
   return /\.(mp4|m4v|webm|mov|mkv)$/i.test(String(p || ''));
 }
 
+/** 视频诊断日志：挂在 <video> 上，关键事件全打到浏览器控制台（F12 可见）。
+ * 2026-09-22 排查"视频放不出来"加的 —— 谁再遇到播放问题，看控制台 [视频] 行即可。 */
+export function videoLog(tag, rel) {
+  const where = `${tag} ${rel || ''}`;
+  return {
+    onLoadStart: () => console.info(`[视频] ${where} 开始加载`),
+    onLoadedMetadata: (e) => console.info(`[视频] ${where} 元数据就绪（时长 ${e.currentTarget.duration}s）`),
+    onCanPlay: () => console.info(`[视频] ${where} 可以播放`),
+    onWaiting: () => console.info(`[视频] ${where} 缓冲中…`),
+    onStalled: () => console.warn(`[视频] ${where} 停滞（stalled）`),
+    onError: (e) => {
+      const v = e.currentTarget;
+      const meaning = { 1: '加载被中止', 2: '网络错误', 3: '解码失败', 4: '格式或源不支持' }[v.error?.code] || '未知';
+      console.error(`[视频] ${where} 加载失败：${meaning}（code=${v.error?.code}）`, {
+        就绪度: v.readyState, 网络层: v.networkState, 实际地址: v.currentSrc,
+      });
+    },
+  };
+}
+
 /* ── 管理动作（归档 / 恢复 / 删除）─────────────────────────────────────────
  *
  * 每个写请求都带 `X-Kanban-Action` 头 —— 服务端的跨源防护第一道就认它：
