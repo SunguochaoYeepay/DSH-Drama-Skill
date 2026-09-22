@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { allowedChangesList, bindHandoffKeyframe, createHandoffRecord, requireHandoff, writeHandoff } from '../src/continuity-handoff.mjs';
+import { allowedChangesList, bindHandoffKeyframe, carryOverKeyframeBinding, createHandoffRecord, requireHandoff, writeHandoff } from '../src/continuity-handoff.mjs';
 
 const unit = { id: 'g002', continuity: { mode: 'continue_previous', previous_unit: 'g001', handoff_state: '人物仍趴在地面', allowed_changes: ['framing'] } };
 function fixture() {
@@ -61,4 +61,36 @@ test('凭证里的 allowed_changes 归一成词数组', () => {
   const sentence = { ...unit, continuity: { ...unit.continuity, allowed_changes: '景别收紧、机位后移' } };
   const record = createHandoffRecord({ projectDir: project, unit: sentence, sourceUnit: 'g001', sourceClip: clip, stableFrame: frame, tailOffsetS: 0.35 });
   assert.deepEqual(record.allowed_changes, ['景别收紧', '机位后移']);
+});
+
+/**
+ * 重跑 `prepare-handoff` 不冲掉已有绑定。
+ *
+ * 依据（desk_quake 2026-09-22 实测）：为了更新 `allowed_changes` 重跑一次
+ * `cli/prepare-handoff.mjs`，`createHandoffRecord` 把 `keyframe` 置回了 null，
+ * 于是重签 `keyframes` 票时本单元报「下一关键帧未绑定实际稳定尾帧」——
+ * 只能手工调 `bindHandoffKeyframe` 补回来。判据是**字节**：尾帧没变就带过来。
+ */
+test('尾帧未变时重建凭证会保住关键帧绑定', () => {
+  const f = fixture();
+  bindHandoffKeyframe(f.project, unit, f.keyframe);
+  const bound = requireHandoff(f.project, unit);
+  const next = createHandoffRecord({ projectDir: f.project, unit, sourceUnit: 'g001', sourceClip: f.clip, stableFrame: f.frame, tailOffsetS: 0.35 });
+  carryOverKeyframeBinding(bound, next);
+  assert.equal(next.keyframe, path.resolve(f.keyframe), '同一张尾帧 → 绑定应当沿用');
+  assert.equal(next.keyframe_sha256, bound.keyframe_sha256);
+  assert.ok(next.keyframe_bound_at, '绑定时间要一起带过来');
+  // 重建后仍然可校验
+  writeHandoff(f.project, next);
+  assert.equal(requireHandoff(f.project, unit).keyframe, path.resolve(f.keyframe));
+});
+
+test('尾帧变了就不带绑定（那张关键帧确实该重出）', () => {
+  const f = fixture();
+  bindHandoffKeyframe(f.project, unit, f.keyframe);
+  const bound = requireHandoff(f.project, unit);
+  fs.writeFileSync(f.frame, 'frame-b');
+  const next = createHandoffRecord({ projectDir: f.project, unit, sourceUnit: 'g001', sourceClip: f.clip, stableFrame: f.frame, tailOffsetS: 0.35 });
+  carryOverKeyframeBinding(bound, next);
+  assert.equal(next.keyframe, null);
 });

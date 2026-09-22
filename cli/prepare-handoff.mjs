@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { allowedChangesList, createHandoffRecord, writeHandoff } from '../src/continuity-handoff.mjs';
+import { allowedChangesList, carryOverKeyframeBinding, createHandoffRecord, handoffPath, writeHandoff } from '../src/continuity-handoff.mjs';
 import { clipResultPath, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 
@@ -40,6 +40,14 @@ fs.mkdirSync(path.dirname(frame), { recursive: true });
 const extracted = spawnSync(ffmpeg, ['-y', '-v', 'error', '-sseof', `-${offset}`, '-i', clip, '-frames:v', '1', frame], { encoding: 'utf8' });
 if (extracted.status !== 0 || !fs.existsSync(frame)) throw new Error(`稳定尾帧提取失败：${String(extracted.stderr || '').slice(0, 300)}`);
 const record = createHandoffRecord({ projectDir: project, unit, sourceUnit, sourceClip: clip, stableFrame: frame, tailOffsetS: offset });
+
+// **重跑不冲掉已有绑定**：`createHandoffRecord` 一律把 keyframe 置 null，于是"为了更新
+// allowed_changes 再跑一次"会静默解绑 —— 之后 `keyframes` 票只绑得到前一个单元，
+// 本单元报「下一关键帧未绑定实际稳定尾帧」（desk_quake 2026-09-22 实测）。
+const prevFile = handoffPath(project, unitId);
+const prev = fs.existsSync(prevFile) ? JSON.parse(fs.readFileSync(prevFile, 'utf8')) : null;
+carryOverKeyframeBinding(prev, record);
+if (record.keyframe) console.log(`稳定尾帧未变，沿用上次绑定的关键帧：${record.keyframe}`);
 const recordFile = writeHandoff(project, record);
 const note = writeReviewNote(project, `handoff-${unitId}`, [
   `# 连续性交接 ${sourceUnit} -> ${unitId}`, '',

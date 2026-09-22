@@ -9,22 +9,29 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { COMFY_GEN, WINGET_PACKAGES, requireComfyPython } from '../runtime-paths.mjs';
+import { COMFY_GEN, FFMPEG, requireComfyPython } from '../runtime-paths.mjs';
 import { LOCAL_IMAGE_MODEL } from '../config.mjs';
 
 const GEN = COMFY_GEN;
 
-const FFMPEG = (() => {
-  const base = WINGET_PACKAGES;
-  try {
-    for (const dir of fs.readdirSync(base)) {
-      if (!dir.startsWith('Gyan.FFmpeg_')) continue;
-      const c = path.join(base, dir, 'ffmpeg-7.1.1-full_build', 'bin', 'ffmpeg.exe');
-      if (fs.existsSync(c)) return c;
-    }
-  } catch { /* 退回 PATH */ }
-    return 'ffmpeg';
-})();
+/**
+ * ComfyUI 安装根 —— `gen.py` 用它定位自己的 `output/`，再把产物拷回项目。
+ *
+ * ⚠ **不传的代价（desk_quake 2026-09-22 实测）**：`gen.py` 的 `--comfy-root` 缺省是空串，
+ * 退化成"当前目录"，于是 `output/img/*.png` 找不到 → **图其实生成了，但一个都没拷回来**，
+ * CLI 只看到"未产出文件"，排查花掉一整轮。
+ *
+ * 工程不猜机器路径，但 `AIH_PYTHON` 本身就是 `<ComfyUI 根>/python/python.exe` ——
+ * 从它往上推两级是**确定信息，不是猜**。显式设了 `COMFYUI_ROOT` 时以它为准。
+ */
+function comfyRootArgs() {
+  const explicit = String(process.env.COMFYUI_ROOT || '').trim();
+  if (explicit) return ['--comfy-root', explicit];
+  const py = String(process.env.AIH_PYTHON || '').trim();
+  if (!py) return [];
+  const root = path.dirname(path.dirname(py));
+  return root && root !== '.' ? ['--comfy-root', root] : [];
+}
 
 /**
  * 项目风格 → gen.py `--style` 预设名。**这张表是"画面像不像"的真正开关。**
@@ -127,6 +134,7 @@ export async function generate({ prompt, ratio = '16:9', n = 1, outDir, prefix =
   fs.mkdirSync(outDir, { recursive: true });
   const before = snapshot(outDir);
   const args = ['t2i', '--prompt', prompt, '--batch', String(n), '--out-dir', outDir];
+  args.push(...comfyRootArgs());
   // 画幅：显式宽高优先，其次 ratio。**不传的话走 IMAGE_DEFAULT = (1024,576) 横屏。**
   if (width && height) args.push('--width', String(width), '--height', String(height));
   else args.push('--ratio', ratio);
@@ -207,6 +215,7 @@ export async function edit({ images, instruction, n = 1, outDir, prefix = 'edit'
     for (let i = 0; i < Math.max(1, n); i++) {
       const before = snapshot(outDir);
       const args = ['edit'];
+      args.push(...comfyRootArgs());
       for (const img of refs) args.push('--image', path.resolve(img));
       args.push('--prompt', instruction, '--out-dir', outDir);
       // **画幅一定要传，而且要传宽高、不能只传 ratio。**

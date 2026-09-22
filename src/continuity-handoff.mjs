@@ -92,3 +92,24 @@ export function requireHandoff(projectDir, unit, { requireKeyframe = true } = {}
   }
   return record;
 }
+
+/**
+ * 重建交接凭证时**保住已有的关键帧绑定**。
+ *
+ * `createHandoffRecord` 一律把 `keyframe` 置 null，于是"为了更新 `allowed_changes`
+ * 再跑一次 `prepare-handoff`"会**静默解绑**：之后 `keyframes` 票只绑得到前一个单元，
+ * 本单元报「下一关键帧未绑定实际稳定尾帧」（desk_quake 2026-09-22 实测，排查时只能
+ * 手工调 `bindHandoffKeyframe` 补回来）。
+ *
+ * 判据是**字节**：稳定尾帧没变、旧绑定文件仍在且哈希自洽 → 原样带过来；
+ * 尾帧变了就保持 null（语义上那张关键帧确实该重出）。
+ */
+export function carryOverKeyframeBinding(prev, next) {
+  if (!next || !prev?.keyframe || !prev.keyframe_sha256) return next;
+  if (prev.stable_frame_sha256 !== next.stable_frame_sha256) return next;
+  if (!fs.existsSync(prev.keyframe) || fileSha256(prev.keyframe) !== prev.keyframe_sha256) return next;
+  next.keyframe = prev.keyframe;
+  next.keyframe_sha256 = prev.keyframe_sha256;
+  next.keyframe_bound_at = prev.keyframe_bound_at;
+  return next;
+}

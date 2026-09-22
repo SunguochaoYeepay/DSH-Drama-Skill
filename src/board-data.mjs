@@ -310,7 +310,10 @@ export function loadProject(root, name) {
     cast: Array.isArray(u.cast) ? u.cast : [],
     audienceKnows: u.audience_knows || '',
     why: u.why || '',
-    keyframe: u.keyframe ? relInside(dir, u.keyframe) : null,
+    // 计划里的 `units[].keyframe` 是**编译期就写死的路径**，关键帧生成前它必然不存在。
+    // 不查存在性就会给一个不存在的文件渲染 <img>（裂图 + alt 文本漏到页面上，
+    // desk_quake 2026-09-22 实测）。视频那一路（clipOf）一直是查的，这里对齐。
+    keyframe: u.keyframe && fs.existsSync(path.join(dir, u.keyframe)) ? relInside(dir, u.keyframe) : null,
     clip: clipOf(dir, u.id),
     keyframePrompt: keyframePromptOf(dir, u.id),
     videoPrompt: videoPromptOf(dir, u.id),

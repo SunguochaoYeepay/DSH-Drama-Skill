@@ -41,12 +41,23 @@ function estimateDuration(lines) {
   return Math.min(SHOT_MAX_S, Math.max(1, Math.round(sec)));
 }
 
+/**
+ * 林地词表：**必须是词，不能是单字**。
+ *
+ * 🔁 单字匹配的代价（desk_quake 2026-09-22 实测）：场景名写「**林**薇工位」（开放式办公区），
+ * 被 `/林/` 命中 → 这条索引镜头拿到了「树叶摩擦的沙沙声与踩在石板路上的脚步声」，
+ * 而它会被拼进 H3 视频提示词的 `overall_soundscape`。中文人名/地名里「林」「山」都是常见姓。
+ */
+const FOREST_PLACE = /林间|树林|森林|林地|山林|竹林|树丛|灌木|林子/;
+/** 动作文本里提到林木（「树叶」「林间」）才给林地音效。 */
+const FOREST_TEXT = /树|林间|树林|森林|林地|竹林/;
+
 /** 从动作描述里抠一个具体的声音事件 —— H3 的电平跟着内容走，写虚的等于写静音。 */
 function soundFrom(text, scene) {
   const t = String(text || '');
   const hit = t.match(/[^，。；]*?(?:沙沙|作响|声|响|鸣|哗|咚|砰|哒)[^，。；]*/);
   if (hit) return hit[0].replace(/^[，。；、]/, '').trim();
-  if (/林|树|山/.test(scene?.location || '') || /林|树/.test(t)) return '树叶摩擦的沙沙声与踩在石板路上的脚步声';
+  if (FOREST_PLACE.test(scene?.location || '') || FOREST_TEXT.test(t)) return '树叶摩擦的沙沙声与踩在石板路上的脚步声';
   return '环境底噪与衣料摩擦声';
 }
 
