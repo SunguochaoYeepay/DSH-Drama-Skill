@@ -93,7 +93,7 @@
 | `boundary_trigger` | ✅ | 第一单元为 `opening`；后续只允许 `scene_change` / `time_jump` / `identity_anchor` / `spatial_reset` / `state_transition_anchor` / `engine_limit` 六类硬理由 |
 | `keyframe_cast` | ✅ | 0 秒关键帧需要身份参考的角色，必须是本单元角色子集；本地 Qwen 最多 2 名 |
 | `action_complexity` | ✅ | H3 动作复杂度；每单元最多一个高风险状态转换 |
-| `end_state` | v6 必填 | 单元应停住的稳定、可观察状态，供下一单元承接和实际尾帧核对 |
+| `end_state` | v6 必填 | 单元应停住的稳定、可观察状态，供下一单元承接和实际尾帧核对。**它只是核对基准，不进生成提示词** —— 时间线由 `shot.action` 的文本决定；要让单元真的停在这个状态，必须把结尾动作写进该单元**最后一镜的 `action`**（只把单元时长加长是无效的，`desk_quake` 2026-09-22 实测：5.0s→6.0s 仍停在仰头喝水，把"咽下后放下杯子"写进 `action` 才走到位） |
 | `continuity` | v6 必填 | 第一单元为 `independent`。后续可为 `independent`；若关键帧必须参考上一段实际尾帧，使用 `reference_previous` 并提供 `previous_unit/deferred_keyframe:true/allowed_changes`；若还必须继承动作状态，使用 `continue_previous` 并额外提供 `handoff_state` |
 | `shots` | ✅ | 至少一镜 |
 

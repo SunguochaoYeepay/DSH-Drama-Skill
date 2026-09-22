@@ -2,6 +2,37 @@
 
 记录工程级行为变化。具体剧目的抽卡结果、耗时和逐帧评价留在对应项目目录，不写入这里。
 
+## 2026-09-22 - 跑通第一部真剧后的清账：四处缺陷 + 契约规则写前自检
+
+《工位上的地震》（`projects/desk_quake`）是第一部从立项走到成片的真剧（8 张人工票全由人签、
+全本地通道 0 元、13.323s）。跑的过程挖出四处工程缺陷，经用户逐条批准后落地：
+
+- **`src/literal.mjs` 的音效词表去掉单字匹配**：`/林|树|山/` 会把场景名「**林**薇工位」
+  （开放式办公区）判成林地，索引镜头拿到「树叶摩擦的沙沙声…」——而这个字段会进 H3 的
+  `overall_soundscape`。改成分级词表（`林间|树林|森林|林地|…`）。测试：
+  `tests/literal-ambience.test.mjs` 同时钉住"办公区不误判"与"真林地不丢功能"。
+- **`src/board-data.mjs` 的关键帧要做存在性检查**：`render.plan.json` 的 `units[].keyframe`
+  是编译期写死的路径，关键帧生成前必然不存在；看板不查就会给不存在的文件渲染 `<img>`
+  （裂图 + alt 文本漏到页面上）。视频那一路（`clipOf`）一直是查的，这里对齐。
+  测试：`tests/keyframe-slot.test.mjs`。
+- **`src/providers/comfyui.mjs`：comfy 根与 ffmpeg 各归其位**。① 从 `AIH_PYTHON`
+  （`<ComfyUI 根>/python/python.exe`）推出根并传 `--comfy-root` —— 不传时 gen.py 退化成
+  "当前目录"，产物**生成了却拷不回来**，CLI 只报"未产出文件"（本轮排查掉一整轮）；
+  ② 删掉本文件里那份写死版本号 `ffmpeg-7.1.1-full_build` 的重复探测，改用
+  `runtime-paths.mjs` 的 `FFMPEG`（同一件事只该有一个所有者）。
+- **重跑 `cli/prepare-handoff.mjs` 不再冲掉关键帧绑定**：`createHandoffRecord` 一律把
+  `keyframe` 置 null，于是"为了更新 `allowed_changes` 再跑一次"会静默解绑，之后 `keyframes`
+  票只绑得到前一个单元。新增 `carryOverKeyframeBinding()`：稳定尾帧**字节未变**且旧绑定
+  仍然有效时原样带过来，变了则保持 null（那张关键帧确实该重出）。
+- **契约的 `rules` 增加写前自检**：`src/cinematography.mjs` 新增 `auditContractRules()`，
+  `cli/unit.mjs` 在出片前对规则文本跑否定式正则并告警（只报告、不阻断）。规则里写
+  「不出现第二只杯子」等于把「第二只杯子」递进语义空间 —— 本轮 g001 视频里真的多出一只杯子，
+  改正向陈述后同提示词重跑即消失。规则正本 `references/cinematography.md` 由"四条规矩"
+  扩为"五条规矩"，并标 `🔁 已复发`。测试：`tests/contract-rules-audit.test.mjs`。
+- **`references/director/schema.md`**：`end_state` 行补一句"它只是核对基准，不进生成提示词，
+  要让单元真的停在该状态必须写进最后一镜的 `shot.action`"（本轮实测：只加时长无效）。
+- **`.env.example`** 补 `COMFYUI_ROOT` 说明（不填也能跑，工程从 `AIH_PYTHON` 往上推两级）。
+
 ## 2026-09-22 - 示例剧目补齐到关键帧提示词，两张人工票是真的
 
 `examples/demo-show/` 之前停在未登记草稿上（导演稿登记要 `story` 人工票，而票只能由人签）。
