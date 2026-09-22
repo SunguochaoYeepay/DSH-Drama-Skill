@@ -2,6 +2,46 @@
 
 记录工程级行为变化。具体剧目的抽卡结果、耗时和逐帧评价留在对应项目目录，不写入这里。
 
+## 2026-09-22 - 仓库瘦身与门面整理：工具进 GitHub，剧留在本地
+
+起因：要把仓库公开出去。之前它是「能跑但谁也看不懂」的状态 —— 根目录躺着 2.1GB 剧目产物、41MB 的
+`comfy-out/` 与一堆备份，`.gitignore` 用九条裸目录名做全仓通配，README 里还写着已被推翻的
+「剧目契约链随仓库入库」。这些别人 clone 下来第一眼就会看到。
+
+**删除（全部进系统回收站，可还原）**：18 个历史剧目（2146MB）、`projects/_archive/`（99MB）、
+`comfy-out/`（41MB）、`.tmp/` 三处备份。回收站条目 4155 → 6328。剧目早在本次改动前已整体退库，
+所以 git 历史不受影响，要翻某个剧目的旧版本用 `git log --oneline -- projects/<名>`。
+
+> 删除时的坑：PowerShell 的 `DeleteDirectory(..., SendToRecycleBin)` 第一次调用会把**文件**挪进回收站
+> 却没能摘掉已经空掉的目录壳，抛一个「系统不支持该功能」。再调一次就成功 —— 成功判据永远只看
+> **目录还在不在**（不管是目录还是文件都要先判 `statSync().isDirectory()`，递归 du 时对文件会抛 ENOTDIR）。
+
+**`.gitignore` 重做**。原来第 16–24 行是九条裸目录名（`assets/ out/ clips/ audio/ pool/ keyframes/ shots/`…），
+gitignore 的语义是「任意层级同名目录」—— 实测把 `web/src/out/x.js`、`tests/fixtures/assets/x.json`、
+`cli/keyframes/x.mjs` 全部静默吞掉，不报错不提示。现在一律改成 `/` 前缀锚到仓库根。
+另一处：`.gitignore` **不支持行尾注释**，`#` 必须独占一行；重写时三行规则因为带尾注而静默失效，
+靠 `git check-ignore -v` 才抓出来。20 条用例（该挡 / 该入库）全部核对通过。
+
+**新增**
+
+- `examples/demo-show/` —— 对外示例剧目，一整条契约链但**只有文本文件**（无图无音视频）。
+  剧本与板子由工程自己的 `cli/script.mjs` / `cli/init-board.mjs` 生成，不是手写凑的。
+  ⚠ 它停在 `board.direction.draft.json`（未登记草稿）：导演稿要登记得先有 `story` 人工票，
+  而**人工票只能由人特许**（`cli/review-gate.mjs`），示例也不例外 —— 宁可不完整也不伪造签名。
+- `tests/example-demo.test.mjs` —— 钉住示例不腐烂：板子零 error 零 warning、来源票哈希与 story.md 一致、
+  导演稿的台词行号与剧本逐句对应且不多不少、单元 ≤15 秒、示例目录里不许混进媒体文件。
+- `CONTRIBUTING.md` —— 改动规程：沉淀层 / 禁区两层边界、`references/` 规则的四要素提案、
+  人工票谁都不许代签、测试判据（禁止源码文本断言）、gitignore 前缀纪律。
+- `.github/workflows/ci.yml` —— Node 20 / 22 矩阵跑 `npm test`。
+- `vendor/comfy-studio/README.md` —— 出处、为何快照入库、手工同步策略，以及**许可状态未知**的提示。
+
+**删除**：`src/keyframe-overrides.mjs`（LLM 直写提示词制落地后全仓零引用、无连带，已备份到系统临时目录）。
+`src/board.mjs` 的 `ideaToStory` / `fromStory` 虽同样零调用（CLI 入口已被 `die()` 挡死），
+但删它会连带出 `carryMeta` / `withNoThink` / `ollamaChat` 三个孤儿，属代码手术，留待单独处置。
+
+**README 修订**：去掉「剧目契约链入库」这段自相矛盾的表述（昨天的退库已推翻它）；补充仓库分层说明、
+按阶段而非按通道命名剧目目录的理由（19 种 `keyframes_*` 的历史教训）、CI / Node / MIT 徽章。
+
 ## 2026-09-22 - 项目创建时间显式化：meta.created_at 成为排序的正主
 
 起因：剧目清单按时间倒序时，只能用 `board.json` 的 mtime 推断 —— 那只是「板子最后写入」，改板会让剧目前移，且剧目目录迁进仓库时目录时间已被文件系统抹平（22 个目录同一时刻）。推断终究不是事实。

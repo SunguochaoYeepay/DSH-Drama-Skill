@@ -1,0 +1,277 @@
+{
+  "meta": {
+    "title": "雨夜末班车",
+    "project": "demo_show",
+    "logline": "加班到深夜的女孩请求司机在路口停一下，嘴上说没站的司机却把车停了下来",
+    "genre": "都市温情",
+    "language": "zh-CN",
+    "aspect": "9:16",
+    "style": "realistic",
+    "style_prompt": null,
+    "total_duration_s": 17,
+    "stage": "story",
+    "created_at": "2026-09-22T07:01:37.896Z",
+    "approvals": {
+      "story": null,
+      "shots": null,
+      "assets": null,
+      "keyframes": null
+    },
+    "music": null,
+    "final_video": null
+  },
+  "story": {
+    "synopsis": "雨夜的末班公交上只剩一位乘客。女孩小雨请求司机在没有站牌的路口停一下，司机沉默片刻说那儿没站。车却在路口缓缓停住，理由是下雨走回去太远。小雨愣了一下，快步下车，回头挥手道别。",
+    "beats": [
+      {
+        "text": "雨夜末班车车厢里，小雨请求司机在路口停一下",
+        "purpose": "抛出请求，建立两人之间无法直接求助的距离感"
+      },
+      {
+        "text": "司机抬眼看后视镜，说那儿没站",
+        "purpose": "让请求落空，形成第一处张力"
+      },
+      {
+        "text": "车却在路口缓缓停下，司机说下雨走回去远",
+        "purpose": "用行动推翻刚才的拒绝，把善意落到行为上"
+      },
+      {
+        "text": "小雨回头挥手，车灯在雨里越来越远",
+        "purpose": "收束情绪，让温度留在两人之间不点破"
+      }
+    ],
+    "source": "短剧剧本：雨夜末班车\n风格：写实，冷色雨夜，车内暖光\n时长：约 12 秒\n类型：都市温情\n\n人物设定\n阿伟：末班公交司机，话不多，心软\n小雨：加班归来的上班族，疲惫\n\n第 1 集 1-1 场景：内 末班公交车厢 雨夜 人物：阿伟、小雨\n△ 雨刷来回摆动，车厢空荡，只剩小雨一个人靠窗坐着，肩头还沾着雨点。\n小雨（疲惫）：师傅，前面路口能停一下吗？我住那儿。\n△ 阿伟抬眼看了下后视镜，没有立刻回答。\n阿伟：那儿没站。\n△ 小雨愣了一下，点点头，把脸转回窗外。\n\n△ 车速慢慢降下来，公交车在路口提前滑停，转向灯一下一下地闪。\n阿伟：下雨，走回去远。\n小雨 OS：我以为会被拒绝的。\n△ 小雨快步走下车，回头朝驾驶座挥了挥手。\n\n（完）\n"
+  },
+  "characters": [
+    {
+      "id": "c_driver",
+      "name": "阿伟",
+      "age_group": "youth",
+      "face_prompt": "东亚男性，约三十五岁，方脸，眉眼平直，鼻梁偏宽，唇线平实，皮肤偏黄；短发略乱，额前有几绺碎发",
+      "identities": [
+        "i_driver_default"
+      ]
+    },
+    {
+      "id": "c_passenger",
+      "name": "小雨",
+      "age_group": "youth",
+      "face_prompt": "东亚女性，约二十六岁，鹅蛋脸，眉细而淡，眼尾略垂，鼻梁小巧，唇色偏淡，皮肤偏白；黑色中长发微湿，几缕贴在颊侧，眼下有明显倦意",
+      "identities": [
+        "i_passenger_default"
+      ]
+    }
+  ],
+  "identities": [
+    {
+      "id": "i_driver_default",
+      "name": "工装制服",
+      "character": "c_driver",
+      "appearance_details": "深蓝色公交司机工装外套，肩部略褪为灰蓝，内里白色衬衫领口微敞，左胸别一枚褪色工牌；深色长裤，黑色胶底鞋"
+    },
+    {
+      "id": "i_passenger_default",
+      "name": "通勤装",
+      "character": "c_passenger",
+      "appearance_details": "米白色针织开衫，肩头一片被雨打湿的深色水痕，内搭浅灰衬衫；黑色直筒长裤，白色运动鞋，左肩挎一只深灰色帆布通勤包"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "s_bus_night",
+      "name": "末班公交车厢",
+      "environment": "雨夜的末班公交车厢，顶灯是暖黄色，车窗挂满水珠，外面是被雨糊成一片的路灯光斑",
+      "scene_no": 1
+    }
+  ],
+  "props": [],
+  "shots": [
+    {
+      "id": "s01",
+      "scene": "s_bus_night",
+      "cast": [
+        "i_passenger_default"
+      ],
+      "props": [],
+      "duration_s": 4,
+      "shot_size": "近景",
+      "lighting": "低照度冷光，暗部层次",
+      "camera": "固定镜头",
+      "action": "雨刷来回摆动，车厢空荡，只剩小雨一个人靠窗坐着，肩头还沾着雨点。",
+      "prompt": "{{i_passenger_default}}，雨刷来回摆动，车厢空荡，只剩小雨一个人靠窗坐着，肩头还沾着雨点。，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "i_passenger_default",
+          "text": "师傅，前面路口能停一下吗？我住那儿。",
+          "emotion": "疲惫",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        11,
+        12
+      ]
+    },
+    {
+      "id": "s02",
+      "scene": "s_bus_night",
+      "cast": [
+        "i_driver_default"
+      ],
+      "props": [],
+      "duration_s": 2,
+      "shot_size": "近景",
+      "lighting": "低照度冷光，暗部层次",
+      "camera": "固定镜头",
+      "action": "阿伟抬眼看了下后视镜，没有立刻回答。",
+      "prompt": "{{i_driver_default}}，阿伟抬眼看了下后视镜，没有立刻回答。，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "i_driver_default",
+          "text": "那儿没站。",
+          "emotion": "",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        13,
+        14
+      ]
+    },
+    {
+      "id": "s03",
+      "scene": "s_bus_night",
+      "cast": [
+        "i_passenger_default"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "低照度冷光，暗部层次",
+      "camera": "缓慢横移",
+      "action": "小雨愣了一下，点点头，把脸转回窗外。 车速慢慢降下来，公交车在路口提前滑停，转向灯一下一下地闪。",
+      "prompt": "{{i_passenger_default}}，小雨愣了一下，点点头，把脸转回窗外。 车速慢慢降下来，公交车在路口提前滑停，转向灯一下一下地闪。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        15,
+        17
+      ]
+    },
+    {
+      "id": "s04",
+      "scene": "s_bus_night",
+      "cast": [
+        "i_driver_default"
+      ],
+      "props": [],
+      "duration_s": 2,
+      "shot_size": "近景",
+      "lighting": "低照度冷光，暗部层次",
+      "camera": "固定镜头",
+      "action": "阿伟开口说话",
+      "prompt": "{{i_driver_default}}，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "i_driver_default",
+          "text": "下雨，走回去远。",
+          "emotion": "",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        18
+      ]
+    },
+    {
+      "id": "s05",
+      "scene": "s_bus_night",
+      "cast": [
+        "i_passenger_default"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "近景",
+      "lighting": "低照度冷光，暗部层次",
+      "camera": "固定镜头",
+      "action": "小雨开口说话",
+      "prompt": "{{i_passenger_default}}，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "i_passenger_default",
+          "text": "我以为会被拒绝的。",
+          "emotion": "内心独白",
+          "kind": "voiceover"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        19
+      ]
+    },
+    {
+      "id": "s06",
+      "scene": "s_bus_night",
+      "cast": [
+        "i_passenger_default"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "低照度冷光，暗部层次",
+      "camera": "缓慢横移",
+      "action": "小雨快步走下车，回头朝驾驶座挥了挥手。",
+      "prompt": "{{i_passenger_default}}，小雨快步走下车，回头朝驾驶座挥了挥手。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        20
+      ]
+    }
+  ]
+}

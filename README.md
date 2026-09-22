@@ -1,8 +1,15 @@
 # Story2Video Harness
 
+![CI](https://github.com/SunguochaoYeepay/DSH-Drama-Skill/actions/workflows/ci.yml/badge.svg)
+![Node](https://img.shields.io/badge/node-20%20%7C%2022-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
 把故事或成品剧本转换为导演方案、视觉资产、关键帧、逐段视频和最终成片的本地工程。
 
 工程的重点不是"一键生成"，而是让每个高成本阶段都有结构化输入和人工确认，避免错误一直传到视频生成阶段。
+
+> 改动规程（人工票纪律、测试判据、`references/` 规则的四要素提案）见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
 
 ## 当前流程
 
@@ -22,12 +29,16 @@
 
 ```text
 ai-images-harness/
-├─ SKILL.md                  Skill 入口、状态机和阶段路由
 ├─ README.md                 工程说明
 ├─ CHANGELOG.md              工程行为变更记录
+├─ CONTRIBUTING.md           改动规程：人工票、测试判据、规则提案
+├─ SKILL.md                  Skill 入口、状态机和阶段路由
+├─ .github/workflows/ci.yml  CI：Node 20 / 22 跑 npm test
 ├─ .env.example              本机模型、通道与规格配置模板
 ├─ cli/                      可直接执行的命令
 ├─ src/                      业务逻辑和提供方适配
+├─ schema/                   Storyboard JSON Schema
+├─ tests/                    确定性测试（含 tests/integration/ 活体验证）
 ├─ references/               按阶段加载的规则和模型提示
 │  ├─ preflight.md           开工前清单（环境体检、预算、提示词自检）
 │  ├─ story-craft.md         剧本工艺入口（节拍/动机/台词/自检）
@@ -35,46 +46,57 @@ ai-images-harness/
 │  ├─ cinematography.md      摄影语言契约（镜头/光/风格头，立项定、全片共用）
 │  ├─ qa-and-review.md       人工送审规则（只有人工确认，没有机器审核）
 │  ├─ director/              导演 Brief 与输出结构
-│  ├─ art/                   分题材视觉语言包（realistic / cartoon3d / …）
+│  ├─ art/                   分题材视觉语言库（realistic / cartoon3d / …）
 │  ├─ draw-specialist.md     抽卡师岗位规范（LLM 直写制，2026-09-21 起）
 │  ├─ prompt-rules.md        生图提示词禁令与正向工艺（双闸执行）
-│  ├─ draw-vocabulary.md     生图正向词汇库（光照/镜头/材质/姿态）
-│  └─ prompts/               故事与 storyboard 提示模板（已退役，仅历史契约）
-├─ schema/                   Storyboard JSON Schema
-├─ tests/                    确定性测试（含 tests/integration/ 活体验证）
+│  └─ draw-vocabulary.md     生图正向词汇库（光照/镜头/材质/姿态）
+├─ examples/demo-show/       示例剧目：一整条契约链，只有文本没有媒体
 ├─ plugins/                  UI 插件
-├─ vendor/                   外部工具快照（comfy-studio 的 gen.py 等，随仓库分发）
+├─ vendor/comfy-studio/      外部工具快照（见该目录 README 的许可提示）
 ├─ web/                      独立看板（server.mjs 零依赖服务 + src/ 前端源码，不依赖 DSH）
-└─ projects/                 剧目目录（契约链入 git，媒体产物被 .gitignore 挡住）
+└─ projects/                 你的剧放这儿（**整体不入库**，只有说明用的 README 例外）
 ```
 
-仓库不保存真实剧目的图片、视频、音频、缓存或运行日志（`.gitignore` 按扩展名挡住）。**例外（2026-09-22 起）**：剧目的契约链 —— 剧本、板子、导演稿、生成计划、人工票、提示词、请求档案等文本文件 —— 随仓库入库，审计链完整可查。
+**仓库里放的是工具，不是剧。** clone 下来拿到的是能跑的流水线：
 
-测试输入例外：最小、稳定、无生成媒体的 JSON/文本夹具保存在 `tests/fixtures/`。需要真实 ComfyUI、云服务或已安装插件的检查放在 `tests/integration/`，不属于普通单元测试。
+- `projects/` 整体不进 git —— 你的剧本、板子、剧照、成片都在本地磁盘上，不会出现在 `git status` 里，
+  也不会被推到远端。历史提交里若仍有旧版本，用 `git log --oneline -- projects/<名>` 翻阅。
+- 图片 / 视频 / 音频连传记都不入库（`.gitignore` 按扩展名挡住），凭据也是。
+- 想给别人看这套契约长什么样，用 [`examples/demo-show/`](examples/README.md) —— 它只有文本文件。
+- 测试输入例外：最小、稳定、无生成媒体的 JSON/文本夹具保存在 `tests/fixtures/`。需要真实 ComfyUI、云服务或已安装插件的检查放在 `tests/integration/`，不属于普通单元测试。
 
 ## 项目工作区
 
-每部剧放在**仓库内**的独立目录（2026-09-22 从仓库外迁入）：
+每部剧放在**仓库内** `projects\` 下的独立目录。**项目根是硬规则**：一律建在这儿，新建立项前先列一次
+`projects\`，已有同名副目录就续用，没有才新建。不要在仓库外、其他磁盘或临时目录自建项目目录。
+
+### 目录按阶段命名，不按"这次怎么跑"命名
+
+这一条是被数据打出来的教训：18 部历史剧里出现过 **19 种** `keyframes_*` 目录名
+（`keyframes_local_v2` / `_8step` / `_20step` / `_retry` / `_bailian_v4` / `_testfix2` / `_volcengine` …），
+因为每换一次通道、每重试一次就新开一层。结果是没人知道哪一层是准的，看板也得靠猜目录名去凑数据。
+
+**阶段是一回事，跑法是另一回事** —— 通道、步数、分辨率属于这一次的执行参数，写进 manifest，
+不写进目录名。要留不同跑法的快照，用 `--out_dir` 指到别处，不要在剧目里并列兄弟目录。
 
 ```text
 projects/<剧名>\
-├─ story.md
-├─ story.provenance.json
-├─ board.json
-├─ board.direction.json
+├─ story.md                  原剧本
+├─ story.provenance.json     剧本来源票（谁写的、基于什么素材）
+├─ board.json                故事板（含 meta.created_at = 立项时刻）
+├─ board.direction.json      导演方案
 ├─ board.direction.json.provenance.json
-├─ render.plan.json
-├─ review.approvals.json
-├─ inputs\references\          用户原始参考图，只读保存
-├─ assets\
-├─ keyframes\
-├─ units\
-├─ reviews\
-├─ out\
-└─ .tmp\
+├─ render.plan.json          生成计划（可执行的单元划分）
+├─ review.approvals.json     人工票，**只由 review-gate 在人说「通过」后写**
+├─ keyframe-prompts\         关键帧提示词，逐字送模型
+├─ assets\                   角色 / 场景图与其请求档案
+├─ units\                    每段视频与它的 result
+├─ reviews\                  人工审阅记录（← 经验沉淀也落这儿）
+└─ out\                      成片
 ```
 
-**项目根是硬规则**：一律建在本仓库的 `projects\<剧名>\` 下，新建立项前先列一次该 `projects\` 目录，已有同名副目录就续用，没有才新建。不要在仓库外、其他磁盘或临时目录自建项目目录。历史剧目已从 `E:\AI-Tool\DeepSeek\story2video\projects\` 整体迁入（原目录保留作快照，不再往那里写新东西）。
+最小可跑的样子直接看 [`examples/demo-show/`](examples/README.md) —— 同样结构，只有文本没有媒体。
+想让看板直接读示例，把 `AIH_PROJECTS_ROOT` 指过去：`AIH_PROJECTS_ROOT=examples npm run kanban`。
 
 ## 从零跑起来
 
@@ -275,9 +297,13 @@ $env:VERIFY_INSTALLED=1; node tests/integration/dsh-plugins.test.mjs
 ## 依赖
 
 - Node.js 20+
-- FFmpeg / FFprobe
+- FFmpeg / FFprobe（少数测试会用它现造素材；GitHub Actions 的 runner 自带）
 - 本地 ComfyUI 与 `comfy-studio`
 - 百炼 CLI（使用百炼图片模型时）
+
+> ⚠ `vendor/comfy-studio/` 下三个 Python 文件是**第三方快照**，没有任何许可头，
+> **不在本仓库 MIT 许可范围内**。详情见 [vendor/comfy-studio/README.md](vendor/comfy-studio/README.md)；
+> 想换成自己机器上的那份，设 `AIH_GEN` 环境变量即可。
 
 模型凭据、项目媒体和运行缓存不得提交到仓库。
 

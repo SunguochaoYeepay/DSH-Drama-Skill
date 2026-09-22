@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # 只有 bailian-cli 一个运行时依赖，且确定性测试用不到它；装它是为了让
+      # src/runtime-paths.mjs 的仓内路径分支与时保持一致。
+      - run: npm install --ignore-scripts
+
+      # 确定性测试：不联网、不烧卡、不需要 ComfyUI。
+      # 少数用例要用 ffmpeg 现造素材 —— ubuntu runner 自带。
+      - run: npm test
+
+      - name: 契约自检
+        run: node cli/doctor.mjs || true
