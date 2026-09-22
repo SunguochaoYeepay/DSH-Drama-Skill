@@ -18,7 +18,7 @@ import fs from 'node:fs';
 import {
   assetPlan, portraitPrompt, sheetInstruction, sheetRefs,
   masterPrompt, propPrompt, keyframeRefs, keyframeInstruction,
-  shotPrompt, expandMarkers, styleAnchor, isHuman, wearsClothes,
+  shotPrompt, expandMarkers, styleAnchor, sceneAnchor, isHuman, isAnthropomorphic, wearsClothes,
 } from '../src/assets.mjs';
 import { FIXTURE, fixtureOrArg } from './fixtures/index.mjs';
 
@@ -191,10 +191,59 @@ console.log('\n身份图（非人类分支）');
     /同一身毛色与斑纹/.test(ins) && !/同一套服装/.test(ins), ins.slice(0, 80));
   check('人类：仍保留「人物」与「发型、领口」措辞（不能被改回归）',
     /人物/.test(sheetInstruction(board, board.identities[0])) && /发型、领口/.test(sheetInstruction(board, board.identities[0])));
+
+  // 拟人化（F1，🔁 已复发第 2 次：gopher_toll → half_step 2026-09-21）：
+  // `species` 含 `anthropomorphic` 时必须换掉「四足／不直立／不拟人化」整段 ——
+  // 否则「直立跳舞的小狐狸」会拿到一张趴着的裸兽身份图，与每条关键帧提示词互相矛盾。
+  const anthroBoard = structuredClone(animalBoard);
+  const anthroCh = anthroBoard.characters[0];
+  anthroCh.species = 'fox_anthropomorphic';
+  const anthroIdent = anthroBoard.identities.find((y) => y.character === anthroCh.id);
+  anthroIdent.appearance_details = '橙红色短毛，胸口与腹部白色，蓬松的大尾巴末端是白色；脖子上一条深蓝色细围巾';
+  const insAnthro = sheetInstruction(anthroBoard, anthroIdent);
+  check('拟人：不再出现「四足动物／不直立／不拟人化」',
+    !/四足动物/.test(insAnthro) && !/不直立/.test(insAnthro) && !/不拟人化/.test(insAnthro), insAnthro.slice(-110));
+  check('拟人：点明直立、两条腿站立与可抓握的双手',
+    /直立/.test(insAnthro) && /两条腿站立/.test(insAnthro) && /双手/.test(insAnthro), insAnthro.slice(-110));
+  check('拟人：不出现「人物」措辞', !/人物/.test(insAnthro), insAnthro.slice(0, 80));
+  const pAnthro = portraitPrompt(anthroBoard, anthroBoard.characters[0]);
+  check('拟人肖像：不再出现「四足动物／不直立／不拟人化」',
+    !/四足动物/.test(pAnthro) && !/不直立/.test(pAnthro) && !/不拟人化/.test(pAnthro), pAnthro.slice(-110));
+  check('拟人肖像：点明直立与可抓握的双手，且不表现服装',
+    /直立/.test(pAnthro) && /双手/.test(pAnthro) && /不表现服装/.test(pAnthro), pAnthro.slice(-110));
+
+  // 反向守卫：同一块板子把 species 换成不含 anthropomorphic 的 `fox`，必须回到四足配方 —— 三档互斥
+  const quadBoard = structuredClone(anthroBoard);
+  quadBoard.characters[0].species = 'fox';
+  const quadIdent = quadBoard.identities.find((y) => y.character === quadBoard.characters[0].id);
+  check('同一块板子换回四足 species：配方回到「四足动物」',
+    /四足动物/.test(sheetInstruction(quadBoard, quadIdent))
+    && /四足动物/.test(portraitPrompt(quadBoard, quadBoard.characters[0])), 'anthropomorphic 判定漏进了四足档');
+
+  // 判定本身是纯函数：三档互斥（human / 四足 / 拟人）
+  check('isAnthropomorphic：human 与四足都为否，含 anthropomorphic 为真（大小写不限）',
+    !isAnthropomorphic({ species: 'human' }) && !isAnthropomorphic({}) && !isAnthropomorphic({ species: 'fox' })
+    && isAnthropomorphic({ species: 'fox_anthropomorphic' }) && isAnthropomorphic({ species: 'Fox_Anthropomorphic' }));
 }
 
 // ---------- 四、场景：带风格圣经 + 禁人 ----------
 console.log('\n场景');
+
+// F5（gopher_toll 2026-09-21，🔁 同类教训第 2 次）：**两套风格锚必须共用同一套形状语言。**
+// 卡司锚按「模型只认形状、不认风格名」修过，场景锚当时漏了 —— 实测同机同参数下
+// **卡司出卡通、场景主图出写实照片**，而场景主图是喂给全部关键帧的风格锚。
+// 断言的是**配方产出**（进提示词的字符串本身就是产物，不是源码文本），并且按关键词计数判定，
+// 换一套等价措辞不会假红。
+{
+  const SHAPE_WORDS = ['圆润', '饱满', '块状', '简化', '夸张', '大色块'];
+  const hits = (text) => SHAPE_WORDS.filter((w) => String(text).includes(w)).length;
+  const cartoon = { meta: { style: 'cartoon3d' } };
+  const castHits = hits(styleAnchor(cartoon));
+  const sceneHits = hits(sceneAnchor(cartoon));
+  check('卡通档：场景锚与卡司锚都点名具体形状（只修一个会出写实照片）',
+    castHits >= 2 && sceneHits >= 2, `卡司 ${castHits} 个 / 场景 ${sceneHits} 个`);
+}
+
 for (const s of board.scenes) {
   const p = masterPrompt(board, s);
   check(`${s.id}：主图**带**风格圣经`, p.includes(STYLE_MARK));

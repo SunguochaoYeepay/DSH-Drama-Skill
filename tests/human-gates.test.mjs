@@ -60,4 +60,46 @@ review.approvals.clips.g001 = { preview: review.approvals.clips.g001.final };
 fs.writeFileSync(reviewFile, JSON.stringify(review));
 assert.equal(approvalStatus(legacy, 'clip', [legacyVideo], 'g001').ok, false);
 assert.throws(() => requireAllClips(legacy, { units: [{ id: 'g001' }] }), /尚未人工确认/);
+// 板子票绑**语义**而不是字节（2026-09-21 F4）：`cli/assets.mjs` 开头查板子票、结尾把资源路径
+// 回填进 `board.json`，票原先绑整文件哈希 → 同一张票被自己的下游冲掉。用真实文件名 board.json
+// 验证两件事：**资源回填不失效**（否则流程自锁），**语义变更照旧失效**（否则票就白签了）。
+const bp = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-gates-board-'));
+const boardFile = path.join(bp, 'board.json');
+const baseBoard = {
+  meta: { title: '示例', project: 'example', aspect: '16:9', style: 'cartoon3d', total_duration_s: 0, stage: 'story', approvals: {} },
+  characters: [{ id: 'c1', name: '甲', species: 'human', age_group: 'youth', face_prompt: '圆脸，黑色短发', identities: ['c1_a'], portrait: null }],
+  identities: [{ id: 'c1_a', character: 'c1', name: '甲·常服', appearance_details: '灰色外套与长裤', sheet: null }],
+  scenes: [{ id: 's1', name: '山谷口', environment: '两面岩壁收成一道窄口', master: null }],
+  props: [],
+};
+const writeBoard = (b) => fs.writeFileSync(boardFile, `${JSON.stringify(b, null, 2)}\n`);
+const clone = (b) => JSON.parse(JSON.stringify(b));
+
+writeBoard(baseBoard);
+approve(bp, 'board', [boardFile]);
+assert.equal(approvalStatus(bp, 'board', [boardFile]).ok, true);
+
+const filled = clone(baseBoard);
+filled.characters[0].portrait = 'assets/c1_portrait.png';
+filled.identities[0].sheet = 'assets/c1_a_sheet.png';
+filled.scenes[0].master = 'assets/s1_master.png';
+filled.meta.stage = 'assets';
+filled.meta.total_duration_s = 24.3;
+writeBoard(filled);
+assert.equal(approvalStatus(bp, 'board', [boardFile]).ok, true, '资源回填 / 流程推进不该让板子票失效');
+requireApproval(bp, 'board', [boardFile]);
+
+const renamed = clone(filled);
+renamed.scenes[0].name = '河滩';
+writeBoard(renamed);
+assert.match(approvalStatus(bp, 'board', [boardFile]).reason, /失效/, '场景改名必须让板子票失效');
+assert.throws(() => requireApproval(bp, 'board', [boardFile]), /板子/);
+
+writeBoard(filled);
+approve(bp, 'board', [boardFile]);
+const addedProp = clone(filled);
+addedProp.props.push({ id: 'p1', name: '木棍', description: '一根天然木棍' });
+writeBoard(addedProp);
+assert.match(approvalStatus(bp, 'board', [boardFile]).reason, /失效/, '新增道具是语义变更，必须让票失效');
+
 console.log('human gates: passed');

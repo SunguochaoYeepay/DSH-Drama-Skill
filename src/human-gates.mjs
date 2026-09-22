@@ -23,6 +23,55 @@ export function fingerprint(files) {
 
 export function reviewPath(projectDir) { return path.join(projectDir, REVIEW_FILE); }
 
+/**
+ * 板子票绑的是**语义**，不是字节。
+ *
+ * 起因（F4，2026-09-21 第 2 次记录）：`cli/assets.mjs` 在开头查板子票、结尾把资产生成结果
+ * **回填**进 `board.json`。票原先绑整文件 SHA-256，于是**同一张票被自己的下游冲掉**：
+ * 分批 `--only` 出资产做不到（第一次回填就冲掉票，第二次立刻被拒），关键帧入口也被拒。
+ * 参照剧目 `one_step_late` 的票据时间戳显示实际做法是「板子票排到最后连批」—— 官方文本里没有这一步。
+ *
+ * 板子票要防的是「确认了 A、交付了 B」—— 那是**场景清单 / 角色 / 造型 / 道具**被改，
+ * 不是资源槽位里多出一个文件名。所以这里按语义字段算指纹。
+ *
+ * 不进指纹的两类（都在这张票的语义之外）：
+ *   · 资源槽位：portrait / sheet / master / reverse_master / spatial_layout /
+ *     ref_image / costume_image / reference_images / voice_ref —— 由资源阶段回填；
+ *   · 运行期字段：stage / approvals / final_video / total_duration_s —— 由流程推进改写。
+ *
+ * **改板子的语义字段，票照旧失效** —— 这一条没有松（断言见 tests/human-gates.test.mjs）。
+ */
+const BOARD_VOLATILE_KEYS = new Set([
+  'portrait', 'sheet', 'master', 'reverse_master', 'spatial_layout',
+  'ref_image', 'costume_image', 'reference_images', 'voice_ref',
+  'stage', 'approvals', 'final_video', 'total_duration_s',
+]);
+
+function boardSemanticHash(file) {
+  const board = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const strip = (value) => {
+    if (Array.isArray(value)) return value.map(strip);
+    if (!value || typeof value !== 'object') return value;
+    const out = {};
+    for (const key of Object.keys(value).sort()) {
+      if (BOARD_VOLATILE_KEYS.has(key)) continue;
+      out[key] = strip(value[key]);
+    }
+    return out;
+  };
+  return crypto.createHash('sha256').update(JSON.stringify(strip(board))).digest('hex');
+}
+
+/** 按阶段取指纹：`board.json` 走语义，其余一律走字节。 */
+function stageFingerprint(stage, files) {
+  const normalized = [...new Set(files.map((f) => path.resolve(f)))].sort();
+  if (stage === 'board' && normalized.length === 1 && path.basename(normalized[0]) === 'board.json') {
+    if (!fs.existsSync(normalized[0])) throw new Error(`审阅产物不存在：${normalized[0]}`);
+    return { hash: boardSemanticHash(normalized[0]), files: normalized };
+  }
+  return fingerprint(files);
+}
+
 export function planKeyframeFiles(projectDir, plan) {
   return (plan.units || []).map((unit) => {
     const handoff = fs.existsSync(handoffPath(projectDir, unit.id)) ? requireHandoff(projectDir, unit) : null;
@@ -52,7 +101,7 @@ function slot(data, stage, id) {
 export function approvalStatus(projectDir, stage, files, id = null) {
   const approval = slot(readReviews(projectDir), stage, id);
   if (!approval) return { ok: false, reason: '尚未人工确认' };
-  const current = fingerprint(files);
+  const current = stageFingerprint(stage, files);
   if (approval.artifact_hash !== current.hash) return { ok: false, reason: '产物已变化，旧确认自动失效' };
   return { ok: true, approval };
 }
@@ -72,7 +121,7 @@ export function requireApproval(projectDir, stage, files, { id = null, skip = fa
 
 export function approve(projectDir, stage, files, { id = null, by = '用户' } = {}) {
   const data = readReviews(projectDir);
-  const artifact = fingerprint(files);
+  const artifact = stageFingerprint(stage, files);
   const ticket = { at: new Date().toISOString(), by, artifact_hash: artifact.hash, artifacts: artifact.files };
   const generation = readGenerationRecord(projectDir, stage);
   if (generation) ticket.generation = generation;

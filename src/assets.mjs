@@ -84,7 +84,14 @@ export function styleAnchor(board) {
  * 场景媒介只锁「渲染管线/光/配色/材质」，角色脸型归卡司参考图锁。
  */
 const STYLE_ANCHOR_SCENE = {
-  cartoon3d: '欧美三维卡通动画长片风格的场景，三维渲染管线，柔和体积光与柔阴影，高饱和动画配色，玩具般的材质质感',
+  // 🔁 **已复发（gopher_toll 2026-09-21）**：这条原先只写「柔和体积光/高饱和配色/玩具般材质」，
+  //    **一个形状词都没有** —— 而卡司锚早就按同一条教训修过（见下面 STYLE_ANCHOR.cartoon3d 的注释：
+  //    「'3D 卡通'是个风格名不是画面描述，模型只认形状」）。同一个教训只修了卡司锚、没修场景锚。
+  //    实测对照（同机、同 25 步 `--style anime`）：**卡司全是卡通、两张场景主图全是写实照片**；
+  //    补上形状语言后重出，**一次到位变明确的 3D 卡通**。
+  //    场景主图是喂给**全部关键帧**的风格锚，它写实，后面每一帧的背景都写实。
+  cartoon3d: '欧美三维卡通动画长片风格的场景，皮克斯迪士尼式三维渲染：圆润饱满的块状体积、'
+    + '简化夸张的地理造型、干净的大色块、玩具般的哑光材质，柔和体积光与柔阴影，高饱和动画配色',
 };
 
 export function sceneAnchor(board) {
@@ -160,6 +167,26 @@ export function isHuman(ch) {
 }
 
 /**
+ * 拟人化的非人类角色？
+ *
+ * **约定**：`species` 里带 `anthropomorphic`（大小写不限，形如 `fox_anthropomorphic` /
+ * `gopher_anthropomorphic`）即视为**直立的拟人角色**：用两条腿站立、有可以抓握东西的双手。
+ *
+ * **为什么需要这一档**（F1，🔁 已复发第 2 次：`gopher_toll` 2026-09-21 → `half_step` 同日）：
+ * 非人类分支原先只有「四足萌宠」一种写法，硬编码
+ *   「四足动物，不穿任何衣物、不佩戴任何配饰，不拟人化、不直立」
+ * 遇到「直立的地鼠劫匪」「直立跳舞的小狐狸」时，**身份锚会和每一条关键帧提示词互相矛盾**
+ * （gopher_toll 实测：那只地鼠只能靠手工写的肖像/身份图提示词绕开自动配方）。
+ *
+ * 判据放在 `species` 上、不靠猜文案：**属性必需，就必须有明确的拥有者** —— 与整个非人类分支同一条规矩。
+ * 缺省（或 human）= 人类；非 human 且不含 `anthropomorphic` = 四足动物。这三档互斥。
+ */
+export function isAnthropomorphic(ch) {
+  if (!ch || isHuman(ch)) return false;
+  return /anthropo/i.test(String(ch.species || ''));
+}
+
+/**
  * 这只非人类角色有没有服装？
  *
  * 🔁 已复发（fat_cat 2026-09-20）：非人类配方硬编码「四足动物，不穿任何衣物、不拟人化」，
@@ -186,6 +213,7 @@ export function wearsClothes(board, character) {
  */
 export function portraitPrompt(board, character, contract = null) {
   const human = isHuman(character);
+  const anthro = isAnthropomorphic(character);
   const region = human && needsRegion(character.face_prompt) ? regionAnchor(board) : '';
   // 肖像只吃排除项与焦段，**不吃风格头和光**（`assetCinematography` 里有判据表）。
   // 这两块自带标点和【】包裹，直接贴在风格锚后面，不进「，」拼接 —— 否则会出现「。，」。
@@ -210,10 +238,20 @@ export function portraitPrompt(board, character, contract = null) {
       ? '【服装】只穿**素色无花纹的上衣**（领口可见即可）；**不出现任何服装细节** —— 不要戏服、纹样、腰带、配饰。'
         + '**上衣必须是完全纯色的** —— 不要碎花、不要图案、不要印花、不要条纹、不要格子、不要蕾丝、不要刺绣。'
         + '**画面下边界必须切在锁骨上方**，画面里只有头部与颈部，**颈部和肩以下不允许出现任何衣物**。'
-      : (wearsClothes(board, character)
-        ? '【体表】**四足动物，不拟人化、不直立**；只有自然的毛发与体表特征。'
-          + '**本图不表现服装**（服装归造型层的身份图负责），画面下边界切在胸口上方，不出现服装细节。'
-        : '【体表】**四足动物，不穿任何衣物、不佩戴任何配饰**，不拟人化、不直立；只有自然的毛发与体表特征。'),
+      : (anthro
+        // 拟人化（`species` 含 anthropomorphic）：**不许出现「四足／不直立／不拟人化」** ——
+        // 那三句是给四足萌宠写的，用在直立的拟人角色上会把身份锚推向相反方向（F1，🔁 第 2 次）。
+        ? (wearsClothes(board, character)
+          ? '【体表】这是一只**拟人化的卡通角色**：用两条腿直立、有可以抓握东西的双手，'
+            + '头颈结构与人类头部同构（有额头、眉弓、脸颊与下颌）；体表保留该物种的毛发与体表特征。'
+            + '**本图不表现服装**（服装与配饰归造型层的身份图负责），画面下边界切在胸口上方，不出现服装细节。'
+          : '【体表】这是一只**拟人化的卡通角色**：用两条腿直立、有可以抓握东西的双手，'
+            + '头颈结构与人类头部同构（有额头、眉弓、脸颊与下颌）；体表保留该物种的毛发与体表特征。'
+            + '**本图不画任何衣物与配饰**（头巾、背包这类配饰归身份图负责）。')
+        : (wearsClothes(board, character)
+          ? '【体表】**四足动物，不拟人化、不直立**；只有自然的毛发与体表特征。'
+            + '**本图不表现服装**（服装归造型层的身份图负责），画面下边界切在胸口上方，不出现服装细节。'
+          : '【体表】**四足动物，不穿任何衣物、不佩戴任何配饰**，不拟人化、不直立；只有自然的毛发与体表特征。')),
     '【禁止】画面里不许出现任何文字、水印、边框、色卡、标注，也不许出现道具和场景。',
   ].filter(Boolean).join('，'));
 }
@@ -235,6 +273,7 @@ export function portraitPrompt(board, character, contract = null) {
 export function sheetInstruction(board, identity, contract = null) {
   const ch = (board.characters || []).find((c) => c.id === identity.character);
   const human = isHuman(ch);
+  const anthro = isAnthropomorphic(ch);
   const region = ch && human && needsRegion(ch.face_prompt) ? regionAnchor(board) : '';
   // 同肖像：只吃排除项与焦段，不吃风格头和光。这两块自带标点，直接贴在风格锚后。
   const cine = assetCinematography(contract, 'sheet');
@@ -273,11 +312,17 @@ export function sheetInstruction(board, identity, contract = null) {
     human
       ? '**参考图只用于锁定长相（脸型、五官）；参考图里的发型与衣着都必须完全忽略，'
         + '四个面板的发型与服装一律以上面那段描述为准**'
-      : (wearsClothes(board, ch)
-        ? '**参考图只用于锁定长相（脸型、五官、毛色与斑纹）；参考图里出现的任何衣着都必须完全忽略，'
-          + '四个面板的服装一律以上面 appearance_details 描述为准；角色仍是四足动物，不直立、不拟人化**'
-        : '**参考图只用于锁定长相（脸型、五官、毛色与斑纹）；参考图里出现的任何衣着都必须完全忽略，'
-          + '四个面板的体表以上面那段描述为准；角色是四足动物，不穿衣、不拟人化**'),
+      : (anthro
+        // 拟人化：把「四足动物、不穿衣、不直立」整段换掉 —— 那三句会把四个面板推成趴着的裸兽，
+        // 与本片要的「直立的拟人角色」正好相反（F1，🔁 第 2 次：gopher_toll → half_step）。
+        ? '**参考图只用于锁定长相（脸型、五官、毛色与斑纹）；参考图里的衣着与配饰若与上面描述不一致，'
+          + '一律以上面那段描述为准；角色的身体结构是**直立的拟人化形态** —— 用两条腿站立、躯干挺直、'
+          + '有可以抓握东西的双手**'
+        : (wearsClothes(board, ch)
+          ? '**参考图只用于锁定长相（脸型、五官、毛色与斑纹）；参考图里出现的任何衣着都必须完全忽略，'
+            + '四个面板的服装一律以上面 appearance_details 描述为准；角色仍是四足动物，不直立、不拟人化**'
+          : '**参考图只用于锁定长相（脸型、五官、毛色与斑纹）；参考图里出现的任何衣着都必须完全忽略，'
+            + '四个面板的体表以上面那段描述为准；角色是四足动物，不穿衣、不拟人化**')),
     // 另一条实测教训：模型会自作主张加上"角色设定图 / 年龄 / 门派 / 服装配色"那套排版文字。
     // 那张图要当参考图喂给关键帧，**烧进去的字会跟着污染画面**。
     '【禁止】**画面里不许出现任何文字、数字、标题、标注、色标、参数表、分隔线、边框或水印**，'

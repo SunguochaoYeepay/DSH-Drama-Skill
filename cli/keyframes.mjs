@@ -34,7 +34,7 @@ import { allowedChangesList, bindHandoffKeyframe, requireHandoff } from '../src/
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { KEYFRAME_PROVIDER, KEYFRAME_IMAGE_MODEL, HUIMENG_IMAGE_MODEL, KEYFRAME_SIZE, BAILIAN_KEYFRAME_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG, LOCAL_KEYFRAME_FAST, LOCAL_KEYFRAME_SIZE, LOCAL_KEYFRAME_LORA, LOCAL_KEYFRAME_STEPS, LOCAL_KEYFRAME_CFG, LOCAL_IMAGE_MODEL, LOCAL_KEYFRAME_STEPS_21, LOCAL_KEYFRAME_CFG_21 } from '../src/config.mjs';
 import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
-import { withHandoffReference } from '../src/keyframe-references.mjs';
+import { refImageLimit, withHandoffReference } from '../src/keyframe-references.mjs';
 import { writeGenerationRecord } from '../src/generation-records.mjs';
 import { auditPrompt } from '../src/draw-specialist.mjs';
 import { localStyle } from '../src/providers/comfyui.mjs';
@@ -130,8 +130,12 @@ function refsFor(shot, unit) {
     { file: person.sheet, role: 'sheet', character: person.characterId },
   ]);
   if (PROVIDER === 'local' || PROVIDER === 'bailian' || PROVIDER === 'volcengine') {
-    if (assets.people.length > 2) {
-      throw new Error(`${unit.id}: 三个参考位中需保留一个给场景，最多只能精确锚定 2 名角色；请让导演拆分镜头`);
+    // 参考位容量按「通道 + 图像模型家族」算（`refImageLimit`）：本地 2.1 是 16 张，
+    // 旧 qwen 家族与百炼/火山仍是 3 张。**场景占 1 位**，其余给角色。
+    // 原先硬编码 `> 2` 是把 2.1 的能力当成了旧家族的 3 —— 见 src/keyframe-references.mjs 的来历。
+    const capacity = refImageLimit(PROVIDER, IMAGE_MODEL);
+    if (assets.people.length + 1 > capacity) {
+      throw new Error(`${unit.id}: 参考位共 ${capacity} 个、场景占 1 个，最多只能精确锚定 ${capacity - 1} 名角色；请让导演拆分镜头`);
     }
     if (PROVIDER === 'bailian' || PROVIDER === 'volcengine') {
       return [
@@ -231,7 +235,7 @@ for (const unit of dir.units) {
   }
   const shot = unit.shots[0];
   let refs = refsFor(shot, unit);
-  if (handoff) refs = withHandoffReference(refs, handoff.stable_frame, PROVIDER);
+  if (handoff) refs = withHandoffReference(refs, handoff.stable_frame, PROVIDER, { imageModel: IMAGE_MODEL });
   // 参考图表：与真正挂载的图片同源（refsFor / withHandoffReference 的产物）。
   // LLM 抽卡师写提示词时的「图N=职责」编号必须对齐这一行 —— 看到的就是跑的。
   const REF_ROLE_LABEL = {
