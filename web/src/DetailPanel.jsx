@@ -11,14 +11,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { mediaUrl, isVideo } from './api.js';
 import { directorUnitOf, fmtSec } from './graph.js';
+import { CopyBlock, CopyButton } from './Copy.jsx';
+
+/** `asset-design.json` 的设计类型 → 中文名。 */
+const KIND_LABEL = {
+  scene_design: '场景图',
+  character_design: '角色图',
+  prop_design: '道具图',
+};
 
 /* ── 小组件 ─────────────────────────────────────────────── */
 
 function Section({ title, right, children }) {
   return (
     <section className="mt-4 first:mt-0">
-      <div className="mb-2 flex items-baseline justify-between">
-        <h3 className="text-[12px] font-medium text-ink-300">{title}</h3>
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <h3 className="shrink-0 text-[12px] font-medium text-ink-300">{title}</h3>
         <span className="text-[11px] text-ink-500">{right}</span>
       </div>
       {children}
@@ -35,11 +43,30 @@ function KV({ label, children }) {
   );
 }
 
-function Box({ children, className = '' }) {
+/** 文本块。传了 `copy` 就在右上角挂一个复制按钮（复制的是**原文**，不是渲染后的 DOM）。 */
+function Box({ children, className = '', copy }) {
   return (
-    <div className={`rounded-lg border border-ink-700/70 bg-ink-900/60 px-3 py-2 text-[12px] leading-relaxed ${className}`}>
-      {children}
+    <div className="relative">
+      {copy ? (
+        <div className="absolute right-1.5 top-1.5 z-10">
+          <CopyButton text={copy} />
+        </div>
+      ) : null}
+      <div className={`rounded-lg border border-ink-700/70 bg-ink-900/60 px-3 py-2 text-[12px] leading-relaxed ${copy ? 'pr-14' : ''} ${className}`}>
+        {children}
+      </div>
     </div>
+  );
+}
+
+/** 提示词区块：正文可复制，右上角标字数。 */
+function PromptSection({ title, text, missing, right }) {
+  return (
+    <Section title={title} right={text ? `${text.length} 字` : (right || '未写')}>
+      {text
+        ? <CopyBlock text={text} />
+        : <Box className="text-ink-500">{missing}</Box>}
+    </Section>
   );
 }
 
@@ -127,7 +154,12 @@ function StoryView({ snapshot, hitLines, jumpLine }) {
           ))}
         </div>
       </Section>
-      <Section title="剧本全文" right={snapshot.story ? `${lines.length} 行` : ''}>
+      <Section
+        title="剧本全文"
+        right={snapshot.story
+          ? <span className="flex items-center gap-2">{lines.length} 行<CopyButton text={snapshot.story} label="复制全文" /></span>
+          : ''}
+      >
         {snapshot.story ? (
           <div className="max-h-[calc(100vh-260px)] overflow-auto rounded-lg border border-ink-700/70 bg-ink-900/60 px-3 py-2 text-[12px] leading-relaxed">
             {lines.map((t, i) => {
@@ -254,10 +286,10 @@ function DirectionView({ snapshot, board, jumpUnitId, onJumpLine }) {
         </div>
       </Section>
       <Section title={`单元 ${current.id}`} right={`${(current.shots || []).length} 镜`}>
-        <KV label="首帧状态">{current.keyframe_start ? <Box className="max-h-40 overflow-auto">{current.keyframe_start}</Box> : '—'}</KV>
-        <KV label="为什么放一起"><Box>{current.why || '—'}</Box></KV>
-        <KV label="时长理由"><Box>{current.duration_reason || '—'}</Box></KV>
-        {current.audience_knows && <KV label="观众已知"><Box>{current.audience_knows}</Box></KV>}
+        <KV label="首帧状态">{current.keyframe_start ? <Box className="max-h-40 overflow-auto" copy={current.keyframe_start}>{current.keyframe_start}</Box> : '—'}</KV>
+        <KV label="为什么放一起"><Box copy={current.why}>{current.why || '—'}</Box></KV>
+        <KV label="时长理由"><Box copy={current.duration_reason}>{current.duration_reason || '—'}</Box></KV>
+        {current.audience_knows && <KV label="观众已知"><Box copy={current.audience_knows}>{current.audience_knows}</Box></KV>}
       </Section>
       <Section title="镜头">
         <div className="space-y-2">
@@ -356,8 +388,18 @@ function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine }) {
           <Box className="text-ink-500">这个单元还没有视频片段</Box>
         )}
       </Section>
-      {unit.audienceKnows && <Section title="观众已知"><Box>{unit.audienceKnows}</Box></Section>}
-      {unit.why && <Section title="切分理由"><Box>{unit.why}</Box></Section>}
+      <PromptSection
+        title="关键帧提示词"
+        text={unit.keyframePrompt}
+        missing={`还没有 keyframe-prompts/${unitId}.txt（LLM 直写制：这个文件逐字送模型）`}
+      />
+      <PromptSection
+        title="视频提示词"
+        text={unit.videoPrompt}
+        missing={`还没有 units/.${unitId}.prompt.txt`}
+      />
+      {unit.audienceKnows && <Section title="观众已知"><Box copy={unit.audienceKnows}>{unit.audienceKnows}</Box></Section>}
+      {unit.why && <Section title="切分理由"><Box copy={unit.why}>{unit.why}</Box></Section>}
       {dirUnit && (
         <Section title={`镜头（导演单元 ${dirUnit.id}）`} right={`${(dirUnit.shots || []).length} 镜`}>
           <div className="space-y-2">
@@ -384,7 +426,7 @@ function FinalView({ snapshot, project }) {
 
 /* ── 主组件 ─────────────────────────────────────────────── */
 
-export default function DetailPanel({ snapshot, project, selected, onOpen }) {
+export default function DetailPanel({ snapshot, project, selected, width = 560, onOpen }) {
   const [view, setView] = useState(null);   // {kind:'story', line} —— 从镜头跳剧本时用
   useEffect(() => { setView(null); }, [selected]);
 
@@ -416,7 +458,7 @@ export default function DetailPanel({ snapshot, project, selected, onOpen }) {
     : { 'stage:story': '剧本', 'stage:board': '板子', 'stage:direction': '导演稿', 'stage:plan': '生成计划' }[node] || node;
 
   return (
-    <aside className="flex h-full w-[560px] shrink-0 flex-col border-l border-ink-800 bg-ink-900">
+    <aside style={{ width }} className="flex h-full shrink-0 flex-col border-l border-ink-800 bg-ink-900">
       <header className="flex items-center gap-2 border-b border-ink-800 px-4 py-2.5">
         <h2 className="text-[13px] font-medium">{title}</h2>
         {hitLines?.size ? <span className="text-[11px] text-ink-500">涉及剧本 {hitLines.size} 行</span> : null}
@@ -439,6 +481,25 @@ export default function DetailPanel({ snapshot, project, selected, onOpen }) {
             </Section>
             <Section title="资源" right={`${(snapshot.assets || []).filter((a) => a.tab === 1).length} 项`}>
               <Gallery snapshot={snapshot} project={project} onOpen={onOpen} />
+            </Section>
+            <Section title="图提示词" right={`${(snapshot.assetPrompts || []).length} 条`}>
+              {(snapshot.assetPrompts || []).length ? (
+                <div className="space-y-2">
+                  {(snapshot.assetPrompts || []).map((p, i) => (
+                    <div key={`${p.kind}-${p.id}-${i}`}>
+                      <div className="mb-1 flex items-baseline gap-2">
+                        <span className="shrink-0 rounded bg-ink-800 px-1.5 py-px text-[10.5px] text-ink-300">
+                          {KIND_LABEL[p.kind] || p.kind}
+                        </span>
+                        <span className="truncate text-[11.5px] text-ink-300" title={p.label}>{p.label}</span>
+                      </div>
+                      <CopyBlock text={p.text} />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Box className="text-ink-500">没有 asset-design.json 的设计提示词（场景图 / 角色图）</Box>
+              )}
             </Section>
             <Section title="分镜" right={`${(board.shots || []).length} 镜`}>
               <div className="space-y-2">

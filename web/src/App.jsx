@@ -5,7 +5,7 @@
  * 画布由 `graph.js` 算出的节点与边驱动，点节点即换右侧内容。
  * 大图查看器（点缩略图全屏看）保留自旧页面。
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ReactFlow, Background, BackgroundVariant, Controls, MiniMap, MarkerType, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from '@xyflow/react';
 import { RefreshCw, CircleAlert, Archive, Trash2, ChevronRight, RotateCcw } from 'lucide-react';
 import {
@@ -16,9 +16,41 @@ import { buildGraph, GATE_LABELS } from './graph.js';
 import { nodeTypes } from './nodes.jsx';
 import DetailPanel from './DetailPanel.jsx';
 import ConfirmModal from './ConfirmModal.jsx';
+import Splitter from './Splitter.jsx';
 
 /** 顶栏票序（clips 单独按单元计数，不走这里）。 */
 const HEAD_GATES = ['story', 'board', 'direction', 'assets', 'keyframes', 'final'];
+
+/* ── 三栏宽度 ─────────────────────────────────────────────
+ * 左导航 / 中画布 / 右详情都可拖。留一条硬规矩：画布再挤也得留 CANVAS_MIN，
+ * 否则拖到底画布没了、React Flow 会退化成一条缝。
+ * 宽度记在 localStorage —— 每次打开是上次调好的样子。
+ */
+const LAYOUT_KEY = 'kanban.layout';
+const DEFAULT_LAYOUT = { left: 236, right: 560 };
+const MIN_LEFT = 160, MAX_LEFT = 460;
+const MIN_RIGHT = 320;
+const CANVAS_MIN = 360;
+
+/** 把宽度压回合法区间：画布优先，压不下再收左右两侧。 */
+function clampLayout(d, w = typeof window === 'undefined' ? 1440 : window.innerWidth) {
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(v, hi));
+  let left = clamp(d.left ?? DEFAULT_LAYOUT.left, MIN_LEFT, MAX_LEFT);
+  let right = clamp(d.right ?? DEFAULT_LAYOUT.right, MIN_RIGHT, Math.max(MIN_RIGHT, w - CANVAS_MIN));
+  if (left + right > w - CANVAS_MIN) {
+    right = Math.max(MIN_RIGHT, w - CANVAS_MIN - left);
+    left = Math.max(MIN_LEFT, w - CANVAS_MIN - right);
+  }
+  return { left, right };
+}
+
+function loadLayout() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LAYOUT_KEY) || 'null');
+    if (raw && typeof raw === 'object') return clampLayout(raw);
+  } catch { /* 存坏了就当没存 */ }
+  return clampLayout(DEFAULT_LAYOUT);
+}
 
 /** 剧目创建时间 → `09-21`（跨年显示 `2025-12-30`）。读不到返回空串。 */
 function fmtDay(iso) {
@@ -110,6 +142,38 @@ export default function App() {
   const [acting, setActing] = useState(false);
   const [actError, setActError] = useState('');
   const [notice, setNotice] = useState('');
+
+  // 三栏宽度（拖动分隔条改它）
+  const [layout, setLayout] = useState(loadLayout);
+  const dragBase = useRef(layout);
+
+  useEffect(() => {
+    try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout)); } catch { /* 无痕模式写不进，忽略 */ }
+  }, [layout]);
+
+  // 窗口变小（分屏、缩放）时把宽度收回来，别让画布被挤没
+  useEffect(() => {
+    const onResize = () => setLayout((d) => clampLayout(d));
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  /** 分隔条位移 → 新宽度。位移都从**按下那一刻**的宽度起算，避免拖到底后累积漂移。 */
+  const onResizeColumn = useCallback((side, dx) => {
+    setLayout((cur) => {
+      const base = dragBase.current;
+      const next = side === 'left'
+        ? { ...base, left: base.left + dx }
+        : { ...base, right: base.right - dx };
+      return clampLayout(next);
+    });
+  }, []);
+
+  const onStartResize = useCallback(() => { dragBase.current = layout; }, [layout]);
+
+  const resetColumn = useCallback((side) => {
+    setLayout((d) => clampLayout({ ...d, [side]: DEFAULT_LAYOUT[side] }));
+  }, []);
 
   /** 拉主线清单 + 归档清单；返回主线清单（调用方要拿它判断当前剧目还在不在）。 */
   const loadList = useCallback(async () => {
@@ -298,13 +362,11 @@ export default function App() {
             </button>
           </div>
         </div>
-        {snapshot?.logline && (
-          <p className="truncate px-4 pb-2 text-[11.5px] text-ink-400" title={snapshot.logline}>{snapshot.logline}</p>
-        )}
+   
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <nav className="w-[236px] shrink-0 overflow-y-auto border-r border-ink-800 bg-ink-900/60 px-2 py-2">
+        <nav style={{ width: layout.left }} className="shrink-0 overflow-y-auto border-r border-ink-800 bg-ink-900/60 px-2 py-2">
           <div className="px-2 pb-1.5 text-[11px] text-ink-500">剧目 · {projects.length}</div>
           {projects.map((p) => (
             <div
@@ -387,6 +449,14 @@ export default function App() {
           )}
         </nav>
 
+        <Splitter
+          side="left"
+          onStart={onStartResize}
+          onResize={onResizeColumn}
+          onReset={() => resetColumn('left')}
+          title="拖动调整剧目栏宽度（双击复位）"
+        />
+
         <main className="relative min-w-0 flex-1">
           {error ? (
             <div className="flex h-full items-center justify-center px-6 text-center text-[12.5px] text-bad">{error}</div>
@@ -403,7 +473,22 @@ export default function App() {
         </main>
 
         {snapshot && (
-          <DetailPanel snapshot={snapshot} project={snapshot.name} selected={selected} onOpen={openMedia} />
+          <>
+            <Splitter
+              side="right"
+              onStart={onStartResize}
+              onResize={onResizeColumn}
+              onReset={() => resetColumn('right')}
+              title="拖动调整详情栏宽度（双击复位）"
+            />
+            <DetailPanel
+              snapshot={snapshot}
+              project={snapshot.name}
+              selected={selected}
+              width={layout.right}
+              onOpen={openMedia}
+            />
+          </>
         )}
       </div>
 

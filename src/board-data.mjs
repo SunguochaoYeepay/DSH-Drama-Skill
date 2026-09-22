@@ -33,6 +33,22 @@ function readJson(file) {
   }
 }
 
+/** 读纯文本：读不到给 null —— 提示词文件缺是常态（阶段没走到），不是错误。 */
+function readText(file) {
+  try {
+    return fs.readFileSync(file, 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+/** 文本 → 送模型的形态（去首尾空白）；空串按「没有」处理。 */
+function trimOrNull(s) {
+  if (typeof s !== 'string') return null;
+  const t = s.trim();
+  return t || null;
+}
+
 /** 归档区目录名：归档剧目住这里，不进主线清单。 */
 export const ARCHIVE_DIRNAME = '_archive';
 
@@ -200,6 +216,64 @@ function clipOf(projectDir, unitId) {
 }
 
 /**
+ * 单元的**关键帧提示词**。
+ *
+ * 正主是 `keyframe-prompts/<unit>.txt`（2026-09-21 起的 LLM 直写制：`cli/keyframes.mjs`
+ * 逐字把它送进模型，工程拼装链已废）。老剧目走的是工程通道，提示词落在
+ * `keyframes_<通道>/raw/<unit>/_request/prompt.txt`，目录名不固定，所以扫一遍
+ * `keyframes*` 目录兜底 —— 只是**看**，不参与生成。
+ * @returns {string|null}
+ */
+export function keyframePromptOf(dir, unitId) {
+  const own = trimOrNull(readText(path.join(dir, 'keyframe-prompts', `${unitId}.txt`)));
+  if (own) return own;
+  let dirs = [];
+  try {
+    dirs = fs.readdirSync(dir, { withFileTypes: true })
+      .filter((e) => e.isDirectory() && e.name.startsWith('keyframes'))
+      .map((e) => e.name)
+      .sort();
+  } catch {
+    return null;
+  }
+  for (const d of dirs) {
+    const p = trimOrNull(readText(path.join(dir, d, 'raw', unitId, '_request', 'prompt.txt')));
+    if (p) return p;
+  }
+  return null;
+}
+
+/**
+ * 单元的**视频提示词**：`cli/unit.mjs` 写 `units/.<unit>.prompt.txt`
+ * （点开头，与出片产物区分）。个别老剧目写成了不带点的同名文件，兜一层。
+ * @returns {string|null}
+ */
+export function videoPromptOf(dir, unitId) {
+  return trimOrNull(readText(path.join(dir, 'units', `.${unitId}.prompt.txt`)))
+    ?? trimOrNull(readText(path.join(dir, 'units', `${unitId}.prompt.txt`)));
+}
+
+/**
+ * 场景图 / 角色图的**生成提示词**：`asset-design.json` 的 `designs[].prompt`。
+ * 只收带提示词的条目 —— 老文件里没写 prompt 的设计不占位。
+ * @returns {Array<{id:string,kind:string,label:string,text:string}>}
+ */
+export function assetPromptsOf(dir, board = {}) {
+  const design = readJson(path.join(dir, 'asset-design.json'));
+  const out = [];
+  for (const d of design?.designs || []) {
+    const text = trimOrNull(d?.prompt);
+    if (!text) continue;
+    const id = d.scene_id || d.character_id || d.prop_id || '';
+    const scene = (board.scenes || []).find((s) => s.id === d.scene_id);
+    const character = (board.characters || []).find((c) => c.id === d.character_id);
+    const label = scene?.name || character?.name || id || d.kind || '设计';
+    out.push({ id, kind: d.kind || 'design', label, text });
+  }
+  return out;
+}
+
+/**
  * 读一个剧目的完整快照（看板一屏要的全部数据，一次给齐）。
  * 任何单文件缺失都不抛 —— 缺的字段置 null / 空数组，界面按「—」画。
  *
@@ -238,6 +312,8 @@ export function loadProject(root, name) {
     why: u.why || '',
     keyframe: u.keyframe ? relInside(dir, u.keyframe) : null,
     clip: clipOf(dir, u.id),
+    keyframePrompt: keyframePromptOf(dir, u.id),
+    videoPrompt: videoPromptOf(dir, u.id),
   }));
 
   // 导演单元：**行号就地解成台词正文**（导演稿的 lines 只有行号，原文在剧本里）。
@@ -307,6 +383,7 @@ export function loadProject(root, name) {
     tickets,
     units,
     directionUnits,
+    assetPrompts: assetPromptsOf(dir, board),
     gates: gateSummary(tickets, units.map((u) => u.id)),
     assets,
     finalRel,

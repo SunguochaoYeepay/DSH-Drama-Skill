@@ -60,6 +60,11 @@ body {
 /* 选中节点：卡片描边亮起（不动 RF 自己的 box-shadow 轮廓线） */
 .react-flow__node.selected .card { border-color: var(--color-accent); }
 
+/* 拖列宽时：全窗口统一成 col-resize 并禁选中 —— 否则指针扫过画布/文字时
+   光标被各元素自己的 cursor 抢回去，还会顺手选中一片字 */
+body.kanban-resizing { cursor: col-resize; user-select: none; }
+body.kanban-resizing * { cursor: col-resize !important; user-select: none !important; }
+
 /* 剧本正文：行号表格布局，行号对齐、正文换行缩进 */
 .story-line { display: grid; grid-template-columns: 48px 1fr; gap: 8px; padding: 1px 0; border-radius: 4px; }
 .story-line > b { color: var(--color-ink-500); font-weight: 400; text-align: right; font-variant-numeric: tabular-nums; }
