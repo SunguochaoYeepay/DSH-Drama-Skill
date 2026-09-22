@@ -9,7 +9,7 @@
  * 只读 —— 没有任何写票入口。
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { mediaUrl, isVideo } from './api.js';
+import { mediaUrl, isVideo, videoLog } from './api.js';
 import { directorUnitOf, fmtSec } from './graph.js';
 import { CopyBlock, CopyButton } from './Copy.jsx';
 
