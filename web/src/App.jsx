@@ -308,7 +308,7 @@ export default function App() {
             })}
           </select>
 
-          <span className="text-[14px] font-medium">{snapshot ? snapshot.title : '分镜看板'}</span>
+          <span className="text-[14px] font-medium">{snapshot ? snapshot.title : '逐格 · 分镜看板'}</span>
           {snapshot && <span className="text-[11.5px] text-ink-500">{meta}</span>}
 
           {snapshot && (

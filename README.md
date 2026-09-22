@@ -1,4 +1,7 @@
-# Story2Video Harness
+# 逐格 · Story2Video Harness
+
+> 工程代号「逐格」：一格一格地拍 —— 逐段生成、逐段确认，每格都要有人签字。
+> 名字说的是态度，不是速度。
 
 ![CI](https://github.com/SunguochaoYeepay/DSH-Drama-Skill/actions/workflows/ci.yml/badge.svg)
 ![Node](https://img.shields.io/badge/node-20%20%7C%2022-brightgreen)
