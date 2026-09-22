@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "stage": "keyframes",
+  "at": "2026-09-21T09:25:52.129Z",
+  "provider": "local",
+  "model": "local-comfyui/qwen21",
+  "requested_provider": "comfyui",
+  "artifacts": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\one_step_late\\keyframes_render\\g001.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\one_step_late\\keyframes_render\\g002.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\one_step_late\\keyframes_render\\g003.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\one_step_late\\keyframes_local_v2\\g004.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\one_step_late\\keyframes_local_v2\\g005.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\one_step_late\\keyframes_local_v2\\g006.png"
+  ],
+  "plan": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\one_step_late\\render.plan.json",
+  "prompt_files": [
+    "keyframe-prompts/g006.txt"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "project": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\one_step_late",
+  "unit": "g005",
+  "source_unit": "g004",
+  "allowed_changes": [
+    "手机在柏油面上的具体位置",
+    "她下蹲的深度",
+    "路缘石与手机的相对距离"
+  ],
+  "source_clip": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\one_step_late\\units\\i2v_20260921-171316.mp4",
+  "source_clip_sha256": "b0abe554530bf8e6e5fb9ee466a348ae3a65163f3aca33354f664201f72057d5",
+  "stable_frame": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\one_step_late\\handoffs\\g005.stable-tail.png",
+  "stable_frame_sha256": "fc7dcb8bb093a7f5894b73f812b01ce697b406eaf3ba6161d6fab3fe31999365",
+  "tail_offset_s": 0.35,
+  "keyframe": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\one_step_late\\keyframes_local_v2\\g005.png",
+  "keyframe_sha256": "ecf4a7dea6b4fba1900a0dfe8c2de081db2f3dae4f74e94704f53db7d98bab5a",
+  "created_at": "2026-09-21T09:15:56.211Z",
+  "keyframe_bound_at": "2026-09-21T09:17:40.116Z"
+}

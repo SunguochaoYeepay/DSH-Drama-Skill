@@ -1,0 +1,16 @@
+For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.
+
+integrated_multimodal_description: 欧美三维卡通动画长片风格，皮克斯迪士尼式卡通造型：大眼睛、圆润饱满的面部轮廓、简化并适度夸张的五官比例、平滑的卡通皮肤、饱满的卡通体型比例，三维渲染，柔和体积光与柔阴影，玩具般的材质质感；黄昏暖金高饱和色调，逆光英雄时刻氛围
+Style negatives: NEVER 写实照片感, NEVER 真人皮肤纹理, NEVER 2D 平涂, NEVER 水彩, NEVER 线稿, NEVER 厚涂插画.
+[Shot 1] a wide shot of 肥猫 —— 肥猫的可见表演：圆滚滚的身体努力挺直，双爪在胸前握拢，耳朵朝向前方，眼神郑重地先向下移动再向上移动；视线：先看楼下，再看向天空，橘色虎斑猫，圆脸，大而圆的亮眼睛，粉色鼻头，圆润饱满的卡通面部轮廓；蓝色超人紧身衣包裹着圆滚滚的身体，胸前印着车标盾牌，肩后系红色披风，肥猫穿着超人装站立在二十三层窗台外沿，披风被高空风吹起；它低头看了一眼楼下，又抬头看了一眼天，眼神郑重，Lens and framing: 35mm lens. 全景深，画面全部清晰. camera at 视线高度.，Lighting: key light direction: 身后低角度落日，黄昏逆光; light quality: 柔和散射，阴影边缘软; lighting ratio: 高反差逆光轮廓，暗部柔和保留卡通细节; colour temperature: 暖金 3200K.，黄昏金光铺满城市天际线，落日低角度逆光在猫身后勾出金色轮廓，影子投向画面前方。
+Global rules:
+- shadow: 所有影子必须投向落日反方向，方向与长度全片一致
+[Shot 2] At 04.00 seconds, the camera cuts to a wide shot of 肥猫 —— 肥猫的可见表演：咧嘴大喊，眼睛发亮，双爪前伸，身体在空中绷成飞行线条，披风向后展开；视线：看向前方天空，橘色虎斑猫，圆脸，大而圆的亮眼睛，粉色鼻头，圆润饱满的卡通面部轮廓；蓝色超人紧身衣包裹着圆滚滚的身体，胸前印着车标盾牌，肩后系红色披风，它后退两步，助跑，纵身跃出窗台；跃出瞬间大喊，在空中摆出超人飞行姿势，双爪前伸，摄影机稍低机位仰拍，固定；跃出后镜头快速小幅下摇跟随，Lens and framing: 35mm lens. 全景深，画面全部清晰. camera at 视线高度.，Lighting: key light direction: 身后低角度落日，黄昏逆光; light quality: 柔和散射，阴影边缘软; lighting ratio: 高反差逆光轮廓，暗部柔和保留卡通细节; colour temperature: 暖金 3200K.，逆光仰拍，落日轮廓光包住猫的剪影，暖金色调。
+Global rules:
+- shadow: 所有影子必须投向落日反方向，方向与长度全片一致 肥猫 (S1)，亢奋大喊，说道：<d>[Chinese] 我要飞得更高</d>。
+
+overall_soundscape: 高空风声，披风猎猎作响，远处模糊的城市环境音 助跑脚步声，跃出时的破风声，高喊声
+
+non_diegetic_music: N/A
+
+on_screen_text: none. No subtitles, no captions, no text overlays of any kind.

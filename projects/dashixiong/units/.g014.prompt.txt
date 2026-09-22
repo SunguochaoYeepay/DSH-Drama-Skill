@@ -1,0 +1,9 @@
+For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.
+
+integrated_multimodal_description: [Shot 1] a medium close-up shot of 小师妹 —— 东亚女性，约二十岁，鹅蛋脸偏圆，杏眼清澈眼尾微挑，鼻尖小巧，唇形饱满，脸颊自然透红；黑长直发，头顶挽成双螺髻，两侧垂落青色发带；浅青色齐胸襦裙，白色交领内衬，肩臂披一层同色薄纱披帛，腰间束白色绫带打结，裙摆轻盈垂坠及地，足下浅色绣花鞋，她嘴唇轻抿、眉头微蹙，望向画面右侧，内心翻涌，晨光转柔，光比降低。 小师妹 (S1) says in an off-screen voiceover: <d>[Chinese] 我以为的负责是相守相伴，他居然只想着赔钱？这个呆子到底懂不懂儿女情长！</d>，嘴唇始终完全闭合。
+
+overall_soundscape: 微风穿过林间。
+
+non_diegetic_music: N/A
+
+on_screen_text: none. No subtitles, no captions, no text overlays of any kind.

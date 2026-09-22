@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "project": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\fat_cat",
+  "unit": "g002",
+  "source_unit": "g001",
+  "handoff_state": "猫在空中保持双爪前伸的超人飞行姿势，披风在身后展开，背景楼立面开始下移",
+  "allowed_changes": [
+    "景别由全景收为中景",
+    "背景楼层持续下移",
+    "机位移至猫侧前方同高"
+  ],
+  "source_clip": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\fat_cat\\units\\i2v_20260920-185110.mp4",
+  "source_clip_sha256": "d4b238ebe4cd5552ef5d7948842bb1e8935a5c9591c47d789aeef55810028916",
+  "stable_frame": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\fat_cat\\handoffs\\g002.stable-tail.png",
+  "stable_frame_sha256": "1b284402d0a6f9c05558c9e42f2caa7f21ee4620354e6a2ea99d9d7b4c973b79",
+  "tail_offset_s": 0.35,
+  "keyframe": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\fat_cat\\keyframes_local_v2\\g002.png",
+  "keyframe_sha256": "0dfab4b2be3dca36f9140bc12a06885f97539a97d0486b436da491615ae32bf7",
+  "created_at": "2026-09-20T10:52:29.891Z",
+  "keyframe_bound_at": "2026-09-20T10:53:19.109Z"
+}

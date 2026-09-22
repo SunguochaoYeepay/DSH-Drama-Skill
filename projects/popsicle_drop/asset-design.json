@@ -1,0 +1,54 @@
+{
+  "contract": 1,
+  "designs": [
+    {
+      "kind": "scene_design",
+      "scene_id": "sidewalk",
+      "source_scene": {
+        "id": "sidewalk",
+        "name": "夏日午后街边人行道",
+        "environment": "夏日午后的人行道，阳光偏暖，树影斑驳落在柏油路面上，道旁有绿化和轻微虚化的街景",
+        "time_of_day": "午后",
+        "scene_no": 1,
+        "master": null,
+        "reverse_master": null,
+        "spatial_layout": null
+      },
+      "anchors": {
+        "environment": "夏日午后的人行道，阳光偏暖，树影斑驳落在柏油路面上，道旁有绿化和轻微虚化的街景",
+        "aspect": "9:16"
+      },
+      "prompt": "写实电影摄影，夏日午后自然光，高光偏暖、阴影柔和，浅景深与背景轻微虚化，低饱和，轻微胶片颗粒，生活纪实质感 夏日午后的人行道，阳光偏暖，树影斑驳落在柏油路面上，道旁有绿化和轻微虚化的街景 场景主图，9:16，空镜。 固定空间结构、入口、窗户、家具相对位置和主光方向。 画面中不出现人物、动物、临时道具、文字、水印或标注。",
+      "questions": []
+    },
+    {
+      "kind": "character_design",
+      "character_id": "girl",
+      "identity_id": "girl_campus",
+      "locked": {
+        "face": "鹅蛋脸，下颌线条圆润，单眼皮、眼型细长，鼻梁小巧挺直，唇形饱满；自然黑齐肩短发，发尾微内扣，额前碎刘海",
+        "appearance": "浅蓝色牛仔背带裤，内搭白色圆领短袖T恤，脚穿白色帆布鞋；体型瘦高、肩部偏窄；发型与面部设定一致（自然黑齐肩短发、发尾微内扣、额前碎刘海）"
+      },
+      "prompt": "鹅蛋脸，下颌线条圆润，单眼皮、眼型细长，鼻梁小巧挺直，唇形饱满；自然黑齐肩短发，发尾微内扣，额前碎刘海 浅蓝色牛仔背带裤，内搭白色圆领短袖T恤，脚穿白色帆布鞋；体型瘦高、肩部偏窄；发型与面部设定一致（自然黑齐肩短发、发尾微内扣、额前碎刘海） 人物身份图，锁定同一张脸、体型和造型连续性。 四视图只允许视角变化，不出现文字、水印、场景或其他人物。",
+      "questions": []
+    }
+  ],
+  "receipt": [
+    {
+      "contract": 1,
+      "kind": "scene_design",
+      "director_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\popsicle_drop\\board.direction.json",
+      "board_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\popsicle_drop\\board.json",
+      "design_sha256": "3475a0a56c5ae58935e7efb554651b65fc148a45c6da6f9e093e6bcef451e405",
+      "status": "director_review_pending"
+    },
+    {
+      "contract": 1,
+      "kind": "character_design",
+      "director_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\popsicle_drop\\board.direction.json",
+      "board_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\popsicle_drop\\board.json",
+      "design_sha256": "e9c5632e6c5892230804362847b2f2eaf1d848c3678a4bb59e14b22182bbce03",
+      "status": "director_review_pending"
+    }
+  ]
+}

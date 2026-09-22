@@ -1,0 +1,343 @@
+{
+  "meta": {
+    "title": "一个误会",
+    "project": "beach_mosquito",
+    "logline": "沙滩上他以为她肩头落了只蚊子，一巴掌拍下去——那是她的纹身。",
+    "genre": "夏日轻喜剧 / 误会反转",
+    "language": "zh-CN",
+    "aspect": "9:16",
+    "style": "realistic",
+    "style_prompt": "写实电影感：午后自然光，海面高光柔和不过曝，浅景深，肤色自然通透，颗粒细腻，色彩偏暖但保留海水的青蓝，手持稳定器质感，没有夸张滤镜",
+    "music": null,
+    "total_duration_s": 20.6,
+    "final_video": null,
+    "created_by": "story2video harness",
+    "stage": "assets",
+    "approvals": {
+      "story": {
+        "at": "2026-09-17T05:26:25Z",
+        "by": "用户"
+      },
+      "shots": {
+        "at": "2026-09-17T05:27:26Z",
+        "by": "AI(经用户授权代决)"
+      },
+      "assets": null,
+      "keyframes": null
+    }
+  },
+  "story": {
+    "source": "短剧剧本：一个误会\n\n风格：写实电影感、夏日沙滩轻喜剧、误会反转\n时长：约 20 秒\n\n人物设定\n苏晚：亚洲都市女性，二十多岁，长卷发被海风吹起，穿黑色比基尼上衣与高腰沙滩裹裙；性格外放直接，被冒犯时第一反应就是瞪眼发火\n陆晨：亚洲男性，二十多岁，清瘦，穿浅灰短袖衬衫与卡其短裤；犹豫但自认好心，做事不过脑\n\n第 1 集 1-1 场景：外 海滩 午后 人物：苏晚、陆晨\n\n△ 午后海滩，白色细沙与浅滩，海面反光刺眼，远处海浪一层层推上来。\n\n△ 苏晚侧身沿着水线慢慢走，黑色比基尼，赤脚，长卷发被海风吹向一侧。\n\n△ 陆晨从斜后方走来，脚步放慢，视线落在她的右肩上，眉头微皱。\n\n△ 她右肩肩头有一枚极小的黑色纹身，看上去只是肩上一点细小的黑点。\n\n△ 陆晨在她身后半步停住，右臂缓缓抬起，手掌在半空停住，指尖有一点抖。\n\n△ 陆晨的右掌快速落下，拍在她的右肩上，接触瞬间即停，声音清脆。\n\n△ 苏晚猛地转身，肩膀一缩，眼睛瞪圆，抬手按住被拍的地方。\n\n苏晚（吃痛，瞪眼）：你有病啊！\n\n△ 陆晨慌忙把双手抬到胸前，掌心朝上，身体前倾。\n\n陆晨（语速偏快，急切）：有个蚊子，在你肩膀上！我给你打死了！\n\n△ 陆晨摊开右掌凑到她眼前，掌心干干净净，什么都没有。\n\n△ 苏晚低头看了一眼他的掌心，抬起头，抬手指向自己的右肩。\n\n苏晚（更气，胸口起伏）：你傻吗！我那个是纹身！\n",
+    "synopsis": "午后海滩，穿黑色比基尼的苏晚沿水线散步。陆晨从斜后方走近，看见她右肩肩头有一点细小的黑色，认定是蚊子，犹豫两下还是一掌拍了下去。苏晚被打得一疼，转身怒吼「你有病啊」，陆晨急忙摊开手心让她看那只被拍死的蚊子——掌心却干干净净。最后苏晚指着自己的肩膀告诉他：那是纹身。一个好心办错事的完整误会闭环，笑点落在陆晨越解释越站不住脚的那只空手上。",
+    "beats": [
+      {
+        "text": "苏晚穿黑色比基尼在午后海滩沿水线散步，海风吹起长卷发。",
+        "purpose": "建立人物与环境，同时把她右肩的纹身自然地摆在画面里——观众先看见那一点黑，才可能和男主犯同一个错。",
+        "emotion": "松弛、无防备"
+      },
+      {
+        "text": "陆晨从斜后方走来，视线锁住她右肩，脚步放慢，眉头微皱。",
+        "purpose": "交代他的误判依据：他看到的就是一个会动的小黑点，而不是图案。",
+        "emotion": "迟疑、判断中"
+      },
+      {
+        "text": "陆晨抬掌犹豫，指尖发抖，最后快速拍在她的右肩上，声脆。",
+        "purpose": "制造笑点与身体接触这一高风险瞬间，把误会推向不可收拾。",
+        "emotion": "犹豫转果断"
+      },
+      {
+        "text": "苏晚猛地转身，瞪圆眼睛按住肩膀，骂出「你有病啊」。",
+        "purpose": "情绪落点：受害者的第一反应，让观众和她站在一起。",
+        "emotion": "吃痛、暴怒"
+      },
+      {
+        "text": "陆晨慌忙举起双手，急切解释「有个蚊子，在你肩膀上，我给你打死了」。",
+        "purpose": "交代他的动机是善意，喜剧张力来自他理直气壮。",
+        "emotion": "慌张、急于自证"
+      },
+      {
+        "text": "他摊开右掌凑到她眼前，掌心一干二净，什么都没有。",
+        "purpose": "反转的引信：他的证据消失了，观众比角色先明白过来。",
+        "emotion": "错愕、心里发虚"
+      },
+      {
+        "text": "苏晚指着自己的肩膀甩出「你傻吗！我那个是纹身！」。",
+        "purpose": "收尾反转，把整个误会一次说破，落到喜剧高潮。",
+        "emotion": "更气、无语"
+      }
+    ],
+    "tone": "夏日轻喜剧，节奏偏快，反转靠台词砸下来，不靠配乐提示",
+    "ending": "苏晚指着肩上的纹身把真相说破，陆晨举着那只空手僵在原地，误会完成闭环。"
+  },
+  "characters": [
+    {
+      "id": "c_82cf665a",
+      "name": "苏晚",
+      "age_group": "youth",
+      "face_prompt": "东亚女性面孔，二十多岁，鹅蛋脸偏尖下巴，杏眼双眼皮，眼尾略上挑，鼻梁挺直鼻头小巧，唇形饱满唇峰明显，长卷发深棕近黑、发尾自然外翻，皮肤小麦色但细腻，右眉尾有一颗很小的浅褐色痣，**画面下边界切在锁骨上方**，画面里只有头部与颈部与裸露的双肩，颈部以下画面即结束",
+      "portrait": "assets/c_82cf665a_portrait.png",
+      "voice": "",
+      "identities": [
+        "c_82cf665a_default"
+      ]
+    },
+    {
+      "id": "c_96466668",
+      "name": "陆晨",
+      "age_group": "youth",
+      "face_prompt": "东亚男性面孔，二十多岁，长方脸下颌线清晰，单眼皮细长眼，眉毛平直略粗，鼻梁高挺，嘴唇偏薄，黑色短碎发发际线整齐，皮肤偏白有轻微雀斑，左侧颧骨有一道很浅的旧疤",
+      "portrait": "assets/c_96466668_portrait.png",
+      "voice": "",
+      "identities": [
+        "c_96466668_default"
+      ]
+    }
+  ],
+  "identities": [
+    {
+      "id": "c_82cf665a_default",
+      "character": "c_82cf665a",
+      "name": "沙滩比基尼",
+      "appearance_details": "黑色三角比基尼上衣，细肩带，下装为高腰米白色沙滩裹裙，裙摆到膝上，赤脚，右手腕一条细银链，右肩肩头有一枚极小的黑色纹身，看上去只是肩上一点细小的黑点，不描摹图案、不放大",
+      "costume_image": null,
+      "sheet": "assets/c_82cf665a_default_sheet.png",
+      "reference_images": [],
+      "voice_ref": null
+    },
+    {
+      "id": "c_96466668_default",
+      "character": "c_96466668",
+      "name": "沙滩休闲装",
+      "appearance_details": "浅灰色短袖亚麻衬衫，未系最上一颗扣，卡其色休闲短裤到膝，白色帆布鞋，左手腕戴一只深灰色运动手表",
+      "costume_image": null,
+      "sheet": "assets/c_96466668_default_sheet.png",
+      "reference_images": [],
+      "voice_ref": null
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_01",
+      "name": "海滩",
+      "environment": "午后海滩，白色细沙与浅滩，海面反光刺眼，远处海浪一层层推上来。",
+      "time_of_day": "午后",
+      "scene_no": 1,
+      "master": "assets/scene_01_master.png",
+      "reverse_master": null,
+      "spatial_layout": null
+    }
+  ],
+  "props": [],
+  "shots": [
+    {
+      "id": "s01",
+      "scene": "scene_01",
+      "cast": [
+        "c_82cf665a_default"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "全景",
+      "lighting": "偏暖侧光",
+      "camera": "缓慢前推",
+      "action": "午后海滩，白色细沙与浅滩，海面反光刺眼，远处海浪一层层推上来。 苏晚侧身沿着水线慢慢走，黑色比基尼，赤脚，长卷发被海风吹向一侧。",
+      "prompt": "{{c_82cf665a_default}}，午后海滩，白色细沙与浅滩，海面反光刺眼，远处海浪一层层推上来。 苏晚侧身沿着水线慢慢走，黑色比基尼，赤脚，长卷发被海风吹向一侧。，全景，缓慢前推",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        12,
+        14
+      ]
+    },
+    {
+      "id": "s02",
+      "scene": "scene_01",
+      "cast": [
+        "c_96466668_default"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "全景",
+      "lighting": "偏暖侧光",
+      "camera": "缓慢前推",
+      "action": "陆晨从斜后方走来，脚步放慢，视线落在她的右肩上，眉头微皱。 她右肩肩头有一枚极小的黑色纹身，看上去只是肩上一点细小的黑点。",
+      "prompt": "{{c_96466668_default}}，陆晨从斜后方走来，脚步放慢，视线落在她的右肩上，眉头微皱。 她右肩肩头有一枚极小的黑色纹身，看上去只是肩上一点细小的黑点。，全景，缓慢前推",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        16,
+        18
+      ]
+    },
+    {
+      "id": "s03",
+      "scene": "scene_01",
+      "cast": [
+        "c_96466668_default"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "偏暖侧光",
+      "camera": "缓慢横移",
+      "action": "陆晨在她身后半步停住，右臂缓缓抬起，手掌在半空停住，指尖有一点抖。 陆晨的右掌快速落下，拍在她的右肩上，接触瞬间即停，声音清脆。",
+      "prompt": "{{c_96466668_default}}，陆晨在她身后半步停住，右臂缓缓抬起，手掌在半空停住，指尖有一点抖。 陆晨的右掌快速落下，拍在她的右肩上，接触瞬间即停，声音清脆。，中景，缓慢横移",
+      "audio": "声音清脆",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        20,
+        22
+      ]
+    },
+    {
+      "id": "s04",
+      "scene": "scene_01",
+      "cast": [
+        "c_82cf665a_default"
+      ],
+      "props": [],
+      "duration_s": 1.7,
+      "shot_size": "近景",
+      "lighting": "偏暖侧光",
+      "camera": "固定镜头",
+      "action": "苏晚猛地转身，肩膀一缩，眼睛瞪圆，抬手按住被拍的地方。",
+      "prompt": "{{c_82cf665a_default}}，苏晚猛地转身，肩膀一缩，眼睛瞪圆，抬手按住被拍的地方。，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "c_82cf665a_default",
+          "text": "你有病啊！",
+          "emotion": "吃痛，瞪眼",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        24,
+        26
+      ]
+    },
+    {
+      "id": "s05",
+      "scene": "scene_01",
+      "cast": [
+        "c_96466668_default"
+      ],
+      "props": [],
+      "duration_s": 5,
+      "shot_size": "近景",
+      "lighting": "偏暖侧光",
+      "camera": "固定镜头",
+      "action": "陆晨慌忙把双手抬到胸前，掌心朝上，身体前倾。",
+      "prompt": "{{c_96466668_default}}，陆晨慌忙把双手抬到胸前，掌心朝上，身体前倾。，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "c_96466668_default",
+          "text": "有个蚊子，在你肩膀上！我给你打死了！",
+          "emotion": "语速偏快，急切",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        28,
+        30
+      ]
+    },
+    {
+      "id": "s06",
+      "scene": "scene_01",
+      "cast": [
+        "c_82cf665a_default",
+        "c_96466668_default"
+      ],
+      "props": [],
+      "duration_s": 2.1,
+      "shot_size": "中景",
+      "lighting": "偏暖侧光",
+      "camera": "缓慢横移",
+      "action": "陆晨摊开右掌凑到她眼前，掌心干干净净，什么都没有。 苏晚低头看了一眼他的掌心，抬起头，抬手指向自己的右肩。",
+      "prompt": "{{c_82cf665a_default}}、{{c_96466668_default}}，陆晨摊开右掌凑到她眼前，掌心干干净净，什么都没有。 苏晚低头看了一眼他的掌心，抬起头，抬手指向自己的右肩。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        32,
+        34
+      ]
+    },
+    {
+      "id": "s07",
+      "scene": "scene_01",
+      "cast": [
+        "c_82cf665a_default"
+      ],
+      "props": [],
+      "duration_s": 2.8,
+      "shot_size": "近景",
+      "lighting": "偏暖侧光",
+      "camera": "固定镜头",
+      "action": "苏晚开口说话",
+      "prompt": "{{c_82cf665a_default}}，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "c_82cf665a_default",
+          "text": "你傻吗！我那个是纹身！",
+          "emotion": "更气，胸口起伏",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        36
+      ]
+    }
+  ]
+}

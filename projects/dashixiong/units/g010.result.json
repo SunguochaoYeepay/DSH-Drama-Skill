@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "e61e5da3-bd0d-4f20-96b4-fdbac29a6049",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 328,
+    "seconds": 13.67,
+    "profile": "fast",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+    "vsa": true
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00128_.mp4",
+      "filename": "H3_i2v_00128_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 2942157,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00128_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\units\\i2v_20260916-230832.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\units\\i2v_20260916-230832.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] a wide shot of 大师兄与小师妹 —— 小师妹 facing the left side of the frame，东亚男性，约二十二岁，剑眉星目，鼻梁挺直，唇形偏薄，下颌线条利落，皮肤白皙；黑长发以青玉冠束起，鬓角利落，眉眼清冷，神情端正；月白色交领长袍，外罩一层浅青色薄纱外衫，腰束深青色宽幅布带，衣摆及踝微扬；背负一柄青铜剑鞘的长剑，脚下白布软靴；东亚女性，约二十岁，鹅蛋脸偏圆，杏眼清澈眼尾微挑，鼻尖小巧，唇形饱满，脸颊自然透红；黑长直发，头顶挽成双螺髻，两侧垂落青色发带；浅青色齐胸襦裙，白色交领内衬，肩臂披一层同色薄纱披帛，腰间束白色绫带打结，裙摆轻盈垂坠及地，足下浅色绣花鞋，她先失笑般低声吐槽，随后望着他淡然的背影，情绪转为无声心声；风吹动树叶，摄影机缓慢后拉，晨光拉长林道，人物之间多出一点距离感。 小师妹 (S1)，无奈失笑，满心无语，说道：<d>[Chinese] ……你果然是个木头！</d>。 小师妹 (S1) says in an off-screen voiceover: <d>[Chinese] 我以为的负责是相守相伴，他居然只想着赔钱？这个呆子到底懂不懂儿女情长！</d>，嘴唇始终完全闭合。\n\noverall_soundscape: 风声、树叶沙沙\n\nnon_diegetic_music: N/A\n\non_screen_text: none. No subtitles, no captions, no text overlays of any kind.",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 101.8
+}

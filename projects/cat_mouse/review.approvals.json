@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "approvals": {
+    "clips": {
+      "g001": {
+        "at": "2026-09-17T03:22:57.662Z",
+        "by": "用户",
+        "artifact_hash": "0304ca84f42a9ecb4813ac4a40410070e29fc0b0037956b9f5d141bcf26a3a93",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\units\\i2v_20260917-112104.mp4"
+        ]
+      },
+      "g002": {
+        "at": "2026-09-17T03:25:24.092Z",
+        "by": "用户",
+        "artifact_hash": "37ba27ed3bff3a814ae32659ec0536bc87fb13361bd7d9fb83c11903c81eca81",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\units\\i2v_20260917-112415.mp4"
+        ]
+      },
+      "g003": {
+        "at": "2026-09-17T03:43:49.201Z",
+        "by": "用户",
+        "artifact_hash": "68a076fe450d3b9a548aed70ee6ccd8fec26c7c5f57ac71f156c811ccdb9cf98",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\units\\i2v_20260917-114149.mp4"
+        ]
+      },
+      "g004": {
+        "at": "2026-09-17T04:55:26.480Z",
+        "by": "用户",
+        "artifact_hash": "bc2529a3252e61f704fb7bfd9bc801782593e28e09e1e19c7e9d875021de97ac",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\units\\i2v_20260917-125400.mp4"
+        ]
+      },
+      "g005": {
+        "at": "2026-09-17T04:03:50.292Z",
+        "by": "用户",
+        "artifact_hash": "d4c79792b23dce706b4a125bb3a774f00dddc1357534bba843099de26798e7c5",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\units\\i2v_20260917-120147.mp4"
+        ]
+      }
+    },
+    "keyframes": {
+      "at": "2026-09-17T04:49:12.898Z",
+      "by": "用户",
+      "artifact_hash": "63d87f43c5c14a43846e59a306961bb9939a6157df1a8445ccd7c83171bc4852",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\keyframes_bailian_v4\\g001.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\keyframes_bailian_v4\\g002.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\keyframes_bailian_v4\\g003.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\keyframes_bailian_v4\\g005.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\keyframes_bailian_v6\\g004.png"
+      ]
+    },
+    "handoffs": {
+      "g004": {
+        "at": "2026-09-17T04:40:58.653Z",
+        "by": "用户",
+        "artifact_hash": "81bd78a61729e89ee0fc71c594bd241ab6d9ce71e18e34c52d54b39f51c3eb6c",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\handoffs\\g004.stable-tail.png"
+        ]
+      }
+    },
+    "direction": {
+      "at": "2026-09-17T05:11:15.500Z",
+      "by": "用户",
+      "artifact_hash": "a7d20b9e4647c85fdfed270469fc2133d8524e766970b7567e18a2668820e91c",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\render.plan.json"
+      ]
+    }
+  }
+}

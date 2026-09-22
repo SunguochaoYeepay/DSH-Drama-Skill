@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "stage": "keyframes",
+  "at": "2026-09-22T02:06:35.949Z",
+  "provider": "local",
+  "model": "local-comfyui/qwen21",
+  "requested_provider": "comfyui",
+  "artifacts": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\keyframes_render\\g001.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\keyframes_local_v2\\g002.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\keyframes_local_v2\\g003.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\keyframes_local_v2\\g004.png"
+  ],
+  "plan": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\render.plan.json",
+  "prompt_files": [
+    "keyframe-prompts/g002.txt"
+  ]
+}

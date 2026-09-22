@@ -1,0 +1,665 @@
+{
+  "version": 6,
+  "logline": "分批导演合并方案",
+  "units": [
+    {
+      "id": "u1",
+      "boundary_trigger": "opening",
+      "keyframe_cast": [
+        "tiantian_dream_girl_home"
+      ],
+      "action_complexity": {
+        "level": "medium",
+        "high_risk_events": [
+          {
+            "at_s": 5.5,
+            "type": "large_displacement",
+            "description": "女孩将被子从腰间猛力掀飞至床侧，同时身体从坐姿转为站立落地，由床上位移至床下地面"
+          }
+        ],
+        "strategy": "single_transition"
+      },
+      "why": "梦境开场，同一角色在连续时空内完成睁眼、坐起、看手、说话、掀被、下床扶床沿的动作链。空间未变，主体未换，仅景别和运镜变化，适合共享一张0秒关键帧。掀被与下床合并为一次连贯位移，作为唯一高风险转换。",
+      "duration_reason": "台词16行最低2.56秒加表演停顿约0.94秒共3.5秒；台词23行最低2.34秒加喘息反应约1.16秒共3.5秒；睁眼坐起看手2秒；掀被下床2秒。总内容时长11.0秒，小于引擎上限15秒且大于单单元最低交付5.17秒。",
+      "keyframe_start": "0秒时女孩沿床长边仰面平躺，后脑勺靠在枕头上，身体完全由床垫承托。被子覆盖胸口以下至双脚，被面平整。双手自然平放在被面上、约腰部位置，手背朝上。双眼刚刚猛地睁开，瞳孔微缩，嘴唇紧闭，尚未有任何肢体动作。",
+      "end_state": "女孩站在床侧地面上，双手紧紧抓住床沿，身体前倾，呼吸急促。被子被掀至床面一侧皱成一团，部分垂落床沿。她低头看向地面，处于惊恐但物理稳定的站立姿态。",
+      "continuity": {
+        "mode": "independent",
+        "reason": "开场第一单元"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 2,
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "dream_bedroom",
+          "on_screen": [
+            "tiantian_dream_girl_home"
+          ],
+          "props": [],
+          "action": "女孩仰面躺着，被子覆盖胸口以下，双手放在被面上。她双眼猛地睁开，随后缓慢坐起身；随着上身抬起，被子自然从胸口滑落堆至腰间和大腿处。她低头看向自己摊开的双手——手指纤细白净，指甲圆润。她愣住，将双手翻来覆去地看。",
+          "emotion_analysis": [
+            {
+              "character": "tiantian_dream_girl_home",
+              "cause": "刚从睡眠中惊醒，发现手部形态完全陌生",
+              "internal_state": "震惊与困惑",
+              "visible_behavior": "双眼猛然睁大，瞳孔收缩，嘴唇紧闭，坐起时动作迟缓僵硬，双手翻转查看时手指颤抖",
+              "gaze": "低头看着自己的双手",
+              "avoid_symbols": [
+                "微笑",
+                "放松的肩颈线条",
+                "平静的眼神"
+              ]
+            }
+          ],
+          "lighting": "偏冷色调晨光从窗帘缝隙透入，光线略带失真感",
+          "lines": [],
+          "audio": "急促的呼吸声，被子布料滑落的轻微摩擦声"
+        },
+        {
+          "n": 2,
+          "at": 2,
+          "cut": "the camera cuts to",
+          "duration_s": 3.5,
+          "framing": "特写",
+          "camera": "固定",
+          "scene": "dream_bedroom",
+          "on_screen": [
+            "tiantian_dream_girl_home"
+          ],
+          "props": [],
+          "action": "画面只填满她的下半张脸和举在面前的双手。纤细白净的手指在眼前微微发抖，她张嘴，声音发颤地说出话。被子仍堆在腰间，画面边缘可见被面褶皱。",
+          "emotion_analysis": [
+            {
+              "character": "tiantian_dream_girl_home",
+              "cause": "确认眼前这双陌生的手确实长在自己身上",
+              "internal_state": "恐惧开始压过困惑",
+              "visible_behavior": "嘴唇微张且不受控制地颤抖，下颌肌肉紧绷，手指持续高频抖动",
+              "gaze": "直直盯着面前的双手",
+              "avoid_symbols": [
+                "嘴角上扬",
+                "眼神好奇而非恐惧",
+                "手指稳定"
+              ]
+            }
+          ],
+          "lighting": "冷调侧光打在手背上，指节轮廓清晰",
+          "lines": [
+            16
+          ],
+          "audio": "发颤的高音调说话声，急促呼吸"
+        },
+        {
+          "n": 3,
+          "at": 5.5,
+          "cut": "the camera cuts to",
+          "duration_s": 2,
+          "framing": "全景",
+          "camera": "固定",
+          "scene": "dream_bedroom",
+          "on_screen": [
+            "tiantian_dream_girl_home"
+          ],
+          "props": [],
+          "action": "她坐在床上，被子堆在腰间。她双手抓住被沿猛力向身侧掀飞，被子脱离身体皱成一团甩到床面一侧，露出穿着宽松男式T恤的少女身体轮廓。紧接着她双腿摆下床沿，身体从床上跳落地面，落地时踉跄一步，双手死死抓住床沿稳住。",
+          "emotion_analysis": [
+            {
+              "character": "tiantian_dream_girl_home",
+              "cause": "掀开被子后看到完全陌生的少女身体轮廓",
+              "internal_state": "极度恐慌",
+              "visible_behavior": "掀被动作猛烈急促，落地后脚步不稳身体前倾，双臂用力抓紧床沿，肩膀高耸紧缩",
+              "gaze": "低头看着自己的身体，随后看向脚下地面",
+              "avoid_symbols": [
+                "从容的步伐",
+                "直立放松的站姿",
+                "欣赏的眼神"
+              ]
+            }
+          ],
+          "lighting": "冷调漫射光，房间角落偏暗",
+          "lines": [],
+          "audio": "被子猛力掀飞的布料声，赤脚砸在地板上的闷响"
+        },
+        {
+          "n": 4,
+          "at": 7.5,
+          "cut": "the camera cuts to",
+          "duration_s": 3.5,
+          "framing": "中景",
+          "camera": "缓慢前推",
+          "scene": "dream_bedroom",
+          "on_screen": [
+            "tiantian_dream_girl_home"
+          ],
+          "props": [],
+          "action": "她双手紧紧抓着床沿，身体前倾，大口喘息。身后床上被子皱成一团。她抬起头，眼神惊恐涣散，嘴里断断续续挤出话。摄影机缓慢向她面部推近。",
+          "emotion_analysis": [
+            {
+              "character": "tiantian_dream_girl_home",
+              "cause": "跌撞下床后被迫面对身体彻底改变的现实",
+              "internal_state": "崩溃边缘的恐慌",
+              "visible_behavior": "胸口剧烈起伏，嘴唇张开急促喘气，眼眶撑大，眉头紧锁，说话时下巴不受控制地发抖",
+              "gaze": "茫然看向前方虚空处",
+              "avoid_symbols": [
+                "平稳的呼吸节奏",
+                "闭合的嘴唇",
+                "聚焦的视线"
+              ]
+            }
+          ],
+          "lighting": "冷光从侧面打在脸上，阴影偏重",
+          "lines": [
+            23
+          ],
+          "audio": "粗重的喘息声，手指抠紧木质床沿的摩擦声"
+        }
+      ]
+    },
+    {
+      "id": "u2",
+      "boundary_trigger": "scene_change",
+      "keyframe_cast": [
+        "tiantian_dream_girl_home"
+      ],
+      "action_complexity": {
+        "level": "low",
+        "high_risk_events": [],
+        "strategy": "none"
+      },
+      "why": "梦境中女孩冲向穿衣镜、摸脸确认身份、崩溃后退撞翻椅子并蹲下抱头，属于同一空间内连续的情绪递进动作，共享梦境卧室场景与角色造型，适合一次生成。",
+      "duration_reason": "台词32行最低2.80秒，台词39行最低3.99秒；冲向镜子1.5秒，摸脸反应1.0秒，后退撞椅蹲下2.0秒，崩溃停顿1.0秒，总时长约12.29秒。",
+      "keyframe_start": "0秒时女孩刚从床沿直起身，身体前倾转为迈步姿态，面朝画面右侧的穿衣镜方向，双手自然下垂尚未抬起，嘴唇闭合。",
+      "end_state": "女孩蹲在倒地的椅子旁，双手紧紧抱住头部，肩膀剧烈颤抖，面部被手臂遮挡，处于崩溃哭泣的稳定姿态。",
+      "continuity": {
+        "mode": "independent",
+        "reason": "场景由现实切至梦境卧室，空间关系完全重置，独立开始。"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 4.8,
+          "framing": "全景",
+          "camera": "跟随",
+          "scene": "dream_bedroom",
+          "on_screen": [
+            "tiantian_dream_girl_home"
+          ],
+          "props": [],
+          "action": "女孩跌跌撞撞从床沿冲向画面右侧角落的穿衣镜，踉跄两步后在镜前急停。她猛地伸出双手贴住自己的脸颊，手指在皮肤上慌乱摸索。镜中映出黑发少女惊恐的面容，动作与她完全同步。",
+          "emotion_analysis": [
+            {
+              "character": "tiantian_dream_girl_home",
+              "cause": "发现身体轮廓完全不对，急需通过镜子确认自己变成了谁",
+              "internal_state": "极度恐慌与否认",
+              "visible_behavior": "步伐踉跄不稳，双臂前伸，双手用力贴住双颊，十指在面部快速移动按压，嘴部张开急促喘气",
+              "gaze": "看向正前方的镜面",
+              "avoid_symbols": [
+                "平静站立",
+                "微笑",
+                "好奇打量"
+              ]
+            }
+          ],
+          "lighting": "偏冷色调晨光从窗帘缝隙透入，光线略带失真感，镜面反射出冷白微光",
+          "lines": [
+            32
+          ],
+          "audio": "赤脚急促踩在地板上的声音，粗重的喘息声"
+        },
+        {
+          "n": 2,
+          "at": 4.8,
+          "cut": "the camera cuts to",
+          "duration_s": 3,
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "dream_bedroom",
+          "on_screen": [
+            "tiantian_dream_girl_home"
+          ],
+          "props": [],
+          "action": "女孩的脸占满画面，双手仍贴在脸颊两侧。她瞳孔骤然收缩，泪水瞬间涌出眼眶滑过指缝。她猛地向后撤步，身体失去平衡向后仰去，画面边缘可见一把椅子被她后背撞翻，向地面倒去。",
+          "emotion_analysis": [
+            {
+              "character": "tiantian_dream_girl_home",
+              "cause": "镜中的脸明确证实自己不再是原来的自己",
+              "internal_state": "认知崩塌、绝望恐惧",
+              "visible_behavior": "双眼圆睁瞳孔缩小，泪水溢出眼角流过手背，嘴唇剧烈哆嗦，身体急速后仰失去重心",
+              "gaze": "看向正前方镜面中的自己",
+              "avoid_symbols": [
+                "星星眼",
+                "崇拜眼神",
+                "微笑",
+                "平静眨眼"
+              ]
+            }
+          ],
+          "lighting": "冷调失真光线直射面部，泪痕反光明显",
+          "lines": [],
+          "audio": "椅子腿撞击地板的刺耳巨响，急促倒抽一口气的声音"
+        },
+        {
+          "n": 3,
+          "at": 7.8,
+          "cut": "the camera cuts to",
+          "duration_s": 4.49,
+          "framing": "中景",
+          "camera": "缓慢下摇",
+          "scene": "dream_bedroom",
+          "on_screen": [
+            "tiantian_dream_girl_home"
+          ],
+          "props": [],
+          "action": "女孩跌坐在倒地椅子旁的地板上，迅速蜷缩起身体蹲下，双手死死抱住后脑勺，将脸埋进膝盖间。她的双肩随着呼吸剧烈起伏颤抖，整个身体缩成一小团。摄影机随她下蹲的动作缓慢向下摇。",
+          "emotion_analysis": [
+            {
+              "character": "tiantian_dream_girl_home",
+              "cause": "确认异变无法逆转，恐惧彻底压垮理智",
+              "internal_state": "精神崩溃、无助绝望",
+              "visible_behavior": "双手十指交叉紧扣后脑，手肘向内收紧护住头部，肩膀高频剧烈耸动，脊背弓起蜷缩，胸腔大幅度起伏",
+              "gaze": "低头埋在膝盖与手臂之间，不看任何方向",
+              "avoid_symbols": [
+                "抬头挺胸",
+                "放松垂手",
+                "微笑",
+                "平静坐姿"
+              ]
+            }
+          ],
+          "lighting": "冷调光线从上方打下，女孩蜷缩的身体在地面投下浓重阴影",
+          "lines": [
+            39
+          ],
+          "audio": "压抑的哭腔喘息声，椅子倒地后的余音在安静房间里回荡"
+        }
+      ]
+    },
+    {
+      "id": "u3",
+      "boundary_trigger": "state_transition_anchor",
+      "keyframe_cast": [
+        "tiantian_dream_girl_home"
+      ],
+      "action_complexity": {
+        "level": "low",
+        "high_risk_events": [],
+        "strategy": "none"
+      },
+      "why": "梦境崩溃的余韵延续至现实苏醒。以女孩抱头颤抖的稳定姿态收尾后，画面骤然变白作为梦境与现实的物理隔断，随后切入现实卧室中男孩蜷缩惊醒的连续反应段落。妈妈推门、走近、拍肩的动作路径简单且为单向递进，可在同一次生成中以运镜和切镜完成，无需再次重置身份锚点。",
+      "duration_reason": "56行画外音最低4.70秒（分配5.0秒），63行最低2.89秒（分配3.5秒含表演），70行最低1.20秒（分配3.5秒含男孩茫然凝视的表演停顿），加上白屏转场0.8秒与开场喘息反应1.7秒，总计14.5秒。",
+      "keyframe_start": "0秒时黑发少女仍蹲在倒地的椅子旁，双手紧紧抱住头部，肩膀剧烈颤抖，面部被手臂完全遮挡，处于崩溃哭泣的稳定姿态，冷色调失真光线笼罩。",
+      "end_state": "妈妈站在床边低头看着天天，右手刚从天天的左肩上收回；天天仰面躺在床上，胸口剧烈起伏，双眼大睁盯着天花板，眼神茫然。两人保持分离站立与躺卧的空间关系，未发生身体接触。",
+      "continuity": {
+        "mode": "continue_previous",
+        "previous_unit": "u2",
+        "handoff_state": "女孩蹲在倒地的椅子旁，双手紧紧抱住头部，肩膀剧烈颤抖，面部被手臂遮挡，处于崩溃哭泣的稳定姿态。",
+        "deferred_keyframe": true,
+        "allowed_changes": [
+          "scene",
+          "lighting",
+          "character_identity",
+          "framing"
+        ]
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 1.7,
+          "framing": "中景",
+          "camera": "固定",
+          "scene": "dream_bedroom",
+          "on_screen": [
+            "tiantian_dream_girl_home"
+          ],
+          "props": [],
+          "action": "黑发少女蹲在倒地的木椅旁，双手死死抱住头部，肩膀随抽泣剧烈上下耸动，面部完全埋入臂弯中不可见。",
+          "emotion_analysis": [
+            {
+              "character": "tiantian_dream_girl_home",
+              "cause": "刚刚在镜中看到陌生女孩的脸并确认自己身体改变，陷入极度恐惧与崩溃",
+              "internal_state": "惊恐失控",
+              "visible_behavior": "双肩高频耸动，脊背弓起蜷缩，手指用力抓扯头发，整个身体重心压向地面",
+              "gaze": "away",
+              "avoid_symbols": [
+                "平静垂手",
+                "抬头直视镜头",
+                "嘴角上扬"
+              ]
+            }
+          ],
+          "lighting": "偏冷且轻微失真的清晨光线，空气中有不自然的灰蓝色颗粒感",
+          "lines": [],
+          "audio": "压抑急促的抽泣声，椅子倒地后的寂静回声"
+        },
+        {
+          "n": 2,
+          "at": 1.7,
+          "cut": "the camera cuts to",
+          "duration_s": 0.8,
+          "framing": "远景",
+          "camera": "固定",
+          "scene": "dream_bedroom",
+          "on_screen": [
+            "tiantian_dream_girl_home"
+          ],
+          "props": [],
+          "action": "画面骤然爆发出刺目的纯白光晕，少女蜷缩的轮廓在白光的吞噬下迅速溶解消失，整个空间被无细节的高亮白色填满。",
+          "emotion_analysis": [
+            {
+              "character": "tiantian_dream_girl_home",
+              "cause": "梦境世界正在崩塌瓦解",
+              "internal_state": "意识消散",
+              "visible_behavior": "身体轮廓边缘模糊化，肢体动作停止，形体融入白光中不再可辨",
+              "gaze": "away",
+              "avoid_symbols": [
+                "清晰五官",
+                "站立姿态",
+                "微笑"
+              ]
+            }
+          ],
+          "lighting": "从冷调瞬间转为过曝的纯白，无任何阴影层次",
+          "lines": [],
+          "audio": "一声极短促尖锐的耳鸣音，随即切断为绝对寂静"
+        },
+        {
+          "n": 3,
+          "at": 2.5,
+          "cut": "the camera cuts to",
+          "duration_s": 2,
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "real_bedroom",
+          "on_screen": [
+            "tiantian_boy_home"
+          ],
+          "props": [],
+          "action": "十四岁男孩侧躺在单人床上，身体蜷缩成一团，眉头紧紧拧在一起，嘴唇微张快速翕动，胸口急促起伏，仿佛刚从深水中挣扎而出。",
+          "emotion_analysis": [
+            {
+              "character": "tiantian_boy_home",
+              "cause": "刚从极度真实的恐怖梦境中被强行拉回现实，生理应激尚未消退",
+              "internal_state": "惊惧与窒息感交织",
+              "visible_behavior": "眉心紧锁形成深刻竖纹，鼻翼快速扩张收缩，胸廓大幅度起伏，下颌肌肉紧绷",
+              "gaze": "away",
+              "avoid_symbols": [
+                "舒展微笑",
+                "平稳呼吸",
+                "睁眼直视"
+              ]
+            }
+          ],
+          "lighting": "温暖正常的晨光从窗帘缝隙斜射进来，照亮床单的织物纹理",
+          "lines": [],
+          "audio": "粗重急促的喘息声，远处隐约的鸟鸣"
+        },
+        {
+          "n": 4,
+          "at": 4.5,
+          "cut": "the camera cuts to",
+          "duration_s": 5,
+          "framing": "全景",
+          "camera": "缓慢前推",
+          "scene": "real_bedroom",
+          "on_screen": [
+            "tiantian_boy_home"
+          ],
+          "props": [],
+          "action": "男孩仍蜷缩在床上大口喘气。卧室门被从外面推开，妈妈穿着居家服走进来，手里拿着一条叠好的浅色毛巾，停在门口看向床的方向。",
+          "emotion_analysis": [
+            {
+              "character": "tiantian_boy_home",
+              "cause": "噩梦的余悸让身体无法动弹，尚未意识到现实环境的声音",
+              "internal_state": "惊魂未定",
+              "visible_behavior": "身体维持蜷缩姿态未变，只有胸腔在剧烈起伏，手指无意识地抓紧身下的床单",
+              "gaze": "away",
+              "avoid_symbols": [
+                "坐起",
+                "转头看门",
+                "放松"
+              ]
+            }
+          ],
+          "lighting": "温暖的自然晨光铺满房间，空气通透干净",
+          "lines": [
+            56
+          ],
+          "audio": "门轴转动的吱呀声，脚步声停在木地板上，画外传来母亲的催促声"
+        },
+        {
+          "n": 5,
+          "at": 9.5,
+          "cut": "the camera cuts to",
+          "duration_s": 3.5,
+          "framing": "中景",
+          "camera": "小幅左移",
+          "scene": "real_bedroom",
+          "on_screen": [
+            "tiantian_boy_home",
+            "mother_home"
+          ],
+          "props": [],
+          "action": "妈妈走到床边，微微弯腰，伸出右手轻轻拍了一下男孩露在被子外的左肩。男孩的身体像触电般猛地弹开，双眼骤然睁开，瞳孔放大，嘴巴张开大口吸气，整个人僵直地仰卧在床上。",
+          "emotion_analysis": [
+            {
+              "character": "tiantian_boy_home",
+              "cause": "睡梦中突然被外力触碰肩膀，触发防御性惊跳反射",
+              "internal_state": "极度惊吓后的短暂空白",
+              "visible_behavior": "眼球快速震颤后定住，嘴部大张吸入一口气，颈部肌肉绷紧使头部后仰贴住枕头，双臂僵硬平放在身体两侧",
+              "gaze": "away",
+              "avoid_symbols": [
+                "立刻微笑认人",
+                "平静翻身",
+                "闭眼继续睡"
+              ]
+            },
+            {
+              "character": "mother_home",
+              "cause": "叫了一声没反应，走近发现儿子睡得很沉且状态不对，伸手叫醒",
+              "internal_state": "日常催促中带着一丝察觉异样的疑惑",
+              "visible_behavior": "眉头轻微蹙起，右手掌平放轻拍男孩肩部后自然收回，上半身微微前倾俯视",
+              "gaze": "toward",
+              "avoid_symbols": [
+                "惊恐后退",
+                "大声尖叫",
+                "愤怒指责"
+              ]
+            }
+          ],
+          "lighting": "侧面暖光勾勒出妈妈的手臂轮廓和男孩额头上的细汗",
+          "lines": [
+            63
+          ],
+          "audio": "手掌拍击棉质睡衣的闷响，男孩猛吸一口气的抽气声"
+        },
+        {
+          "n": 6,
+          "at": 13,
+          "cut": "the camera cuts to",
+          "duration_s": 1.5,
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "real_bedroom",
+          "on_screen": [
+            "tiantian_boy_home",
+            "mother_home"
+          ],
+          "props": [],
+          "action": "男孩仰面躺着，胸口仍在剧烈起伏，双眼直勾勾盯着正上方的天花板，眼神涣散没有焦点。妈妈直起身站在画面左侧边缘，低头看着他，眉头皱得更深了。",
+          "emotion_analysis": [
+            {
+              "character": "tiantian_boy_home",
+              "cause": "意识刚回到现实，但梦境中的恐惧感仍残留在身体里，无法立刻组织语言回应",
+              "internal_state": "茫然与残留的恐惧",
+              "visible_behavior": "眼球固定在上方不动，喉结上下滑动一次试图吞咽，嘴唇微微发抖但没有张开，胸骨随呼吸大幅度升降",
+              "gaze": "away",
+              "avoid_symbols": [
+                "转头对视",
+                "开口说话",
+                "表情放松"
+              ]
+            },
+            {
+              "character": "mother_home",
+              "cause": "儿子醒来后没有正常反应，而是僵直喘息盯着天花板，这不像普通的起床气",
+              "internal_state": "担忧与不解",
+              "visible_behavior": "双唇抿紧，眉间纹路加深，头部微微偏向一侧审视男孩的面部，拿毛巾的左手垂在身侧",
+              "gaze": "toward",
+              "avoid_symbols": [
+                "转身离开",
+                "笑",
+                "无视"
+              ]
+            }
+          ],
+          "lighting": "柔和的暖色侧光打在男孩苍白的脸上，阴影落在眼窝处加深了茫然感",
+          "lines": [
+            70
+          ],
+          "audio": "男孩持续的不规则喘息声，窗外远处的街道环境底噪"
+        }
+      ]
+    },
+    {
+      "id": "u4",
+      "boundary_trigger": "time_jump",
+      "keyframe_cast": [
+        "mother_home",
+        "tiantian_boy_home"
+      ],
+      "action_complexity": {
+        "level": "low",
+        "high_risk_events": [],
+        "strategy": "none"
+      },
+      "why": "妈妈说完台词后转身离开、天天坐起确认身体并自言自语，是连续的情绪回落过程，空间未变，人物身份稳定，适合共享一次生成。",
+      "duration_reason": "79行最低5.84秒，妈妈转身离开动作约2.0秒；天天低头看身体约1.5秒；88行最低1.38秒加停顿共2.0秒；擦眼角过渡1.5秒；93行最低1.20秒加表演余量共2.5秒。总计14.84秒。",
+      "keyframe_start": "0秒时妈妈站在床边，身体微侧向画面右侧的房门方向，嘴唇微张正在说话；天天仰面躺在床上，胸口起伏，双眼大睁盯着天花板。两人保持分离，未发生身体接触。",
+      "end_state": "天天坐在床沿，双脚落地，右手刚放下摸脸的动作，目光看向画面左侧的穿衣镜方向，表情平静带微弱笑意。房间内只剩他一人。",
+      "continuity": {
+        "mode": "continue_previous",
+        "previous_unit": "u3",
+        "handoff_state": "妈妈站在床边低头看着天天，右手刚从天天的左肩上收回；天天仰面躺在床上，胸口剧烈起伏，双眼大睁盯着天花板，眼神茫然。两人保持分离站立与躺卧的空间关系，未发生身体接触。",
+        "deferred_keyframe": true,
+        "allowed_changes": [
+          "景别从中景切至近景或特写",
+          "机位角度微调"
+        ]
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 7.84,
+          "framing": "中景",
+          "camera": "缓慢右移跟随妈妈走向房门",
+          "scene": "real_bedroom",
+          "on_screen": [
+            "mother_home",
+            "tiantian_boy_home"
+          ],
+          "props": [],
+          "action": "妈妈站在床边，语气轻描淡写地说话，说完后将手中叠好的毛巾放在床头柜上，转身向画面右侧的房门走去，顺手拉开门走出房间并带上门。天天始终仰面躺在床上，胸口起伏逐渐放缓，眼神从茫然慢慢聚焦到天花板上。",
+          "emotion_analysis": [
+            {
+              "character": "mother_home",
+              "cause": "看到儿子醒来只是做噩梦，并无大碍，日常催促流程继续",
+              "internal_state": "轻松、习以为常",
+              "visible_behavior": "嘴角自然放松，动作利落不拖沓，放毛巾和转身的姿态随意流畅",
+              "gaze": "先看向床上的天天，随后转向房门方向",
+              "avoid_symbols": [
+                "焦虑皱眉",
+                "过度关切弯腰"
+              ]
+            },
+            {
+              "character": "tiantian_boy_home",
+              "cause": "刚从噩梦中惊醒，正在适应现实环境，听到妈妈平常的语气后心跳开始平复",
+              "internal_state": "惊魂未定但逐渐安定",
+              "visible_behavior": "胸口起伏幅度由大变小，眼珠微动扫视天花板，手指轻微蜷缩后松开",
+              "gaze": "盯着天花板",
+              "avoid_symbols": [
+                "惊恐瞪眼",
+                "猛然坐起"
+              ]
+            }
+          ],
+          "lighting": "温暖自然晨光从窗帘缝隙洒入，色调正常生活化",
+          "lines": [
+            79
+          ],
+          "audio": "毛巾放在木柜上的轻响，脚步声，门轴转动声，门锁扣合声"
+        },
+        {
+          "n": 2,
+          "at": 7.84,
+          "cut": "the camera cuts to",
+          "duration_s": 3.5,
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "real_bedroom",
+          "on_screen": [
+            "tiantian_boy_home"
+          ],
+          "props": [],
+          "action": "房间里只剩天天一人。他慢慢用手撑床坐起来，低头看向自己的身体——宽松的旧T恤，平瘦的胸口，男孩的骨架。他长长地呼出一口气，整个人像泄了力一样靠回床头，低声说了一句话。",
+          "emotion_analysis": [
+            {
+              "character": "tiantian_boy_home",
+              "cause": "确认自己仍是男孩的身体，梦境的恐惧被现实验证推翻",
+              "internal_state": "如释重负、脱力",
+              "visible_behavior": "肩膀塌下，胸腔随长呼气明显收缩，后背软靠在床头板上，嘴唇微动发出低语",
+              "gaze": "低头看着自己的胸口和衣服",
+              "avoid_symbols": [
+                "挺胸紧绷",
+                "恐惧颤抖"
+              ]
+            }
+          ],
+          "lighting": "温暖晨光从画面左侧照入，在T恤褶皱上投下柔和阴影",
+          "lines": [
+            88
+          ],
+          "audio": "床单摩擦声，一声长而缓的呼气"
+        },
+        {
+          "n": 3,
+          "at": 11.34,
+          "cut": "the camera cuts to",
+          "duration_s": 3.66,
+          "framing": "特写",
+          "camera": "固定",
+          "scene": "real_bedroom",
+          "on_screen": [
+            "tiantian_boy_home"
+          ],
+          "props": [],
+          "action": "天天的脸占满画面。他抬起手背轻轻擦了一下眼角，然后手掌贴上面颊摸了摸自己的脸。嘴角微微上扬，露出一丝劫后余生的笑，小声说了一句话。眼眶仍有些泛红。",
+          "emotion_analysis": [
+            {
+              "character": "tiantian_boy_home",
+              "cause": "指尖触碰到熟悉的骨骼轮廓，彻底确认自我身份回归",
+              "internal_state": "庆幸、安心",
+              "visible_behavior": "手背蹭过眼角带走湿意，掌心贴合颧骨和下颌线滑动，嘴角牵起微小弧度，喉结微动发声",
+              "gaze": "视线落在自己摸脸的手背上，随后微微抬眼看向前方",
+              "avoid_symbols": [
+                "大笑",
+                "流泪哭泣",
+                "惊恐瞪眼"
+              ]
+            }
+          ],
+          "lighting": "暖光打在面部一侧，眼角有微弱反光",
+          "lines": [
+            93
+          ],
+          "audio": "皮肤摩擦的细微声响，窗外隐约鸟鸣"
+        }
+      ]
+    }
+  ]
+}

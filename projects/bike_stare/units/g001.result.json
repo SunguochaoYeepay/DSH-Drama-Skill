@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "781e9f70-b6df-48ea-a97b-f6057b7489cd",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 175,
+    "seconds": 7.29,
+    "profile": "fast",
+    "attention": "vsa",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+    "vsa": true
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00176_.mp4",
+      "filename": "H3_i2v_00176_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 1710259,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00176_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\bike_stare\\units\\i2v_20260919-230414.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\bike_stare\\units\\i2v_20260919-230414.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\bike_stare\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] a wide shot of 女生 —— 女生的可见表演：步幅自然收小，重心前移，随后腰部下压、上身自然折下去，一只手伸向草丛，肩背放松；视线：先看向前方路面，随后下移到画面下方自己脚边的草丛；表演边界：嘴角形态服从上述可见表演，不额外改变情绪方向，二十出头的东亚女生；鹅蛋脸，五官清秀自然，鼻梁不高但挺直；眼睛偏圆、双眼皮浅；眉形平缓；皮肤自然偏暖、有轻微雀斑与真实毛孔；不施浓妆。；浅灰色紧身瑜伽裤 + 亮黄色细吊带背心 + 白色运动鞋；长黑发扎成高马尾；戴一对白色入耳式耳机；无首饰。全片衣着完整、无变化。，女生沿碎石小径朝画面下方走来，走了几步后停下，低头看见草丛里的东西，随后弯腰伸手去捡，上身自然压下去，动作利落。摄影机缓慢前推，把她的上半身收进中景，午后日光充足明亮，草叶与碎石在正下方投出短而硬的暗影，野草边缘有高光。\n\noverall_soundscape: 草地风声，脚步踩在碎石上的沙沙声，衣料蹭过野草的细响\n\nnon_diegetic_music: N/A",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 66.1
+}

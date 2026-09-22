@@ -1,0 +1,33 @@
+{
+  "ok": true,
+  "mode": "edit",
+  "kind": "image",
+  "prompt_id": "607b8668-3986-40ae-976d-d1abe22c7a69",
+  "params": {
+    "mode": "edit",
+    "width": 576,
+    "height": 1024
+  },
+  "seed_used": 930052771,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\img\\Qwen_edit_00114_.png",
+      "filename": "Qwen_edit_00114_.png",
+      "subfolder": "img",
+      "type": "output",
+      "kind": "image",
+      "exists": true,
+      "bytes": 824756,
+      "url": "http://127.0.0.1:8188/view?filename=Qwen_edit_00114_.png&subfolder=img&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\keyframes_local\\edit_20260917-001248.png"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\keyframes_local\\edit_20260917-001248.png"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\keyframes_local",
+  "prompt_used": "请把参考图中的雪球放进同一个镜头，整体风格严格遵循：高品质卡通3D电影动画质感，圆润造型，柔软蓬松毛发，明亮暖色调，温馨居家灯光，可爱幽默，不恐怖，无血腥。图1是场景参考，只参考环境、光线和色调；图2是雪球的身份参考，严格保持此人的脸、发型；图3是雪球的身份参考，严格保持此人的脸、发型和服装。\n构图要求：【景别｜近景】画面只取胸部以上 —— 下边界在胸口到腰之间、明显高于腰线。能看到肩膀和上胸，脸部占画面较大比例。绝不允许出现腰部以下（那就成了中景），也不允许只剩一个头（那就成了特写）。\n画面起点：0秒，雪球坐在沙发上，圆眼瞪向阿橘方向，嘴巴闭合，尚未笑出来。\n光线：暖黄灯光，眼睛高光明显。\n保持参考图的角色身份、体型比例和体表材质。不得重设计脸部或头部特征、毛发、皮肤、服装与配饰。\n画面中不要出现文字、字幕、水印、logo、边框或拼图。",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 44.6
+}

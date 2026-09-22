@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "approvals": {
+    "clips": {
+      "g001": {
+        "at": "2026-09-20T02:32:22.707Z",
+        "by": "用户",
+        "artifact_hash": "3b4407df841332067c7d97d6546fb5ade7a6c2c5f17beb4628c9467447313379",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\units\\i2v_20260920-102922.mp4"
+        ]
+      },
+      "g002": {
+        "at": "2026-09-20T02:33:56.247Z",
+        "by": "用户",
+        "artifact_hash": "36c09f751dd8347ab6867b2372a326b7863212da96e6a44a3c3291f6dc842e43",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\units\\i2v_20260920-103307.mp4"
+        ]
+      },
+      "g003": {
+        "at": "2026-09-20T02:35:19.121Z",
+        "by": "用户",
+        "artifact_hash": "9ef619df12a268a7451cdd45d3346ea2caa149a141a56ecd010799816bf27d52",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\units\\i2v_20260920-103440.mp4"
+        ]
+      },
+      "g004": {
+        "at": "2026-09-20T02:38:21.047Z",
+        "by": "用户",
+        "artifact_hash": "ab7775772d9de7f3ac6bf8656e75b6a34e736c742f90d6f22551aa691372fa0b",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\units\\i2v_20260920-103604.mp4"
+        ]
+      },
+      "g005": {
+        "at": "2026-09-20T02:39:19.959Z",
+        "by": "用户",
+        "artifact_hash": "39e7ecf9515c687354301d26163b0d191adfd0c25e3c8737a1f216e31ab984e9",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\units\\i2v_20260920-103905.mp4"
+        ]
+      },
+      "g006": {
+        "at": "2026-09-20T02:40:21.791Z",
+        "by": "用户",
+        "artifact_hash": "c3aa582ddf7c59dd3b73e87d3def6c3b43cf7f3004ffdd9cb9bb8775ef51f4b6",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\units\\i2v_20260920-104004.mp4"
+        ]
+      }
+    },
+    "story": {
+      "at": "2026-09-20T02:22:22.715Z",
+      "by": "用户",
+      "artifact_hash": "679028440a4dad057779a5396ee68a4d223930ba78cbb15b2586593cbc480742",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\story.md"
+      ]
+    },
+    "direction": {
+      "at": "2026-09-20T02:22:22.808Z",
+      "by": "用户",
+      "artifact_hash": "8ab547520275ec73fbf238d73ac2e6a1b285d06a16f3a82274d9987f26f67308",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\board.direction.json"
+      ]
+    },
+    "assets": {
+      "at": "2026-09-20T02:22:22.766Z",
+      "by": "用户",
+      "artifact_hash": "e3f33bb1952263dd1e26acd7694a786e0601ca8496922ef75746f52e9e7fbd9c",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\alley_entrance_master.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\buddy_default_sheet.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\buddy_portrait.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\girl_default_sheet.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\girl_portrait.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\grandpa_default_sheet.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\grandpa_portrait.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\kitten_default_sheet.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\kitten_portrait.png"
+      ],
+      "generation": {
+        "version": 1,
+        "stage": "assets",
+        "at": "2026-09-20T02:18:10.408Z",
+        "provider": "comfyui",
+        "model": "local-comfyui",
+        "requested_provider": "local",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\girl_portrait.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\grandpa_portrait.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\buddy_portrait.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\kitten_portrait.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\girl_default_sheet.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\grandpa_default_sheet.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\buddy_default_sheet.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\kitten_default_sheet.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\alley_entrance_master.png"
+        ]
+      }
+    },
+    "keyframes": {
+      "at": "2026-09-20T02:28:24.282Z",
+      "by": "用户",
+      "artifact_hash": "0d8bb758610565ff9ac356d1ee2d7af81c6e1fb5e0d25b1224d4947891d47b49",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g001.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g002.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g003.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g004.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g005.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g006.png"
+      ],
+      "generation": {
+        "version": 1,
+        "stage": "keyframes",
+        "at": "2026-09-20T02:28:03.042Z",
+        "provider": "local",
+        "model": "local-comfyui",
+        "requested_provider": "local",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g001.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g002.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g003.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g004.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g005.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g006.png"
+        ],
+        "plan": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\render.plan.json",
+        "execution_overrides": [
+          "g002"
+        ]
+      }
+    },
+    "final": {
+      "at": "2026-09-20T02:40:55.954Z",
+      "by": "用户",
+      "artifact_hash": "8cf61f57259254dc75faf27d8686c89fe19d66df8aef02d4ba3e0d2e8afd1b28",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\out\\final.mp4"
+      ]
+    }
+  }
+}

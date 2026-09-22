@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "project": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll",
+  "unit": "g002",
+  "source_unit": "g001",
+  "allowed_changes": [
+    "景别由山谷口全景改为拦路点中景",
+    "机位由谷口正面改为沿土路的侧向",
+    "画面里的人物组合由领队与壮汉改为领队与地鼠"
+  ],
+  "source_clip": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\units\\i2v_20260921-225418.mp4",
+  "source_clip_sha256": "b1b22fb6b089f7c0862836445d2d495304baf9672d0cd1ff51f63b9c60be18c4",
+  "stable_frame": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\handoffs\\g002.stable-tail.png",
+  "stable_frame_sha256": "6190254bdfa7ba023c0388363ecf900a2b58b37d90915aa3c1f0ccd84bfe38dd",
+  "tail_offset_s": 0.35,
+  "keyframe": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\keyframes_local_v2\\g002.png",
+  "keyframe_sha256": "feebf1578da9b98b309213f5cf5dae0a7ea16d58229693b28da6f5ae32fab434",
+  "created_at": "2026-09-21T14:57:05.034Z",
+  "keyframe_bound_at": "2026-09-22T02:06:35.936Z"
+}

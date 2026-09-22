@@ -1,0 +1,252 @@
+{
+  "meta": {
+    "title": "看呆了",
+    "project": "bike_stare",
+    "logline": "午后草地小径，一个女生弯腰去捡草里的东西；身后骑车的男生看呆了、忘了看路，连人带车翻出画面。",
+    "genre": "",
+    "language": "zh-CN",
+    "aspect": "9:16",
+    "style": "realistic",
+    "style_prompt": "写实电影质感：实拍级皮肤与布料细节，真实毛孔、汗光与织物厚度；日光充足明亮，物体在正下方投出短而硬的暗影；天空是均匀的高亮浅蓝色；暖调偏灰绿，低饱和高对比；空气中有细微浮尘；浅景深，自然光学暗角。",
+    "total_duration_s": 18,
+    "stage": "story",
+    "approvals": {
+      "story": null,
+      "shots": null,
+      "assets": null,
+      "keyframes": null
+    },
+    "music": null,
+    "final_video": null
+  },
+  "story": {
+    "synopsis": "午后草地，一个扎着长发的女生沿碎石小径走来，低头看见草丛里有东西，弯腰去捡。小径后方，一个短发男生骑着共享单车驶过，头扭过去看她，眼睛睁大，视线再没回到路上。车把开始左右摆，前轮蹭向路基——他张着嘴连人带车向画面外侧翻倒，人和车一起跌出画面，只留下晃动的野草和一片扬起的浮尘。女生直起身，手里捏着一片枯叶，看了一眼空掉的小径，继续往前走。草地恢复安静。",
+    "beats": [
+      {
+        "text": "女生沿小径走来，低头看见草丛里的东西，停下，弯腰去捡",
+        "purpose": "建立画面主体与她的日常动作，给笑点一个完全无心机的起因"
+      },
+      {
+        "text": "骑车的男生驶过，头扭过去看她，视线黏住，完全没看路",
+        "purpose": "把笑点建在男生自己身上——他在为自己后面的失控积累条件，而不是让镜头去凝视她"
+      },
+      {
+        "text": "车把摆动、前轮蹭向路基，他连人带车翻倒并跌出画面",
+        "purpose": "喜剧落点：凝视的代价由凝视者自己支付"
+      },
+      {
+        "text": "女生直起身捏着枯叶，看一眼空掉的小径，继续往前走",
+        "purpose": "收尾留白：她全程不知情，草地恢复安静"
+      }
+    ],
+    "source": "看呆了\n\n场次一 外景 草地小径 白天\n\n△ 午后草地缓坡，一条碎石小径斜穿画面，两侧齐膝野草，远处一排低矮的树，日光偏顶光。\n△ 一个扎着长发的女生沿小径走来，穿浅灰紧身瑜伽裤和亮色细吊带，戴入耳耳机，步伐轻快。\n△ 她低头看见草丛里有个东西，停下脚步。\n△ 她弯腰去捡，上身自然压下去，动作利落。\n△ 小径后方，一个短发男生骑着共享单车驶过，头扭过来，眼睛睁大。\n△ 他的视线还黏着，完全没看路，车把开始左右摆。\n△ 前轮蹭向路基，车把一歪。\n△ 他张着嘴，连人带车向画面外侧翻倒。\n△ 人和车一起跌出画面边缘，只留下晃动的野草和一片扬起的浮尘。\n△ 女生直起身，手里捏着一片枯叶。\n△ 她看了一眼空掉的小径，继续往前走。\n△ 草地恢复安静，只有野草在晃。\n\n（完）\n"
+  },
+  "characters": [
+    {
+      "id": "girl",
+      "name": "女生",
+      "species": "human",
+      "age_group": "youth",
+      "face_prompt": "二十出头的东亚女生；鹅蛋脸，五官清秀自然，鼻梁不高但挺直；眼睛偏圆、双眼皮浅；眉形平缓；皮肤自然偏暖、有轻微雀斑与真实毛孔；不施浓妆。",
+      "identities": [
+        "girl_default"
+      ],
+      "portrait": "assets/girl_portrait.png"
+    },
+    {
+      "id": "boy",
+      "name": "男生",
+      "species": "human",
+      "age_group": "youth",
+      "face_prompt": "二十出头的东亚男生；脸偏圆、下颌线柔和、带一点婴儿肥；短寸头、发际线整齐；眉毛浓而平，眼睛不大、单眼皮；鼻梁中等；皮肤偏麦色、有真实毛孔。",
+      "identities": [
+        "boy_default"
+      ],
+      "portrait": "assets/boy_portrait.png"
+    }
+  ],
+  "identities": [
+    {
+      "id": "girl_default",
+      "name": "运动休闲造型",
+      "character": "girl",
+      "appearance_details": "浅灰色紧身瑜伽裤 + 亮黄色细吊带背心 + 白色运动鞋；长黑发扎成高马尾；戴一对白色入耳式耳机；无首饰。全片衣着完整、无变化。",
+      "sheet": "assets/girl_default_sheet.png"
+    },
+    {
+      "id": "boy_default",
+      "name": "骑车少年造型",
+      "character": "boy",
+      "appearance_details": "亮蓝色短袖 T 恤 + 深灰色束脚休闲裤 + 旧帆布鞋；黑色短寸头。全片衣着完整、无变化；自行车写在镜头动作里，不占造型槽位。",
+      "sheet": "assets/boy_default_sheet.png"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "grass_path",
+      "name": "午后草地小径",
+      "environment": "午后草地缓坡，一条碎石小径斜穿画面，两侧是齐膝高的野草，远处一排低矮的树；日光充足明亮，草叶与碎石在正下方投出短而硬的暗影；天空是均匀的高亮浅蓝色；暖调偏灰绿、低饱和高对比，空气中有细微浮尘；小径后方是草地起伏的纵深。",
+      "scene_no": 1,
+      "master": "assets/grass_path_master.png"
+    }
+  ],
+  "props": [],
+  "shots": [
+    {
+      "id": "s01",
+      "scene": "grass_path",
+      "cast": [
+        "girl_default"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "全景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢前推",
+      "action": "午后草地缓坡，一条碎石小径斜穿画面，两侧齐膝野草，远处一排低矮的树，日光偏顶光。 一个扎着长发的女生沿小径走来，穿浅灰紧身瑜伽裤和亮色细吊带，戴入耳耳机，步伐轻快。",
+      "prompt": "{{girl_default}}，午后草地缓坡，一条碎石小径斜穿画面，两侧齐膝野草，远处一排低矮的树，日光偏顶光。 一个扎着长发的女生沿小径走来，穿浅灰紧身瑜伽裤和亮色细吊带，戴入耳耳机，步伐轻快。，全景，缓慢前推",
+      "audio": "树叶摩擦的沙沙声与踩在石板路上的脚步声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        5,
+        6
+      ]
+    },
+    {
+      "id": "s02",
+      "scene": "grass_path",
+      "cast": [],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "全景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢前推",
+      "action": "她低头看见草丛里有个东西，停下脚步。 她弯腰去捡，上身自然压下去，动作利落。",
+      "prompt": "她低头看见草丛里有个东西，停下脚步。 她弯腰去捡，上身自然压下去，动作利落。，全景，缓慢前推",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        7,
+        8
+      ]
+    },
+    {
+      "id": "s03",
+      "scene": "grass_path",
+      "cast": [
+        "boy_default"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "小径后方，一个短发男生骑着共享单车驶过，头扭过来，眼睛睁大。 他的视线还黏着，完全没看路，车把开始左右摆。",
+      "prompt": "{{boy_default}}，小径后方，一个短发男生骑着共享单车驶过，头扭过来，眼睛睁大。 他的视线还黏着，完全没看路，车把开始左右摆。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        9,
+        10
+      ]
+    },
+    {
+      "id": "s04",
+      "scene": "grass_path",
+      "cast": [],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "前轮蹭向路基，车把一歪。 他张着嘴，连人带车向画面外侧翻倒。",
+      "prompt": "前轮蹭向路基，车把一歪。 他张着嘴，连人带车向画面外侧翻倒。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        11,
+        12
+      ]
+    },
+    {
+      "id": "s05",
+      "scene": "grass_path",
+      "cast": [
+        "girl_default"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "人和车一起跌出画面边缘，只留下晃动的野草和一片扬起的浮尘。 女生直起身，手里捏着一片枯叶。",
+      "prompt": "{{girl_default}}，人和车一起跌出画面边缘，只留下晃动的野草和一片扬起的浮尘。 女生直起身，手里捏着一片枯叶。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        13,
+        14
+      ]
+    },
+    {
+      "id": "s06",
+      "scene": "grass_path",
+      "cast": [],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "她看了一眼空掉的小径，继续往前走。 草地恢复安静，只有野草在晃。",
+      "prompt": "她看了一眼空掉的小径，继续往前走。 草地恢复安静，只有野草在晃。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        15,
+        16
+      ]
+    }
+  ]
+}

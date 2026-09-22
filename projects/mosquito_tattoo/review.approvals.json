@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "approvals": {
+    "clips": {
+      "g001": {
+        "at": "2026-09-17T07:34:34.476Z",
+        "by": "用户",
+        "artifact_hash": "f80a238a78bcbd728802bdc5932cc96ab577113a7777cf5da0500e1ffe4a8538",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo\\units\\r2v_20260917-152617.mp4"
+        ]
+      },
+      "g002": {
+        "final": {
+          "at": "2026-09-17T09:55:25.280Z",
+          "by": "用户",
+          "artifact_hash": "3e4b43f47dc6f6ec2529707339da4bfdc6b50b022c15d1645476f2ffc559d741",
+          "artifacts": [
+            "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo\\units\\i2v_20260917-163438.mp4"
+          ]
+        }
+      }
+    },
+    "assets": {
+      "at": "2026-09-17T05:26:59.291Z",
+      "by": "用户",
+      "artifact_hash": "ad85399dd427d09aee5ab3e9de29e940b96008f29baad57b95ea40c15dce2ead",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo\\assets\\chen_mo_default_sheet.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo\\assets\\chen_mo_portrait.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo\\assets\\lin_xiaoya_default_sheet.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo\\assets\\lin_xiaoya_portrait.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo\\assets\\seaside_boardwalk_master.png"
+      ]
+    },
+    "direction": {
+      "at": "2026-09-17T05:28:22.412Z",
+      "by": "用户",
+      "artifact_hash": "435ac90e4da63c5be0afc1988034a9a6d3edeacb29930e9946a11454692a73b2",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo\\render.plan.json"
+      ]
+    },
+    "keyframes": {
+      "at": "2026-09-17T08:32:37.498Z",
+      "by": "用户",
+      "artifact_hash": "2ea3113d1333aecee9d393db847737b5ef905aa30ad54023aa03e2163c6dd778",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo\\keyframes_render\\g001.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo\\keyframes_render\\g002.png"
+      ]
+    },
+    "handoffs": {
+      "g002": {
+        "at": "2026-09-17T07:43:48.010Z",
+        "by": "用户",
+        "artifact_hash": "5eb19255ec8a3cc0f8206c126214d988d83e9ced8fcc3b1276c19b4bb4f38835",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo\\handoffs\\g002.stable-tail.png"
+        ]
+      }
+    }
+  }
+}

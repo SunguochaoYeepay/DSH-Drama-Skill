@@ -1,0 +1,738 @@
+{
+  "meta": {
+    "title": "天天的梦",
+    "project": "tiantian_dream_20260918",
+    "logline": "十四岁男孩天天梦见自己变成一个黑发、脸型相似但五官不同的女孩，情绪崩溃后被妈妈叫醒，庆幸一切只是梦。",
+    "genre": "",
+    "language": "zh-CN",
+    "aspect": "9:16",
+    "style": "realistic",
+    "style_prompt": "写实电影风格，真实少年与家庭卧室，梦境使用柔暖朦胧光线，现实使用清冷自然晨光，细腻表情和可信身体比例，不要奇幻特效堆砌。",
+    "total_duration_s": 61,
+    "stage": "story",
+    "approvals": {
+      "story": null,
+      "shots": null,
+      "assets": null,
+      "keyframes": null
+    },
+    "music": null,
+    "final_video": null
+  },
+  "story": {
+    "synopsis": "十四岁男孩天天在陌生卧室醒来，发现身体变成了黑发女孩。镜中女孩与他脸型相似却有完全不同的五官，他确认疼痛真实后情绪崩溃。画面切黑，妈妈在现实卧室叫醒正在睡觉的天天；天天恢复男孩身体，确认手上的旧伤疤后松了一口气，庆幸只是噩梦。",
+    "beats": [
+      {
+        "text": "梦中天天醒来发现身体变成黑发女孩，反复确认后崩溃",
+        "purpose": "建立身体变化冲突并让观众明确女孩不是换装后的天天"
+      },
+      {
+        "text": "妈妈叫醒现实中的天天，他确认自己仍是男孩并庆幸只是梦",
+        "purpose": "用梦现实切换完成反转和情绪释放"
+      }
+    ],
+    "source": "《天天的梦》\n\n场次一 内景 陌生卧室 日（梦境）\n\n一张铺着浅色床单的单人床。阳光从窗帘缝隙透进来，光线偏暖偏柔，带着一层不真实的朦胧感。\n\n天天从被子里慢慢坐起来。他揉了揉眼睛，动作还带着刚睡醒的迟钝。\n\n他低头，看见自己的手——纤细的，指节比记忆中细了一圈。\n\n天天愣住。\n\n他翻过手掌，又翻过来，反复看了两遍。呼吸开始变快。\n\n天天掀开被子，低头看自己的身体。他的表情从困惑迅速滑向恐惧。\n\n天天（声音发颤，比平时高了半个调）\n……这什么？\n\n他猛地从床上跳下来，踉跄了一步，重心明显不对，扶住了床沿。\n\n场次二 内景 陌生卧室 日（梦境）续\n\n天天跌跌撞撞走到衣柜前。柜门上嵌着一块椭圆形的穿衣镜。\n\n镜子里映出一个女孩。黑色长发散在肩上，脸型和天天有几分相似，但五官分明不同——更柔和，更窄的下颌，完全不同的一个人。\n\n天天（后退一步，声音几乎是从喉咙里挤出来的）\n不……不是……\n\n他伸手去摸自己的脸。镜子里的女孩做了同样的动作。\n\n天天用力掐了一下自己的手臂。疼。\n\n天天（眼眶红了，声音带哭腔）\n这不对……这不对！\n\n他开始翻自己的衣领、看自己的手背，像在做最后的确认。每一个动作都在告诉他同一个事实。\n\n天天蹲下来，抱住自己的头，肩膀剧烈发抖。\n\n天天（几乎是喊出来的）\n妈——！\n\n画面骤然黑屏。\n\n场次三 内景 天天卧室 日（现实）\n\n黑屏中，一个女人的声音由远及近传来。\n\n妈妈（画外音，语气平常）\n天天，天天，起来了。\n\n画面亮起。光线是清晨正常的冷白色调，没有梦境那层暖雾。\n\n天天猛地从床上弹起来，大口喘气。他穿着自己那件洗得发白的旧T恤，头发乱糟糟的，是十四岁男孩的样子。\n\n妈妈站在床边，手里拿着一条叠好的校服裤子，看了他一眼。\n\n妈妈\n怎么了？做噩梦了？\n\n天天低头看自己的手。粗指节，短指甲，手背上有一道去年骑车摔的疤。\n\n他长长地吐了一口气，整个人像被抽走了所有力气一样靠回枕头上。\n\n天天（声音还有点哑，带着劫后余生的庆幸）\n没有……没事。\n\n妈妈把校服裤子扔到他被子上。\n\n妈妈\n没事就赶紧起，七点二十了。\n\n妈妈转身走出房间。\n\n天天一个人躺着，盯着天花板。他慢慢抬起手，又看了一遍。\n\n他笑了一下，很短，带着点还没完全消散的后怕。\n\n天天（小声，像说给自己听）\n还好。\n\n他翻身下床，脚踩到地板上，踏实地站住了。\n\n（完）"
+  },
+  "characters": [
+    {
+      "id": "tiantian_boy",
+      "name": "天天（现实）",
+      "age_group": "youth",
+      "face_prompt": "待由人物造型师确认的14岁男孩外观",
+      "identities": [
+        "tiantian_boy_home"
+      ]
+    },
+    {
+      "id": "tiantian_dream_girl",
+      "name": "天天梦中女孩",
+      "age_group": "youth",
+      "face_prompt": "黑发女孩，脸型与天天相似但五官明显不同；具体外观待由人物造型师确认",
+      "identities": [
+        "tiantian_dream_girl_home"
+      ]
+    },
+    {
+      "id": "mother",
+      "name": "妈妈",
+      "age_group": "middle",
+      "face_prompt": "待由人物造型师确认的成年女性外观",
+      "identities": [
+        "mother_home"
+      ]
+    }
+  ],
+  "identities": [
+    {
+      "id": "tiantian_boy_home",
+      "name": "天天现实居家造型",
+      "character": "tiantian_boy",
+      "appearance_details": "现实居家旧T恤，凌乱短发，14岁男孩"
+    },
+    {
+      "id": "tiantian_dream_girl_home",
+      "name": "天天梦中女孩造型",
+      "character": "tiantian_dream_girl",
+      "appearance_details": "梦中黑色长发女孩，具体服装待确认"
+    },
+    {
+      "id": "mother_home",
+      "name": "妈妈居家造型",
+      "character": "mother",
+      "appearance_details": "现实居家服装，具体造型待确认"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "dream_bedroom_1",
+      "scene_no": 1,
+      "name": "陌生卧室（梦境发现）",
+      "environment": "陌生卧室，浅色床单，窗帘缝隙透入柔暖朦胧晨光，梦境不真实但不使用夸张特效"
+    },
+    {
+      "id": "dream_bedroom_2",
+      "scene_no": 2,
+      "name": "陌生卧室（梦境镜前）",
+      "environment": "同一陌生卧室的衣柜与椭圆穿衣镜区域，柔暖朦胧梦境光线"
+    },
+    {
+      "id": "real_bedroom",
+      "scene_no": 3,
+      "name": "天天卧室（现实）",
+      "environment": "天天的现实卧室，清晨冷白自然光，普通单人床，生活化家庭环境"
+    }
+  ],
+  "props": [],
+  "shots": [
+    {
+      "id": "s01",
+      "scene": "dream_bedroom_1",
+      "cast": [
+        "tiantian_dream_girl_home"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "全景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢前推",
+      "action": "一张铺着浅色床单的单人床。阳光从窗帘缝隙透进来，光线偏暖偏柔，带着一层不真实的朦胧感。 天天从被子里慢慢坐起来。他揉了揉眼睛，动作还带着刚睡醒的迟钝。",
+      "prompt": "{{tiantian_dream_girl_home}}，一张铺着浅色床单的单人床。阳光从窗帘缝隙透进来，光线偏暖偏柔，带着一层不真实的朦胧感。 天天从被子里慢慢坐起来。他揉了揉眼睛，动作还带着刚睡醒的迟钝。，全景，缓慢前推",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        5,
+        7
+      ]
+    },
+    {
+      "id": "s02",
+      "scene": "dream_bedroom_1",
+      "cast": [
+        "tiantian_dream_girl_home"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "全景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢前推",
+      "action": "他低头，看见自己的手——纤细的，指节比记忆中细了一圈。 天天愣住。",
+      "prompt": "{{tiantian_dream_girl_home}}，他低头，看见自己的手——纤细的，指节比记忆中细了一圈。 天天愣住。，全景，缓慢前推",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        9,
+        11
+      ]
+    },
+    {
+      "id": "s03",
+      "scene": "dream_bedroom_1",
+      "cast": [
+        "tiantian_dream_girl_home"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "他翻过手掌，又翻过来，反复看了两遍。呼吸开始变快。 天天掀开被子，低头看自己的身体。他的表情从困惑迅速滑向恐惧。",
+      "prompt": "{{tiantian_dream_girl_home}}，他翻过手掌，又翻过来，反复看了两遍。呼吸开始变快。 天天掀开被子，低头看自己的身体。他的表情从困惑迅速滑向恐惧。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        13,
+        15
+      ]
+    },
+    {
+      "id": "s04",
+      "scene": "dream_bedroom_1",
+      "cast": [
+        "tiantian_dream_girl_home"
+      ],
+      "props": [],
+      "duration_s": 2,
+      "shot_size": "近景",
+      "lighting": "均匀自然光",
+      "camera": "固定镜头",
+      "action": "天天开口说话",
+      "prompt": "{{tiantian_dream_girl_home}}，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "tiantian_dream_girl_home",
+          "text": "……这什么？",
+          "emotion": "声音发颤，比平时高了半个调",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        17
+      ]
+    },
+    {
+      "id": "s05",
+      "scene": "dream_bedroom_1",
+      "cast": [],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "他猛地从床上跳下来，踉跄了一步，重心明显不对，扶住了床沿。",
+      "prompt": "他猛地从床上跳下来，踉跄了一步，重心明显不对，扶住了床沿。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        20
+      ]
+    },
+    {
+      "id": "s06",
+      "scene": "dream_bedroom_2",
+      "cast": [
+        "tiantian_dream_girl_home"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "天天跌跌撞撞走到衣柜前。柜门上嵌着一块椭圆形的穿衣镜。 镜子里映出一个女孩。黑色长发散在肩上，脸型和天天有几分相似，但五官分明不同——更柔和，更窄的下颌，完全不同的一个人。",
+      "prompt": "{{tiantian_dream_girl_home}}，天天跌跌撞撞走到衣柜前。柜门上嵌着一块椭圆形的穿衣镜。 镜子里映出一个女孩。黑色长发散在肩上，脸型和天天有几分相似，但五官分明不同——更柔和，更窄的下颌，完全不同的一个人。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        24,
+        26
+      ]
+    },
+    {
+      "id": "s07",
+      "scene": "dream_bedroom_2",
+      "cast": [
+        "tiantian_dream_girl_home"
+      ],
+      "props": [],
+      "duration_s": 2,
+      "shot_size": "近景",
+      "lighting": "均匀自然光",
+      "camera": "固定镜头",
+      "action": "天天开口说话",
+      "prompt": "{{tiantian_dream_girl_home}}，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "tiantian_dream_girl_home",
+          "text": "不……不是……",
+          "emotion": "后退一步，声音几乎是从喉咙里挤出来的",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        28
+      ]
+    },
+    {
+      "id": "s08",
+      "scene": "dream_bedroom_2",
+      "cast": [
+        "tiantian_dream_girl_home"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "他伸手去摸自己的脸。镜子里的女孩做了同样的动作。 天天用力掐了一下自己的手臂。疼。",
+      "prompt": "{{tiantian_dream_girl_home}}，他伸手去摸自己的脸。镜子里的女孩做了同样的动作。 天天用力掐了一下自己的手臂。疼。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        31,
+        33
+      ]
+    },
+    {
+      "id": "s09",
+      "scene": "dream_bedroom_2",
+      "cast": [
+        "tiantian_dream_girl_home"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "近景",
+      "lighting": "均匀自然光",
+      "camera": "固定镜头",
+      "action": "天天开口说话",
+      "prompt": "{{tiantian_dream_girl_home}}，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "tiantian_dream_girl_home",
+          "text": "这不对……这不对！",
+          "emotion": "眼眶红了，声音带哭腔",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        35
+      ]
+    },
+    {
+      "id": "s10",
+      "scene": "dream_bedroom_2",
+      "cast": [
+        "tiantian_dream_girl_home"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "他开始翻自己的衣领、看自己的手背，像在做最后的确认。每一个动作都在告诉他同一个事实。 天天蹲下来，抱住自己的头，肩膀剧烈发抖。",
+      "prompt": "{{tiantian_dream_girl_home}}，他开始翻自己的衣领、看自己的手背，像在做最后的确认。每一个动作都在告诉他同一个事实。 天天蹲下来，抱住自己的头，肩膀剧烈发抖。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        38,
+        40
+      ]
+    },
+    {
+      "id": "s11",
+      "scene": "dream_bedroom_2",
+      "cast": [
+        "tiantian_dream_girl_home"
+      ],
+      "props": [],
+      "duration_s": 2,
+      "shot_size": "近景",
+      "lighting": "均匀自然光",
+      "camera": "固定镜头",
+      "action": "天天开口说话",
+      "prompt": "{{tiantian_dream_girl_home}}，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "tiantian_dream_girl_home",
+          "text": "妈——！",
+          "emotion": "几乎是喊出来的",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        42
+      ]
+    },
+    {
+      "id": "s12",
+      "scene": "dream_bedroom_2",
+      "cast": [],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "画面骤然黑屏。",
+      "prompt": "画面骤然黑屏。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        45
+      ]
+    },
+    {
+      "id": "s13",
+      "scene": "real_bedroom",
+      "cast": [
+        "mother_home"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "近景",
+      "lighting": "均匀自然光",
+      "camera": "固定镜头",
+      "action": "黑屏中，一个女人的声音由远及近传来。",
+      "prompt": "{{mother_home}}，黑屏中，一个女人的声音由远及近传来。，近景，固定镜头",
+      "audio": "一个女人的声音由远及近传来",
+      "dialogue": [
+        {
+          "character": "mother_home",
+          "text": "天天，天天，起来了。",
+          "emotion": "画外音，语气平常",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        49,
+        51
+      ]
+    },
+    {
+      "id": "s14",
+      "scene": "real_bedroom",
+      "cast": [
+        "tiantian_boy_home"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "画面亮起。光线是清晨正常的冷白色调，没有梦境那层暖雾。 天天猛地从床上弹起来，大口喘气。他穿着自己那件洗得发白的旧T恤，头发乱糟糟的，是十四岁男孩的样子。",
+      "prompt": "{{tiantian_boy_home}}，画面亮起。光线是清晨正常的冷白色调，没有梦境那层暖雾。 天天猛地从床上弹起来，大口喘气。他穿着自己那件洗得发白的旧T恤，头发乱糟糟的，是十四岁男孩的样子。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        54,
+        56
+      ]
+    },
+    {
+      "id": "s15",
+      "scene": "real_bedroom",
+      "cast": [
+        "mother_home"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "妈妈站在床边，手里拿着一条叠好的校服裤子，看了他一眼。 妈妈",
+      "prompt": "{{mother_home}}，妈妈站在床边，手里拿着一条叠好的校服裤子，看了他一眼。 妈妈，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        58,
+        60
+      ]
+    },
+    {
+      "id": "s16",
+      "scene": "real_bedroom",
+      "cast": [
+        "tiantian_boy_home"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "怎么了？做噩梦了？ 天天低头看自己的手。粗指节，短指甲，手背上有一道去年骑车摔的疤。",
+      "prompt": "{{tiantian_boy_home}}，怎么了？做噩梦了？ 天天低头看自己的手。粗指节，短指甲，手背上有一道去年骑车摔的疤。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        61,
+        63
+      ]
+    },
+    {
+      "id": "s17",
+      "scene": "real_bedroom",
+      "cast": [
+        "tiantian_boy_home"
+      ],
+      "props": [],
+      "duration_s": 2,
+      "shot_size": "近景",
+      "lighting": "均匀自然光",
+      "camera": "固定镜头",
+      "action": "他长长地吐了一口气，整个人像被抽走了所有力气一样靠回枕头上。",
+      "prompt": "{{tiantian_boy_home}}，他长长地吐了一口气，整个人像被抽走了所有力气一样靠回枕头上。，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "tiantian_boy_home",
+          "text": "没有……没事。",
+          "emotion": "声音还有点哑，带着劫后余生的庆幸",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        65,
+        67
+      ]
+    },
+    {
+      "id": "s18",
+      "scene": "real_bedroom",
+      "cast": [
+        "mother_home"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "妈妈把校服裤子扔到他被子上。 妈妈",
+      "prompt": "{{mother_home}}，妈妈把校服裤子扔到他被子上。 妈妈，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        70,
+        72
+      ]
+    },
+    {
+      "id": "s19",
+      "scene": "real_bedroom",
+      "cast": [
+        "mother_home"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "没事就赶紧起，七点二十了。 妈妈转身走出房间。",
+      "prompt": "{{mother_home}}，没事就赶紧起，七点二十了。 妈妈转身走出房间。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        73,
+        75
+      ]
+    },
+    {
+      "id": "s20",
+      "scene": "real_bedroom",
+      "cast": [
+        "tiantian_boy_home"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "天天一个人躺着，盯着天花板。他慢慢抬起手，又看了一遍。 他笑了一下，很短，带着点还没完全消散的后怕。",
+      "prompt": "{{tiantian_boy_home}}，天天一个人躺着，盯着天花板。他慢慢抬起手，又看了一遍。 他笑了一下，很短，带着点还没完全消散的后怕。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        77,
+        79
+      ]
+    },
+    {
+      "id": "s21",
+      "scene": "real_bedroom",
+      "cast": [
+        "tiantian_boy_home"
+      ],
+      "props": [],
+      "duration_s": 2,
+      "shot_size": "近景",
+      "lighting": "均匀自然光",
+      "camera": "固定镜头",
+      "action": "天天开口说话",
+      "prompt": "{{tiantian_boy_home}}，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "tiantian_boy_home",
+          "text": "还好。",
+          "emotion": "小声，像说给自己听",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        81
+      ]
+    },
+    {
+      "id": "s22",
+      "scene": "real_bedroom",
+      "cast": [],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "他翻身下床，脚踩到地板上，踏实地站住了。 （完）",
+      "prompt": "他翻身下床，脚踩到地板上，踏实地站住了。 （完），中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        84,
+        86
+      ]
+    }
+  ]
+}

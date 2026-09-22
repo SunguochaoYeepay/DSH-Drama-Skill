@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "stage": "keyframes",
+  "at": "2026-09-19T11:42:39.525Z",
+  "provider": "local",
+  "model": "local-comfyui",
+  "requested_provider": "local",
+  "artifacts": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\keyframes_render\\g001.png"
+  ],
+  "plan": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\render.plan.json",
+  "execution_overrides": []
+}

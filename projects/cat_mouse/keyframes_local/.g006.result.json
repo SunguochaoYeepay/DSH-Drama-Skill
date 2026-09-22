@@ -1,0 +1,33 @@
+{
+  "ok": true,
+  "mode": "edit",
+  "kind": "image",
+  "prompt_id": "6fe7d0d7-98a6-4f46-b34d-13fbb40b0d78",
+  "params": {
+    "mode": "edit",
+    "width": 576,
+    "height": 1024
+  },
+  "seed_used": 608475219,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\img\\Qwen_edit_00116_.png",
+      "filename": "Qwen_edit_00116_.png",
+      "subfolder": "img",
+      "type": "output",
+      "kind": "image",
+      "exists": true,
+      "bytes": 1041479,
+      "url": "http://127.0.0.1:8188/view?filename=Qwen_edit_00116_.png&subfolder=img&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\keyframes_local\\edit_20260917-001550.png"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\keyframes_local\\edit_20260917-001550.png"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\keyframes_local",
+  "prompt_used": "以图1的卡通3D客厅、橘猫阿橘和小老鼠灰豆为基础，加入图2和图3中的银渐层母猫雪球坐在后方米色沙发上观看。画面必须同时且只出现阿橘、灰豆、雪球三个角色。0秒动作起点：阿橘刚低头张嘴靠近被按住的灰豆，尚未吞下；雪球在沙发上瞪大眼睛观看。高品质卡通3D电影动画质感，暖黄居家灯光，可爱夸张，无血腥，无文字字幕水印。保持三名角色的外观、毛色、体型与参考图一致。9:16竖屏全景。",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 43.8
+}

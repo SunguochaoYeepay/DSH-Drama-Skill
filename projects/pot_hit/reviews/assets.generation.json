@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "stage": "assets",
+  "at": "2026-09-20T02:18:10.408Z",
+  "provider": "comfyui",
+  "model": "local-comfyui",
+  "requested_provider": "local",
+  "artifacts": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\girl_portrait.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\grandpa_portrait.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\buddy_portrait.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\kitten_portrait.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\girl_default_sheet.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\grandpa_default_sheet.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\buddy_default_sheet.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\kitten_default_sheet.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\assets\\alley_entrance_master.png"
+  ]
+}

@@ -1,0 +1,486 @@
+{
+  "version": 1,
+  "source_logline": "两个拍点：一个动作误会，一句反转收尾。他以为拍死了一只蚊子，她肩上那只是纹身。",
+  "policy": {
+    "target_seconds": 10,
+    "max_seconds": 15,
+    "min_generation_seconds": 5.17,
+    "split_on_cast_change": false,
+    "director_owns_unit_boundaries": true,
+    "preserves_director_shots": true
+  },
+  "units": [
+    {
+      "id": "g001",
+      "source_units": [
+        "u1_discover"
+      ],
+      "boundary_reason": "director_unit",
+      "content_duration_s": 9.8,
+      "generation_duration_s": 9.8,
+      "keyframe": "keyframes_render/g001.png",
+      "cast": [
+        "lin_xiaoya_default",
+        "chen_mo_default"
+      ],
+      "scene": "seaside_boardwalk",
+      "props": [],
+      "why": "走近、停步、犹豫、抬手、拍落全程发生在一个连续时空和一组固定站位里，是连贯动作链，拆开反而丢掉手部轨迹的连续性。本单元只承载一个高风险转换（拍肩），因此不需要第二个关键帧锚点。",
+      "duration_reason": "结尾台词最低口播 1.20 秒；前面「停步辨认 2.0 + 犹豫 1.6 + 抬手悬停 1.4 + 拍落 1.4」共 6.4 秒无台词铺垫，合计 9.8 秒。不凑满 15 秒上限。",
+      "keyframe_start": "陈默站在林小雅身后两步的木栈道上刚停下脚步，右手自然垂在身侧，视线落在她的右肩；林小雅侧身面向画面右侧的栏杆看海，右肩朝向他，肩头一点细小的深色印记，尚未察觉身后有人。",
+      "keyframe_cast": [
+        "lin_xiaoya_default",
+        "chen_mo_default"
+      ],
+      "action_complexity": {
+        "level": "medium",
+        "high_risk_events": [
+          {
+            "at_s": 6.5,
+            "type": "multi_actor_contact",
+            "description": "陈默的右掌从半空落下拍到林小雅右肩上，两人由彼此分离第一次发生身体接触"
+          }
+        ],
+        "strategy": "single_transition"
+      },
+      "end_state": "陈默的右掌停在她右肩外侧同一高度尚未收回、掌心朝下；林小雅已经转过身正面对着他，眉头紧皱、下巴收紧瞪视。",
+      "continuity": {
+        "mode": "independent",
+        "reason": "开场，没有前置单元可承接"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 2.6,
+          "framing": "全景",
+          "camera": "缓慢前推",
+          "scene": "seaside_boardwalk",
+          "on_screen": [
+            "lin_xiaoya_default",
+            "chen_mo_default"
+          ],
+          "props": [],
+          "action": "林小雅侧身站在栏杆边看海，长发被海风掀起一缕，双手搭在栏杆上；陈默从画面左侧走入栈道，在她身后两步处停下，视线落在她的右肩上",
+          "emotion_analysis": [
+            {
+              "character": "lin_xiaoya_default",
+              "cause": "她正独自一人看海，对身后发生的事毫无察觉",
+              "internal_state": "完全放松，注意力在海面上",
+              "visible_behavior": "肩背松弛，双手搭在栏杆上，下巴微抬，呼吸平缓",
+              "gaze": "看向画面右侧远处的海面",
+              "avoid_symbols": [
+                "回头张望",
+                "警觉的挺背",
+                "皱眉"
+              ]
+            },
+            {
+              "character": "chen_mo_default",
+              "cause": "他在栈道上散步，余光注意到她肩头有东西",
+              "internal_state": "被吸引注意，还在辨认那是什么",
+              "visible_behavior": "步幅收短后站定，肩膀微微前倾，视线定住不再游移",
+              "gaze": "看向画面右侧林小雅的右肩",
+              "avoid_symbols": [
+                "厌恶的皱眉",
+                "夸张地张大嘴",
+                "抬手示意"
+              ]
+            }
+          ],
+          "lighting": "午后阳光从画面右后方斜照，海面泛白高光，两人身上带暖色边缘光",
+          "lines": [],
+          "audio": "海浪拍岸，远处海鸥鸣叫，木栈道被踩出轻微吱声",
+          "source": {
+            "unit": "u1_discover",
+            "shot": 1
+          }
+        },
+        {
+          "n": 2,
+          "at": 2.6,
+          "duration_s": 2,
+          "cut": "the camera cuts to",
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "seaside_boardwalk",
+          "on_screen": [
+            "chen_mo_default"
+          ],
+          "props": [],
+          "action": "陈默的正面近景，他确认了肩上的东西，眉头微皱，嘴唇抿成一条线，视线没有移开",
+          "emotion_analysis": [
+            {
+              "character": "chen_mo_default",
+              "cause": "他看清她肩头停着的确实是一只蚊子，但对方是陌生人",
+              "internal_state": "想动手又怕唐突，正在权衡",
+              "visible_behavior": "眉心收紧，嘴唇抿成一条线，喉结动了一下，肩膀略微上提",
+              "gaze": "眼珠偏向画面右侧下方，锁定她肩膀的位置",
+              "avoid_symbols": [
+                "微笑",
+                "放松的眉眼",
+                "游移不定的眼神"
+              ]
+            }
+          ],
+          "facing": {
+            "chen_mo_default": "right"
+          },
+          "lighting": "阳光从画面右后方打来，脸颊侧面有暖光，眼窝留一点阴影",
+          "lines": [],
+          "audio": "海浪声",
+          "source": {
+            "unit": "u1_discover",
+            "shot": 2
+          }
+        },
+        {
+          "n": 3,
+          "at": 4.6,
+          "duration_s": 1.6,
+          "cut": "the shot cuts to",
+          "framing": "中景",
+          "camera": "小幅右移",
+          "scene": "seaside_boardwalk",
+          "on_screen": [
+            "chen_mo_default"
+          ],
+          "props": [],
+          "action": "陈默的右臂抬起，手掌在半空停住，五指张开又微微收拢，指尖有一点抖",
+          "emotion_analysis": [
+            {
+              "character": "chen_mo_default",
+              "cause": "他心里已经决定动手，身体却在最后一刻迟疑",
+              "internal_state": "决心已定，手却停在半空不敢落",
+              "visible_behavior": "右臂举到胸口高度后僵住，五指张开又收拢，指尖轻微抖动，胸廓屏住不动",
+              "gaze": "看向画面右下方她肩膀的位置",
+              "avoid_symbols": [
+                "干脆利落的挥臂",
+                "放松摊开的手型",
+                "看向镜头"
+              ]
+            }
+          ],
+          "lighting": "午后侧光，手臂抬起时在木地板上投下一条移动的影子",
+          "lines": [],
+          "audio": "海浪声，风声",
+          "source": {
+            "unit": "u1_discover",
+            "shot": 3
+          }
+        },
+        {
+          "n": 4,
+          "at": 6.2,
+          "duration_s": 1.4,
+          "cut": "the shot cuts to",
+          "framing": "中景",
+          "camera": "固定",
+          "scene": "seaside_boardwalk",
+          "on_screen": [
+            "lin_xiaoya_default",
+            "chen_mo_default"
+          ],
+          "props": [],
+          "action": "陈默的右掌快速落下，拍在林小雅的右肩上，接触瞬间即停住不动",
+          "emotion_analysis": [
+            {
+              "character": "lin_xiaoya_default",
+              "cause": "她被毫无预兆地拍了一下肩膀",
+              "internal_state": "受惊，还没反应过来发生了什么",
+              "visible_behavior": "右肩猛地向下沉，上半身被拍得往前一晃，头还没有转过来",
+              "gaze": "视线仍朝着画面右侧的海面，尚未转向身后",
+              "avoid_symbols": [
+                "早有察觉的从容",
+                "微笑",
+                "主动转身"
+              ]
+            },
+            {
+              "character": "chen_mo_default",
+              "cause": "手已经落下，接触发生了",
+              "internal_state": "松了一口气，觉得事情办成了",
+              "visible_behavior": "手掌完全贴合在她肩上，手腕放松，肩膀跟着落下来",
+              "gaze": "看着自己落下的那只手",
+              "avoid_symbols": [
+                "半途收手的犹豫",
+                "惊慌",
+                "看向别处"
+              ]
+            }
+          ],
+          "lighting": "侧光，手掌落下时在她肩上投出一小块阴影",
+          "lines": [],
+          "audio": "一声清脆的拍击声，海浪声",
+          "source": {
+            "unit": "u1_discover",
+            "shot": 4
+          }
+        },
+        {
+          "n": 5,
+          "at": 7.6,
+          "duration_s": 2.2,
+          "cut": "the shot cuts to",
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "seaside_boardwalk",
+          "on_screen": [
+            "lin_xiaoya_default"
+          ],
+          "props": [],
+          "action": "林小雅猛地转身，肩膀一缩，眼睛瞪圆，脸颊涨红，张嘴说话",
+          "emotion_analysis": [
+            {
+              "character": "lin_xiaoya_default",
+              "cause": "她被陌生人在肩膀上拍了一下，既疼又莫名其妙",
+              "internal_state": "又疼又火，第一反应是质问",
+              "visible_behavior": "转身幅度很大，肩膀往内收，眼睛睁大，眉头压低，脸颊泛红，嘴张开后快速闭合",
+              "gaze": "抬眼直视画面左侧的陈默",
+              "avoid_symbols": [
+                "害羞低头",
+                "微笑",
+                "撒娇的嘟嘴"
+              ]
+            }
+          ],
+          "facing": {
+            "lin_xiaoya_default": "left"
+          },
+          "lighting": "侧光，转身后正面受光，脸上有一层暖调",
+          "lines": [
+            24
+          ],
+          "audio": "海浪声",
+          "source": {
+            "unit": "u1_discover",
+            "shot": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "g002",
+      "source_units": [
+        "u2_reveal"
+      ],
+      "boundary_reason": "end",
+      "content_duration_s": 12.2,
+      "generation_duration_s": 12.2,
+      "keyframe": "keyframes_render/g002.png",
+      "cast": [
+        "chen_mo_default",
+        "lin_xiaoya_default"
+      ],
+      "scene": "seaside_boardwalk",
+      "props": [],
+      "why": "两人体态从「她侧身、他在侧后」变成正面对峙，空间关系必须重置，正反打才能成立。重置之后所有镜头都在同一固定站位里连续发生，没有新增高风险转换。",
+      "duration_reason": "两句台词最低口播 4.54 + 2.31 共 6.85 秒；加举手自证的反应 1.8 秒，以及「低头看手心—抬头—抬手指肩」这一拍 2.8 秒，合计 12.2 秒。",
+      "keyframe_start": "陈默站在画面左侧，右手停在胸前高度、掌心朝下，身体略微前倾；林小雅站在画面右侧正面对着他，眉头紧皱、下巴微抬，双臂还垂在身体两侧没有抬起。",
+      "keyframe_cast": [
+        "chen_mo_default",
+        "lin_xiaoya_default"
+      ],
+      "action_complexity": {
+        "level": "low",
+        "high_risk_events": [],
+        "strategy": "none"
+      },
+      "end_state": "林小雅抬起右手指着自己的肩膀怒视对方；陈默双手僵在胸前，表情凝住不动。",
+      "continuity": {
+        "mode": "continue_previous",
+        "previous_unit": "g001",
+        "handoff_state": "陈默的右掌仍停在她右肩外侧同一高度尚未收回；林小雅保持转身后的正面站姿与瞪视表情，两人距离不变",
+        "deferred_keyframe": true,
+        "allowed_changes": [
+          "两人体态由侧后改为正面对峙",
+          "景别与机位"
+        ],
+        "previous_source_unit": "u1_discover"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 1.8,
+          "framing": "中景",
+          "camera": "缓慢前推",
+          "scene": "seaside_boardwalk",
+          "on_screen": [
+            "chen_mo_default",
+            "lin_xiaoya_default"
+          ],
+          "props": [],
+          "action": "陈默慌忙把双手抬到胸前，掌心朝上，上身前倾；林小雅站在原地瞪着他，没有动",
+          "emotion_analysis": [
+            {
+              "character": "chen_mo_default",
+              "cause": "对方刚骂了他一句，他急着解释自己不是有意冒犯",
+              "internal_state": "慌张，急着自证",
+              "visible_behavior": "双手迅速提到胸前并把掌心翻上来，上身前倾，肩膀耸起，嘴张开正要开口",
+              "gaze": "看着画面右侧林小雅的脸",
+              "avoid_symbols": [
+                "理直气壮地扬起下巴",
+                "慢条斯理的手势",
+                "后退"
+              ]
+            },
+            {
+              "character": "lin_xiaoya_default",
+              "cause": "她刚被拍了一下，正等着对方给个说法",
+              "internal_state": "火气还没消，警惕地看着他",
+              "visible_behavior": "双臂垂在身旁没有放松，肩膀仍微微内收，眉头压低盯住他",
+              "gaze": "直视画面左侧陈默的脸",
+              "avoid_symbols": [
+                "放松的微笑",
+                "移开视线",
+                "后退躲避"
+              ]
+            }
+          ],
+          "lighting": "午后侧光，两人正面都受光",
+          "lines": [],
+          "audio": "海浪声，风声",
+          "source": {
+            "unit": "u2_reveal",
+            "shot": 1
+          }
+        },
+        {
+          "n": 2,
+          "at": 1.8,
+          "duration_s": 4.8,
+          "cut": "the camera cuts to",
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "seaside_boardwalk",
+          "on_screen": [
+            "chen_mo_default"
+          ],
+          "props": [],
+          "action": "陈默把摊开的右掌举到脸侧凑近她，手心里空空的什么都没有，他一边说一边用另一只手指了指她肩膀的方向",
+          "emotion_analysis": [
+            {
+              "character": "chen_mo_default",
+              "cause": "他要证明自己确实打到了东西，于是把手心亮给她看",
+              "internal_state": "笃定自己是出于好心，急着让她看见证据",
+              "visible_behavior": "右掌完全摊开停在脸侧，五指绷直，另一只手指向她的方向，语速偏快，眉毛上扬",
+              "gaze": "先看自己摊开的手心，再看画面右侧林小雅",
+              "avoid_symbols": [
+                "心虚躲闪的眼神",
+                "缓慢犹豫的语速",
+                "低头"
+              ]
+            }
+          ],
+          "facing": {
+            "chen_mo_default": "right"
+          },
+          "lighting": "侧光正好打在手心上，掌纹清晰可见",
+          "lines": [
+            28
+          ],
+          "audio": "海浪声",
+          "source": {
+            "unit": "u2_reveal",
+            "shot": 2
+          }
+        },
+        {
+          "n": 3,
+          "at": 6.6,
+          "duration_s": 2.8,
+          "cut": "the shot cuts to",
+          "framing": "中景",
+          "camera": "固定",
+          "scene": "seaside_boardwalk",
+          "on_screen": [
+            "lin_xiaoya_default"
+          ],
+          "props": [],
+          "action": "林小雅低头看了一眼他摊开的手心，再抬起头，眼睛瞪得更圆，抬起右手指向自己的肩膀",
+          "emotion_analysis": [
+            {
+              "character": "lin_xiaoya_default",
+              "cause": "她看清他手心什么都没有，同时立刻明白了他刚才拍的是什么",
+              "internal_state": "从恼火转成被冒犯，还夹着一点荒谬感",
+              "visible_behavior": "低头看一眼手心后快速抬头，眼睛睁大，抬起右手指向自己的肩膀，胸口明显起伏",
+              "gaze": "先看画面左侧的手心，再抬眼直视陈默",
+              "avoid_symbols": [
+                "笑意",
+                "善意地摇头",
+                "平静无波的表情"
+              ]
+            }
+          ],
+          "facing": {
+            "lin_xiaoya_default": "left"
+          },
+          "lighting": "侧光，抬头时眼睛里有高光",
+          "lines": [],
+          "audio": "海浪声",
+          "source": {
+            "unit": "u2_reveal",
+            "shot": 3
+          }
+        },
+        {
+          "n": 4,
+          "at": 9.4,
+          "duration_s": 2.8,
+          "cut": "the shot cuts to",
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "seaside_boardwalk",
+          "on_screen": [
+            "lin_xiaoya_default"
+          ],
+          "props": [],
+          "action": "林小雅用食指点着自己的肩膀不放，下巴前伸，一字一顿地说话",
+          "emotion_analysis": [
+            {
+              "character": "lin_xiaoya_default",
+              "cause": "对方拍的是她肩上的图案，还理直气壮地摊开手心给她看",
+              "internal_state": "又好气又荒谬，气占上风",
+              "visible_behavior": "食指点着肩膀不放，下巴前伸，眉头紧锁，嘴唇用力开合",
+              "gaze": "直视画面左侧的陈默",
+              "avoid_symbols": [
+                "无奈的笑",
+                "语气软化的松弛表情",
+                "移开视线的躲闪"
+              ]
+            }
+          ],
+          "facing": {
+            "lin_xiaoya_default": "left"
+          },
+          "lighting": "侧光，面部受光均匀",
+          "lines": [
+            34
+          ],
+          "audio": "海浪声，远处游客的模糊人声",
+          "source": {
+            "unit": "u2_reveal",
+            "shot": 4
+          }
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "content_duration_s": 22,
+    "projected_delivery_duration_s": 22,
+    "keyframe_count": 2
+  },
+  "provenance": {
+    "contract": 1,
+    "project_id": "mosquito_tattoo",
+    "board_sha256": "0717a5d31debe31d648c12f178da8b4a83a32256781c2b278ac95b8fb6a8cd0f",
+    "story_sha256": "0b66d806895eff533a22e083c217795c55085be89c6e670a46c0205d0536545b",
+    "direction_sha256": "dffd6bcccc5a07d3fa6da2873d9ec2afe559eac0f0f8f4a71e2d69ca31eb19c0",
+    "direction_version": 6,
+    "direction_file": "board.direction.json",
+    "bound_at": "2026-09-17T05:26:45.398Z",
+    "plan_units_sha256": "fa242f5038c673222e4819a1d4c8a8457881ec6126836b0af6bc8cb48930c901"
+  }
+}

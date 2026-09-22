@@ -42,19 +42,22 @@ ai-images-harness/
 │  └─ prompts/               故事与 storyboard 提示模板（已退役，仅历史契约）
 ├─ schema/                   Storyboard JSON Schema
 ├─ tests/                    确定性测试（含 tests/integration/ 活体验证）
-└─ plugins/                  UI 插件
+├─ plugins/                  UI 插件
+├─ vendor/                   外部工具快照（comfy-studio 的 gen.py 等，随仓库分发）
+├─ web/                      独立看板服务（server.mjs + index.html，不依赖 DSH）
+└─ projects/                 剧目目录（契约链入 git，媒体产物被 .gitignore 挡住）
 ```
 
-仓库不保存真实剧目的图片、视频、音频、缓存或运行日志。
+仓库不保存真实剧目的图片、视频、音频、缓存或运行日志（`.gitignore` 按扩展名挡住）。**例外（2026-09-22 起）**：剧目的契约链 —— 剧本、板子、导演稿、生成计划、人工票、提示词、请求档案等文本文件 —— 随仓库入库，审计链完整可查。
 
 测试输入例外：最小、稳定、无生成媒体的 JSON/文本夹具保存在 `tests/fixtures/`。需要真实 ComfyUI、云服务或已安装插件的检查放在 `tests/integration/`，不属于普通单元测试。
 
 ## 项目工作区
 
-每部剧放在仓库外的独立目录：
+每部剧放在**仓库内**的独立目录（2026-09-22 从仓库外迁入）：
 
 ```text
-E:\AI-Tool\DeepSeek\story2video\projects\cat_mouse\
+projects/<剧名>\
 ├─ story.md
 ├─ story.provenance.json
 ├─ board.json
@@ -71,9 +74,26 @@ E:\AI-Tool\DeepSeek\story2video\projects\cat_mouse\
 └─ .tmp\
 ```
 
-不要把项目输出写到仓库根目录，也不要创建跨剧目共用的 `comfy-out`。
+**项目根是硬规则**：一律建在本仓库的 `projects\<剧名>\` 下，新建立项前先列一次该 `projects\` 目录，已有同名副目录就续用，没有才新建。不要在仓库外、其他磁盘或临时目录自建项目目录。历史剧目已从 `E:\AI-Tool\DeepSeek\story2video\projects\` 整体迁入（原目录保留作快照，不再往那里写新东西）。
 
-**项目根是硬规则**：一律建在正在运行生成的那套 story2video 副本下的 `projects\<剧名>\`（上例的 `E:\AI-Tool\DeepSeek\story2video\projects\` 即标准位置，根目录随副本所在磁盘而定）。不要在仓库旁边、其他磁盘或临时目录自建项目目录；新建立项前先列一次该 `projects\` 目录，已有同名副目录就续用，没有才新建。
+## 从零跑起来
+
+1. **装 Node ≥ 22** 与 **Git**，clone 本仓库。
+2. `npm install` —— 装百炼 CLI 等仓内依赖（生图入口 `gen.py` 已随仓库放在 `vendor/comfy-studio/`，不用另装）。
+3. 机器侧前置（体量大、不入仓）：
+   - **ComfyUI 引擎**（含 H3 视频模型与 Qwen 生图模型），装好后设 `AIH_PYTHON` 指向其 `python.exe`；
+   - **ffmpeg**：`winget install Gyan.FFmpeg`（或设 `AIH_FFMPEG` 指向 ffmpeg.exe）；
+   - **Docker**（可选）：只有 `cli/desub.mjs` 去字幕用得上，不跑它可以不装。
+4. 参照 [`.env.example`](.env.example) 配置本机 `.env`（模型、通道与规格；`.env` 不入库）。
+5. 自检：`npm run doctor` —— 逐项报有/缺，必需项全绿即可跑。
+
+看板（分镜确认表，独立服务，不需要 DSH）：
+
+```powershell
+npm run kanban          # http://127.0.0.1:8787
+```
+
+可选参数：`node web/server.mjs --root <剧目根> --port <端口>`（环境变量 `AIH_PROJECTS_ROOT` / `AIH_KANBAN_PORT` 同名覆盖）。看板**只读**：人工票仍由 `cli/review-gate.mjs` 在用户明确说「通过」之后落笔。
 
 ## 基本用法
 

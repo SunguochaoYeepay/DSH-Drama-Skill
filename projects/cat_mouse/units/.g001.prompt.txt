@@ -1,0 +1,10 @@
+For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.
+
+integrated_multimodal_description: [Shot 1] a wide shot of 阿橘与雪球与灰豆 —— 矮壮憨厚的橘色公猫，蓬松橘黄色短毛，圆脸，小圆耳，琥珀色眼睛温和迟钝，白色口鼻，圆润腮帮；自然橘色毛发，不穿衣服，体型矮壮，肚子圆润，爪子宽大厚实，尾巴粗而放松；漂亮秀气的银渐层母猫，雪白蓬松毛发带浅灰渐变，大而水润的蓝灰色眼睛，小巧粉鼻，尖圆耳朵，蓬松脸颊；自然银渐层毛发，不穿衣服，身体纤细娇俏，胸口雪白，尾巴长而蓬松；灰棕色小老鼠，尖尖鼻子，圆溜溜黑眼睛，大圆耳朵，细长尾巴，个头很小；自然灰棕色短毛，不穿衣服，身体小巧，细尾巴，小爪子，卡通可爱不恐怖，暖黄灯光下，阿橘慵懒半躺，雪球依偎吃零食，低处灰豆偷吃碎屑，电视微光在背景闪动，摄影机缓慢前推，暖黄室内光，电视冷微光边缘点缀。
+[Shot 2] At 02.40 seconds, the camera cuts to a medium close-up shot of 阿橘与雪球 —— 雪球 facing the right side of the frame，矮壮憨厚的橘色公猫，蓬松橘黄色短毛，圆脸，小圆耳，琥珀色眼睛温和迟钝，白色口鼻，圆润腮帮；自然橘色毛发，不穿衣服，体型矮壮，肚子圆润，爪子宽大厚实，尾巴粗而放松；漂亮秀气的银渐层母猫，雪白蓬松毛发带浅灰渐变，大而水润的蓝灰色眼睛，小巧粉鼻，尖圆耳朵，蓬松脸颊；自然银渐层毛发，不穿衣服，身体纤细娇俏，胸口雪白，尾巴长而蓬松，雪球突然看见画外低处的灰豆，视线明确落向画面外下方，毛发蓬松竖起，迅速缩进阿橘怀里并惊慌开口；阿橘稳重地让她靠着。本镜只拍两只猫，灰豆不进入近景画面，暖黄室内光。 雪球 (S1)，高音惊慌，说道：<d>[Chinese] 啊！老公！有老鼠！</d>。
+
+overall_soundscape: 电视低声作响，零食碎屑轻响 沙发织物轻响，电视声压低
+
+non_diegetic_music: 轻快温馨的卡通喜剧配乐
+
+on_screen_text: none. No subtitles, no captions, no text overlays of any kind.

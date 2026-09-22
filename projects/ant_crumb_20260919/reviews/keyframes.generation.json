@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "stage": "keyframes",
+  "at": "2026-09-19T11:34:47.436Z",
+  "provider": "bailian",
+  "model": "qwen-image-3.0-pro",
+  "requested_provider": "bailian",
+  "artifacts": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\keyframes_render\\g001.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\keyframes_bailian\\g002.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\keyframes_bailian\\g003.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\keyframes_bailian\\g004.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\keyframes_bailian\\g005.png"
+  ],
+  "plan": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\render.plan.json",
+  "execution_overrides": []
+}

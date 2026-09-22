@@ -1,0 +1,434 @@
+{
+  "version": 1,
+  "source_logline": "十八岁的女孩从闹钟响起的那一刻起就没睁开过眼，她三次摸索三次落空，最后用一条被子解决了声响——全过程 她都不知道自己压根没碰过那只闹钟。三个单元：日常平静的建立、柜面上的三次错位、以及\"暴力制止\"之后的安静。",
+  "policy": {
+    "target_seconds": 10,
+    "max_seconds": 15,
+    "min_generation_seconds": 5.17,
+    "split_on_cast_change": false,
+    "director_owns_unit_boundaries": true,
+    "manual_boundaries": false,
+    "preserves_director_shots": true
+  },
+  "units": [
+    {
+      "id": "g001",
+      "source_units": [
+        "u1"
+      ],
+      "boundary_reason": "director_unit",
+      "content_duration_s": 5.2,
+      "generation_duration_s": 5.2,
+      "keyframe": "keyframes_render/g001.png",
+      "cast": [
+        "xiaoyu_night"
+      ],
+      "scene": "bedroom_wide",
+      "props": [
+        "alarm_clock",
+        "phone",
+        "enamel_mug",
+        "folding_glasses"
+      ],
+      "why": "开场必须先把三件事摆在同一张画面里：这是谁的房间、她在睡觉、那只闹钟在哪、以及她的眼睛被眼罩遮住。这四件只要少一件，后面的错位就无从成立。整单元不离开这张床，也没有任何跨空间的运动，一次生成足够。",
+      "audience_knows": "观众看见夏天清晨的卧室、一个戴着遮光眼罩睡得很沉的女孩，和床头柜最远端那只正在抖动的闹钟；她还什么都不知道，闹钟正在响这件事只有观众知道。",
+      "duration_reason": "静止建立 2.2 秒 + 手臂伸出并悬停在柜面上方 2.6 秒，单元内一镜固定一镜中景，取 5.2 秒。",
+      "keyframe_start": "0 秒时：夏天清晨的卧室，9:16 竖幅中全景。机位在床尾的斜前方、略高于床面的高度，水平略俯向下看，画面里同时装下整张床、躺在床上的她和床头那只矮柜。她侧躺着、面朝画面的左侧也就是墙的那一边，浅米白色棉质吊带睡裙、细肩带勒在肩上，眼睛上戴着深灰色带细小波点的松紧带式遮光眼罩，被子拉到肩线，双手在被子里，身体放松。床头右侧紧贴一只矮的浅木色床头柜，柜面上摆着白搪瓷杯、折叠起来的眼镜、一部正面朝上躺着的手机，最远端紧贴墙壁的位置是一只黄铜色老式双铃闹钟。晨光从画面右侧百叶窗的缝隙里挤进来，在浅色木地板上切成几条平行的亮条，空气里有浮尘。画面里只有她一个人。她的手还在被子里尚未伸出，身体尚未发生任何位移，闹钟尚未被触碰。",
+      "keyframe_cast": [
+        "xiaoyu_night"
+      ],
+      "action_complexity": {
+        "level": "low",
+        "high_risk_events": [],
+        "strategy": "none"
+      },
+      "end_state": "她的右手连同小臂已经完全伸出被子外面，五指张开悬在床头柜柜面的上方，尚未碰到柜面上的任何东西；身体其余部分仍保持侧躺姿势没有起身。",
+      "continuity": {
+        "mode": "independent",
+        "reason": "开场单元，无前段可承接"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 2.2,
+          "framing": "全景",
+          "camera": "固定",
+          "scene": "bedroom_wide",
+          "on_screen": [
+            "xiaoyu_night"
+          ],
+          "props": [
+            "alarm_clock",
+            "phone",
+            "enamel_mug",
+            "folding_glasses"
+          ],
+          "action": "夏天的卧室里一切都静止：她侧躺睡着，被子只随着极缓慢的呼吸起伏，嘴唇微张，越过鼻息没有任何别的动作。窗外的蝉声与晨光里的浮尘一动不动。她的手还在被子里，身体没有任何位移，眼罩始终戴着。",
+          "emotion_analysis": [
+            {
+              "character": "xiaoyu_night",
+              "cause": "她睡得很沉，闹钟还没把她拽起来",
+              "internal_state": "深度睡眠的松弛，没有任何察觉",
+              "visible_behavior": "肩背随呼吸缓慢起伏，嘴唇微张，身体没有任何位移",
+              "gaze": "眼睛被深灰色遮光眼罩完全遮住，眼皮没有任何颤动",
+              "avoid_symbols": [
+                "微笑",
+                "皱眉",
+                "睁开眼睛",
+                "看向镜头"
+              ]
+            }
+          ],
+          "lighting": "清晨的散射光从画面右侧的百叶窗缝挤进来，在地板与床尾形成几条平行的亮条；床体正面处在柔和的半暗部",
+          "lines": [],
+          "audio": "老式闹钟持续不断的铃声，很远的地方有夏日的蝉声",
+          "source": {
+            "unit": "u1",
+            "shot": 1
+          }
+        },
+        {
+          "n": 2,
+          "at": 2.2,
+          "cut": "the shot cuts to",
+          "duration_s": 3,
+          "framing": "中景",
+          "camera": "固定，极轻微的手持呼吸感",
+          "scene": "bedroom_wide",
+          "on_screen": [
+            "xiaoyu_night"
+          ],
+          "props": [
+            "alarm_clock",
+            "phone",
+            "enamel_mug",
+            "folding_glasses"
+          ],
+          "action": "画面切近到她的上半身与床头柜：她的右手正从被子里缓缓抽出来，手臂带着睡醒前的迟滞一点点伸向画面右侧柜面的方向，五指张开、掌心朝下，最后停在柜面上方一掌的位置不再移动。她的头没有转、眼罩始终戴着，身体其余部分保持在侧躺的原位。",
+          "emotion_analysis": [
+            {
+              "character": "xiaoyu_night",
+              "cause": "铃声把她从睡眠里往上拽，但她连眼皮都不想掀",
+              "internal_state": "半梦半醒的敷衍，只想让声音停下来",
+              "visible_behavior": "右臂缓慢地从被子里抽出，手肘先离开被面，然后五指张开朝柜面方向探，肩膀没有抬起来，头没有转动",
+              "gaze": "眼睛被深灰色遮光眼罩完全遮住",
+              "avoid_symbols": [
+                "睁开眼睛",
+                "摘眼罩",
+                "坐起",
+                "看向镜头"
+              ]
+            }
+          ],
+          "lighting": "晨光在她的手臂与被面上形成亮调边缘，床头柜在画面右侧的亮部",
+          "lines": [],
+          "audio": "闹钟铃声持续，被褥摩擦的窸窣声",
+          "source": {
+            "unit": "u1",
+            "shot": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "g002",
+      "source_units": [
+        "u2"
+      ],
+      "boundary_reason": "director_unit",
+      "content_duration_s": 5.6,
+      "generation_duration_s": 5.6,
+      "keyframe": "keyframes_render/g002.png",
+      "cast": [],
+      "scene": "bedside",
+      "props": [
+        "enamel_mug",
+        "alarm_clock",
+        "phone",
+        "folding_glasses"
+      ],
+      "why": "三次摸索发生在同一个物件平面上：机位不变、景别不变、参与的物体也不变，只是那只手在空间里移动。这种\"同一舞台上的连续失败\"必须连着演，切开会变成三次重新起步。整个单元唯一的高风险事件是第二步\"捂住手机\"这一次接触变化，其余都是同一个动作的不同落点。",
+      "audience_knows": "观众已经看见她的手正在往错的方向摸过去——她要摸的是离她最近的那部手机，而不是最远端贴墙的那只闹钟；她自己不知道这件事，她以为按下去世界就会安静。",
+      "duration_reason": "三次摸索各需要一个完整的起落：第一次扫过杯沿 1.6 秒、第二次按住手机并让屏幕光暗下去 2.0 秒、第三次抓错杯子把它抱起来 2.0 秒，加上两次切换的余量，取 5.6 秒。",
+      "keyframe_start": "0 秒时：9:16 竖幅近景，画面截取床头柜的柜面与柜面上方的空间。机位在柜面的斜前方约三十厘米、略高于柜面，向下俯看。柜面上从左到右依次摆着：一只白搪瓷杯（杯口有一处磕掉的瓷）、一副折叠起来的细金属框眼镜、一部正面朝上躺着、屏幕正亮着的手机；最远端紧贴墙壁的位置是一只黄铜色双铃闹钟，两只圆铃铛在钟的顶部，中间的小锤正在左右急敲，整只闹钟在原地轻微发抖。她的右手连同小臂从画面右下方的被子边缘伸进来，五指张开、掌心朝下，悬在白搪瓷杯正上方约一掌高的位置，手指还没有碰碰到任何东西。她的脸不在画面里，遮光眼罩的画面右侧是被子的边缘与一小段床沿。晨光从画面右上角斜切进来，在柜面上形成一个明亮的光斑，闹钟金属面在光里反射出高光。",
+      "keyframe_cast": [],
+      "action_complexity": {
+        "level": "medium",
+        "high_risk_events": [
+          {
+            "at_s": 3.4,
+            "type": "possession_change",
+            "description": "她的手从虚握的摸索状态变成整个手掌按住手机，把发声的那件东西压在自己掌下"
+          }
+        ],
+        "strategy": "single_transition"
+      },
+      "end_state": "她的手已经把白搪瓷杯抱离了柜面，五指扣在杯身上；柜面空出一块，最远端的闹钟仍在原地响着、抖着，没有任何人碰过它。",
+      "continuity": {
+        "mode": "independent",
+        "reason": "空间从卧室整体切到床头柜的柜面，机位与景别完全重置；参与的手不必承接上一个单元的具体姿态，只是为了眼罩未摘这个状态在同一里"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 1.6,
+          "framing": "近景",
+          "camera": "固定，极轻微的手持呼吸感",
+          "scene": "bedside",
+          "on_screen": [],
+          "props": [
+            "enamel_mug",
+            "alarm_clock"
+          ],
+          "action": "她张开五指的手缓慢落到柜面上摸索，指尖先是擦过柜面的木纹，随后碰到白搪瓷杯的杯沿——杯子被指尖带得晃了一下，在原地转了小半圈，没有倒。她的手指在杯沿上停了一瞬，随即抬起来朝旁边继续摸过去。",
+          "emotion_analysis": [
+            {
+              "character": "xiaoyu_night",
+              "cause": "她不想睁眼，全靠手去找那个正在响的东西",
+              "internal_state": "半梦半醒之间的烦躁与敷衍",
+              "visible_behavior": "五指张开、掌心朝下的手在柜面上缓慢移动，指尖与杯沿接触时短暂停顿，手腕没有任何方向的确认",
+              "gaze": "她的脸与眼睛不在画面里，遮光眼罩不可见",
+              "avoid_symbols": [
+                "抬手比划",
+                "手在空中挥舞",
+                "手指指向镜头"
+              ]
+            }
+          ],
+          "lighting": "晨光从右上方斜切进入，闹钟的金属面在柜面上投出高光；柜面其余部分处在柔和的半暗部",
+          "rule_overrides": {
+            "still_life": "闹钟在这个画面里持续发抖，其余物体静止"
+          },
+          "lines": [],
+          "audio": "闹钟铃声持续，指尖刮过木质柜面的轻响，瓷杯接触到木头的顿响",
+          "source": {
+            "unit": "u2",
+            "shot": 1
+          }
+        },
+        {
+          "n": 2,
+          "at": 1.6,
+          "cut": "the shot cuts to",
+          "duration_s": 2,
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "bedside",
+          "on_screen": [],
+          "props": [
+            "phone",
+            "alarm_clock"
+          ],
+          "action": "她的手继续往外侧摸过去，一把按在离她最近、正在发声的那个东西上——那是正面朝上躺着的手机。手掌落下把手机整个捂住，屏幕的光在被按住之前的一瞬还亮着，指缝里漏出一线，随后随着屏幕熄灭完全暗下去。她的手按上去之后就停在那里不动了，手指放松，像是以为事情已经办完了。闹钟还在最远端贴墙的位置响着，没有停止。",
+          "emotion_analysis": [
+            {
+              "character": "xiaoyu_night",
+              "cause": "她不想睁眼，全靠手去找那个正在响的东西",
+              "internal_state": "半梦半醒之间的烦躁与敷衍",
+              "visible_behavior": "五指张开、掌心朝下的手在柜面上缓慢移动，指尖与杯沿接触时短暂停顿，手腕没有任何方向的确认",
+              "gaze": "她的脸与眼睛不在画面里，遮光眼罩不可见",
+              "avoid_symbols": [
+                "抬手比划",
+                "手在空中挥舞",
+                "手指指向镜头"
+              ]
+            }
+          ],
+          "lighting": "手机屏幕熄灭前的一瞬给手指的缝隙打出一线冷白色高光，熄灭后柜面重新回到晨光的散射照明",
+          "rule_overrides": {
+            "still_life": "闹钟在这个画面里持续发抖，手机屏幕由亮转灭"
+          },
+          "lines": [],
+          "audio": "闹钟铃声持续未被打断，手机铃在这一镜里因为被手掌压住而显得闷了一层",
+          "source": {
+            "unit": "u2",
+            "shot": 2
+          }
+        },
+        {
+          "n": 3,
+          "at": 3.6,
+          "cut": "the shot cuts to",
+          "duration_s": 2,
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "bedside",
+          "on_screen": [],
+          "props": [
+            "enamel_mug",
+            "folding_glasses",
+            "alarm_clock"
+          ],
+          "action": "她的手松开手机重新抬起来，朝外再一路摸过去：指尖掠过躺着的手机外壳、又碰了碰折叠起来的眼镜，两只手指在柜面上方悬着空敲了两下，似乎在判断声音的方向。最后她顺着铃声的方向一把抓下去——抓到的是那只白搪瓷杯，手指顺势在杯身上收紧，把整个杯子抱离了柜面。闹钟还在原地，无人触碰。",
+          "emotion_analysis": [
+            {
+              "character": "xiaoyu_night",
+              "cause": "她不想睁眼，全靠手去找那个正在响的东西",
+              "internal_state": "半梦半醒之间的烦躁与敷衍",
+              "visible_behavior": "五指张开、掌心朝下的手在柜面上缓慢移动，指尖与杯沿接触时短暂停顿，手腕没有任何方向的确认",
+              "gaze": "她的脸与眼睛不在画面里，遮光眼罩不可见",
+              "avoid_symbols": [
+                "抬手比划",
+                "手在空中挥舞",
+                "手指指向镜头"
+              ]
+            }
+          ],
+          "lighting": "晨光斜射，杯子被抱起来后在柜面上留下一圈浅色的水印痕迹",
+          "rule_overrides": {
+            "still_life": "闹钟在这个画面里持续发抖，杯子被抱离柜面"
+          },
+          "lines": [],
+          "audio": "闹钟铃声持续没有被碰过，手指空敲柜面的两声脆响，杯子被提起来时的摩擦声",
+          "source": {
+            "unit": "u2",
+            "shot": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "g003",
+      "source_units": [
+        "u3"
+      ],
+      "boundary_reason": "end",
+      "content_duration_s": 5.8,
+      "generation_duration_s": 5.8,
+      "keyframe": "keyframes_render/g003.png",
+      "cast": [
+        "xiaoyu_night"
+      ],
+      "scene": "bedroom_wide",
+      "props": [
+        "alarm_clock",
+        "phone"
+      ],
+      "why": "落点必须回到整张床：她这次是动了真气坐起身解决问题，舞台从柜面重新变成人与床的关系，也只有这个景别能同时装下\"枕头底下压着东西\"和\"身侧的手机亮起来\"这两个信息。整个单元只有一个高风险事件——闹钟被揪走消失，之后就是彻底的静止。",
+      "audience_knows": "观众知道她自始至终没有碰过那只真正响的闹钟，也知道此刻已是 07:58、锁屏上堆着未读通知；她不知道，她已经重新睡着了。",
+      "duration_reason": "坐起并揪走闹钟需要一段真实的身体位移 3.2 秒，之后躺平与静止需要足够长的时间让房间\"安静下来\"被观众感受到 2.6 秒，取 5.8 秒。",
+      "keyframe_start": "0 秒时：夏天清晨的卧室，9:16 竖幅中景。机位在床的侧面靠近床头的位置，水平略俯，画面截取她腰部以上与枕头、床头柜柜面的一部分。她已经坐了起来，上身直立，浅米白色棉质吊带睡裙的细肩带勒在肩上，眼睛上仍然戴着深灰色松紧带式遮光眼罩，右手刚刚伸到画面右侧的柜面上方、手指张开正要落下，尚未碰到那只还在响的闹钟。闹钟仍在柜面最远端原地抖动。她尚未把闹钟抓起来，也尚未把它压到枕头底下。画面里只有她一个人。",
+      "keyframe_cast": [
+        "xiaoyu_night"
+      ],
+      "action_complexity": {
+        "level": "medium",
+        "high_risk_events": [
+          {
+            "at_s": 2.2,
+            "type": "appearance_or_disappearance",
+            "description": "闹钟被她从柜面揪走、塞进枕头底下，从画面中消失"
+          }
+        ],
+        "strategy": "single_transition"
+      },
+      "end_state": "闹钟已经不见；她重新躺平睡着，被子拉到肩线，眼罩仍戴着；她身侧被子上的手机屏幕亮着，屏幕上显示时间 07:58 与一列未读通知。",
+      "continuity": {
+        "mode": "independent",
+        "reason": "机位与景别从柜面近景重置回床的整体，空间关系完全重建；身份由肖像与睡衣造型锚定，不依赖上一段的实际尾帧"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 3.2,
+          "framing": "中景",
+          "camera": "固定，轻微手持晃动",
+          "scene": "bedroom_wide",
+          "on_screen": [
+            "xiaoyu_night"
+          ],
+          "props": [
+            "alarm_clock"
+          ],
+          "action": "她坐着伸手一把逮住那只还在响的闹钟，把它从柜面上整个抓起来拉到画面中间，顺势连同一角被子一起塞到枕头底下，整个人的上半身压下去用力压住。铃声在被子里先被闷住、变得低沉，随后彻底消失。她保持压着的姿势不动。眼罩自始至终没有被摘下。",
+          "emotion_analysis": [
+            {
+              "character": "xiaoyu_night",
+              "cause": "闹钟响了太久，她终于忍不了了",
+              "internal_state": "烦躁，但仍然是闭着眼的半睡状态，不是清醒的恼怒",
+              "visible_behavior": "上身前倾把重量压在枕头上的手臂，肩背绷紧了一下又随着铃声消失松开，下颌咬了一瞬，嘴唇闭合",
+              "gaze": "眼睛被遮光眼罩完全遮住，看不见眼神",
+              "avoid_symbols": [
+                "睁开眼睛",
+                "皱眉",
+                "看向镜头",
+                "坐直"
+              ]
+            }
+          ],
+          "lighting": "她的上半身处在半暗部，晨光在枕头与被子上形成亮调的边缘， 这一小片出现过曝的白",
+          "rule_overrides": {
+            "still_life": "这一镜里只有她的动作，闹钟在被抓走后不再出现在画面里"
+          },
+          "lines": [],
+          "audio": "闹钟铃声由清脆转为被织物压住的闷响，最后完全消失；被褥的摩擦声",
+          "source": {
+            "unit": "u3",
+            "shot": 1
+          }
+        },
+        {
+          "n": 2,
+          "at": 3.2,
+          "cut": "the shot cuts to",
+          "duration_s": 2.6,
+          "framing": "中景",
+          "camera": "固定，极轻微的手持呼吸感",
+          "scene": "bedroom_wide",
+          "on_screen": [
+            "xiaoyu_night"
+          ],
+          "props": [
+            "phone"
+          ],
+          "action": "她松开手臂重新躺平，把被子拉回肩线，头埋进枕头，很快就恢复了之前那种缓慢的呼吸起伏。房间彻底安静下来。过了一会儿，她身侧被子上那部被遗忘的手机屏幕慢慢亮起来，锁屏页面上从上往下堆着一列未读通知，屏幕顶端显示的时间是 07:58。她的身体纹丝不动，眼罩还戴在眼睛上。",
+          "emotion_analysis": [
+            {
+              "character": "xiaoyu_night",
+              "cause": "她睡得很沉，闹钟还没把她拽起来",
+              "internal_state": "深度睡眠的松弛，没有任何察觉",
+              "visible_behavior": "肩背随呼吸缓慢起伏，嘴唇微张，被子里蜷着的手指缓慢张开又松开，身体没有任何位移",
+              "gaze": "眼睛被深灰色遮光眼罩完全遮住，眼窝不可见，眼皮也没有任何颤动",
+              "avoid_symbols": [
+                "微笑",
+                "皱眉",
+                "睁开眼睛",
+                "看向镜头"
+              ]
+            }
+          ],
+          "lighting": "手机屏幕的冷白色光在这一小片被面上打亮，与窗外暖调的晨光形成对比；其余部分继续保持在半暗部",
+          "rule_overrides": {
+            "still_life": "画面里她完全静止，只有手机屏幕亮起"
+          },
+          "lines": [],
+          "audio": "房间彻底安静，只有窗外持续的夏日蝉声",
+          "source": {
+            "unit": "u3",
+            "shot": 2
+          }
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "content_duration_s": 16.6,
+    "projected_delivery_duration_s": 16.6,
+    "keyframe_count": 3
+  },
+  "provenance": {
+    "contract": 1,
+    "project_id": "not_awake",
+    "board_identity_sha256": "af15d44a49ae5f33566c6017ec0484e4e467275453cb6c32daf63ff8dcf596ed",
+    "story_sha256": "49f9df70165d1c48081717373561a6068e0a9eea587b5801977ebb4e0739f6f7",
+    "direction_sha256": "77fcdb72b2a026055acf2a7ff3f1be8c8ef87bd6a7b3f2fb5af7a62170694c65",
+    "direction_receipt_sha256": "237670f513ffec10a426a17c930efdb93283ecfdda3d98c73aa530112a4572fe",
+    "direction_version": 6,
+    "direction_file": "board.direction.json",
+    "bound_at": "2026-09-21T02:06:01.822Z",
+    "plan_units_sha256": "fab7069ee779d53748eb890402d06f41f7c2db7d7937d137440300e2e2a61547"
+  }
+}

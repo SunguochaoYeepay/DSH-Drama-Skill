@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "stage": "assets",
+  "at": "2026-09-21T05:18:24.429Z",
+  "provider": "comfyui",
+  "model": "local-comfyui",
+  "requested_provider": null,
+  "artifacts": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\xiaoyu_portrait.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\xiaoyu_night_sheet.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\bedroom_wide_master.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\bedside_master.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\alarm_clock_ref_image.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\phone_ref_image.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\enamel_mug_ref_image.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\folding_glasses_ref_image.png"
+  ]
+}

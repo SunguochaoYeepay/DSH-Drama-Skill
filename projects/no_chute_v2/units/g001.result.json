@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "5cb35315-bd27-4fd3-9146-b2586c9d6d01",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 141,
+    "seconds": 5.88,
+    "profile": "fast",
+    "attention": "vsa",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+    "vsa": true
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00197_.mp4",
+      "filename": "H3_i2v_00197_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 841677,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00197_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\units\\i2v_20260920-205153.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\units\\i2v_20260920-205153.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: audience_knows（这一单元开始时观众与角色各自知道什么；用作表演与视线的依据，不是画面文字）：观众看见高空、一架正在飞的旧螺旋桨飞机、机身侧门敞开着——敞开的门洞里空着，还没有任何人出现。观众不知道门里等一下会站着谁，也不知道这架飞机上正酝酿什么\n[Shot 1] a extreme long shot —— 高空云层里，一架漆面斑驳的螺旋桨飞机持续朝画面左侧飞行，机头螺旋桨转成一片半透明的模糊圆盘，白色云层从画面右侧朝左侧流过机身；机身侧面的舱门敞开着，门洞是机身上一个偏暗的矩形开口，开口里空着。这一镜里没有任何人出现：门洞里里外外都是空的，没有身影、没有轮廓；画面里只有飞机在飞、云在流动，高空强自然日光，机身在明亮云层的背景前略压暗、接近剪影，金属蒙皮上有磨损与掉漆的高光；云层顶部有一层薄薄的高光。\n\noverall_soundscape: 高空的风噪与螺旋桨的低沉轰鸣，远近没有别的声音\n\nnon_diegetic_music: N/A",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 53.3
+}

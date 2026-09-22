@@ -1,0 +1,21 @@
+{
+  "_record": {
+    "problem": "关键帧提示词里没有冰棍的状态，与剧本「快要融化、只剩小半截」的前提矛盾",
+    "cause": "cli/keyframes.mjs:197/246 走 staticKeyframeStart(unit, shot)，即 unit.keyframe_start || shot.action；keyframe_start 存在时导演的 shot.action 不进提示词，而 keyframe_start 未描述道具状态，板子从剧本继承的「只剩小半截、糖水顺木棍淌下」在关键帧链路无入口",
+    "classification": "执行层约束缺失 / 提示词翻译不完整（不涉及剧情、台词、角色设定、场景语义、单元边界或连续性决策）",
+    "affected_units": ["g001"],
+    "unit_id_mapping": {
+      "note": "导演稿 board.direction.json 里该单元叫 u1，编译后 render.plan.json 里叫 g001",
+      "why_key_is_g001": "cli/keyframes.mjs:58 的 --direction 默认指向 render.plan.json，第 315/332/447 行遍历的是计划单元；按导演稿的 u1 建 key 会静默失效",
+      "direction_unit": "u1",
+      "plan_unit": "g001"
+    },
+    "rerun_scope": ["g001 关键帧", "g001 视频"],
+    "not_affected": ["已确认剧本 story.md", "导演稿 board.direction.json", "方向票"],
+    "decided_by": "用户（2026-09-18，选择项目级执行层覆盖）",
+    "note": "每单元只出首帧（cli/keyframes.mjs:323 取 unit.shots[0]），故本覆盖只作用于 g001 的首帧"
+  },
+  "units": {
+    "g001": "她手中的冰棍只剩小半截：冰体已明显缩小、表面融化发亮、边缘变软塌，糖水顺着木棍往下淌并滴落在她手背上，木棍下半截裸露在外；冰棍整体尺寸明显小于刚拆封的冰棍。"
+  }
+}

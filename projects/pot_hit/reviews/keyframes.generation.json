@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "stage": "keyframes",
+  "at": "2026-09-20T02:28:03.042Z",
+  "provider": "local",
+  "model": "local-comfyui",
+  "requested_provider": "local",
+  "artifacts": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g001.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g002.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g003.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g004.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g005.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\keyframes_render\\g006.png"
+  ],
+  "plan": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\render.plan.json",
+  "execution_overrides": [
+    "g002"
+  ]
+}

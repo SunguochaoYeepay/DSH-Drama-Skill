@@ -1,0 +1,33 @@
+{
+  "ok": true,
+  "mode": "edit",
+  "kind": "image",
+  "prompt_id": "bbd32795-77d7-4758-b76b-b057d10e40bd",
+  "params": {
+    "mode": "edit",
+    "width": 576,
+    "height": 1024
+  },
+  "seed_used": 108336534,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\img\\Qwen_edit_00063_.png",
+      "filename": "Qwen_edit_00063_.png",
+      "subfolder": "img",
+      "type": "output",
+      "kind": "image",
+      "exists": true,
+      "bytes": 1336594,
+      "url": "http://127.0.0.1:8188/view?filename=Qwen_edit_00063_.png&subfolder=img&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\keyframes_local_v2\\edit_20260916-191325.png"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\keyframes_local_v2\\edit_20260916-191325.png"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\keyframes_local_v2",
+  "prompt_used": "【参考图职责】图1=场景与构图环境；图2=人物脸部；图3=人物服装与身份\n古风仙侠短剧电影感，写实实拍，真人质感，皮肤纹理与毛孔自然，高清细节；**不要动漫、插画、3D 渲染、卡通感**。\n【景别｜特写】**画面里只有脸** —— 从下巴下方一点点到头顶，**头部占满整个画面**。**绝不允许出现肩膀或衣领**（那就不算特写），**也不允许只拍半张脸**。\n【人物】小师妹（东亚女性，约二十岁，鹅蛋脸偏圆，杏眼清澈眼尾微挑，鼻尖小巧，唇形饱满，脸颊自然透红；黑长直发，头顶挽成双螺髻，两侧垂落青色发带；服装：浅青色齐胸襦裙，白色交领内衬，肩臂披一层同色薄纱披帛，腰间束白色绫带打结，裙摆轻盈垂坠及地，足下浅色绣花鞋）\n【动作起点】0秒时小师妹猛地抬头，瞳孔收紧，耳尖发红，嘴唇尚未张开。\n【光】晨光打在脸侧，耳尖泛红清晰可见\n【禁止】画面里**不许出现任何文字、字幕、水印、logo、边框、色卡**。\n【一致性】**人物长相必须与提供的参考图完全一致**（同一个人，不是\"像\"）；服装颜色与层次以参考图为准。",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 16.5
+}

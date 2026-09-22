@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "stage": "keyframes",
+  "at": "2026-09-21T05:25:30.104Z",
+  "provider": "local",
+  "model": "local-comfyui/qwen21",
+  "requested_provider": "comfyui",
+  "artifacts": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\keyframes_render\\g001.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\keyframes_render\\g002.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\keyframes_render\\g003.png"
+  ],
+  "plan": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\render.plan.json",
+  "execution_overrides": []
+}

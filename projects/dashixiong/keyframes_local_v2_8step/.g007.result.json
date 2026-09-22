@@ -1,0 +1,33 @@
+{
+  "ok": true,
+  "mode": "edit",
+  "kind": "image",
+  "prompt_id": "a9221d58-9622-48f2-b3a3-d45e959a14bf",
+  "params": {
+    "mode": "edit",
+    "width": 576,
+    "height": 1024
+  },
+  "seed_used": 1735750648,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\img\\Qwen_edit_00080_.png",
+      "filename": "Qwen_edit_00080_.png",
+      "subfolder": "img",
+      "type": "output",
+      "kind": "image",
+      "exists": true,
+      "bytes": 1205955,
+      "url": "http://127.0.0.1:8188/view?filename=Qwen_edit_00080_.png&subfolder=img&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\keyframes_local_v2_8step\\edit_20260916-194659.png"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\keyframes_local_v2_8step\\edit_20260916-194659.png"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\keyframes_local_v2_8step",
+  "prompt_used": "请把参考图中的大师兄放进同一个古风仙侠实拍镜头。图1是场景参考，只参考环境、光线和色调；图2是大师兄的身份参考，严格保持此人的脸、发型；图3是大师兄的身份参考，严格保持此人的脸、发型和服装。\n构图要求：【景别｜近景】画面只取胸部以上 —— 下边界在胸口到腰之间、明显高于腰线。能看到肩膀和上胸，脸部占画面较大比例。绝不允许出现腰部以下（那就成了中景），也不允许只剩一个头（那就成了特写）。\n画面起点：0秒时大师兄面向画面右侧，眼神清澈，嘴唇闭合。\n光线：晨光干净，面部线条清楚\n保持真人摄影质感和自然皮肤纹理。人物五官不得重设计，不要改变性别、年龄、发型和服装主色。\n画面中不要出现文字、字幕、水印、logo、边框或拼图。",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 46.4
+}

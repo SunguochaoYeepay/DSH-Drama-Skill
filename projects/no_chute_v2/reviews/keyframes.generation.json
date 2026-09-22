@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "stage": "keyframes",
+  "at": "2026-09-20T15:07:47.156Z",
+  "provider": "local",
+  "model": "local-comfyui",
+  "requested_provider": "comfyui",
+  "artifacts": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\keyframes_render\\g001.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\keyframes_render\\g002.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\keyframes_local_v2\\g003.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\keyframes_local_v2\\g004.png"
+  ],
+  "plan": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\render.plan.json",
+  "execution_overrides": []
+}

@@ -1,0 +1,26 @@
+﻿[
+    {
+        "unit":  "u1",
+        "file":  "i2v_20260916-145111.mp4",
+        "path":  "E:\\\\AI-Tool\\\\DeepSeek\\\\story2video\\\\projects\\\\dashixiong\\\\units\\\\i2v_20260916-145111.mp4",
+        "frames":  "328",
+        "seconds":  "13.67",
+        "elapsed":  287
+    },
+    {
+        "unit":  "u2",
+        "file":  "i2v_20260916-145626.mp4",
+        "path":  "E:\\\\AI-Tool\\\\DeepSeek\\\\story2video\\\\projects\\\\dashixiong\\\\units\\\\i2v_20260916-145626.mp4",
+        "frames":  "345",
+        "seconds":  "14.38",
+        "elapsed":  315
+    },
+    {
+        "unit":  "u3",
+        "file":  "i2v_20260916-150142.mp4",
+        "path":  "E:\\\\AI-Tool\\\\DeepSeek\\\\story2video\\\\projects\\\\dashixiong\\\\units\\\\i2v_20260916-150142.mp4",
+        "frames":  "345",
+        "seconds":  "14.38",
+        "elapsed":  316
+    }
+]

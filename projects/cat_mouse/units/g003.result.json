@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "e07b7b1b-2480-4e0b-b2d2-384f713c7b4d",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 141,
+    "seconds": 5.88,
+    "profile": "fast",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+    "vsa": true
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00150_.mp4",
+      "filename": "H3_i2v_00150_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 1510484,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00150_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\units\\i2v_20260917-114149.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\units\\i2v_20260917-114149.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\cat_mouse\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] a medium shot of 阿橘与灰豆 —— 阿橘 facing the right side of the frame，灰豆 facing the left side of the frame，阿橘始终注视灰豆，头部、眼睛和瞳孔都明确朝向对方，全过程不看镜头；阿橘的可见表演：头部低下，肩背稳定，抬爪动作缓慢准确，嘴部闭合；视线：持续低头注视脚边的灰豆；禁止表现为：看镜头、视线游离、兴奋大笑；灰豆的可见表演：耳朵向后压，瞳孔缩小，身体后缩半步，小爪收紧；视线：抬头紧盯阿橘的脸和落下的爪子；禁止表现为：星星眼、微笑、崇拜眼神、兴奋表情，矮壮憨厚的橘色公猫，蓬松橘黄色短毛，圆脸，小圆耳，琥珀色眼睛温和迟钝，白色口鼻，圆润腮帮；自然橘色毛发，不穿衣服，体型矮壮，肚子圆润，爪子宽大厚实，尾巴粗而放松；灰棕色小老鼠，尖尖鼻子，圆溜溜黑眼睛，大圆耳朵，细长尾巴，个头很小；自然灰棕色短毛，不穿衣服，身体小巧，细尾巴，小爪子，卡通可爱不恐怖，阿橘慢悠悠向前半步，宽大爪子抬起，神情淡定；灰豆后退半寸，圆眼发紧，摄影机缓慢前推，暖黄室内光。\n[Shot 2] At 02.50 seconds, the camera cuts to a close-up shot of 阿橘与灰豆 —— 阿橘始终注视灰豆，头部、眼睛和瞳孔都明确朝向对方，全过程不看镜头；阿橘的可见表演：头部低下，爪子稳定压住目标，表情平静，嘴部闭合；视线：持续看着爪下的灰豆；禁止表现为：看镜头、凶狠咆哮、兴奋大笑；灰豆的可见表演：耳朵后压，起初瞳孔缩小并短促挣扎，随后眼神涣散、眼皮半闭、身体松软；视线：先惊恐看向阿橘，随后失去明确焦点；禁止表现为：星星眼、爱心眼、微笑、崇拜眼神、开心表情，矮壮憨厚的橘色公猫，蓬松橘黄色短毛，圆脸，小圆耳，琥珀色眼睛温和迟钝，白色口鼻，圆润腮帮；自然橘色毛发，不穿衣服，体型矮壮，肚子圆润，爪子宽大厚实，尾巴粗而放松；灰棕色小老鼠，尖尖鼻子，圆溜溜黑眼睛，大圆耳朵，细长尾巴，个头很小；自然灰棕色短毛，不穿衣服，身体小巧，细尾巴，小爪子，卡通可爱不恐怖，阿橘的厚实爪子稳稳压住灰豆，灰豆惊恐地挣扎两下，随后眼神涣散、眼皮半闭，身体停止挣扎，暖黄室内光。\n\noverall_soundscape: 地板轻响 轻卡通挤压声\n\nnon_diegetic_music: 轻快温馨的卡通喜剧配乐",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 45.7
+}

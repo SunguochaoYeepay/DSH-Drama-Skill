@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "approvals": {
+    "clips": {
+      "g001": {
+        "at": "2026-09-19T11:52:14.743Z",
+        "by": "用户",
+        "artifact_hash": "9b40b0f4db25ec50b0b82ab75cdcbce64ab097b1d47e6aa3f9f31e69d937fcac",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\units\\i2v_20260919-194942.mp4"
+        ]
+      }
+    },
+    "story": {
+      "at": "2026-09-18T14:52:32.597Z",
+      "by": "用户",
+      "artifact_hash": "3fe8bdabc970301b801344604bad9681aa9e5b94813daa0f9f9aa738dd3d51e4",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\story.md"
+      ]
+    },
+    "direction": {
+      "at": "2026-09-18T15:04:51.300Z",
+      "by": "用户",
+      "artifact_hash": "ada6be7ed1a801a93590ddd673b4c9daa0ae07ac6fef4d3c7eed3ffd67a2d1a6",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\board.direction.json"
+      ]
+    },
+    "assets": {
+      "at": "2026-09-19T11:38:58.835Z",
+      "by": "用户",
+      "artifact_hash": "539f0ca65ff225e9e4bee063dcf8facbd0472a738cf910e28ac94560540c5fb3",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\assets\\bone_ref_image.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\assets\\living_room_dusk_master.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\assets\\shiba_default_sheet.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\assets\\shiba_portrait.png"
+      ],
+      "generation": {
+        "version": 1,
+        "stage": "assets",
+        "at": "2026-09-19T11:37:49.143Z",
+        "provider": "comfyui",
+        "model": "local-comfyui",
+        "requested_provider": "local",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\assets\\shiba_portrait.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\assets\\shiba_default_sheet.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\assets\\living_room_dusk_master.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\assets\\bone_ref_image.png"
+        ]
+      }
+    },
+    "keyframes": {
+      "at": "2026-09-19T11:47:31.202Z",
+      "by": "用户",
+      "artifact_hash": "d31b737a9acad6b08abab2e9b5d550f5ac6571719c07e52bf5f6ba0c49bfe705",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\keyframes_render\\g001.png"
+      ],
+      "generation": {
+        "version": 1,
+        "stage": "keyframes",
+        "at": "2026-09-19T11:42:39.525Z",
+        "provider": "local",
+        "model": "local-comfyui",
+        "requested_provider": "local",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\keyframes_render\\g001.png"
+        ],
+        "plan": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\render.plan.json",
+        "execution_overrides": []
+      }
+    },
+    "final": {
+      "at": "2026-09-19T11:53:49.116Z",
+      "by": "用户",
+      "artifact_hash": "2b0ee6ef8921db741eb8086014634c1de23cd99174237c544a7a59068899ae93",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\out\\final.mp4"
+      ]
+    }
+  }
+}

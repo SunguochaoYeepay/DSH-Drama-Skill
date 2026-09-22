@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "ce68d681-1532-4308-bf62-064c3931c9c5",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 243,
+    "seconds": 10.12,
+    "profile": "fast",
+    "attention": "vsa",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+    "vsa": true
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00192_.mp4",
+      "filename": "H3_i2v_00192_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 3288474,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00192_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\fat_cat\\units\\i2v_20260920-191028.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\fat_cat\\units\\i2v_20260920-191028.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\fat_cat\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: 欧美三维卡通动画长片风格，皮克斯迪士尼式卡通造型：大眼睛、圆润饱满的面部轮廓、简化并适度夸张的五官比例、平滑的卡通皮肤、饱满的卡通体型比例，三维渲染，柔和体积光与柔阴影，玩具般的材质质感；黄昏暖金高饱和色调，逆光英雄时刻氛围\nStyle negatives: NEVER 写实照片感, NEVER 真人皮肤纹理, NEVER 2D 平涂, NEVER 水彩, NEVER 线稿, NEVER 厚涂插画.\n[Shot 1] a medium shot of 肥猫 —— 肥猫的可见表演：双爪前伸，胸口挺起，咧嘴，眼睛明亮，尾巴绷直；视线：看向前方天空，橘色虎斑猫，圆脸，大而圆的亮眼睛，粉色鼻头，圆润饱满的卡通面部轮廓；蓝色超人紧身衣包裹着圆滚滚的身体，胸前印着车标盾牌，肩后系红色披风，它在空中摆出超人飞行姿势，双爪前伸，咧嘴得意；身后的楼却开始往上退，Lens and framing: 35mm lens. 全景深，画面全部清晰. camera at 视线高度.，Lighting: key light direction: 身后低角度落日，黄昏逆光; light quality: 柔和散射，阴影边缘软; lighting ratio: 高反差逆光轮廓，暗部柔和保留卡通细节; colour temperature: 暖金 3200K.，侧逆光，金色轮廓光勾住飞行姿态。\nGlobal rules:\n- shadow: 所有影子必须投向落日反方向，方向与长度全片一致\n[Shot 2] At 03.00 seconds, the camera cuts to a medium close-up shot of 肥猫 —— 肥猫的可见表演：表情先凝固半秒，随后瞳孔放大、耳朵后贴、嘴巴张开发不出声，前爪从超人伸展姿势改成快速乱刨；视线：先愣住看向前方，再向下看；表演边界：眼睛保持自然解剖结构，瞳孔形态稳定；嘴角形态服从上述可见表演，不额外改变情绪方向；视线只执行上述注视目标与强度，橘色虎斑猫，圆脸，大而圆的亮眼睛，粉色鼻头，圆润饱满的卡通面部轮廓；蓝色超人紧身衣包裹着圆滚滚的身体，胸前印着车标盾牌，肩后系红色披风，身后的楼立面在它眼前往上退，它愣住，表情从笃定凝固成惊慌——眼睛瞪圆、瞳孔猛缩、耳朵向后贴紧，前爪从伸展改成在空中慌乱乱刨，Lens and framing: 35mm lens. 全景深，画面全部清晰. camera at 视线高度.，Lighting: key light direction: 身后低角度落日，黄昏逆光; light quality: 柔和散射，阴影边缘软; lighting ratio: 高反差逆光轮廓，暗部柔和保留卡通细节; colour temperature: 暖金 3200K.，柔和散射光打在猫脸上，阴影边缘软。\nGlobal rules:\n- shadow: 所有影子必须投向落日反方向，方向与长度全片一致\n[Shot 3] At 06.00 seconds, the camera cuts to a wide shot of 肥猫 —— 肥猫的可见表演：四肢摊开，身体砸扁成饼状再回弹，眼睛圆睁，舌头微吐；视线：向下看棚顶；表演边界：嘴角形态服从上述可见表演，不额外改变情绪方向，橘色虎斑猫，圆脸，大而圆的亮眼睛，粉色鼻头，圆润饱满的卡通面部轮廓；蓝色超人紧身衣包裹着圆滚滚的身体，胸前印着车标盾牌，肩后系红色披风，它垂直加速下落，楼立面在身后飞速上移；画面下方出现二楼遮阳棚，它砰地砸上棚顶，棚布下沉后回弹，把它弹起又落回棚上，摄影机垂直快速下移跟拍，Lens and framing: 35mm lens. 全景深，画面全部清晰. camera at 视线高度.，Lighting: key light direction: 身后低角度落日，黄昏逆光; light quality: 柔和散射，阴影边缘软; lighting ratio: 高反差逆光轮廓，暗部柔和保留卡通细节; colour temperature: 暖金 3200K.，落日余晖在飞速上移的窗玻璃上掠过，棚顶被染成暖金色。\nGlobal rules:\n- shadow: 所有影子必须投向落日反方向，方向与长度全片一致\n\noverall_soundscape: 高空风声呼啸，披风震动声 风声更急，布料拍打和糊脸的声音 坠落风声加剧，砰的砸击声，棚布下沉弹响\n\nnon_diegetic_music: N/A",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 86.9
+}

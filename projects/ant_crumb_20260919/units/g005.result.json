@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "59689396-d3d6-4852-9509-7fa7c0ea64ae",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 158,
+    "seconds": 6.58,
+    "profile": "fast",
+    "attention": "vsa",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+    "vsa": true
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00174_.mp4",
+      "filename": "H3_i2v_00174_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 1679994,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00174_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\units\\i2v_20260919-193604.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\units\\i2v_20260919-193604.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] a medium shot of 小蚂蚁 —— 小蚂蚁的可见表演：步伐有节奏感，触角随步伐轻快摆动，身体姿态放松而有力，整体节奏明快；视线：看向前方道路，拟人化小蚂蚁，圆润身体、大眼睛、两根细触角，可爱治愈微距卡通造型，不是人类也不是昆虫写实标本；具体造型待人物造型师确认；拟人化小蚂蚁，深棕色圆润身体，大眼睛，两根细触角，六条小短腿（前足可作手用），无衣物；具体造型待人物造型师确认，小蚂蚁一路用小脑袋顶着碎屑往前滚，碎屑骨碌碌地翻动，带起细小的草屑和土壤颗粒，蚂蚁步子轻快有节奏，触角随步伐摆动，暖调光，远处光线更暖更亮，有金色光斑穿过草叶。\n[Shot 2] At 03.50 seconds, the camera cuts to a extreme long shot of 小蚂蚁 —— 小蚂蚁的可见表演：回头时嘴角咧开露出大大的笑容，眼睛弯成月牙形，触角得意地左右晃动，然后转身继续轻快地走，背影活泼；视线：先看向镜头方向（即看向观众），然后转回看向前方道路，拟人化小蚂蚁，圆润身体、大眼睛、两根细触角，可爱治愈微距卡通造型，不是人类也不是昆虫写实标本；具体造型待人物造型师确认；拟人化小蚂蚁，深棕色圆润身体，大眼睛，两根细触角，六条小短腿（前足可作手用），无衣物；具体造型待人物造型师确认，小蚂蚁回头看了一眼镜头，露出一个大大的笑容，触角得意地晃了晃；然后转回身继续推着碎屑向画面深处走去，身影越来越小，步子是轻快的，画面渐暖淡出，画面整体渐暖，远处光晕加强扩大，营造温馨治愈的收尾氛围。\n\noverall_soundscape: 碎屑骨碌碌滚动声，轻快的小碎步声，草屑被带起的沙沙声 轻快的脚步声渐远，温暖的旋律渐起，碎屑滚动声渐弱\n\nnon_diegetic_music: N/A",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 69.0
+}

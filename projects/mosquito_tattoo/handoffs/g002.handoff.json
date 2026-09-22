@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "project": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo",
+  "unit": "g002",
+  "source_unit": "g001",
+  "handoff_state": "陈默的右掌仍停在她右肩外侧同一高度尚未收回；林小雅保持转身后的正面站姿与瞪视表情，两人距离不变",
+  "allowed_changes": [
+    "两人体态由侧后改为正面对峙",
+    "景别与机位"
+  ],
+  "source_clip": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo\\units\\r2v_20260917-152617.mp4",
+  "source_clip_sha256": "17c949c48794be5ca5a720dee1c084926df4feb985f36aebc804d8194570f87c",
+  "stable_frame": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo\\handoffs\\g002.stable-tail.png",
+  "stable_frame_sha256": "68e6f234e46fe04e49761dbfa267bb3e62bfdef1ba3c372fd68ae9700f07e569",
+  "tail_offset_s": 0.35,
+  "keyframe": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo\\keyframes_render\\g002.png",
+  "keyframe_sha256": "9e4a83678e1fbcf61d6ff9458b9508de1ad70f63e3c8c969ef27a395010d993e",
+  "created_at": "2026-09-17T07:34:40.024Z",
+  "stable_frame_edit": {
+    "at": "2026-09-17T07:43:19.897Z",
+    "tool": "comfyui / qwen_image_edit_2511_fp8_e4m3fn + Qwen-Image-Edit-2511-Lightning-4steps (本地)",
+    "instruction": "Remove the insect tattoo completely from the woman's right shoulder. Restore clean natural bare skin there, matching the surrounding skin tone and lighting. Keep her face, hair, expression, clothing, pose, body shape, arm and the background exactly unchanged.",
+    "source_frame": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo\\handoffs\\g002.stable-tail.raw.png",
+    "source_frame_sha256": "413479bf3fcdad3a35f91a8d1ffdc2f0c6b7c7c7942cac329c0a9ef16a0349d2",
+    "output_frame": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mosquito_tattoo\\handoffs\\g002.stable-tail.png",
+    "output_sha256": "68e6f234e46fe04e49761dbfa267bb3e62bfdef1ba3c372fd68ae9700f07e569",
+    "reason": "原始尾帧右肩纹身尺寸严重偏大（≈肩宽19%），而尾帧是 g002 关键帧参考图的第1张会被直接继承，故按用户要求删除。纹身本就在右肩后侧，林小雅在本单元已转身面对镜头，正面不呈现纹身。用户于 2026-09-17 15:42 确认该编辑版可用。"
+  },
+  "keyframe_bound_at": "2026-09-17T08:17:00.903Z"
+}

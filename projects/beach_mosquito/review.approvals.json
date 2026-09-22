@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "approvals": {
+    "clips": {
+      "g001": {
+        "at": "2026-09-17T08:02:08.779Z",
+        "by": "用户",
+        "artifact_hash": "9cf589fcf9088513b5d44d86b29f3ebf8e5e6d3a6758919c7e4c7286fe1b085b",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\units\\i2v_20260917-155822.mp4"
+        ]
+      },
+      "g002": {
+        "at": "2026-09-17T08:16:00.097Z",
+        "by": "用户",
+        "artifact_hash": "137876e432ed3b1e516c4b4a7379d75a7a3c7385f138ed0244b13c45a7c4d36c",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\units\\i2v_20260917-161215.mp4"
+        ]
+      }
+    },
+    "direction": {
+      "at": "2026-09-17T07:56:50.861Z",
+      "by": "用户（授权修提示词后重跑）",
+      "artifact_hash": "2cb4c9023dc64e6bbfc5080a715ceefcccab359c29f9afd3d10183c8178a2783",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\render.plan.json"
+      ]
+    },
+    "assets": {
+      "at": "2026-09-17T05:38:48.679Z",
+      "by": "用户",
+      "artifact_hash": "6c4ab9e7b1e7d56efcac43cee03f7df0a00c8f78cc094d49c75c7dc88172621e",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\assets\\c_82cf665a_default_sheet.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\assets\\c_82cf665a_portrait.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\assets\\c_96466668_default_sheet.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\assets\\c_96466668_portrait.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\assets\\scene_01_master.png"
+      ]
+    },
+    "keyframes": {
+      "at": "2026-09-17T08:10:41.744Z",
+      "by": "用户",
+      "artifact_hash": "2e36169c23ab218cb201f7cd1f856528852c158a0e6e57b445a5e8c67742f1f5",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\keyframes_bailian\\g002.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\keyframes_render\\g001.png"
+      ]
+    },
+    "handoffs": {
+      "g002": {
+        "at": "2026-09-17T08:03:31.902Z",
+        "by": "用户",
+        "artifact_hash": "a4108321902a55b9d1c2828d883865dac60648dd4ef14563aca89b4d71ec245b",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\handoffs\\g002.stable-tail.png"
+        ]
+      }
+    },
+    "final": {
+      "at": "2026-09-17T08:19:42.156Z",
+      "by": "用户",
+      "artifact_hash": "a8eb65b6c3ddf911abf00da4757485a5873276f425dce62c14b9ed2d0581dee8",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\out\\final.mp4"
+      ]
+    }
+  }
+}

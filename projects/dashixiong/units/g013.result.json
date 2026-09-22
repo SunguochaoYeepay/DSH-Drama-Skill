@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "5f8ebb39-3fa3-4330-b73d-3185bef6c3fd",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 124,
+    "seconds": 5.17,
+    "profile": "fast",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+    "vsa": true
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00113_.mp4",
+      "filename": "H3_i2v_00113_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 1045972,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00113_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\units\\i2v_20260916-181306.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\units\\i2v_20260916-181306.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] a close-up shot of 小师妹 —— facing the right side of the frame，东亚女性，约二十岁，鹅蛋脸偏圆，杏眼清澈眼尾微挑，鼻尖小巧，唇形饱满，脸颊自然透红；黑长直发，头顶挽成双螺髻，两侧垂落青色发带；浅青色齐胸襦裙，白色交领内衬，肩臂披一层同色薄纱披帛，腰间束白色绫带打结，裙摆轻盈垂坠及地，足下浅色绣花鞋，她瞬间僵住，脸上血色褪去，满眼错愕，随后失笑，光斑轻晃。 小师妹 (S1)，无奈失笑，满心无语，说道：<d>[Chinese] ……你果然是个木头！</d>。\n\noverall_soundscape: 树叶沙沙声放大一瞬。\n\nnon_diegetic_music: N/A\n\non_screen_text: none. No subtitles, no captions, no text overlays of any kind.",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 37.3
+}

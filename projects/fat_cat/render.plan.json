@@ -1,0 +1,408 @@
+{
+  "version": 1,
+  "source_logline": "用三次生成讲完一只坚信自己是超人的肥猫：亮相起跳（观众先知它不会飞）→空中穿帮砸棚→落地淡定舔爪。情绪引擎是观众与猫的全程知情错位。",
+  "policy": {
+    "target_seconds": 10,
+    "max_seconds": 15,
+    "min_generation_seconds": 5.17,
+    "split_on_cast_change": false,
+    "director_owns_unit_boundaries": true,
+    "manual_boundaries": false,
+    "preserves_director_shots": true
+  },
+  "units": [
+    {
+      "id": "g001",
+      "source_units": [
+        "u1"
+      ],
+      "boundary_reason": "director_unit",
+      "content_duration_s": 8,
+      "generation_duration_s": 8,
+      "keyframe": "keyframes_render/g001.png",
+      "cast": [
+        "fatcat_super"
+      ],
+      "scene": "scene_01",
+      "props": [],
+      "why": "同一时空（二十三层窗台外沿）的连续表演：亮相、下决心、助跑、跃出、喊出台词，是一条不可拆的动作链，共享一张首帧锚点；单元内只切一刀，把'郑重'与'起跳'的力度区分开。",
+      "duration_reason": "亮相与郑重表演约4秒，后退助跑约1.5秒，跃出到喊完台词约2.5秒，合计约8秒；本单元唯一一句台词口播约2秒，分配给4秒镜头足够。",
+      "keyframe_start": "0秒时肥猫以 fatcat_super 造型（橘色虎斑圆脸、蓝色超人紧身衣胸前车标盾牌、红色披风）双脚站立在二十三层窗台外沿，身体侧对画面；全景，头到脚完整入画，脚下保留窗台外沿与一小截楼立面，头顶留出黄昏天空；镜头与猫视线同高、从楼外正面略偏侧拍摄，落日在猫身后低角度形成逆光轮廓；画面中可见它身后敞开的窗框，红色披风被高空风吹向画面一侧；尚未助跑，尚未跃出窗台。",
+      "keyframe_cast": [
+        "fatcat_super"
+      ],
+      "action_complexity": {
+        "level": "medium",
+        "high_risk_events": [
+          {
+            "at_s": 5.2,
+            "type": "large_displacement",
+            "description": "猫从窗台表面跃出进入空中，支撑点由窗台变为悬空"
+          }
+        ],
+        "strategy": "single_transition"
+      },
+      "end_state": "猫已离开窗台处于空中，双爪前伸保持超人飞行姿势，披风在身后展开，背景楼立面开始下移。",
+      "continuity": {
+        "mode": "independent",
+        "reason": "开场"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 4,
+          "framing": "全景",
+          "camera": "固定，极缓慢前推",
+          "scene": "scene_01",
+          "on_screen": [
+            "fatcat_super"
+          ],
+          "props": [],
+          "action": "肥猫穿着超人装站立在二十三层窗台外沿，披风被高空风吹起；它低头看了一眼楼下，又抬头看了一眼天，眼神郑重",
+          "emotion_analysis": [
+            {
+              "character": "fatcat_super",
+              "cause": "它穿着超人装站上了二十三层窗台外沿，正准备'执行任务'",
+              "internal_state": "自我使命感的笃定",
+              "visible_behavior": "圆滚滚的身体努力挺直，双爪在胸前握拢，耳朵朝向前方，眼神郑重地先向下移动再向上移动",
+              "gaze": "先看楼下，再看向天空",
+              "avoid_symbols": [
+                "惊恐瞪眼",
+                "身体发抖",
+                "退缩弓背"
+              ]
+            }
+          ],
+          "lighting": "黄昏金光铺满城市天际线，落日低角度逆光在猫身后勾出金色轮廓，影子投向画面前方",
+          "lines": [],
+          "audio": "高空风声，披风猎猎作响，远处模糊的城市环境音",
+          "source": {
+            "unit": "u1",
+            "shot": 1
+          }
+        },
+        {
+          "n": 2,
+          "at": 4,
+          "cut": "the camera cuts to",
+          "duration_s": 4,
+          "framing": "全景",
+          "camera": "稍低机位仰拍，固定；跃出后镜头快速小幅下摇跟随",
+          "scene": "scene_01",
+          "on_screen": [
+            "fatcat_super"
+          ],
+          "props": [],
+          "action": "它后退两步，助跑，纵身跃出窗台；跃出瞬间大喊，在空中摆出超人飞行姿势，双爪前伸",
+          "emotion_analysis": [
+            {
+              "character": "fatcat_super",
+              "cause": "它已做出决定并跃出窗台，感到自己正在起飞",
+              "internal_state": "亢奋，自我实现的狂喜",
+              "visible_behavior": "咧嘴大喊，眼睛发亮，双爪前伸，身体在空中绷成飞行线条，披风向后展开",
+              "gaze": "看向前方天空",
+              "avoid_symbols": [
+                "恐惧表情",
+                "瞳孔收缩",
+                "耳朵后贴"
+              ]
+            }
+          ],
+          "lighting": "逆光仰拍，落日轮廓光包住猫的剪影，暖金色调",
+          "lines": [
+            13
+          ],
+          "audio": "助跑脚步声，跃出时的破风声，高喊声",
+          "source": {
+            "unit": "u1",
+            "shot": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "g002",
+      "source_units": [
+        "u2"
+      ],
+      "boundary_reason": "director_unit",
+      "content_duration_s": 10,
+      "generation_duration_s": 10,
+      "keyframe": "keyframes_render/g002.png",
+      "cast": [
+        "fatcat_super"
+      ],
+      "scene": "scene_01",
+      "props": [],
+      "why": "空中段是同一次坠落的连续错觉表演：自以为在飞、披风打脸、表情翻转，主体始终是同一只猫、空间关系始终是'猫在空中、楼在身后'；一次生成内用单元内切镜完成三段力度变化，比拆成多个锚点不足的单元更稳。",
+      "duration_reason": "飞行错觉约3秒，披风打脸与表情翻转约3秒，坠落加速到砸棚回弹约4秒，合计约10秒；本单元无台词。",
+      "keyframe_start": "0秒时肥猫以 fatcat_super 造型在空中保持超人飞行姿势，双爪前伸、身体近似水平；中景，胸口以上到前爪完整入画；镜头在猫侧前方与猫同高、从楼外拍摄，背景是黄昏中的楼立面与持续下移的楼层；画面中可见猫在前、楼立面在后，二楼遮阳棚尚未入画；尚未开始慌张，披风尚未糊到脸上。",
+      "keyframe_cast": [
+        "fatcat_super"
+      ],
+      "action_complexity": {
+        "level": "high",
+        "high_risk_events": [
+          {
+            "at_s": 8.8,
+            "type": "large_displacement",
+            "description": "猫从空中砸上二楼遮阳棚，由悬空变为与棚布接触、下压并回弹"
+          }
+        ],
+        "strategy": "single_transition"
+      },
+      "end_state": "猫趴在二楼遮阳棚棚顶，身体随棚布下沉后回弹一次并稳定，四肢摊开，披风盖在背上。",
+      "continuity": {
+        "mode": "continue_previous",
+        "previous_unit": "g001",
+        "deferred_keyframe": true,
+        "handoff_state": "猫在空中保持双爪前伸的超人飞行姿势，披风在身后展开，背景楼立面开始下移",
+        "allowed_changes": [
+          "景别由全景收为中景",
+          "背景楼层持续下移",
+          "机位移至猫侧前方同高"
+        ],
+        "previous_source_unit": "u1"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 3,
+          "framing": "中景",
+          "camera": "固定",
+          "scene": "scene_01",
+          "on_screen": [
+            "fatcat_super"
+          ],
+          "props": [],
+          "action": "它在空中摆出超人飞行姿势，双爪前伸，咧嘴得意；身后的楼却开始往上退",
+          "emotion_analysis": [
+            {
+              "character": "fatcat_super",
+              "cause": "跃出后它没有坠落感，反而'前进'了",
+              "internal_state": "亢奋，确信自己在飞",
+              "visible_behavior": "双爪前伸，胸口挺起，咧嘴，眼睛明亮，尾巴绷直",
+              "gaze": "看向前方天空",
+              "avoid_symbols": [
+                "恐惧",
+                "慌张",
+                "耳朵后贴"
+              ]
+            }
+          ],
+          "lighting": "侧逆光，金色轮廓光勾住飞行姿态",
+          "lines": [],
+          "audio": "高空风声呼啸，披风震动声",
+          "source": {
+            "unit": "u2",
+            "shot": 1
+          }
+        },
+        {
+          "n": 2,
+          "at": 3,
+          "cut": "the camera cuts to",
+          "duration_s": 3,
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "scene_01",
+          "on_screen": [
+            "fatcat_super"
+          ],
+          "props": [],
+          "action": "身后的楼立面在它眼前往上退，它愣住，表情从笃定凝固成惊慌——眼睛瞪圆、瞳孔猛缩、耳朵向后贴紧，前爪从伸展改成在空中慌乱乱刨",
+          "emotion_analysis": [
+            {
+              "character": "fatcat_super",
+              "cause": "它看见身后的楼在往上退，意识到自己没有在飞、正在往下掉",
+              "internal_state": "自信崩塌，慌张",
+              "visible_behavior": "表情先凝固半秒，随后瞳孔放大、耳朵后贴、嘴巴张开发不出声，前爪从超人伸展姿势改成快速乱刨",
+              "gaze": "先愣住看向前方，再向下看",
+              "avoid_symbols": [
+                "星星眼",
+                "微笑",
+                "崇拜眼神"
+              ]
+            }
+          ],
+          "lighting": "柔和散射光打在猫脸上，阴影边缘软",
+          "lines": [],
+          "audio": "风声更急，布料拍打和糊脸的声音",
+          "source": {
+            "unit": "u2",
+            "shot": 2
+          }
+        },
+        {
+          "n": 3,
+          "at": 6,
+          "cut": "the camera cuts to",
+          "duration_s": 4,
+          "framing": "全景",
+          "camera": "垂直快速下移跟拍",
+          "scene": "scene_01",
+          "on_screen": [
+            "fatcat_super"
+          ],
+          "props": [],
+          "action": "它垂直加速下落，楼立面在身后飞速上移；画面下方出现二楼遮阳棚，它砰地砸上棚顶，棚布下沉后回弹，把它弹起又落回棚上",
+          "emotion_analysis": [
+            {
+              "character": "fatcat_super",
+              "cause": "它正砸向棚顶并受到支撑",
+              "internal_state": "惊慌中蒙圈",
+              "visible_behavior": "四肢摊开，身体砸扁成饼状再回弹，眼睛圆睁，舌头微吐",
+              "gaze": "向下看棚顶",
+              "avoid_symbols": [
+                "享受表情",
+                "微笑",
+                "满足闭眼"
+              ]
+            }
+          ],
+          "lighting": "落日余晖在飞速上移的窗玻璃上掠过，棚顶被染成暖金色",
+          "lines": [],
+          "audio": "坠落风声加剧，砰的砸击声，棚布下沉弹响",
+          "source": {
+            "unit": "u2",
+            "shot": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "g003",
+      "source_units": [
+        "u3"
+      ],
+      "boundary_reason": "end",
+      "content_duration_s": 6,
+      "generation_duration_s": 6,
+      "keyframe": "keyframes_render/g003.png",
+      "cast": [
+        "fatcat_super"
+      ],
+      "scene": "scene_01",
+      "props": [],
+      "why": "落地段是空间关系的重置（棚顶到地面）加收尾表演（舔爪、拨正披风、走开）；猫从'趴在棚上'到'站在地面'需要新的身份与空间锚点，一次生成内完成滑落、落地、舔爪、走开的连续表演。",
+      "duration_reason": "滑落到地面约2.5秒，舔爪与拨披风约2秒，若无其事走开约1.5秒，合计约6秒；本单元无台词。",
+      "keyframe_start": "0秒时肥猫以 fatcat_super 造型四肢摊开趴在二楼遮阳棚棚顶上，披风盖在背上；全景，棚顶到猫完整入画，画面上沿保留二楼窗框与一小截楼立面；镜头在棚顶斜下方仰拍棚顶与猫，落日在楼后；画面中可见猫趴在轻微下陷的棚布上；尚未开始滑落，尚未落地。",
+      "keyframe_cast": [
+        "fatcat_super"
+      ],
+      "action_complexity": {
+        "level": "medium",
+        "high_risk_events": [
+          {
+            "at_s": 1.8,
+            "type": "large_displacement",
+            "description": "猫从二楼遮阳棚顶边缘滑落坠地，由棚顶转移到地面"
+          }
+        ],
+        "strategy": "single_transition"
+      },
+      "end_state": "猫在地面上向画面深处缓步走开，尾巴竖起，披风歪在一边，二楼遮阳棚停在画面上方，画面稳定。",
+      "continuity": {
+        "mode": "continue_previous",
+        "previous_unit": "g002",
+        "deferred_keyframe": true,
+        "handoff_state": "猫四肢摊开趴在棚顶，披风盖在背上，棚布已停止晃动",
+        "allowed_changes": [
+          "机位移到棚顶斜下方",
+          "景别保持全景"
+        ],
+        "previous_source_unit": "u2"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 3,
+          "framing": "全景",
+          "camera": "固定",
+          "scene": "scene_01",
+          "on_screen": [
+            "fatcat_super"
+          ],
+          "props": [],
+          "action": "它从棚顶边缘滑下去，落在地面，身体轻微压扁后回弹",
+          "emotion_analysis": [
+            {
+              "character": "fatcat_super",
+              "cause": "它从棚上滑到地面，发现没有受伤",
+              "internal_state": "惊魂未定但迅速镇定",
+              "visible_behavior": "落地时身体轻微压扁回弹，随后深呼吸一次，肩膀放松，耳朵重新竖起",
+              "gaze": "看向前方地面",
+              "avoid_symbols": [
+                "痛苦呻吟",
+                "哭丧脸",
+                "瘸腿姿势"
+              ]
+            }
+          ],
+          "lighting": "黄昏暖金光洒在遮阳棚与楼立面上，影子投向落日反方向",
+          "lines": [],
+          "audio": "棚布滑动声，落地闷响，风声渐弱",
+          "source": {
+            "unit": "u3",
+            "shot": 1
+          }
+        },
+        {
+          "n": 2,
+          "at": 3,
+          "cut": "the camera cuts to",
+          "duration_s": 3,
+          "framing": "中景",
+          "camera": "固定，极缓慢前推",
+          "scene": "scene_01",
+          "on_screen": [
+            "fatcat_super"
+          ],
+          "props": [],
+          "action": "它淡定地舔了舔爪子，把歪掉的披风拨正，然后若无其事地向画面深处走开",
+          "emotion_analysis": [
+            {
+              "character": "fatcat_super",
+              "cause": "它确认自己毫发无损，自尊需要维护",
+              "internal_state": "若无其事，自尊维护",
+              "visible_behavior": "慢条斯理舔爪，用爪子把歪掉的披风拨正，然后踱步走开，尾巴竖起",
+              "gaze": "不看上方，平视前方",
+              "avoid_symbols": [
+                "惊恐未定",
+                "求安慰表情",
+                "后怕拍胸口"
+              ]
+            }
+          ],
+          "lighting": "黄昏暖金光洒在猫身上与楼立面上，柔和散射",
+          "lines": [],
+          "audio": "舔爪声，轻微脚步声，远处城市环境音",
+          "source": {
+            "unit": "u3",
+            "shot": 2
+          }
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "content_duration_s": 24,
+    "projected_delivery_duration_s": 24,
+    "keyframe_count": 3
+  },
+  "provenance": {
+    "contract": 1,
+    "project_id": "fat_cat",
+    "board_identity_sha256": "0147b80fbd5a598d1186ce631f122056eb448f62ae57cf8d37d3e4280a5f3d65",
+    "story_sha256": "6e310efd4919cc64560a1be7ba1801e8be3b9a8a543a9c6c13f77a971217105e",
+    "direction_sha256": "feac0342b13d459d4746894ea1860ae7df98181d1d38559a0f11c9928a6733a3",
+    "direction_receipt_sha256": "097da763c206fb0f3a52aab94f20412b07bea9ae86b02ab29e1712783bbab63b",
+    "direction_version": 6,
+    "direction_file": "board.direction.json",
+    "bound_at": "2026-09-20T06:23:21.527Z",
+    "plan_units_sha256": "bb02c78968691d2a63fa9f742b96e13bfe0b45a07e2450bd93a59dabdb2ce354"
+  }
+}

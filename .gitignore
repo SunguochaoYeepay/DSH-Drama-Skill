@@ -14,7 +14,6 @@ node_modules/
 
 # 生成的数据目录
 story2video/
-projects/
 _archive/
 shots/
 assets/
@@ -45,6 +44,7 @@ Thumbs.db
 .idea/
 .workbuddy/
 *.log
+__pycache__/
 
 # 临时产物 —— **绝不入库**
 # Agent 干活时把命令输出、探针结果、干跑日志转储成 `.tmp-*` 文件（一次会话就能堆出二十多个）。
@@ -59,3 +59,24 @@ Thumbs.db
 # 更要紧的是 comfy-out/_result.json、_stdout.txt、_stderr.txt **已经被跟踪过**，
 # 所以光加这条规则不够，还得 git rm --cached 把它们从索引里摘出来。
 comfy-out/
+
+# ── 剧目目录（2026-09-22 起剧目进仓：契约链入库，媒体产物不入库）─────────────
+# 目标：别人 clone 仓库就拿到全部剧目的剧本/板子/导演稿/计划/票/提示词/请求档案
+# （审计链完整），但 2.4GB 的图/视频/二进制不进 git。
+# 做法：先整体忽略 projects/，再放行**目录**（不放行目录，git 不会往下走）
+# 与三类文本扩展名；其余扩展名（png/mp4/jpg/exe/mjs/ps1/…）一律留在忽略里。
+# 实测依据（E 盘 22 个剧目盘点）：.json 434 / .md 190 / .txt 157 是契约链，
+# .png 1057 / .mp4 241 / .jpg 6 是产物，fat_cat/.tmp/bin/ffmpeg.exe 85MB 是误放的二进制。
+projects/**/*
+!projects/**/
+!projects/**/*.json
+!projects/**/*.md
+!projects/**/*.txt
+# 运行态/账本：上面的放行会翻掉全局忽略（同文件后走全局顺序的话），
+# 这里把已知运行态按更具体的模式压回去 —— 它们是流水线的"当前指针/花费账本"，不是契约。
+projects/**/costs.json
+projects/**/current.json
+projects/**/.gen-result.json
+projects/**/*.filter.txt
+projects/**/_concat.txt
+projects/**/__pycache__/

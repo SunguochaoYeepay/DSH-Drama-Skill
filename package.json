@@ -3,6 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node tests/run-all.mjs"
+    "test": "node tests/run-all.mjs",
+    "kanban": "node web/server.mjs",
+    "doctor": "node cli/doctor.mjs"
+  },
+  "dependencies": {
+    "bailian-cli": "1.26.0"
   }
 }

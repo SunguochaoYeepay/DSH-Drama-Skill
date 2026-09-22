@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "stage": "assets",
+  "at": "2026-09-19T11:37:49.143Z",
+  "provider": "comfyui",
+  "model": "local-comfyui",
+  "requested_provider": "local",
+  "artifacts": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\assets\\shiba_portrait.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\assets\\shiba_default_sheet.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\assets\\living_room_dusk_master.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\mimi_bone\\assets\\bone_ref_image.png"
+  ]
+}

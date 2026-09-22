@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "stage": "assets",
+  "at": "2026-09-18T15:02:44.931Z",
+  "provider": "comfyui",
+  "model": "local-comfyui",
+  "requested_provider": "local",
+  "artifacts": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\wig_sneeze\\assets\\heroine_portrait.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\wig_sneeze\\assets\\heroine_default_sheet.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\wig_sneeze\\assets\\street_evening_1_master.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\wig_sneeze\\assets\\street_evening_2_master.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\wig_sneeze\\assets\\street_evening_3_master.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\wig_sneeze\\assets\\street_evening_4_master.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\wig_sneeze\\assets\\street_evening_5_master.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\wig_sneeze\\assets\\wig_ref_image.png"
+  ]
+}

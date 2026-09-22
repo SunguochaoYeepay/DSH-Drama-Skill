@@ -1,0 +1,334 @@
+{
+  "meta": {
+    "title": "肩上的蚊子",
+    "logline": "他以为自己拍死了一只蚊子，直到她说：那是纹身",
+    "genre": "夏日轻喜剧 / 反转",
+    "language": "zh-CN",
+    "aspect": "9:16",
+    "style": "realistic",
+    "style_prompt": "写实电影质感，夏日下午海滨自然光，海面高光与木栈道暖色反光，中高饱和，浅景深，清晰纹理细节，轻微呼吸感",
+    "total_duration_s": 21,
+    "created_by": "用户",
+    "stage": "shots",
+    "approvals": {
+      "story": {
+        "at": "2026-09-17T04:39:35.396Z",
+        "by": "用户"
+      },
+      "shots": null,
+      "assets": null,
+      "keyframes": null
+    },
+    "music": null,
+    "project": "mosquito_tattoo"
+  },
+  "story": {
+    "synopsis": "海边栈道上，陈默看见陌生女子肩头停着\"蚊子\"，犹豫后一巴掌拍下去。对方疼得骂人，他慌忙摊开手心自证——手心里什么都没有。她更气了：那是纹身。",
+    "tone": "夏日轻喜剧，靠一个动作误会加一句反转收尾",
+    "ending": "陈默手心空空，林小雅指着自己的纹身发火，误解落定无法辩解",
+    "beats": [
+      {
+        "text": "海边栈道上，陈默看见陌生女子肩头停着一只蚊子",
+        "purpose": "制造核心误会的前提：观众必须比女主先看到那只\"蚊子\"",
+        "emotion": "闲散 → 注意"
+      },
+      {
+        "text": "他抬手又停住，犹豫要不要碰一个陌生人",
+        "purpose": "建立人物：犹豫但自认好心，同时给观众\"他要动手\"的预期",
+        "emotion": "迟疑"
+      },
+      {
+        "text": "他一巴掌拍在她肩上",
+        "purpose": "全片唯一的高风险动作，也是笑点的引信",
+        "emotion": "决断"
+      },
+      {
+        "text": "她疼得转身骂他",
+        "purpose": "第一次情绪反转：好心被当成冒犯",
+        "emotion": "她怒，他慌"
+      },
+      {
+        "text": "他摊开手心自证，手心却干干净净",
+        "purpose": "逼近笑点：观众知道\"蚊子\"不存在，但还不知道为什么",
+        "emotion": "悬着"
+      },
+      {
+        "text": "她指着自己的肩膀说是纹身",
+        "purpose": "收尾反转：观众和她同时明白真相，他无从辩解",
+        "emotion": "她更怒，他僵住"
+      }
+    ],
+    "source": "短剧剧本：肩上的蚊子\n\n风格：写实电影感、夏日轻喜剧、反转打脸\n时长：约 21 秒\n\n人物设定\n林小雅：亚洲都市女性，二十多岁，五官明艳，长直发披肩，穿白色吊带短上衣与浅色短裙，右肩外侧靠肩头处有一个极小的黑色蚊子纹身，只有一枚硬币大小——远看只是肩上一点黑，近看才辨得出蚊子的剪影；性格外放，被冒犯时立刻发火\n陈默：亚洲男性，二十多岁，清瘦，穿灰色短袖衬衫与休闲短裤；犹豫但自认好心，做事不过脑\n\n第 1 集 1-1 场景：外 海滨栈道 午后 人物：林小雅、陈默\n\n△ 午后海滨木栈道，阳光斜照，海面泛白，栏杆在木地板上投下长条阴影。\n\n△ 林小雅侧身站在栏杆边看海，右肩朝向栈道一侧，肩头露出一点细小的深色印记。\n\n△ 陈默从她身后走近，脚步放慢，视线落在她的右肩上，眉头微皱。\n\n△ 陈默右臂缓缓抬起，手掌在半空停住，五指张开又收拢，指尖有一点抖。\n\n△ 陈默的右掌快速落下，拍在她的右肩上，接触瞬间即停，声音清脆。\n\n△ 林小雅猛地转身，肩膀一缩，眼睛瞪圆，脸颊涨红。\n\n林小雅（吃痛，瞪眼）：你有病啊！\n\n△ 陈默慌忙把双手抬到胸前，掌心朝上，身体前倾。\n\n陈默（语速偏快，急切）：有个蚊子，在你肩膀上！我给你打死了！\n\n△ 陈默摊开右掌凑到她眼前，手心纹路清晰，干干净净，什么都没有。\n\n△ 林小雅低头看了一眼，抬头，眼睛瞪得更圆，抬手指向自己的右肩。\n\n林小雅（更气，胸口起伏）：你傻吗！我那个是纹身！\n"
+  },
+  "characters": [
+    {
+      "id": "lin_xiaoya",
+      "name": "林小雅",
+      "voice": "清亮明快，语速偏快，情绪外放",
+      "age_group": "youth",
+      "face_prompt": "亚洲女性，二十多岁，五官明艳，杏眼高鼻，长直黑发披肩，皮肤白皙，身形纤细",
+      "portrait": "assets/lin_xiaoya_portrait.png",
+      "identities": [
+        "lin_xiaoya_default"
+      ]
+    },
+    {
+      "id": "chen_mo",
+      "name": "陈默",
+      "voice": "低沉偏平，语速中等，略带迟疑",
+      "age_group": "youth",
+      "face_prompt": "亚洲男性，二十多岁，清瘦，眉目普通，短黑发，皮肤偏黄",
+      "portrait": "assets/chen_mo_portrait.png",
+      "identities": [
+        "chen_mo_default"
+      ]
+    }
+  ],
+  "identities": [
+    {
+      "id": "lin_xiaoya_default",
+      "character": "lin_xiaoya",
+      "name": "日常夏装",
+      "appearance_details": "白色吊带短上衣配浅色短裙，露出双臂与右肩；右肩外侧靠肩头处有一个很小的黑色纹身，图案是一只蚊子的写实剪影，细长的身体、一对向后收拢的窄翅、六条向外伸开的细腿、一根细长口器，纯黑色实心，只有一枚硬币大小，不要画成放射状或星形；长直黑发披肩",
+      "costume_image": null,
+      "sheet": "assets/lin_xiaoya_default_sheet.png",
+      "reference_images": [],
+      "voice_ref": null
+    },
+    {
+      "id": "chen_mo_default",
+      "character": "chen_mo",
+      "name": "休闲夏装",
+      "appearance_details": "灰色短袖衬衫，下摆不扎，浅卡其休闲短裤，白色运动鞋，短黑发",
+      "costume_image": null,
+      "sheet": "assets/chen_mo_default_sheet.png",
+      "reference_images": [],
+      "voice_ref": null
+    }
+  ],
+  "scenes": [
+    {
+      "id": "seaside_boardwalk",
+      "name": "海滨栈道",
+      "environment": "午后海滨木栈道，阳光斜照，海面泛白反光，木地板与金属栏杆，栏杆投下长条阴影",
+      "time_of_day": "午后",
+      "master": "assets/seaside_boardwalk_master.png",
+      "reverse_master": null,
+      "spatial_layout": null,
+      "scene_no": 1
+    }
+  ],
+  "props": [],
+  "shots": [
+    {
+      "id": "s01",
+      "scene": "seaside_boardwalk",
+      "cast": [
+        "lin_xiaoya_default"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "全景",
+      "lighting": "偏暖侧光",
+      "camera": "缓慢前推",
+      "action": "午后海滨木栈道，阳光斜照，海面泛白，栏杆在木地板上投下长条阴影。 林小雅侧身站在栏杆边看海，右肩朝向栈道一侧，肩头露出一点细小的深色印记。",
+      "prompt": "{{lin_xiaoya_default}}，午后海滨木栈道，阳光斜照，海面泛白，栏杆在木地板上投下长条阴影。 林小雅侧身站在栏杆边看海，右肩朝向栈道一侧，肩头露出一点细小的深色印记。，全景，缓慢前推",
+      "audio": "树叶摩擦的沙沙声与踩在石板路上的脚步声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        12,
+        14
+      ]
+    },
+    {
+      "id": "s02",
+      "scene": "seaside_boardwalk",
+      "cast": [
+        "chen_mo_default"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "全景",
+      "lighting": "偏暖侧光",
+      "camera": "缓慢前推",
+      "action": "陈默从她身后走近，脚步放慢，视线落在她的右肩上，眉头微皱。 陈默右臂缓缓抬起，手掌在半空停住，五指张开又收拢，指尖有一点抖。",
+      "prompt": "{{chen_mo_default}}，陈默从她身后走近，脚步放慢，视线落在她的右肩上，眉头微皱。 陈默右臂缓缓抬起，手掌在半空停住，五指张开又收拢，指尖有一点抖。，全景，缓慢前推",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        16,
+        18
+      ]
+    },
+    {
+      "id": "s03",
+      "scene": "seaside_boardwalk",
+      "cast": [
+        "lin_xiaoya_default",
+        "chen_mo_default"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "偏暖侧光",
+      "camera": "缓慢横移",
+      "action": "陈默的右掌快速落下，拍在她的右肩上，接触瞬间即停，声音清脆。 林小雅猛地转身，肩膀一缩，眼睛瞪圆，脸颊涨红。",
+      "prompt": "{{lin_xiaoya_default}}、{{chen_mo_default}}，陈默的右掌快速落下，拍在她的右肩上，接触瞬间即停，声音清脆。 林小雅猛地转身，肩膀一缩，眼睛瞪圆，脸颊涨红。，中景，缓慢横移",
+      "audio": "声音清脆",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        20,
+        22
+      ]
+    },
+    {
+      "id": "s04",
+      "scene": "seaside_boardwalk",
+      "cast": [
+        "lin_xiaoya_default"
+      ],
+      "props": [],
+      "duration_s": 2,
+      "shot_size": "近景",
+      "lighting": "偏暖侧光",
+      "camera": "固定镜头",
+      "action": "林小雅开口说话",
+      "prompt": "{{lin_xiaoya_default}}，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "lin_xiaoya_default",
+          "text": "你有病啊！",
+          "emotion": "吃痛，瞪眼",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        24
+      ]
+    },
+    {
+      "id": "s05",
+      "scene": "seaside_boardwalk",
+      "cast": [
+        "chen_mo_default"
+      ],
+      "props": [],
+      "duration_s": 4,
+      "shot_size": "近景",
+      "lighting": "偏暖侧光",
+      "camera": "固定镜头",
+      "action": "陈默慌忙把双手抬到胸前，掌心朝上，身体前倾。",
+      "prompt": "{{chen_mo_default}}，陈默慌忙把双手抬到胸前，掌心朝上，身体前倾。，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "chen_mo_default",
+          "text": "有个蚊子，在你肩膀上！我给你打死了！",
+          "emotion": "语速偏快，急切",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        26,
+        28
+      ]
+    },
+    {
+      "id": "s06",
+      "scene": "seaside_boardwalk",
+      "cast": [
+        "lin_xiaoya_default",
+        "chen_mo_default"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "偏暖侧光",
+      "camera": "缓慢横移",
+      "action": "陈默摊开右掌凑到她眼前，手心纹路清晰，干干净净，什么都没有。 林小雅低头看了一眼，抬头，眼睛瞪得更圆，抬手指向自己的右肩。",
+      "prompt": "{{lin_xiaoya_default}}、{{chen_mo_default}}，陈默摊开右掌凑到她眼前，手心纹路清晰，干干净净，什么都没有。 林小雅低头看了一眼，抬头，眼睛瞪得更圆，抬手指向自己的右肩。，中景，缓慢横移",
+      "audio": "树叶摩擦的沙沙声与踩在石板路上的脚步声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        30,
+        32
+      ]
+    },
+    {
+      "id": "s07",
+      "scene": "seaside_boardwalk",
+      "cast": [
+        "lin_xiaoya_default"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "近景",
+      "lighting": "偏暖侧光",
+      "camera": "固定镜头",
+      "action": "林小雅开口说话",
+      "prompt": "{{lin_xiaoya_default}}，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "lin_xiaoya_default",
+          "text": "你傻吗！我那个是纹身！",
+          "emotion": "更气，胸口起伏",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        34
+      ]
+    }
+  ]
+}

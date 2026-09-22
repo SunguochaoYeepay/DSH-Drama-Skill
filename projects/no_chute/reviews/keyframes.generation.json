@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "stage": "keyframes",
+  "at": "2026-09-20T12:07:38.713Z",
+  "provider": "local",
+  "model": "local-comfyui",
+  "requested_provider": "local",
+  "artifacts": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute\\keyframes_render\\g001.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute\\keyframes_render\\g002.png"
+  ],
+  "plan": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute\\render.plan.json",
+  "execution_overrides": []
+}

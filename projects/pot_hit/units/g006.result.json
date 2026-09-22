@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "b8c29799-38ab-4222-b09c-6c87c30b9ad4",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 141,
+    "seconds": 5.88,
+    "profile": "fast",
+    "attention": "vsa",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+    "vsa": true
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00186_.mp4",
+      "filename": "H3_i2v_00186_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 872768,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00186_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\units\\i2v_20260920-104004.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\units\\i2v_20260920-104004.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] a medium close-up shot of 女生 —— 女生的可见表演：下巴收紧、眉头上拧，指尖捏起碎叶时指节绷紧，随后把碎叶弹掉、手掌在吊带上拍了两下，肩膀放松；视线：看向自己胸前那片污渍；表演边界：嘴角形态服从上述可见表演，不额外改变情绪方向，二十多岁的东亚女性；鹅蛋脸偏长，五官立体，眼睛偏长、双眼皮明显；鼻梁挺直；嘴唇偏薄；眉形上扬；皮肤白皙、有真实毛孔与自然油光。；牛仔热裤 + 低胸细吊带背心 + 细跟高跟鞋；长直黑发披肩；无首饰、无外搭。全片衣着本身不变。，她低头盯着自己吊带前襟上那一大片湿泥，眉头慢慢拧起来，伸手把嵌在泥里的一片碎叶捏起来看了看，说出那句话；说完把碎叶弹掉，手掌在吊带上拍了两下，同前，平光；吊带上的湿泥反出一点暗光。 女生 (S1)，说道：<d>[Chinese] 靠！我的衣服！</d>。\n\noverall_soundscape: 衣料被手掌拍打的轻响，她说话时台阶下有一点回声\n\nnon_diegetic_music: N/A\n\non_screen_text: none. No subtitles, no captions, no text overlays of any kind.",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 44.3
+}

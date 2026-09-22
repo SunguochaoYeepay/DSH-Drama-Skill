@@ -1,0 +1,10 @@
+{
+  "contract": 1,
+  "source": "agent_draft",
+  "model": null,
+  "response_model": null,
+  "drafted_by": "agent",
+  "input_sha256": "49f9df70165d1c48081717373561a6068e0a9eea587b5801977ebb4e0739f6f7",
+  "story_sha256": "49f9df70165d1c48081717373561a6068e0a9eea587b5801977ebb4e0739f6f7",
+  "recorded_at": "2026-09-21T01:49:51.490Z"
+}

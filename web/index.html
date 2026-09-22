@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>分镜确认表 · story2video</title>
+<style>
+  :root{
+    --bg:#17171a; --panel:#1e1e22; --line:rgba(127,127,127,.25); --dim:rgba(255,255,255,.55);
+    --on:#4a8c5f; --onbg:rgba(64,160,96,.18); --now:#dca028; --nowbg:rgba(220,160,40,.15);
+    --hl:rgba(90,140,255,.5); --hlbg:rgba(90,140,255,.15); --bad:#e06c6c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:#e8e8ea;font:13px/1.6 system-ui,'Segoe UI',sans-serif}
+  .head{padding:12px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+  .head .title{font-size:16px;font-weight:700}
+  .head .logline{color:var(--dim);margin:2px 0 8px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;font-size:12px;align-items:center}
+  .chip{padding:2px 9px;border-radius:999px;border:1px solid var(--line);opacity:.5}
+  .chip.on{opacity:1;background:var(--onbg);border-color:var(--on)}
+  .chip.now{opacity:1;background:var(--nowbg);border-color:var(--now)}
+  .tabs{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .tab{padding:3px 12px;border-radius:6px;border:1px solid var(--line);background:transparent;color:inherit;cursor:pointer;font-size:12.5px}
+  .tab.now{background:var(--nowbg);border-color:var(--now)}
+  select,option{background:var(--panel);color:inherit;border:1px solid var(--line);border-radius:5px;padding:3px 6px;font:12.5px system-ui}
+  .meta{color:var(--dim);font-size:12px;margin-top:6px}
+  main{padding:14px 16px;max-width:1280px}
+  table{border-collapse:collapse;width:100%;font-size:12.5px}
+  th{position:sticky;top:0;background:var(--panel);text-align:left;padding:7px 9px;font-weight:600;color:var(--dim);border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:7px 9px;border-bottom:1px solid rgba(127,127,127,.12);vertical-align:top}
+  tr.row{cursor:pointer}
+  tr.row:hover{background:var(--hlbg)}
+  .thumb{position:relative;width:72px;cursor:zoom-in}
+  .thumb img,.thumb video{width:72px;height:48px;object-fit:cover;border-radius:3px;display:block;background:#000}
+  .thumb .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;text-shadow:0 0 6px rgba(0,0,0,.9);pointer-events:none}
+  .nm{padding:0 3px;border-radius:3px;font-weight:600;background:var(--hlbg);border:1px solid var(--hl)}
+  .ln{color:var(--dim);font-size:10.5px;margin-right:4px}
+  pre.story{white-space:pre-wrap;font:12.5px/1.6 ui-monospace,Consolas,monospace;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+  .cards{display:flex;gap:10px;flex-wrap:wrap}
+  .card{width:150px;padding:6px;border:1px solid var(--line);border-radius:7px;background:transparent;cursor:pointer;text-align:left;color:inherit}
+  .card:hover,.card.on{border-color:var(--hl);background:var(--hlbg)}
+  .card img,.card video{width:100%;height:96px;object-fit:cover;border-radius:4px;display:block;background:#000}
+  .card .lab{display:block;font-size:11px;color:var(--dim);margin-top:5px;overflow-wrap:anywhere}
+  .viewer{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;z-index:10}
+  .viewer img{max-width:92vw;max-height:82vh;border-radius:6px}
+  .viewer video{max-width:92vw;max-height:82vh;border-radius:6px;background:#000}
+  .viewer .cap{color:var(--dim);font-size:12px}
+  .viewer{cursor:zoom-out}
+  .utabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+  .sec{margin:14px 0 5px;font-weight:600;font-size:13px}
+  .kv td:first-child{color:var(--dim);white-space:nowrap;width:130px}
+  .note{color:var(--dim)}
+  .bad{color:var(--bad)}
+  .files{color:var(--dim);font-size:12px;margin-bottom:10px}
+  .empty{color:var(--dim);padding:20px 0}
+  .bar{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="head">
+  <div class="bar">
+    <select id="project" title="选择剧目"></select>
+    <span class="title" id="title">分镜确认表</span>
+  </div>
+  <div class="logline" id="logline"></div>
+  <div class="chips" id="tickets"></div>
+  <div class="meta" id="meta"></div>
+  <div class="tabs" id="tabs"></div>
+</div>
+<main id="main"><p class="note">选择剧目开始。</p></main>
+
+<script>
+'use strict';
+/* 看板页面（原生 JS，无构建）—— 从 DSH 的 dsh-storyboard 面板抽离。
+   数据契约见 src/board-data.mjs；服务见 web/server.mjs。只读，不写票。 */
+
+const TICKETS = [['direction','导演方案'],['assets','资源'],['keyframes','关键帧'],['final','最终成片']];
+const TAB_NAMES = ['① 剧本','② 导演与计划','③ 资源','④ 关键帧与视频片段','⑤ 成片'];
+
+const S = { project:null, snap:null, tab:0, openUnit:null, focus:null };
+const $ = (id) => document.getElementById(id);
+
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function mediaUrl(rel){ return '/media/' + S.project + '/' + String(rel).split('/').map(encodeURIComponent).join('/'); }
+function isVideo(p){ return /\.(mp4|m4v|webm|mov|mkv)$/i.test(String(p||'')); }
+
+/* 行号 → 台词正文（与 board-data.lineTextOf 同规则，前端就地取） */
+function lineTextOf(story, lineNo){
+  const raw = String(story||'').split(/\r?\n/)[Number(lineNo)-1];
+  if (raw === undefined) return null;
+  const m = String(raw).match(/^[^：:]{1,12}(?:[（(][^）)]*[）)])?\s*[:：]\s*(.+)$/);
+  return (m ? m[1] : String(raw)).trim();
+}
+
+function thumbHtml(rel, group, label){
+  if (!rel) return '<span class="note">—</span>';
+  const v = isVideo(rel);
+  const key = esc(group + ':' + label);
+  return `<div class="thumb" data-rel="${esc(rel)}" data-key="${key}">`
+    + (v ? `<video src="${mediaUrl(rel)}#t=0.1" preload="metadata" muted playsinline></video><span class="play">▶</span>`
+         : `<img src="${mediaUrl(rel)}" alt="${esc(label)}" loading="lazy">`)
+    + '</div>';
+}
+
+function viewerHtml(rel, label){
+  const v = isVideo(rel);
+  return `<div class="viewer" onclick="this.remove()">`
+    + (v ? `<video src="${mediaUrl(rel)}" controls autoplay playsinline></video>`
+         : `<img src="${mediaUrl(rel)}" alt="${esc(label)}">`)
+    + `<div class="cap">${esc(label)} · ${esc(rel)}</div></div>`;
+}
+
+function highlightNames(board, text){
+  const s = String(text ?? '');
+  if (!s) return '—';
+  const names = new Set();
+  for (const c of board.characters||[]) if (c.name) names.add(c.name);
+  for (const x of board.identities||[]) if (x.name && x.name !== '默认造型') names.add(x.name);
+  const arr = [...names].sort((a,b)=>b.length-a.length);
+  if (!arr.length) return esc(s);
+  let out = esc(s);
+  for (const n of arr){
+    const en = esc(n);
+    out = out.split(en).join(`<span class="nm">${en}</span>`);
+  }
+  return out;
+}
+
+function shotsLabel(ids){
+  if (!ids.length) return '—';
+  const nums = ids.map(i=>String(i).replace(/^[a-z]+/i,''));
+  const seq = nums.every((n,i)=>i===0||Number(n)===Number(nums[i-1])+1);
+  const prefix = String(ids[0]).replace(/[0-9]+$/,'');
+  if (ids.length>=3 && seq) return prefix+ids[0].slice(prefix.length)+'–'+ids[ids.length-1];
+  return ids.join('、');
+}
+
+/* ── 头部 ─────────────────────────────────────────────── */
+function renderHead(){
+  const b = S.snap.board, meta = b.meta||{};
+  $('title').textContent = S.snap.title + ' · 分镜确认表';
+  $('logline').textContent = S.snap.logline || '';
+  const total = (b.shots||[]).reduce((n,s)=>n+(Number(s.duration_s)||0),0);
+  $('meta').textContent = `${(b.shots||[]).length} 个镜头 · 共 ${total.toFixed(2)}s · ${S.snap.aspect||'?'} · ${S.snap.style||'?'}`;
+
+  const ap = S.snap.tickets?.approvals || {};
+  let chips = TICKETS.map(([k,label])=>{
+    const a = ap[k];
+    return `<span class="chip ${a?'on':''}">${label} ${a?'✅':'⬜'}</span>`;
+  }).join('');
+  const clips = ap.clips || {};
+  chips += Object.keys(clips).sort().map(id=>{
+    const v = clips[id]||{};
+    const ok = Boolean(v.artifact_hash || (v.final && v.final.artifact_hash));
+    return `<span class="chip ${ok?'on':''}">${esc(id)} ${ok?'✅':'⬜'}</span>`;
+  }).join('');
+  $('tickets').innerHTML = chips;
+
+  $('tabs').innerHTML = TAB_NAMES.map((n,i)=>
+    `<button class="tab ${i===S.tab?'now':''}" data-i="${i}">${n}</button>`).join('');
+  for (const el of document.querySelectorAll('.tab')) el.onclick = ()=>{ S.tab = Number(el.dataset.i); render(); };
+}
+
+/* ── ① 剧本 ──────────────────────────────────────────── */
+function renderStory(){
+  const f = S.snap.files;
+  const files = [
+    ['story.md', f['story.md']], ['board.direction.json', f['board.direction.json']],
+    ['render.plan.json', f['render.plan.json']], ['review.approvals.json', f['review.approvals.json']],
+  ].map(([n,ok])=>`${esc(n)} ${ok?'✓':'—'}`).join('　');
+  const body = S.snap.story !== null
+    ? `<pre class="story">${esc(S.snap.story)}</pre>`
+    : '<p class="empty">没有读到剧本（story.md 缺失，板子里也没有 story.source）</p>';
+  return `<div class="files">${files}</div>` + body;
+}
+
+/* ── ② 导演与计划 ────────────────────────────────────── */
+function renderDirection(){
+  const b = S.snap.board;
+  const dirUnits = (S.snap.direction?.units)||[];
+  const planUnits = (S.snap.plan?.units)||[];
+  const planById = new Map(planUnits.map(u=>[u.id,u]));
+  const merged = dirUnits.length
+    ? dirUnits.map(u=>({dir:u, plan:planById.get(u.id)||null}))
+    : planUnits.map(u=>({dir:null, plan:u}));
+  if (!merged.length) return '<p class="empty">没读到 board.direction.json 与 render.plan.json</p>';
+
+  const active = merged.find(p => (p.dir||p.plan).id === S.openUnit) || merged[0];
+  const u = active.dir || active.plan;
+  const shots = u.shots || [];
+  const contentEnd = Math.max(0, ...shots.map(s=>(s.at||0)+(s.duration_s||0)));
+
+  const tabs = `<div class="utabs">` + merged.map(p=>{
+    const id = (p.dir||p.plan).id;
+    return `<button class="tab ${id===u.id?'now':''}" data-unit="${esc(id)}">${esc(id)}</button>`;
+  }).join('') + '</div>';
+
+  const info = `<table class="kv"><tbody>
+    <tr><td>含几镜</td><td>${shots.length} 镜</td></tr>
+    <tr><td>内容时长</td><td>${contentEnd.toFixed(2)}s</td></tr>
+    <tr><td>首帧状态（0 秒）</td><td>${esc(u.keyframe_start||'—')}</td></tr>
+    <tr><td>为什么放一起</td><td>${esc(u.why||'—')}</td></tr>
+  </tbody></table>`;
+
+  const charName = {}; for (const c of b.characters||[]) charName[c.id]=c.name||c.id;
+  const nameOfId = (id)=>{
+    const x = (b.identities||[]).find(i=>i.id===id);
+    if (!x) return id;
+    return charName[x.character] || id;
+  };
+  const rows = shots.map(s=>{
+    const speech = (s.lines||[]).map(no=>{
+      const t = lineTextOf(S.snap.story, no);
+      return `<div><span class="ln">L${esc(no)}</span>${t===null
+        ? '<span class="bad">（剧本第 '+esc(no)+' 行取不到）</span>'
+        : '「'+esc(t)+'」'}</div>`;
+    }).join('') || '—';
+    const emo = (s.emotion_analysis||[]).map(e=>{
+      const rest = [e.internal_state,e.visible_behavior,e.gaze].filter(Boolean).join(' · ');
+      return `<div><span class="nm">${esc(nameOfId(e.character))}</span>${rest?' · '+esc(rest):''}</div>`;
+    }).join('') || '—';
+    return `<tr>
+      <td>${esc(s.n??'—')}</td><td>${Number(s.at||0).toFixed(2)}s</td><td>${Number(s.duration_s||0).toFixed(2)}s</td>
+      <td>${esc(s.framing||'—')}</td><td>${esc(s.camera||'—')}</td>
+      <td>${highlightNames(b, s.action)}</td><td>${speech}</td><td>${esc(s.cut||'—')}</td><td>${emo}</td>
+    </tr>`;
+  }).join('');
+  const table = `<table><thead><tr>
+    <th>镜</th><th>起点</th><th>时长</th><th>景别</th><th>运镜</th><th>动作</th><th>台词</th><th>切法</th><th>情绪因果链</th>
+  </tr></thead><tbody>${rows}</tbody></table>`;
+
+  return tabs + `<p class="sec">基本信息　${esc(u.id)}</p>` + info
+    + `<p class="sec">镜头信息　共 ${shots.length} 镜</p>` + table;
+}
+
+/* ── ③ 资源 ──────────────────────────────────────────── */
+function renderAssets(){
+  const items = S.snap.assets.filter(a=>a.tab===1 && a.path);
+  if (!items.length) return '<p class="empty">这一页在本剧目里没有对应产物。</p>';
+  return `<div class="cards">` + items.map(a=>`
+    <button class="card" data-rel="${esc(a.path)}" data-label="${esc(a.group+' '+a.label)}">
+      ${isVideo(a.path)
+        ? `<video src="${mediaUrl(a.path)}#t=0.1" preload="metadata" muted playsinline></video>`
+        : `<img src="${mediaUrl(a.path)}" alt="${esc(a.label)}" loading="lazy">`}
+      <span class="lab">${esc(a.group)}　${esc(a.label)}</span>
+    </button>`).join('') + '</div>';
+}
+
+/* ── ④ 关键帧与视频片段 ──────────────────────────────── */
+function renderUnits(){
+  const b = S.snap.board;
+  const shots = b.shots||[];
+  const units = S.snap.units;
+  if (!units.length){
+    return '<p class="empty">没有生成计划（render.plan.json），按镜头画也没有单元信息。</p>';
+  }
+  // 单元 → 镜头映射（摊平长度对不上就不猜，退回不带镜头列）
+  const flat = [];
+  for (const u of units) for (let i=0;i<u.shotCount;i++) flat.push(u.id);
+  const byUnit = {};
+  if (flat.length === shots.length){
+    shots.forEach((s,i)=>{ (byUnit[flat[i]] ||= []).push(s); });
+  }
+  const rows = units.map(u=>{
+    const group = byUnit[u.id] || [];
+    const label = group.length ? shotsLabel(group.map(s=>s.id)) : '—';
+    const act = group.map(s=>s.action||'').filter(Boolean).join(' → ') || '—';
+    const dur = u.contentDuration!=null ? Number(u.contentDuration).toFixed(2)+'s' : '—';
+    return `<tr>
+      <td>${esc(u.id)}</td><td>${esc(label)}</td><td>${dur}</td>
+      <td>${highlightNames(b, act)}</td>
+      <td>${thumbHtml(u.keyframe,'kf',u.id)}</td>
+      <td>${thumbHtml(u.clip,'clip',u.id)}</td>
+    </tr>`;
+  }).join('');
+  return `<table><thead><tr>
+    <th>单元</th><th>镜头</th><th>生成时长</th><th>本单元包含的画面</th><th>关键帧</th><th>视频片段</th>
+  </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+/* ── ⑤ 成片 ──────────────────────────────────────────── */
+function renderFinal(){
+  return S.snap.finalRel
+    ? `<video src="${mediaUrl(S.snap.finalRel)}" controls playsinline style="max-width:100%;max-height:70vh;border-radius:6px;background:#000"></video>
+       <p class="note">${esc(S.snap.finalRel)}</p>`
+    : '<p class="empty">还没有成片（约定路径：out/final.mp4）</p>';
+}
+
+const RENDERERS = [renderStory, renderDirection, renderAssets, renderUnits, renderFinal];
+
+function render(){
+  if (!S.snap){ $('main').innerHTML = '<p class="note">选择剧目开始。</p>'; return; }
+  renderHead();
+  $('main').innerHTML = RENDERERS[S.tab]();
+  // 缩略图 / 卡片 → 大图查看器
+  for (const el of document.querySelectorAll('[data-rel]')){
+    el.addEventListener('click', (ev)=>{
+      ev.stopPropagation();
+      const rel = el.dataset.rel;
+      const label = el.dataset.label || rel;
+      document.body.insertAdjacentHTML('beforeend', viewerHtml(rel, label));
+    });
+  }
+  // 单元 tabs
+  for (const el of document.querySelectorAll('[data-unit]')){
+    el.addEventListener('click', ()=>{ S.openUnit = el.dataset.unit; render(); });
+  }
+}
+
+/* ── 载入剧目 ─────────────────────────────────────────── */
+async function loadProjects(){
+  const r = await fetch('/api/projects').then(x=>x.json());
+  $('project').innerHTML = '<option value="">（选择剧目）</option>'
+    + r.projects.map(p=>`<option value="${esc(p.name)}">${esc(p.title===p.name?p.name:p.title+' · '+p.name)}</option>`).join('');
+}
+async function loadProject(name){
+  const snap = await fetch('/api/project?name='+encodeURIComponent(name)).then(x=>x.json());
+  if (snap.error){ $('main').innerHTML = `<p class="bad">${esc(snap.error)}</p>`; S.snap=null; return; }
+  S.snap = snap; S.openUnit = null; S.tab = 0;
+  render();
+}
+$('project').addEventListener('change', (ev)=>{
+  S.project = ev.target.value;
+  if (S.project) loadProject(S.project); else { S.snap=null; render(); }
+});
+loadProjects();
+</script>
+</body>
+</html>

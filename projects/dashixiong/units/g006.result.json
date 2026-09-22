@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "96507bfe-7caf-494e-8bd7-86f8f651ea3c",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 277,
+    "seconds": 11.54,
+    "profile": "fast",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+    "vsa": true
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00119_.mp4",
+      "filename": "H3_i2v_00119_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 2237197,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00119_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\units\\i2v_20260916-224601.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\units\\i2v_20260916-224601.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] a close-up shot of 小师妹 —— facing the left side of the frame，东亚女性，约二十岁，鹅蛋脸偏圆，杏眼清澈眼尾微挑，鼻尖小巧，唇形饱满，脸颊自然透红；黑长直发，头顶挽成双螺髻，两侧垂落青色发带；浅青色齐胸襦裙，白色交领内衬，肩臂披一层同色薄纱披帛，腰间束白色绫带打结，裙摆轻盈垂坠及地，足下浅色绣花鞋，她眉眼微蹙、嘴唇微微张开，语速发紧地连续追问，双手无措地攥着衣角，晨光打在脸侧，耳尖泛红清晰可见。 小师妹 (S1)，语气慌张，手足无措，说道：<d>[Chinese] 昏死？那我的衣服……是你给我穿的？那你、那你有没有对我做什么？</d>。\n\noverall_soundscape: 轻微风声、衣角摩擦声\n\nnon_diegetic_music: N/A\n\non_screen_text: none. No subtitles, no captions, no text overlays of any kind.",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 94.4
+}

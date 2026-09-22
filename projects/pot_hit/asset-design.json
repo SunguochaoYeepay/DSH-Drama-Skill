@@ -1,0 +1,70 @@
+{
+  "contract": 1,
+  "designs": [
+    {
+      "kind": "scene_design",
+      "scene_id": "alley_entrance",
+      "source_scene": {
+        "id": "alley_entrance",
+        "name": "老楼单元门口（白天）",
+        "environment": "老式居民楼的单元门口，外景白天。水泥台阶边缘剥落、有缺口；门洞**正上方就是一层窗台**，窗台上摆着两只陶质花盆、种着绿植，其中一只靠在外沿；门口地上摆着一张旧矮桌和两把小凳子，桌上摊着一副象棋盘，棋子摆到中局；地面有未干的水痕，墙皮发灰，门边有一截褪色的绿漆。",
+        "scene_no": 1,
+        "master": "assets/alley_entrance_master.png"
+      },
+      "anchors": {
+        "environment": "老式居民楼的单元门口，外景白天。水泥台阶边缘剥落、有缺口；门洞**正上方就是一层窗台**，窗台上摆着两只陶质花盆、种着绿植，其中一只靠在外沿；门口地上摆着一张旧矮桌和两把小凳子，桌上摊着一副象棋盘，棋子摆到中局；地面有未干的水痕，墙皮发灰，门边有一截褪色的绿漆。",
+        "aspect": "9:16"
+      },
+      "prompt": "写实电影质感：实拍级皮肤、毛发与布料细节，水泥与陶土的粗糙质感清晰可见；白天日光平直略阴，硬边阴影很淡，地面水痕反出灰白的天光；低饱和、中低对比，整体偏灰绿；浅景深，自然光学暗角，轻微镜头呼吸感。 老式居民楼的单元门口，外景白天。水泥台阶边缘剥落、有缺口；门洞**正上方就是一层窗台**，窗台上摆着两只陶质花盆、种着绿植，其中一只靠在外沿；门口地上摆着一张旧矮桌和两把小凳子，桌上摊着一副象棋盘，棋子摆到中局；地面有未干的水痕，墙皮发灰，门边有一截褪色的绿漆。 场景主图，9:16，空镜。 固定空间结构、入口、窗户、家具相对位置和主光方向。 画面中不出现人物、动物、临时道具、文字、水印或标注。",
+      "questions": []
+    },
+    {
+      "kind": "character_design",
+      "character_id": "girl",
+      "identity_id": "girl_default",
+      "locked": {
+        "face": "二十多岁的东亚女性；鹅蛋脸偏长，五官立体，眼睛偏长、双眼皮明显；鼻梁挺直；嘴唇偏薄；眉形上扬；皮肤白皙、有真实毛孔与自然油光。",
+        "appearance": "牛仔热裤 + 低胸细吊带背心 + 细跟高跟鞋；长直黑发披肩；无首饰、无外搭。全片衣着本身不变，身上保持干净。"
+      },
+      "prompt": "二十多岁的东亚女性；鹅蛋脸偏长，五官立体，眼睛偏长、双眼皮明显；鼻梁挺直；嘴唇偏薄；眉形上扬；皮肤白皙、有真实毛孔与自然油光。 牛仔热裤 + 低胸细吊带背心 + 细跟高跟鞋；长直黑发披肩；无首饰、无外搭。全片衣着本身不变，身上保持干净。 人物身份图，锁定同一张脸、体型和造型连续性。 四视图只允许视角变化，不出现文字、水印、场景或其他人物。",
+      "questions": []
+    },
+    {
+      "kind": "character_design",
+      "character_id": "grandpa",
+      "identity_id": "grandpa_default",
+      "locked": {
+        "face": "七十岁上下的东亚男性；脸型偏方圆、颧骨高，额头与眼角有深皱纹，法令纹明显；花白短发、发际线后移；眼睛小、眼皮下垂；鼻头圆厚；皮肤偏暗黄，有老年斑与真实毛孔。",
+        "appearance": "浅灰色短袖汗衫 + 深蓝色宽松长裤 + 黑色布鞋；花白短发。全片衣着完整、无变化。"
+      },
+      "prompt": "七十岁上下的东亚男性；脸型偏方圆、颧骨高，额头与眼角有深皱纹，法令纹明显；花白短发、发际线后移；眼睛小、眼皮下垂；鼻头圆厚；皮肤偏暗黄，有老年斑与真实毛孔。 浅灰色短袖汗衫 + 深蓝色宽松长裤 + 黑色布鞋；花白短发。全片衣着完整、无变化。 人物身份图，锁定同一张脸、体型和造型连续性。 四视图只允许视角变化，不出现文字、水印、场景或其他人物。",
+      "questions": []
+    }
+  ],
+  "receipt": [
+    {
+      "contract": 1,
+      "kind": "scene_design",
+      "director_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\board.direction.json",
+      "board_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\board.json",
+      "design_sha256": "946bec22061f0e2f2df76c02ca196ef94d4a3a362983be0b5c43499b529ece07",
+      "status": "director_review_pending"
+    },
+    {
+      "contract": 1,
+      "kind": "character_design",
+      "director_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\board.direction.json",
+      "board_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\board.json",
+      "design_sha256": "64fd9ed54cbc0e30cf588abae6ddef62aab6e35a91cea2fd9579d70923f28252",
+      "status": "director_review_pending"
+    },
+    {
+      "contract": 1,
+      "kind": "character_design",
+      "director_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\board.direction.json",
+      "board_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\board.json",
+      "design_sha256": "34e843e7722ddd99d7c2f76d566d5df065e71997f618d3a5552fdc83fac0b1f7",
+      "status": "director_review_pending"
+    }
+  ]
+}

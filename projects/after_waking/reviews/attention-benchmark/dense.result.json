@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "620ca8b4-d094-4237-9efc-ae7a4aa87921",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 124,
+    "seconds": 5.17,
+    "profile": "fast",
+    "attention": "dense",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors"
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00166_.mp4",
+      "filename": "H3_i2v_00166_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 325755,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00166_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\after_waking\\reviews\\attention-benchmark\\i2v_20260918-100917.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\after_waking\\reviews\\attention-benchmark\\i2v_20260918-100917.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\after_waking\\reviews\\attention-benchmark",
+  "prompt_used": "固定机位，清晨的卧室，人物在床上慢慢睁眼并抬头，柔和晨光；轻微环境音，无台词。",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 38.2
+}

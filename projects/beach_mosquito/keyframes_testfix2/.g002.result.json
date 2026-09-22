@@ -1,0 +1,33 @@
+{
+  "ok": true,
+  "mode": "edit",
+  "kind": "image",
+  "prompt_id": "4f2a7a68-fb6c-4ce1-8e40-52fa0ecfe128",
+  "params": {
+    "mode": "edit",
+    "width": 576,
+    "height": 1024
+  },
+  "seed_used": 1862966195,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\img\\Qwen_edit_00149_.png",
+      "filename": "Qwen_edit_00149_.png",
+      "subfolder": "img",
+      "type": "output",
+      "kind": "image",
+      "exists": true,
+      "bytes": 1199236,
+      "url": "http://127.0.0.1:8188/view?filename=Qwen_edit_00149_.png&subfolder=img&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\keyframes_testfix2\\edit_20260917-143240.png"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\keyframes_testfix2\\edit_20260917-143240.png"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\keyframes_testfix2",
+  "prompt_used": "请把参考图中的陆晨放进同一个镜头，整体风格严格遵循：写实电影感：午后自然光，海面高光柔和不过曝，浅景深，肤色自然通透，颗粒细腻，色彩偏暖但保留海水的青蓝，手持稳定器质感，没有夸张滤镜。图1是场景参考，只参考环境、光线和色调；图2是陆晨的身份参考，严格保持此人的脸、发型；图3是陆晨的身份参考，严格保持此人的脸、发型和服装。\n构图要求：【景别｜中景】画面下边界严格切在人物的腰部（腰带/腰线位置），画面里只有头顶到腰部这一段。绝不允许出现大腿或膝盖（那就成了全景），也绝不允许只到胸口（那就成了近景）。\n画面起点：陆晨站在画面中央偏左，身体朝向画面左侧，右臂抬到肩高，右掌张开举在半空、指尖朝下，五指自然分开，掌心朝向画面左侧；他的视线落在画面左前方她右肩的位置，眉毛压低，嘴唇抿紧，上身微向前倾。**画面里只有陆晨一个人，苏晚不在画面内**（她的肩膀在画面左侧之外，只有他自己入画）。【取景下边界】画面最底端精确切在腰带上，画面里最下面能看到的就是腰线本身；大腿与膝盖不进入画面。\n光线：午后自然光从画面左上方来，他的右臂抬起时在肩头留下一道清楚的投影，掌心受光\n保持参考图的角色身份、体型比例和体表材质。不得重设计脸部或头部特征、毛发、皮肤、服装与配饰。\n【生成前最终检查】【景别｜中景】画面下边界严格切在人物的腰部（腰带/腰线位置），画面里只有头顶到腰部这一段。绝不允许出现大腿或膝盖（那就成了全景），也绝不允许只到胸口（那就成了近景）。\n画面中不要出现文字、字幕、水印、logo、边框或拼图。",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 108.7
+}

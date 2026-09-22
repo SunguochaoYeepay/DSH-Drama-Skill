@@ -1,0 +1,146 @@
+{
+  "contract": 1,
+  "designs": [
+    {
+      "kind": "scene_design",
+      "scene_id": "grass_path",
+      "source_scene": {
+        "id": "grass_path",
+        "scene_no": 1,
+        "name": "草地小径",
+        "environment": "微距视角的草地小径，嫩绿草叶、细碎土壤与零星小石子，柔和暖调自然光"
+      },
+      "anchors": {
+        "environment": "微距视角的草地小径，嫩绿草叶、细碎土壤与零星小石子，柔和暖调自然光",
+        "aspect": "9:16"
+      },
+      "prompt": "微距卡通渲染风格，柔和暖调自然光，浅景深微距质感，草叶与土壤的细节清晰，画面干净明亮 微距视角的草地小径，嫩绿草叶、细碎土壤与零星小石子，柔和暖调自然光 场景主图，9:16，空镜。 固定空间结构、入口、窗户、家具相对位置和主光方向。 画面中不出现人物、动物、临时道具、文字、水印或标注。",
+      "questions": []
+    },
+    {
+      "kind": "scene_design",
+      "scene_id": "crumb_side_a",
+      "source_scene": {
+        "id": "crumb_side_a",
+        "scene_no": 2,
+        "name": "面包碎屑旁（初见）",
+        "environment": "草地上散落着土壤颗粒，一颗金黄色的巨大面包碎屑立在画面中央，占画面近一半"
+      },
+      "anchors": {
+        "environment": "草地上散落着土壤颗粒，一颗金黄色的巨大面包碎屑立在画面中央，占画面近一半",
+        "aspect": "9:16"
+      },
+      "prompt": "微距卡通渲染风格，柔和暖调自然光，浅景深微距质感，草叶与土壤的细节清晰，画面干净明亮 草地上散落着土壤颗粒，一颗金黄色的巨大面包碎屑立在画面中央，占画面近一半 场景主图，9:16，空镜。 固定空间结构、入口、窗户、家具相对位置和主光方向。 画面中不出现人物、动物、临时道具、文字、水印或标注。",
+      "questions": []
+    },
+    {
+      "kind": "scene_design",
+      "scene_id": "crumb_side_b",
+      "source_scene": {
+        "id": "crumb_side_b",
+        "scene_no": 3,
+        "name": "面包碎屑旁（尝试搬起）",
+        "environment": "面包碎屑底部特写，碎屑表面有酥脆气孔和金黄边缘，地面是细碎草屑"
+      },
+      "anchors": {
+        "environment": "面包碎屑底部特写，碎屑表面有酥脆气孔和金黄边缘，地面是细碎草屑",
+        "aspect": "9:16"
+      },
+      "prompt": "微距卡通渲染风格，柔和暖调自然光，浅景深微距质感，草叶与土壤的细节清晰，画面干净明亮 面包碎屑底部特写，碎屑表面有酥脆气孔和金黄边缘，地面是细碎草屑 场景主图，9:16，空镜。 固定空间结构、入口、窗户、家具相对位置和主光方向。 画面中不出现人物、动物、临时道具、文字、水印或标注。",
+      "questions": []
+    },
+    {
+      "kind": "scene_design",
+      "scene_id": "crumb_side_c",
+      "source_scene": {
+        "id": "crumb_side_c",
+        "scene_no": 4,
+        "name": "面包碎屑侧面（肩顶）",
+        "environment": "面包碎屑侧面视角，能看到碎屑与地面的接触面，草叶在前景虚化"
+      },
+      "anchors": {
+        "environment": "面包碎屑侧面视角，能看到碎屑与地面的接触面，草叶在前景虚化",
+        "aspect": "9:16"
+      },
+      "prompt": "微距卡通渲染风格，柔和暖调自然光，浅景深微距质感，草叶与土壤的细节清晰，画面干净明亮 面包碎屑侧面视角，能看到碎屑与地面的接触面，草叶在前景虚化 场景主图，9:16，空镜。 固定空间结构、入口、窗户、家具相对位置和主光方向。 画面中不出现人物、动物、临时道具、文字、水印或标注。",
+      "questions": []
+    },
+    {
+      "kind": "scene_design",
+      "scene_id": "grass_path_deep",
+      "source_scene": {
+        "id": "grass_path_deep",
+        "scene_no": 5,
+        "name": "草地深处",
+        "environment": "向前延伸的草地小径，草叶形成通道感，远处光线更暖更亮"
+      },
+      "anchors": {
+        "environment": "向前延伸的草地小径，草叶形成通道感，远处光线更暖更亮",
+        "aspect": "9:16"
+      },
+      "prompt": "微距卡通渲染风格，柔和暖调自然光，浅景深微距质感，草叶与土壤的细节清晰，画面干净明亮 向前延伸的草地小径，草叶形成通道感，远处光线更暖更亮 场景主图，9:16，空镜。 固定空间结构、入口、窗户、家具相对位置和主光方向。 画面中不出现人物、动物、临时道具、文字、水印或标注。",
+      "questions": []
+    },
+    {
+      "kind": "character_design",
+      "character_id": "ant",
+      "identity_id": "ant_forager",
+      "locked": {
+        "face": "拟人化小蚂蚁，圆润身体、大眼睛、两根细触角，可爱治愈微距卡通造型，不是人类也不是昆虫写实标本；具体造型待人物造型师确认",
+        "appearance": "拟人化小蚂蚁，深棕色圆润身体，大眼睛，两根细触角，六条小短腿（前足可作手用），无衣物；具体造型待人物造型师确认"
+      },
+      "prompt": "拟人化小蚂蚁，圆润身体、大眼睛、两根细触角，可爱治愈微距卡通造型，不是人类也不是昆虫写实标本；具体造型待人物造型师确认 拟人化小蚂蚁，深棕色圆润身体，大眼睛，两根细触角，六条小短腿（前足可作手用），无衣物；具体造型待人物造型师确认 人物身份图，锁定同一张脸、体型和造型连续性。 四视图只允许视角变化，不出现文字、水印、场景或其他人物。",
+      "questions": []
+    }
+  ],
+  "receipt": [
+    {
+      "contract": 1,
+      "kind": "scene_design",
+      "director_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\board.direction.json",
+      "board_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\board.json",
+      "design_sha256": "c2c4895c5279be31e0a7266430ce0d9d7a022eba3da2cf8b6ea440b5f08dd2c5",
+      "status": "director_review_pending"
+    },
+    {
+      "contract": 1,
+      "kind": "scene_design",
+      "director_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\board.direction.json",
+      "board_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\board.json",
+      "design_sha256": "c30342f5d7f518b71e8129f0005447cb71c62a5e25f3d0b750f465eea09f12b2",
+      "status": "director_review_pending"
+    },
+    {
+      "contract": 1,
+      "kind": "scene_design",
+      "director_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\board.direction.json",
+      "board_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\board.json",
+      "design_sha256": "ea87c62acfba7c89473223dae4ee96920ad8126b5f370d95ac055440aa480919",
+      "status": "director_review_pending"
+    },
+    {
+      "contract": 1,
+      "kind": "scene_design",
+      "director_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\board.direction.json",
+      "board_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\board.json",
+      "design_sha256": "b5872826cd5309cdbc297441238715b6f3a45326ea3170b2b7b7053906ca6f23",
+      "status": "director_review_pending"
+    },
+    {
+      "contract": 1,
+      "kind": "scene_design",
+      "director_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\board.direction.json",
+      "board_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\board.json",
+      "design_sha256": "26fce12283441744495e03a9cad1e74222ba69b685ab4d8bac824e7354e20fb6",
+      "status": "director_review_pending"
+    },
+    {
+      "contract": 1,
+      "kind": "character_design",
+      "director_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\board.direction.json",
+      "board_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\board.json",
+      "design_sha256": "ac1ececc36d2832979964975f99851b177f9a4ef69341c2f33021a0319502c0d",
+      "status": "director_review_pending"
+    }
+  ]
+}

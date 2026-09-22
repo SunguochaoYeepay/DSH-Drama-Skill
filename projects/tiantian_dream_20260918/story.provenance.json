@@ -1,0 +1,9 @@
+{
+  "contract": 1,
+  "source": "bailian",
+  "model": "qwen3.8-max",
+  "response_model": "qwen3.8-max",
+  "input_sha256": "9c3b2664c95d631295bfa69019c8aaa5633da87b45439a9f47ce3b77c2ceabd0",
+  "story_sha256": "f0c2aa17a7bb0d8972a5b8c79a0a2bc58d8f94edb02f9479566b88951de7c22c",
+  "recorded_at": "2026-09-18T04:06:31.556Z"
+}

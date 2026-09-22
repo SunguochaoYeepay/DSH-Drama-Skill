@@ -1,0 +1,512 @@
+{
+  "meta": {
+    "title": "此路是我开",
+    "project": "gopher_toll",
+    "logline": "三个人走出山谷口，被一只拦路的拟人地鼠索要「过路费」——它把木棍横在路中间、掌心朝上摊开，比谁都认真；而当它从麻袋里掏出的不是刀、是路上捡的石子和瓶盖时，这场抢劫变成了一桩谈成了的买卖。",
+    "genre": "冒险喜剧",
+    "language": "zh-CN",
+    "aspect": "16:9",
+    "style": "cartoon3d",
+    "style_prompt": "山谷白天的自然光，日照充足、画面明亮通透；主色是暖调大地色（土黄、灰绿、石灰白），天空是均匀的高亮浅蓝；中饱和、干净通透，没有颗粒与噪点",
+    "total_duration_s": 31,
+    "stage": "story",
+    "approvals": {
+      "story": null,
+      "shots": null,
+      "assets": null,
+      "keyframes": null
+    },
+    "music": null,
+    "final_video": null
+  },
+  "story": {
+    "synopsis": "一支三人小队走出山谷口，走上一条横切坡面的土路。走在最前面的领队先停住——路中间立着一根比它还高的木棍，棍子后头站着一只直立的拟人地鼠，头上缠着褪色的红头巾，肩上斜挎一只鼓鼓的麻布袋，掌心朝上摊开，冲着他们伸出来。壮汉往前一步，地鼠不躲，反而把木棍往地上顿了一下。对峙几秒后，地鼠从麻布袋里抓出一把东西——不是刀，是路上捡的小石子、一枚瓶盖和半块饼干——郑重地放进摊开的掌心里，摆明了这是它的买卖。领队看了一眼壮汉，从口袋里掏出一枚硬币，放在地鼠掌心。地鼠收手、侧身让开半步，用木棍敲了两下地面。三个人绕过它继续往前走；地鼠蹲下来，把那枚硬币放进麻布袋最深的地方，重新把木棍立好，掌心又朝上摊开，等着下一拨。",
+    "beats": [
+      {
+        "text": "三个人走出山谷口，沿着土路往画面深处走；远处路中间立着一个细长的影子，三个人谁都没有看它",
+        "purpose": "钩子：观众比角色先看见路上的异常。可疑物是画在画面里的、不是写在台词里的——先在观众心里立起「那是什么」，人物却毫无防备地往前走",
+        "emotion": "轻快、毫无防备"
+      },
+      {
+        "text": "走近了才看清：一根木棍横在路中间，棍子后头站着一只直立的拟人地鼠，掌心朝上摊开；走在最前面的苏晴先停住脚，老周跟着停下，阿禾从两个人身后探出头",
+        "purpose": "建立：拦路者出现。地鼠的体型、那根高于它的木棍和鼓鼓的麻袋先于任何台词交代它的来路——它在这儿拦了很久了",
+        "emotion": "一愣"
+      },
+      {
+        "text": "老周往前迈了一步，地鼠不躲，反而把木棍往地上顿了一下；随即它腾出手伸进麻袋，掏出的不是刀，是路上捡的小石子、一枚瓶盖和半块饼干，郑重地放进摊开的掌心",
+        "purpose": "反转，独立成拍：观众比角色先看明白这是「买卖」而不是「抢劫」，角色还在戒备。地鼠掏东西并郑重摆放的那一拍就是笑点的落点",
+        "emotion": "戒备转成错愕，观众先笑"
+      },
+      {
+        "text": "苏晴放下一枚硬币；地鼠收手、侧身让开半步、用木棍敲了两下地。三个人绕过它继续往前走，地鼠蹲下来把硬币放进麻袋最深处，重新把木棍立好，站回原来的位置，掌心又朝上摊开",
+        "purpose": "落点：生意谈成了。最后一拍定格在它重新立好棍子、摊开掌心等下一拨——「抢劫」这个定义被彻底改写成「营生」，情绪在这里兑现",
+        "emotion": "松快、带一点暖"
+      }
+    ],
+    "tone": "轻松荒诞、带一点暖意",
+    "ending": "地鼠把那枚硬币收进麻袋最深处，重新把木棍立好，站回原来的位置，掌心又朝上摊开，等下一拨过路人",
+    "source": "片名：此路是我开\n风格：精致 3D 卡通\n时长：约 20 秒\n\n人物设定\n\n苏晴：二十九岁女性，短发齐耳、中分，深灰绿防风夹克配卡其长裤、磨旧登山鞋，背一只帆布挎包；小队里走在最前面的人\n老周：四十二岁男性，寸头，络腮胡茬，卡其工装背心内搭灰色棉 T，肩背厚实，小臂一道旧疤\n阿禾：十四岁男孩，圆脸带雀斑，蓝色连帽卫衣，抱一只军绿水壶\n地鼠：一只直立的拟人地鼠，深棕色绒毛，圆肚短腿，褪色红头巾在脑后打结，斜挎一只鼓鼓的麻布袋，身边立着一根比它还高的木棍\n\n场次一 【外】山谷口·土路 【白天】\n\n△ 两面山壁在画面中间收成一道口子，一条土路从口子里伸出来。\n△ 苏晴第一个走出谷口，回身朝里招了下手。\n△ 老周跟在后面，肩上搭着外套；阿禾抱着军绿水壶走在最后，边走边回头看了一眼山壁。\n△ 三个人沿着土路往画面深处走，脚下的碎石在滚。\n△ 远处路中间立着一个细长的影子，三个人谁都没有看它。\n苏晴：今晚之前要翻过那道梁。\n△ 阿禾又回头看了一眼，那个细长的影子还在原处。\n\n场次二 【外】土路中段·拦路点 【白天】\n\n△ 木棍横在路中间，棍子后头站着一只直立的拟人地鼠，掌心朝上摊开，冲着来人伸出去。\n△ 苏晴先停住脚，老周跟着停下，阿禾从两个人身后探出头。\n△ 地鼠不躲，反而把木棍往地上顿了一下，脚下的尘土扬起来。\n地鼠：此路是我开。\n△ 老周往前迈了一步，手按在阿禾肩上。\n△ 地鼠把木棍插回原处，腾出手伸进斜挎的麻布袋里，掏出一把东西——不是刀，是路上捡的小石子、一枚瓶盖和半块饼干——郑重地放进摊开的掌心里。\n△ 苏晴看了一眼老周，从夹克口袋里摸出一枚硬币，走上前，把硬币放在地鼠的掌心上。\n△ 地鼠收手，侧身让开半步，用木棍在地上敲了两下。\n阿禾：……它要的是瓶盖？\n苏晴：走吧。\n△ 三个人绕过地鼠继续往前走，脚步越来越远。\n△ 地鼠蹲下来，把那枚硬币放进麻布袋最深的地方，重新把木棍立好，站回原来的位置，掌心又朝上摊开。\n\n（完）\n"
+  },
+  "characters": [
+    {
+      "id": "su_qing",
+      "name": "苏晴",
+      "species": "human",
+      "age_group": "youth",
+      "face_prompt": "二十九岁的东亚女性；鹅蛋脸，下颌线清晰；杏眼、双眼皮，眼尾平；眉形平直偏浓；鼻梁挺直、鼻头圆润；嘴唇偏薄，唇色自然；皮肤是晒过太阳的暖调小麦色，颧骨上有一层浅浅的晒红；黑色短发齐耳、中分，发丝利落贴头",
+      "identities": [
+        "su_qing_trail"
+      ],
+      "portrait": "assets/su_qing_portrait.png",
+      "voice": "清亮干脆的年轻女声，语速偏快，尾音收得干净"
+    },
+    {
+      "id": "lao_zhou",
+      "name": "老周",
+      "species": "human",
+      "age_group": "middle",
+      "face_prompt": "四十二岁的东亚男性；方脸，下颌宽厚，颧骨突出；单眼皮，眼角有细纹；鼻梁宽、鼻翼厚；唇上一圈短而密的胡茬，下巴也有；肤色是长期在户外的深麦色，额头有两道横向抬头纹；寸头，发际线略高",
+      "identities": [
+        "lao_zhou_trail"
+      ],
+      "portrait": "assets/lao_zhou_portrait.png",
+      "voice": "低沉厚实的男中音，话少，尾音往下压"
+    },
+    {
+      "id": "a_he",
+      "name": "阿禾",
+      "species": "human",
+      "age_group": "child",
+      "face_prompt": "十四岁的东亚男孩；圆脸，脸颊饱满、带细密雀斑；眼睛圆而大、双眼皮，眼距略宽；鼻梁短、鼻头圆；嘴唇偏厚；皮肤白皙，日晒后鼻梁有轻微泛红；黑色短发，发丝细软，额前碎发翘起",
+      "identities": [
+        "a_he_trail"
+      ],
+      "portrait": "assets/a_he_portrait.png",
+      "voice": "清瘦的少年音，声音偏小，句尾习惯性上扬"
+    },
+    {
+      "id": "di_shu",
+      "name": "地鼠",
+      "species": "gopher_anthropomorphic",
+      "age_group": "youth",
+      "face_prompt": "一只拟人化的地鼠；头部圆而宽，口鼻短钝，两颗门牙露在唇外；眼睛小而圆、眼距宽，眼周一圈深色绒毛；两颊各有一撮向外炸开的长毛；耳朵是贴头的小圆耳；头顶与背部的毛是深棕色，脸颊与腹部是浅米色；鼻头是粉褐色",
+      "identities": [
+        "di_shu_bandit"
+      ],
+      "portrait": "assets/di_shu_portrait.png",
+      "voice": "尖细而一本正经的说话声，语速慢，每个字都咬得很清楚"
+    }
+  ],
+  "identities": [
+    {
+      "id": "su_qing_trail",
+      "character": "su_qing",
+      "name": "苏晴 山谷行军造型",
+      "appearance_details": "深灰绿色防风夹克（拉链拉到胸口、下摆到胯，面料有细密斜纹），内搭浅灰色速干长袖；下身是卡其色直筒长裤，膝盖处有磨白；脚上是深棕色磨旧登山鞋，鞋面有褶皱和泥点。左肩斜挎一只米色帆布挎包，包身软塌、肩带宽。全片造型不变",
+      "costume_image": null,
+      "sheet": "assets/su_qing_trail_sheet.png",
+      "reference_images": [],
+      "voice_ref": null
+    },
+    {
+      "id": "lao_zhou_trail",
+      "character": "lao_zhou",
+      "name": "老周 山谷行军造型",
+      "appearance_details": "卡其色多口袋工装背心（肩部有磨痕），内搭灰色棉质短袖 T 恤、袖口卷起；下身是深军绿色长裤，裤脚塞进深棕色短靴。一件深灰色抓绒外套搭在肩上，没有穿在身上。全片造型不变",
+      "costume_image": null,
+      "sheet": "assets/lao_zhou_trail_sheet.png",
+      "reference_images": [],
+      "voice_ref": null
+    },
+    {
+      "id": "a_he_trail",
+      "character": "a_he",
+      "name": "阿禾 山谷行军造型",
+      "appearance_details": "蓝色连帽卫衣（帽子放下堆在颈后，前襟有拉链），下身是深灰色运动长裤，脚上是灰色布面运动鞋。怀里抱一只军绿色旧水壶，壶身有磕碰掉漆，背带松松绕着。全片造型不变",
+      "costume_image": null,
+      "sheet": "assets/a_he_trail_sheet.png",
+      "reference_images": [],
+      "voice_ref": null
+    },
+    {
+      "id": "di_shu_bandit",
+      "character": "di_shu",
+      "name": "地鼠 劫匪造型",
+      "appearance_details": "褪色的暗红色头巾缠在头顶、在脑后打一个结，巾角垂在右肩；斜挎一只鼓鼓的土黄色粗麻布袋，袋口用麻绳收着，肩带勒进绒毛里；除此之外不穿任何衣物。全片造型不变",
+      "costume_image": null,
+      "sheet": "assets/di_shu_bandit_sheet.png",
+      "reference_images": [],
+      "voice_ref": null
+    }
+  ],
+  "scenes": [
+    {
+      "id": "valley_mouth",
+      "name": "山谷口·土路（白天）",
+      "environment": "山谷口，白天，16:9 横幅。两面陡峭的岩壁在画面中央收成一道窄口，岩壁是灰褐色层积岩，表面有纵向裂纹和干枯的灌木；一条黄褐色土路从窄口里伸出来，往画面纵深延伸，路面上有浅车辙和散落的碎石。画面右侧是低矮的枯草坡，左侧岩壁根部堆着几块落石。远处是层层叠叠的灰蓝色山脊，越远越淡。天空是均匀的高亮浅蓝色，没有云。",
+      "time_of_day": "白天",
+      "scene_no": 1,
+      "master": "assets/valley_mouth_master.png",
+      "reverse_master": null,
+      "spatial_layout": null
+    },
+    {
+      "id": "roadblock",
+      "name": "土路中段·拦路点（白天）",
+      "environment": "山谷土路的中段，白天，16:9 横幅。土路在这里横切一段缓坡，路面是压实的黄褐色泥土，中间有两道浅浅的车辙，两侧散着碎石和干草。画面右侧是一道低矮的土坎，坎上长着几丛枯黄的灌木；画面左侧是缓坡，坡面覆着稀疏的短草。远处是连绵的灰蓝色山脊。天空是均匀的高亮浅蓝色，没有云。",
+      "time_of_day": "白天",
+      "scene_no": 2,
+      "master": "assets/roadblock_master.png",
+      "reverse_master": null,
+      "spatial_layout": null
+    }
+  ],
+  "props": [
+    {
+      "id": "di_shu_stick",
+      "name": "地鼠的木棍",
+      "description": "一根没有削过的天然木棍，浅褐色，表面留着树皮和几道疤节，自下而上略微弯曲变细，长度约到成年人胸口；底端有泥土磨痕。没有刻字、没有系绳、没有钉子",
+      "owner": "di_shu",
+      "ref_image": "assets/di_shu_stick_ref_image.png"
+    },
+    {
+      "id": "di_shu_sack",
+      "name": "地鼠的麻布袋",
+      "description": "一只土黄色粗麻布袋，布面粗糙、有织纹和两处补丁，袋口用一根麻绳系着，袋身因为装满小东西而鼓出不规则的棱角。没有文字和图案",
+      "owner": "di_shu",
+      "ref_image": "assets/di_shu_sack_ref_image.png"
+    }
+  ],
+  "shots": [
+    {
+      "id": "s01",
+      "scene": "valley_mouth",
+      "cast": [
+        "su_qing_trail"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "全景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢前推",
+      "action": "两面山壁在画面中间收成一道口子，一条土路从口子里伸出来。 苏晴第一个走出谷口，回身朝里招了下手。",
+      "prompt": "{{su_qing_trail}}，两面山壁在画面中间收成一道口子，一条土路从口子里伸出来。 苏晴第一个走出谷口，回身朝里招了下手。，全景，缓慢前推",
+      "audio": "树叶摩擦的沙沙声与踩在石板路上的脚步声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        14,
+        15
+      ]
+    },
+    {
+      "id": "s02",
+      "scene": "valley_mouth",
+      "cast": [
+        "lao_zhou_trail",
+        "a_he_trail"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "全景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢前推",
+      "action": "老周跟在后面，肩上搭着外套；阿禾抱着军绿水壶走在最后，边走边回头看了一眼山壁。 三个人沿着土路往画面深处走，脚下的碎石在滚。",
+      "prompt": "{{lao_zhou_trail}}、{{a_he_trail}}，老周跟在后面，肩上搭着外套；阿禾抱着军绿水壶走在最后，边走边回头看了一眼山壁。 三个人沿着土路往画面深处走，脚下的碎石在滚。，全景，缓慢前推",
+      "audio": "树叶摩擦的沙沙声与踩在石板路上的脚步声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        16,
+        17
+      ]
+    },
+    {
+      "id": "s03",
+      "scene": "valley_mouth",
+      "cast": [
+        "su_qing_trail"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "近景",
+      "lighting": "均匀自然光",
+      "camera": "固定镜头",
+      "action": "远处路中间立着一个细长的影子，三个人谁都没有看它。",
+      "prompt": "{{su_qing_trail}}，远处路中间立着一个细长的影子，三个人谁都没有看它。，近景，固定镜头",
+      "audio": "树叶摩擦的沙沙声与踩在石板路上的脚步声",
+      "dialogue": [
+        {
+          "character": "su_qing_trail",
+          "text": "今晚之前要翻过那道梁。",
+          "emotion": "",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        18,
+        19
+      ]
+    },
+    {
+      "id": "s04",
+      "scene": "valley_mouth",
+      "cast": [
+        "a_he_trail"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "阿禾又回头看了一眼，那个细长的影子还在原处。",
+      "prompt": "{{a_he_trail}}，阿禾又回头看了一眼，那个细长的影子还在原处。，中景，缓慢横移",
+      "audio": "树叶摩擦的沙沙声与踩在石板路上的脚步声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        20
+      ]
+    },
+    {
+      "id": "s05",
+      "scene": "roadblock",
+      "cast": [
+        "su_qing_trail",
+        "lao_zhou_trail",
+        "a_he_trail",
+        "di_shu_bandit"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "木棍横在路中间，棍子后头站着一只直立的拟人地鼠，掌心朝上摊开，冲着来人伸出去。 苏晴先停住脚，老周跟着停下，阿禾从两个人身后探出头。",
+      "prompt": "{{su_qing_trail}}、{{lao_zhou_trail}}、{{a_he_trail}}、{{di_shu_bandit}}，木棍横在路中间，棍子后头站着一只直立的拟人地鼠，掌心朝上摊开，冲着来人伸出去。 苏晴先停住脚，老周跟着停下，阿禾从两个人身后探出头。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        24,
+        25
+      ]
+    },
+    {
+      "id": "s06",
+      "scene": "roadblock",
+      "cast": [
+        "di_shu_bandit"
+      ],
+      "props": [],
+      "duration_s": 2,
+      "shot_size": "近景",
+      "lighting": "均匀自然光",
+      "camera": "固定镜头",
+      "action": "地鼠不躲，反而把木棍往地上顿了一下，脚下的尘土扬起来。",
+      "prompt": "{{di_shu_bandit}}，地鼠不躲，反而把木棍往地上顿了一下，脚下的尘土扬起来。，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "di_shu_bandit",
+          "text": "此路是我开。",
+          "emotion": "",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        26,
+        27
+      ]
+    },
+    {
+      "id": "s07",
+      "scene": "roadblock",
+      "cast": [
+        "lao_zhou_trail",
+        "a_he_trail",
+        "di_shu_bandit"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "老周往前迈了一步，手按在阿禾肩上。 地鼠把木棍插回原处，腾出手伸进斜挎的麻布袋里，掏出一把东西——不是刀，是路上捡的小石子、一枚瓶盖和半块饼干——郑重地放进摊开的掌心里。",
+      "prompt": "{{lao_zhou_trail}}、{{a_he_trail}}、{{di_shu_bandit}}，老周往前迈了一步，手按在阿禾肩上。 地鼠把木棍插回原处，腾出手伸进斜挎的麻布袋里，掏出一把东西——不是刀，是路上捡的小石子、一枚瓶盖和半块饼干——郑重地放进摊开的掌心里。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        28,
+        29
+      ]
+    },
+    {
+      "id": "s08",
+      "scene": "roadblock",
+      "cast": [
+        "su_qing_trail",
+        "lao_zhou_trail",
+        "di_shu_bandit"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "苏晴看了一眼老周，从夹克口袋里摸出一枚硬币，走上前，把硬币放在地鼠的掌心上。 地鼠收手，侧身让开半步，用木棍在地上敲了两下。",
+      "prompt": "{{su_qing_trail}}、{{lao_zhou_trail}}、{{di_shu_bandit}}，苏晴看了一眼老周，从夹克口袋里摸出一枚硬币，走上前，把硬币放在地鼠的掌心上。 地鼠收手，侧身让开半步，用木棍在地上敲了两下。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        30,
+        31
+      ]
+    },
+    {
+      "id": "s09",
+      "scene": "roadblock",
+      "cast": [
+        "a_he_trail"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "近景",
+      "lighting": "均匀自然光",
+      "camera": "固定镜头",
+      "action": "阿禾开口说话",
+      "prompt": "{{a_he_trail}}，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "a_he_trail",
+          "text": "……它要的是瓶盖？",
+          "emotion": "",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        32
+      ]
+    },
+    {
+      "id": "s10",
+      "scene": "roadblock",
+      "cast": [
+        "su_qing_trail"
+      ],
+      "props": [],
+      "duration_s": 2,
+      "shot_size": "近景",
+      "lighting": "均匀自然光",
+      "camera": "固定镜头",
+      "action": "苏晴开口说话",
+      "prompt": "{{su_qing_trail}}，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "su_qing_trail",
+          "text": "走吧。",
+          "emotion": "",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        33
+      ]
+    },
+    {
+      "id": "s11",
+      "scene": "roadblock",
+      "cast": [
+        "di_shu_bandit"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "三个人绕过地鼠继续往前走，脚步越来越远。 地鼠蹲下来，把那枚硬币放进麻布袋最深的地方，重新把木棍立好，站回原来的位置，掌心又朝上摊开。",
+      "prompt": "{{di_shu_bandit}}，三个人绕过地鼠继续往前走，脚步越来越远。 地鼠蹲下来，把那枚硬币放进麻布袋最深的地方，重新把木棍立好，站回原来的位置，掌心又朝上摊开。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        34,
+        35
+      ]
+    }
+  ]
+}

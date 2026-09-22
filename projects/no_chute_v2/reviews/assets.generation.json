@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "stage": "assets",
+  "at": "2026-09-20T14:43:38.851Z",
+  "provider": "comfyui",
+  "model": "local-comfyui",
+  "requested_provider": null,
+  "artifacts": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\assets\\coach_portrait.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\assets\\xiaoya_portrait.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\assets\\coach_gear_sheet.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\assets\\xiaoya_jumpsuit_sheet.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\assets\\altitude_ext_master.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\assets\\cabin_door_master.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\assets\\cabin_int_master.png"
+  ]
+}

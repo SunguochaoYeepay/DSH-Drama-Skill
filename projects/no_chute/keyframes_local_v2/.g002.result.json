@@ -1,0 +1,33 @@
+{
+  "ok": true,
+  "mode": "edit",
+  "kind": "image",
+  "prompt_id": "adb0f493-90e7-43d2-976e-fbc3baf2a83d",
+  "params": {
+    "mode": "edit",
+    "width": 1152,
+    "height": 2048
+  },
+  "seed_used": 1481227092,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\img\\Qwen_edit_00252_.png",
+      "filename": "Qwen_edit_00252_.png",
+      "subfolder": "img",
+      "type": "output",
+      "kind": "image",
+      "exists": true,
+      "bytes": 2707655,
+      "url": "http://127.0.0.1:8188/view?filename=Qwen_edit_00252_.png&subfolder=img&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute\\keyframes_local_v2\\edit_20260920-184332.png"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute\\keyframes_local_v2\\edit_20260920-184332.png"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute\\keyframes_local_v2",
+  "prompt_used": "电影级写实摄影，手持纪实质感，旧金属与磨损漆面的粗糙纹理，自然光下的真实肤色，轻微手持晃动。\n机舱内始终比门外暗，门洞是全画面最亮的高光区；人物在门洞前呈半剪影。\n35mm；浅景深，背景柔化分离；机位视线高度。\n请把参考图中的教练和小雅放进同一个镜头，整体风格严格遵循：写实电影质感：实拍级皮肤、毛发与布料细节，金属蒙皮的磨损、掉漆与锈迹清晰可见；中低饱和，轻微手持晃动与自然光学暗角。图1是场景参考，只参考环境、光线和色调；图2是教练的身份参考，严格保持此人的脸、发型和服装；图3是小雅的身份参考，严格保持此人的脸、发型和服装。\n画面必须同时出现且只出现教练和小雅两个人。两人的脸都必须清楚可辨。\n中景，画面下边界切在人物的腰部。\n机舱内部，她站在画面右侧、面朝画面左侧；教练站在画面左侧，一只手已经握住门框。画面截取两人腰部以上，机位在舱内、从她身后偏侧方向越过她的肩看向教练与敞开的门洞，门洞在她前方、是画面里最亮的区域。教练背上的伞包与她背上的双肩包都在画面内可见。\n主光方向：侧门方向，逆光偏强；光质：硬光与自然散射混合；光比：高反差，机内暗部压暗，门外高光过曝；色温：暖调 4200K；轮廓光：门口高光勾出人物轮廓边缘。\n保持参考图的角色身份、体型比例和体表材质。不得重设计脸部或头部特征、毛发、皮肤、服装与配饰。\n画面中不要出现文字、字幕、水印、logo、边框或拼图。",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 34.9
+}

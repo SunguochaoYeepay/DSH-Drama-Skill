@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "849854f9-0d14-46df-a8b7-51684abfd604",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 141,
+    "seconds": 5.88,
+    "profile": "fast",
+    "attention": "vsa",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+    "vsa": true
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00184_.mp4",
+      "filename": "H3_i2v_00184_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 1214335,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00184_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\units\\i2v_20260920-103604.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\units\\i2v_20260920-103604.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\pot_hit\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] a medium close-up shot of 女生 —— 女生的可见表演：下巴抬起、脖子后仰，眉毛微微皱起，肩膀仍然放松，双手垂在身侧没有抬起；视线：看向自己正上方，二十多岁的东亚女性；鹅蛋脸偏长，五官立体，眼睛偏长、双眼皮明显；鼻梁挺直；嘴唇偏薄；眉形上扬；皮肤白皙、有真实毛孔与自然油光。；牛仔热裤 + 低胸细吊带背心 + 细跟高跟鞋；长直黑发披肩；无首饰、无外搭。全片衣着本身不变。，仰角近景：她抬着头往上看，眉毛微微皱起；她头顶正上方的画面上缘，那只陶质花盆带着一丛绿植直直落进画面、由小变大，白天日光平直略阴，仰角下她脸上没有硬光影，天空是灰白的。\n[Shot 2] At 02.50 seconds, the camera cuts to a medium shot of 女生 —— 女生的可见表演：上身在被砸的一瞬间僵住、头往前一顿，肩颈随即放松重新站直，一只手下意识抬到耳边，脚步没有移动；视线：被砸之后视线向下垂到脚前的台阶上；表演边界：嘴角形态服从上述可见表演，不额外改变情绪方向，二十多岁的东亚女性；鹅蛋脸偏长，五官立体，眼睛偏长、双眼皮明显；鼻梁挺直；嘴唇偏薄；眉形上扬；皮肤白皙、有真实毛孔与自然油光。；牛仔热裤 + 低胸细吊带背心 + 细跟高跟鞋；长直黑发披肩；无首饰、无外搭。全片衣着本身不变。，花盆砸中她的头顶，陶土当场碎开，泥土和碎叶顺着她的头发和肩膀洒下来；她的头被砸得往前一顿、身体晃了一下，又站住了，同前，平光；碎土落下时在灰白的天光里显出一层浮尘。\n\noverall_soundscape: 上方传来陶盆在水泥上刮了一下、随后脱落的短响 陶土碎裂的闷响，碎土洒落在衣服和台阶上的沙沙声\n\nnon_diegetic_music: N/A",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 44.8
+}

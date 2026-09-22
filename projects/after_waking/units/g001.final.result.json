@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "f330f9ec-0f57-4bde-ad3a-5604d85c302b",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 260,
+    "seconds": 10.83,
+    "profile": "fast",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+    "vsa": true
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00161_.mp4",
+      "filename": "H3_i2v_00161_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 1583787,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00161_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\after_waking\\units\\i2v_20260917-232045.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\after_waking\\units\\i2v_20260917-232045.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\after_waking\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] a medium close-up shot of 陈屿 —— 陈屿的可见表演：手背朝上，五指半张，按下手机后没有收回，动作拖沓；视线：视线朝下落在手机上；表演边界：嘴角形态服从上述可见表演，不额外改变情绪方向，十九岁东亚面孔，圆脸偏鹅蛋形，眉眼干净，双眼皮，鼻梁挺直，唇形偏薄，右眉尾一颗小痣；浅粉色棉质睡裙，裙长过膝，无花纹，短袖；黑色长直发垂到腰际，发梢自然微卷；赤脚，一只白净细长的手从被子里伸出来，摸到枕边震动的手机，按下去，屋里重新安静，手停在手机上不动，摄影机缓慢前推，清晨斜光落在被面上，手机屏幕的冷白光映在手背上。\n[Shot 2] At 03.00 seconds, the camera cuts to a medium close-up shot of 陈屿 —— 陈屿的可见表演：手掌停在半空一动不动，眉头向内收，肩膀微微抬起；视线：视线落在自己停住的那只手上，十九岁东亚面孔，圆脸偏鹅蛋形，眉眼干净，双眼皮，鼻梁挺直，唇形偏薄，右眉尾一颗小痣；浅粉色棉质睡裙，裙长过膝，无花纹，短袖；黑色长直发垂到腰际，发梢自然微卷；赤脚，陈屿在被子里翻了个身，一只手僵在半空停住，眉头向内收拢，嘴唇动了两下开口说话，清晨斜光从侧面扫过脸颊，眼下还带着刚醒的红。 陈屿 (S1)，半睡半醒，声音发飘，说道：<d>[Chinese] ……什么情况。</d>。\n[Shot 3] At 06.00 seconds, the camera cuts to a medium shot of 陈屿 —— 陈屿的可见表演：双手来回翻动，指节张开又收拢，肩背绷直，上身略往前压；视线：死死盯着自己的手掌；表演边界：嘴角形态服从上述可见表演，不额外改变情绪方向，十九岁东亚面孔，圆脸偏鹅蛋形，眉眼干净，双眼皮，鼻梁挺直，唇形偏薄，右眉尾一颗小痣；浅粉色棉质睡裙，裙长过膝，无花纹，短袖；黑色长直发垂到腰际，发梢自然微卷；赤脚，陈屿坐在床上，被子堆在腰际，低头盯着自己的手，把手翻过来又翻过去，指尖一根根张开，清晨斜光落在被子和手臂上，房间里其余部分偏暗。\n[Shot 4] At 09.00 seconds, the camera cuts to a close-up shot of 陈屿 —— 陈屿的可见表演：手指捏着发梢，手臂僵在半空，瞳孔放大，嘴唇张开；视线：视线钉在手里的头发上；表演边界：嘴角形态服从上述可见表演，不额外改变情绪方向，十九岁东亚面孔，圆脸偏鹅蛋形，眉眼干净，双眼皮，鼻梁挺直，唇形偏薄，右眉尾一颗小痣；浅粉色棉质睡裙，裙长过膝，无花纹，短袖；黑色长直发垂到腰际，发梢自然微卷；赤脚，她抓起垂到胸口的一把及腰长发，慢慢举到眼前，手臂僵在半空，瞳孔一缩，嘴唇张开，摄影机缓慢前推，清晨斜光穿过发丝，发梢透出暖色边缘光。 陈屿 (S1)，急促，音量拔高，说道：<d>[Chinese] 不是吧——</d>。\n\noverall_soundscape: 手机在枕边震动，被料摩擦的沙沙声，随后归于安静 被料翻动之后的静场，只有很轻的呼吸声 床垫受压的轻响，被子滑落的摩擦声 头发从睡衣肩头滑过的细碎摩擦声\n\nnon_diegetic_music: N/A\n\non_screen_text: none. No subtitles, no captions, no text overlays of any kind.",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 91.5
+}

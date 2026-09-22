@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "6210052a-c0ca-4a83-985a-dccdae13b16f",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 141,
+    "seconds": 5.88,
+    "profile": "fast",
+    "attention": "vsa",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+    "vsa": true
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00196_.mp4",
+      "filename": "H3_i2v_00196_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 1508287,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00196_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute\\units\\i2v_20260920-202134.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute\\units\\i2v_20260920-202134.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: 电影级写实摄影，手持纪实质感，旧金属与磨损漆面的粗糙纹理，自然光下的真实肤色，轻微手持晃动\nStyle negatives: NEVER 线稿, NEVER 水彩, NEVER 日系动画, NEVER 厚涂插画, NEVER CG 渲染感, NEVER 塑料质感, NEVER 高光溢出成死白斑块.\n[Shot 1] a extreme long shot of 教练与小雅 —— 教练的可见表演：背对敞开的门站着，肩背挺直，背上鼓而厚的包把肩带压出明显的褶；视线：朝向机舱内侧；小雅的可见表演：并排站在他旁边，风衣下摆被门外灌进来的风朝外抽动，背上那只瘪的包贴着后背；视线：朝向机舱内侧，四十出头的东亚男性；脸型偏方、下颌线硬，颧骨明显；眉骨高、眉毛浓而短，眼角有风霜晒出的细纹；眼睛偏长、眼窝略深；鼻梁直、鼻头略宽；嘴唇偏厚、唇色暗；皮肤偏深、粗糙，有真实毛孔、胡茬与被高空日晒晒出的斑驳感；黑色短发、鬓角略长；深棕色旧款飞行夹克，内搭深色圆领 T 恤，卡其色工装长裤，深色系带作战靴。背上背着一只完整的跳伞伞包：包身鼓鼓囊囊、方形、深色尼龙材质，宽而厚的背带勒在双肩，胸前有一道横向的扣具带。护目镜推在额头上。全片装备不变；二十多岁的东亚女性；鹅蛋脸，下颌线柔和；眼睛大而圆、双眼皮明显、眼窝浅；鼻梁细直、鼻头小巧；嘴唇饱满、唇色自然；眉毛平直偏淡；皮肤白皙干净，有真实毛孔与自然油光；黑色长发扎成高马尾，额前有碎发；上半身一件半透明的长款风衣（风衣里面是黑色运动背心，不透肤）；背着一只普通的日常双肩包——包身瘪、体积小、肩带细，是一只普通背包，不是伞包。身上没有任何伞包、宽背带、伞绳、扣具或其他降落伞装备。下身是黑色紧身瑜伽裤；脚上是白色运动鞋。黑色长发扎成高马尾。全片造型不变，高空云层里，一架漆面斑驳的螺旋桨飞机从画面右侧飞进来、持续朝画面左侧飞，螺旋桨转成一片模糊的圆盘；云层从右往左流过机身。机身侧门敞开着，门洞里透出机舱内的暖光，光里并排站着两个很小的身影，背对敞开的门、面朝机舱内侧；能看出一个人背上的包鼓而厚、另一个人背上的包瘪而薄，Lens and framing: 24mm lens. 浅景深，背景柔化分离. camera at 视线高度.，Lighting: key light direction: 侧门方向，逆光偏强; light quality: 硬光与自然散射混合; lighting ratio: 高反差，机内暗部压暗，门外高光过曝; colour temperature: 暖调 4200K; rim light: 门口高光勾出人物轮廓边缘.，机身在明亮云层的背景前接近剪影，门洞里的暖光是画面中唯一的暖色；云层顶部有一层薄薄的高光。\nGlobal rules:\n- door_light: 机舱内始终比门外暗，门洞是全画面最亮的高光区；人物在门洞前呈半剪影，不得让人脸与门外天空亮度一致\n- no_chute: 女跳伞员身上不得出现任何伞包、背带、伞绳或降落伞装备 —— 她没有背伞，这是本片的核心事实\n- motion: 飞机恒定向画面左侧飞行，云层与地面相对向右流动；跳伞员离机后向画面下方且略偏右远去，不得向上或向左\n\noverall_soundscape: 高空的风噪与螺旋桨的低沉轰鸣，远近没有别的声音\n\nnon_diegetic_music: N/A",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 45.7
+}

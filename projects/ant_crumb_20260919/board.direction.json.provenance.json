@@ -1,0 +1,11 @@
+{
+  "contract": 1,
+  "provider": "bailian",
+  "model": "qwen3.8-max",
+  "response_model": "qwen3.8-max",
+  "board_sha256": "e07065196f2730121b75c2e12b6eee1d46b345284f8857419d89a1aea832e4be",
+  "board_identity_sha256": "f65290c96fd06f8d0aff08f2f778f2e6df471702eb66942fc7057a29f3543fd6",
+  "story_sha256": "beac0d3d95f5ea665e6552dc1f1365179f2e46a89dfe005af479049190a9a5cb",
+  "direction_sha256": "2bd862991e0972fc99b86ff8a8086a866aaa6eb073816cdb6d0bafca0eb3c297",
+  "recorded_at": "2026-09-19T08:54:13.282Z"
+}

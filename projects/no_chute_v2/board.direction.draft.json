@@ -1,0 +1,423 @@
+{
+  "logline": "用一次知情错位撑起全片：教练习惯把最关键的一句留在最后说，她把训练口令当成执行信号——两个各自合理的行为叠在一起，意外就有了来路。第一单元只交代「在哪儿」：高空、一架飞着的旧飞机、敞开的门洞里站着两个人，但不把人拍大；第二单元才把人提到主体，在舱门口把「她背上不是伞包」埋进画面；起跳与反转各自独立成单元，让笑点落在第四单元的空白里。",
+  "version": 6,
+  "units": [
+    {
+      "id": "u1",
+      "boundary_trigger": "opening",
+      "keyframe_cast": [],
+      "audience_knows": "观众看见高空、一架正在飞的旧螺旋桨飞机、机身侧门敞开着——敞开的门洞里空着，还没有任何人出现。观众不知道门里等一下会站着谁，也不知道这架飞机上正酝酿什么。",
+      "why": "开场只交代「在哪儿」：高空、云层、一架正在飞的旧飞机、敞开的舱门。人一个都不出现——远景里的人物本来就不承担叙事任务，而且实测里远景加人物只会让模型把人放大、挪出门口；把「有谁」整个让给第二单元，观众先看见一架空着门的飞机，再在第二拍看见门里站着两个人，悬念顺着空间递进来。单镜到底，切分会把「这是哪儿」讲碎。",
+      "duration_reason": "无台词。飞机从画面右侧进入、持续朝画面左侧飞，云层从右往左流过机身需要 5.2 秒；单镜到底，不需要内部切分。",
+      "keyframe_start": "0 秒时：9:16 竖幅远景，画面以飞机与云层为主。一架漆面斑驳的单引擎螺旋桨飞机完整处在画面中部偏右、机头朝画面左侧飞行，机头螺旋桨转成一片半透明的模糊圆盘；机身侧面舱门敞开着、门板朝外翻开，因为舱内比舱外暗，敞开着的门洞是机身上一个偏暗的矩形开口，开口里空着、没有任何人；机位在飞机斜前方、与机身同高的水平视角。画面中可见整架飞机、云层、敞开的侧门与空着的门洞；画面里没有任何人，门洞里里外外都是空的。",
+      "end_state": "飞机仍在画面里持续朝画面左侧飞行，云层从右往左流过机身；敞开的门洞里仍然空着，没有出现任何人。",
+      "continuity": {
+        "mode": "independent",
+        "reason": "开场单元，无前段可承接"
+      },
+      "action_complexity": {
+        "level": "low",
+        "high_risk_events": [],
+        "strategy": "none"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 5.2,
+          "framing": "远景",
+          "camera": "固定",
+          "scene": "altitude_ext",
+          "on_screen": [],
+          "props": [],
+          "rule_overrides": {
+            "door_light": "",
+            "motion": ""
+          },
+          "action": "高空云层里，一架漆面斑驳的螺旋桨飞机持续朝画面左侧飞行，机头螺旋桨转成一片半透明的模糊圆盘，白色云层从画面右侧朝左侧流过机身；机身侧面的舱门敞开着，门洞是机身上一个偏暗的矩形开口，开口里空着。这一镜里没有任何人出现：门洞里里外外都是空的，没有身影、没有轮廓；画面里只有飞机在飞、云在流动。",
+          "emotion_analysis": [],
+          "lighting": "高空强自然日光，机身在明亮云层的背景前略压暗、接近剪影，金属蒙皮上有磨损与掉漆的高光；云层顶部有一层薄薄的高光。",
+          "lines": [],
+          "audio": "高空的风噪与螺旋桨的低沉轰鸣，远近没有别的声音"
+        }
+      ]
+    },
+    {
+      "id": "u2",
+      "boundary_trigger": "scene_change",
+      "keyframe_cast": [
+        "coach_gear",
+        "xiaoya_jumpsuit"
+      ],
+      "audience_knows": "观众已经看清两人站在舱门口：教练背上鼓着厚伞包、宽背带勒在肩头，她背上只是一只瘪的日常双肩包——但观众还不知道那只背包不是伞包，也不知道教练的话还没说完。她以为教练交代完了，教练也以为下一句来得及说。",
+      "why": "伏笔必须落在这一单元：上一单元是远景，包看不清；只有把两人提到主体、拍成斜侧身，才能同时做到脸可辨与包可见——正面拍只能看到肩带、背面拍又看不到脸。教练开口、她应答、她转身跳出去是同一段连续表演，中间不能换世界，放在同一次生成里用单元内切镜完成。",
+      "duration_reason": "教练第一句台词最低 3.3 秒；她应答与拍教练胳膊 1.9 秒；她转身跨出门洞 1.5 秒；合计 7.0 秒。",
+      "keyframe_start": "0 秒时：机舱内部，画面从舱内朝敞开的侧门方向看，截取两人腰部以上。机位在两人左侧前方约 45 度的斜侧方向，两人因此呈四分之三侧身对着镜头——斜侧是为了同时拿到脸和背包：正面只能看见肩带，背面又看不见脸。教练在画面左侧、身体已经转向她、一只手握住门框，尚未开口；她在他右侧、略靠前半个身位，尚未点头、尚未抬手。教练背上鼓鼓囊囊的方形伞包与宽厚背带在侧后方完整可见，她背上那只瘪而小的日常双肩包在侧后方同样可见。门洞在他们身侧偏后方，是画面里最亮的过曝区；舱内暗部压暗。两人都还没有移动，也没有人说出一个字。",
+      "end_state": "门洞里已空，只剩翻涌的云与门框；教练仍站在门边内侧，一只手抓着门框，身体尚未扑出去，视线朝着门外的方向。",
+      "continuity": {
+        "mode": "independent",
+        "reason": "场景从机外切到舱门口、机位与景别完全重置；两人的身份由肖像与造型身份图锚定，不需要上一段的实际产物"
+      },
+      "action_complexity": {
+        "level": "medium",
+        "high_risk_events": [
+          {
+            "at_s": 5.6,
+            "type": "appearance_or_disappearance",
+            "description": "她转身跨出敞开的门洞，从画面中消失，门洞里只剩云"
+          }
+        ],
+        "strategy": "single_transition"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 3.6,
+          "framing": "中景",
+          "camera": "固定，轻微手持晃动",
+          "scene": "cabin_door",
+          "on_screen": [
+            "coach_gear",
+            "xiaoya_jumpsuit"
+          ],
+          "props": [],
+          "facing": {
+            "coach_gear": "right",
+            "xiaoya_jumpsuit": "left"
+          },
+          "looks_at": [
+            {
+              "who": "coach_gear",
+              "at": "xiaoya_jumpsuit"
+            },
+            {
+              "who": "xiaoya_jumpsuit",
+              "at": "coach_gear"
+            }
+          ],
+          "optics": {
+            "depth_of_field": "中景深，两人的面部、背包与肩带清晰锐利，仅背景云层轻微柔化"
+          },
+          "lighting_setup": {
+            "key_direction": "敞开的门洞方向，侧逆光偏强",
+            "fill": "机舱内壁的散射反光把脸的四分之三侧面补亮，五官清楚可辨"
+          },
+          "rule_overrides": {
+            "door_light": "机舱内比门外暗，门洞是全画面最亮的高光区；人物呈侧逆光，脸的四分之三侧面被舱内散射光与门口反射光照亮、五官清楚可辨，但人脸亮度明显低于门洞外的过曝天空",
+            "motion": ""
+          },
+          "action": "教练一手抓住门框、转身面对她，提高嗓门压过引擎声对她说话；她站在他面前，风把她的半透明风衣吹得鼓起来，衣摆朝门外的方向抽动。两人全程对视，谁都没有移动脚步。",
+          "emotion_analysis": [
+            {
+              "character": "coach_gear",
+              "cause": "他习惯把最重要的一句留在最后说，此刻正按流程先给常规指令",
+              "internal_state": "稳住她的意图明确，语气是职业性的笃定",
+              "visible_behavior": "眉头微蹙，下颌用力，嘴部张开说话，握门框的手指收紧，肩膀正对她",
+              "gaze": "始终看着她",
+              "avoid_symbols": [
+                "咧嘴笑",
+                "惊慌",
+                "不耐烦的皱眉"
+              ]
+            },
+            {
+              "character": "xiaoya_jumpsuit",
+              "cause": "她把「按之前操练的来」听成了完整指令，正在确认自己准备好了",
+              "internal_state": "被鼓励后的笃定，有一点急于证明自己",
+              "visible_behavior": "嘴唇闭合，肩背挺直，下颌微抬，头部有轻微上下点动",
+              "gaze": "始终看着教练",
+              "avoid_symbols": [
+                "胆怯低头",
+                "夸张大笑",
+                "眨眼卖萌"
+              ]
+            }
+          ],
+          "lighting": "舱内偏暗，敞开的门洞过曝发白；人物侧逆光，脸的四分之三侧面被补亮、五官清楚可辨",
+          "lines": [
+            23
+          ],
+          "audio": "引擎轰鸣压过一切，舱内金属震动"
+        },
+        {
+          "n": 2,
+          "at": 3.6,
+          "cut": "the camera cuts to",
+          "duration_s": 1.9,
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "cabin_door",
+          "on_screen": [
+            "xiaoya_jumpsuit"
+          ],
+          "props": [],
+          "facing": {
+            "xiaoya_jumpsuit": "left"
+          },
+          "rule_overrides": {
+            "motion": ""
+          },
+          "action": "她点头，抬手在教练的胳膊上拍了两下，嘴唇张开说话，随后重心前移、肩膀开始转向门洞的方向。",
+          "emotion_analysis": [
+            {
+              "character": "xiaoya_jumpsuit",
+              "cause": "她要让教练放心，同时已经把动作接到了训练流程的下一步",
+              "internal_state": "干脆、不犹豫",
+              "visible_behavior": "头部上下点动一次，手掌拍在教练上臂两下，嘴角上扬但幅度很小，随后肩膀带动上身开始转向门洞",
+              "gaze": "先看着教练，随后转向门外的方向",
+              "avoid_symbols": [
+                "夸张大笑",
+                "眼泪",
+                "惊恐"
+              ]
+            }
+          ],
+          "lighting": "门洞的强光从她身后偏侧打过来，勾出她的轮廓边缘，脸的正面被舱内散射光补亮",
+          "lines": [
+            25
+          ],
+          "audio": "引擎轰鸣，风声"
+        },
+        {
+          "n": 3,
+          "at": 5.5,
+          "cut": "the shot cuts to",
+          "duration_s": 1.5,
+          "framing": "全景",
+          "camera": "固定",
+          "scene": "cabin_door",
+          "on_screen": [
+            "coach_gear",
+            "xiaoya_jumpsuit"
+          ],
+          "props": [],
+          "action": "她转身朝敞开的门洞跨出去，身体向前一扑，人出了门；门洞里的光一下子空了，只剩翻涌的云和高空的风声。教练仍站在门边，一只手抓着门框。",
+          "emotion_analysis": [
+            {
+              "character": "xiaoya_jumpsuit",
+              "cause": "她按训练动作执行离机，没有任何犹豫",
+              "internal_state": "执行动作的专注",
+              "visible_behavior": "肩背前倾，腿蹬地后身体向外扑出，随后整个人离开画面",
+              "gaze": "朝向门外的方向",
+              "avoid_symbols": [
+                "回头张望",
+                "挥手告别",
+                "惊恐表情"
+              ]
+            },
+            {
+              "character": "coach_gear",
+              "cause": "他看着她扑出去，话还卡在半句上",
+              "internal_state": "话没说完的错愕，还没转成恐慌",
+              "visible_behavior": "身体僵在原地一瞬，握门框的手没有松开，嘴部仍保持张开说话的形状",
+              "gaze": "看向门洞的方向",
+              "avoid_symbols": [
+                "大笑",
+                "微笑",
+                "闭眼"
+              ]
+            }
+          ],
+          "lighting": "门洞空出后成为画面里最亮的一块，舱内更暗",
+          "lines": [],
+          "audio": "引擎轰鸣，风声忽然变大"
+        }
+      ]
+    },
+    {
+      "id": "u3",
+      "boundary_trigger": "state_transition_anchor",
+      "keyframe_cast": [
+        "coach_gear"
+      ],
+      "audience_knows": "教练知道她没背伞、也知道她已经跳了；观众在这一拍才第一次知道「她没背伞」这件事（回头看，第二单元她背上那只瘪背包就是伏笔）；她人在机外，什么都听不见。",
+      "why": "反转必须独立成拍。她离机是不可逆的状态转换，教练从站立到扑向门边是新的空间关系，两者都需要一个新的稳定锚点；和起跳挤在同一单元会让情绪被稀释，也会让生成时两个高风险转换互相污染。",
+      "duration_reason": "他扑向门边需要 1.8 秒，台词最低约 2.5 秒，喊完后的喘息与风声停顿 0.9 秒；合计 5.2 秒。",
+      "keyframe_start": "机舱内，教练站在敞开的门边内侧，身体朝向画面右侧的门洞方向，一只手尚未抓住门框、上半身尚未探出。画面截取他膝盖以上，机位在舱内、从他侧后方约一米半处拍过去，能看到他的侧脸、门框和门洞外过曝的云层，他的身体呈半剪影。画面里只有他一个人。他尚未扑向门边，也尚未开口喊叫；她已经不在画面里。",
+      "end_state": "教练上半身探在门框外，双手抓着门框，头朝画面下方，嘴部仍张着；门洞外是翻涌的云层，画面里没有第二个人。",
+      "continuity": {
+        "mode": "reference_previous",
+        "previous_unit": "u2",
+        "deferred_keyframe": true,
+        "allowed_changes": "景别从全景收到中景、机位从舱内正面移到他侧后方；教练的服装、身份、门框结构与舱内明暗关系不变。"
+      },
+      "action_complexity": {
+        "level": "medium",
+        "high_risk_events": [
+          {
+            "at_s": 1.2,
+            "type": "large_displacement",
+            "description": "教练从站立位置扑到门边，上半身探出门框外"
+          }
+        ],
+        "strategy": "single_transition"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 1.8,
+          "framing": "中景",
+          "camera": "跟随",
+          "scene": "cabin_int",
+          "on_screen": [
+            "coach_gear"
+          ],
+          "props": [],
+          "rule_overrides": {
+            "motion": ""
+          },
+          "action": "教练转身朝敞开的门洞扑过去，两步跨到门边，一把握住门框，肩膀撞在门框边缘。",
+          "emotion_analysis": [
+            {
+              "character": "coach_gear",
+              "cause": "她已经跳出去了，而最关键的那句还没说出口",
+              "internal_state": "急迫、话被卡住的慌张",
+              "visible_behavior": "肩背前倾，步幅大且重心压低，手指张开去抓门框，嘴部张开",
+              "gaze": "死死盯着门洞外",
+              "avoid_symbols": [
+                "微笑",
+                "从容",
+                "闭眼"
+              ]
+            }
+          ],
+          "lighting": "舱内偏暗，门洞过曝发白",
+          "lines": [],
+          "audio": "引擎轰鸣，风声灌进舱内"
+        },
+        {
+          "n": 2,
+          "at": 1.8,
+          "cut": "the shot cuts to",
+          "duration_s": 3.4,
+          "framing": "近景",
+          "camera": "固定，轻微手持晃动",
+          "scene": "cabin_int",
+          "on_screen": [
+            "coach_gear"
+          ],
+          "props": [],
+          "rule_overrides": {
+            "motion": ""
+          },
+          "action": "他上半身探出门框外，头朝画面下方，扯着嗓子朝下面大喊；风把他的衣领吹得翻起来，头发被吹乱。",
+          "emotion_analysis": [
+            {
+              "character": "coach_gear",
+              "cause": "他要把那半句话追着喊出去，喊的是她最要命的一件事",
+              "internal_state": "焦急到失态，但仍是职业性的喊叫不是崩溃",
+              "visible_behavior": "脖颈青筋鼓起，眉毛上抬，嘴部大幅张开，双手死死抓着门框，上半身尽量往外探",
+              "gaze": "朝画面下方，看向舱外",
+              "avoid_symbols": [
+                "微笑",
+                "哭泣流泪",
+                "闭眼"
+              ]
+            }
+          ],
+          "lighting": "门洞外的强光勾出他的轮廓边缘，脸的正面落在舱内的暗部",
+          "lines": [
+            28
+          ],
+          "audio": "引擎轰鸣，风声，他的喊声被风撕开"
+        }
+      ]
+    },
+    {
+      "id": "u4",
+      "boundary_trigger": "spatial_reset",
+      "keyframe_cast": [
+        "coach_gear"
+      ],
+      "audience_knows": "观众知道她没伞、正在往下掉；她自己此刻也反应过来了（所以才有那句从远处飘回来的话）；教练跪在门边，同样知道。三方第一次知情同步——笑点在这里炸开，而不是停在惊吓里。",
+      "why": "这是情绪落点，空间要从「他朝门外喊」重置到「他看着空掉的天空」。用镜头下摇把云层和黑点带进画面，避免为了换主体多切一刀；第二镜再退回到他跪着的姿态定格。",
+      "duration_reason": "镜头下摇露出云层、黑点坠入云中需要 2.6 秒；画外音最低约 1.8 秒；落点留白 0.8 秒；合计 5.2 秒。",
+      "keyframe_start": "承接上一段尾帧：教练上半身探在敞开的门洞外，双手抓着门框，头朝画面下方。画面截取他腰部以上，机位在舱内、从他侧后方拍过去，门洞占据画面上半部分、过曝发白，他的身体呈半剪影，脸的正面落在暗部。画面里只有他一个人。他尚未跪下，也尚未把视线收回；下方的云层尚未进入画面，要等镜头下摇才露出来。",
+      "end_state": "教练跪在敞开的门洞边，双手仍抓着门框，头垂着；门洞外是空的天空，画面里没有任何第二个人。",
+      "continuity": {
+        "mode": "reference_previous",
+        "previous_unit": "u3",
+        "deferred_keyframe": true,
+        "allowed_changes": "机位从他侧后方略退、景别从近景退到中景；教练的服装、身份、门框结构与舱内明暗关系不变。"
+      },
+      "action_complexity": {
+        "level": "medium",
+        "high_risk_events": [
+          {
+            "at_s": 1.8,
+            "type": "appearance_or_disappearance",
+            "description": "云层里那个下坠的小黑点钻进云中，从画面里消失"
+          }
+        ],
+        "strategy": "single_transition"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 2.6,
+          "framing": "中景",
+          "camera": "缓慢下摇",
+          "scene": "cabin_int",
+          "on_screen": [
+            "coach_gear"
+          ],
+          "props": [],
+          "action": "教练仍抓着门框、上半身探在门外；镜头顺着他的视线朝画面下方缓慢下摇，露出下方翻涌的云层，一个很小的黑点正快速向画面右下方坠落，越来越小，随后钻进云里看不见了。",
+          "emotion_analysis": [
+            {
+              "character": "coach_gear",
+              "cause": "他喊完了，但那个人已经掉进云里，追不回来了",
+              "internal_state": "喊出去之后的空落，焦急转为无力",
+              "visible_behavior": "抓门框的手指没有松开，肩膀塌下来，嘴部仍微张，头随着下摇的方向低下去",
+              "gaze": "朝画面下方追着那个点",
+              "avoid_symbols": [
+                "微笑",
+                "大笑",
+                "从容站起"
+              ]
+            }
+          ],
+          "lighting": "舱内暗，门洞与云层过曝发白",
+          "lines": [],
+          "audio": "引擎轰鸣，风声持续"
+        },
+        {
+          "n": 2,
+          "at": 2.6,
+          "cut": "the shot cuts to",
+          "duration_s": 2.6,
+          "framing": "中景",
+          "camera": "固定，轻微手持晃动",
+          "scene": "cabin_int",
+          "on_screen": [
+            "coach_gear"
+          ],
+          "props": [],
+          "action": "教练跪在敞开的门洞边，双手仍抓着门框，头垂着；风把他的衣领吹起来。门洞外是空的天空，什么都没有。",
+          "emotion_analysis": [
+            {
+              "character": "coach_gear",
+              "cause": "画外传来她那句带着抱怨的回话，他知道自己晚了一步",
+              "internal_state": "被噎住的无奈，不是悲恸",
+              "visible_behavior": "双膝跪在铁皮地板上，上身前倾靠着门框，头部低垂，手指仍扣在门框上没有松开",
+              "gaze": "垂向舱内地板，不看门外",
+              "avoid_symbols": [
+                "哭泣",
+                "大笑",
+                "仰望天空的戏剧化姿势"
+              ]
+            }
+          ],
+          "lighting": "门洞是画面里唯一的高光区，空无一人；他的身体是暗部里的剪影",
+          "lines": [
+            33
+          ],
+          "audio": "引擎轰鸣持续，风声灌进舱内，那句回话像是从很远的地方飘进来"
+        }
+      ]
+    }
+  ]
+}

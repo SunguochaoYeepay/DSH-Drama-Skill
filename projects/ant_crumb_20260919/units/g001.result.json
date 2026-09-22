@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "cf1f985b-3fa2-4782-b45a-d4cbcda3f530",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 158,
+    "seconds": 6.58,
+    "profile": "fast",
+    "attention": "vsa",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+    "vsa": true
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00170_.mp4",
+      "filename": "H3_i2v_00170_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 1172457,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00170_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\units\\i2v_20260919-185940.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\units\\i2v_20260919-185940.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\ant_crumb_20260919\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] a medium shot of 小蚂蚁 —— 小蚂蚁的可见表演：步态轻快有节奏→突然停步，身体前倾，眼睛睁大，瞳孔放大，触角从摆动变为静止前探；视线：从平视前方转为朝画面上方看去，拟人化小蚂蚁，圆润身体、大眼睛、两根细触角，可爱治愈微距卡通造型，不是人类也不是昆虫写实标本；具体造型待人物造型师确认；拟人化小蚂蚁，深棕色圆润身体，大眼睛，两根细触角，六条小短腿（前足可作手用），无衣物；具体造型待人物造型师确认，小蚂蚁在草叶间轻快地走着，小短腿快速交替，触角随步伐微微摆动；忽然脚步停住，身体微微前倾，大眼睛忽地一亮，柔和暖调自然光从画面上方洒下，草叶边缘有细腻光晕。（警告：第 3 行没有台词原文）（警告：第 4 行没有台词原文）（警告：第 5 行没有台词原文）（警告：第 6 行没有台词原文）\n[Shot 2] At 03.00 seconds, the camera cuts to a medium close-up shot of 小蚂蚁 —— 小蚂蚁的可见表演：触角快速竖起弹直，嘴巴张成O形，眼睛放光瞳孔放大，身体微微后仰，脸颊微微鼓起；视线：朝画面上方盯着碎屑方向，拟人化小蚂蚁，圆润身体、大眼睛、两根细触角，可爱治愈微距卡通造型，不是人类也不是昆虫写实标本；具体造型待人物造型师确认；拟人化小蚂蚁，深棕色圆润身体，大眼睛，两根细触角，六条小短腿（前足可作手用），无衣物；具体造型待人物造型师确认，近景看小蚂蚁的脸：触角'唰'地竖直弹起，嘴巴张成一个小圆形，大眼睛里映出金黄色的光点，整个表情从惊讶变为狂喜，摄影机缓慢前推，暖光映在蚂蚁脸上，眼中反射出金色光点。\n\noverall_soundscape: 轻快的小碎步声，草叶沙沙 一声清脆的'叮'音效，表示发现\n\nnon_diegetic_music: N/A\n\non_screen_text: none. No subtitles, no captions, no text overlays of any kind.",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 59.5
+}

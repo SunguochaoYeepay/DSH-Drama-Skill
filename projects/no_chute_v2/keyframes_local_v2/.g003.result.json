@@ -1,0 +1,33 @@
+{
+  "ok": true,
+  "mode": "edit",
+  "kind": "image",
+  "prompt_id": "97c1bf9e-787d-4b58-a861-41d44300695d",
+  "params": {
+    "mode": "edit",
+    "width": 1152,
+    "height": 2048
+  },
+  "seed_used": 999770028,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\img\\Qwen_edit_00275_.png",
+      "filename": "Qwen_edit_00275_.png",
+      "subfolder": "img",
+      "type": "output",
+      "kind": "image",
+      "exists": true,
+      "bytes": 2429353,
+      "url": "http://127.0.0.1:8188/view?filename=Qwen_edit_00275_.png&subfolder=img&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\keyframes_local_v2\\edit_20260920-230251.png"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\keyframes_local_v2\\edit_20260920-230251.png"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\no_chute_v2\\keyframes_local_v2",
+  "prompt_used": "请把参考图中的教练放进同一个镜头，整体风格严格遵循：写实电影质感：实拍级皮肤、毛发与布料细节，金属蒙皮的磨损、掉漆与锈迹清晰可见；中低饱和，轻微手持晃动与自然光学暗角。图1是上一段视频的实际稳定尾帧，必须继承其中的角色姿态、位置、朝向和空间关系，只能改变导演明确允许的项目；图2是场景参考，只参考环境、光线和色调；图3是教练的身份参考，严格保持此人的脸、发型和服装。\n中景，画面下边界切在人物的腰部。\n机舱内，教练站在敞开的门边内侧，身体朝向画面右侧的门洞方向。画面截取他膝盖以上，机位在舱内、从他侧后方约一米半处拍过去，能看到他的侧脸、门框和门洞外过曝的云层，他的身体呈半剪影。画面里只有他一个人。她已经不在画面里。\n保持参考图的角色身份、体型比例和体表材质。不得重设计脸部或头部特征、毛发、皮肤、服装与配饰。\n画面中不要出现文字、字幕、水印、logo、边框或拼图。",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 34.4
+}

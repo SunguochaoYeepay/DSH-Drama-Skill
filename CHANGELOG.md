@@ -2,6 +2,39 @@
 
 记录工程级行为变化。具体剧目的抽卡结果、耗时和逐帧评价留在对应项目目录，不写入这里。
 
+## 2026-09-22 - 工程化收编：工具进仓 + 剧目进仓 + 独立看板 + 依赖自检
+
+起因：用户指出工程"分裂"——运行时和工具链在 C 盘、代码在 D 盘、剧目产物在 E 盘，
+别人拿仓库跑不起来；看个剧目还得先起 DSH。三项拍板（收编工具 / 看板独立 /
+二期数据库），本日落地前两项。
+
+- **工具收编**：`vendor/comfy-studio/` 收 `gen.py / graphs.py / routes.py` 快照
+  （⚠ 上游改了不会自动跟，要跟就三个一起重拷并回归）；`bailian-cli@1.26.0` 钉版本
+  进 `package.json`（与全局装的旧版本一致，防行为漂移）。`src/runtime-paths.mjs` 的
+  `COMFY_GEN` 默认指向仓内 vendor、`BAILIAN_ENTRY` 默认指向 `node_modules`（全局装为回退），
+  环境变量覆盖照旧。
+- **剧目进仓**：22 个剧目从 `E:\AI-Tool\...\projects\` 复制进仓库 `projects/`
+  （源目录原样保留作快照，不再往那里写）。`.gitignore` 改为分层：`projects/**/*`
+  全忽略 + 放行目录与 `.json/.md/.txt`（690 个契约文件入库），媒体/二进制照旧挡住
+  （含 fat_cat 里误放的 85MB ffmpeg.exe）；`costs.json/current.json/.gen-result.json`
+  等运行态在放行后重新压回忽略。**项目根硬规则随之改：一律建在本仓库 `projects\` 下。**
+- **独立看板 `web/`**：`npm run kanban` 起 `http://127.0.0.1:8787`，零第三方依赖
+  （node:http + 原生 JS 页面），不需要 DSH。数据层 `src/board-data.mjs` 与
+  `tests/kanban.test.mjs` 共用同一份读取契约。**只读红线**：人工票仍由
+  `cli/review-gate.mjs` 在用户明确说「通过」后落笔，看板不代签。
+  两个实测坑已修：① 导演单元（u1…）与计划单元（g001…）**不是一套编号**，
+  可执行视图必须以 `render.plan.json` 为权威；② 老项目 `result.json` 里的
+  `local_path` 是当时所在盘的绝对路径，项目搬迁后落项目外 —— 退回
+  「末级目录名/文件名」在项目内找同名拷贝。
+- **新增 `cli/doctor.mjs`（`npm run doctor`）**：依赖自检逐项报有/缺（gen.py /
+  ComfyUI Python / ffmpeg / 百炼 CLI 必需；Docker 可选；`--json` 供测试断言）。
+  这是"干净机器能跑起来"的验收仪器。
+- `README.md`：新增「从零跑起来」章节；「项目工作区」从"仓库外 E 盘"改为"仓库内
+  `projects\`"。
+- 测试：新增 `tests/kanban.test.mjs`（5 条，数据层纯函数 + 真起服务的 HTTP 行为 +
+  目录穿越防护）、`tests/doctor.test.mjs`（2 条，`loadEnvFile` 不覆盖已注入环境变量，
+  用 `AIH_*` 钉住每项依赖的位置）。全量 46→48 个测试文件通过。
+
 ## 2026-09-21 - 两个排查工具转正 + 临时脚本落点约定（治"脚手架堆成垃圾场"）
 
 起因：仓库根目录堆了 11 个 `.tmp-*.mjs`（昨天另一条工作线留下），`.tmp/` 里另有 120 项，

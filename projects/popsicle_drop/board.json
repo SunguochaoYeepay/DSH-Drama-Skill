@@ -1,0 +1,175 @@
+{
+  "meta": {
+    "title": "最后一口",
+    "project": "popsicle_drop",
+    "logline": "放学路上的女生舍不得浪费最后一口，专注地吮着快融化的冰棍，冰棍却从手里滑脱，掉在了地上。",
+    "genre": "生活喜剧",
+    "language": "zh-CN",
+    "aspect": "9:16",
+    "style": "realistic",
+    "style_prompt": "写实电影摄影，夏日午后自然光，高光偏暖、阴影柔和，浅景深与背景轻微虚化，低饱和，轻微胶片颗粒，生活纪实质感",
+    "total_duration_s": 8,
+    "stage": "story",
+    "approvals": {
+      "story": null,
+      "shots": null,
+      "assets": null,
+      "keyframes": null
+    },
+    "music": null,
+    "final_video": null
+  },
+  "story": {
+    "synopsis": "放学路上的女生握着一根只剩小半截、正在融化的冰棍，专注地吮着，舍不得松口。就在她贪恋最后一口的时候，冰棍从湿滑的指间脱出，啪地掉在地上，化开一小摊。她低头盯着那截冰棍，嘴唇还微微张着，愣在原地，只剩一声轻轻的「哎」。",
+    "beats": [
+      {
+        "text": "放学路上，女生握着只剩小半截的冰棍专注地吮，眼睛微眯，舍不得松口",
+        "purpose": "建立「贪恋」的人物状态，把观众的注意力收到嘴上那个动作上",
+        "emotion": "满足、专注"
+      },
+      {
+        "text": "冰棍已经化得软烂，糖水顺着木棍淌下来，滴在她手背上",
+        "purpose": "把「快融化、快握不住」的临界状态交代清楚，为脱手蓄势",
+        "emotion": "满足里带一丝急切"
+      },
+      {
+        "text": "她指尖一滑，那截冰棍从指间脱出，啪地摔在地上，化开一小摊",
+        "purpose": "全片的事件本身：转折落点，把「贪恋」的代价摆在画面里",
+        "emotion": "猝然"
+      },
+      {
+        "text": "她低头盯着地上的冰棍，嘴唇微张，愣住不动，轻轻「哎」了一声",
+        "purpose": "情绪落点：把这场小惨剧的惋惜与好笑同时交给观众，不解释、不总结",
+        "emotion": "惋惜、发懵"
+      }
+    ],
+    "tone": "轻快、生活化、带一点自嘲",
+    "ending": "冰棍掉在地上碎开，女生低头看着它愣在原地——不补救、不反转，止于这一声感叹",
+    "source": "第一场 外景 街边人行道 午后\n\n齐肩短发的女生穿着背带裤，手握一根只剩小半截的冰棍，专注地吮着，眼睛微眯，舌头抵住快要化掉的冰面舍不得松口。糖水顺着木棍淌下来，滴在她手背上。\n\n她指尖一滑，那截冰棍从指间脱出，啪地摔在地上，化开一小摊。\n\n女生：哎……\n\n她低头盯着地上那根冰棍，嘴唇还微微张着，愣住不动。"
+  },
+  "characters": [
+    {
+      "id": "girl",
+      "name": "女生",
+      "species": "human",
+      "age_group": "youth",
+      "face_prompt": "鹅蛋脸，下颌线条圆润，单眼皮、眼型细长，鼻梁小巧挺直，唇形饱满；自然黑齐肩短发，发尾微内扣，额前碎刘海",
+      "identities": [
+        "girl_campus"
+      ],
+      "portrait": "assets/girl_portrait.png",
+      "voice": "清亮偏软的年轻女声，语速偏慢，尾音略带拖腔"
+    }
+  ],
+  "identities": [
+    {
+      "id": "girl_campus",
+      "character": "girl",
+      "name": "校园常服",
+      "appearance_details": "浅蓝色牛仔背带裤，内搭白色圆领短袖T恤，脚穿白色帆布鞋；体型瘦高、肩部偏窄；发型与面部设定一致（自然黑齐肩短发、发尾微内扣、额前碎刘海）",
+      "costume_image": null,
+      "sheet": "assets/girl_campus_sheet.png",
+      "reference_images": [],
+      "voice_ref": null
+    }
+  ],
+  "scenes": [
+    {
+      "id": "sidewalk",
+      "name": "夏日午后街边人行道",
+      "environment": "夏日午后的人行道，阳光偏暖，树影斑驳落在柏油路面上，道旁有绿化和轻微虚化的街景",
+      "time_of_day": "午后",
+      "scene_no": 1,
+      "master": "assets/sidewalk_master.png",
+      "reverse_master": null,
+      "spatial_layout": null
+    }
+  ],
+  "props": [],
+  "shots": [
+    {
+      "id": "s01",
+      "scene": "sidewalk",
+      "cast": [
+        "girl_campus"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "全景",
+      "lighting": "偏暖侧光",
+      "camera": "缓慢前推",
+      "action": "齐肩短发的女生穿着背带裤，手握一根只剩小半截的冰棍，专注地吮着，眼睛微眯，舌头抵住快要化掉的冰面舍不得松口。糖水顺着木棍淌下来，滴在她手背上。 她指尖一滑，那截冰棍从指间脱出，啪地摔在地上，化开一小摊。",
+      "prompt": "{{girl_campus}}，齐肩短发的女生穿着背带裤，手握一根只剩小半截的冰棍，专注地吮着，眼睛微眯，舌头抵住快要化掉的冰面舍不得松口。糖水顺着木棍淌下来，滴在她手背上。 她指尖一滑，那截冰棍从指间脱出，啪地摔在地上，化开一小摊。，全景，缓慢前推",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        3,
+        5
+      ]
+    },
+    {
+      "id": "s02",
+      "scene": "sidewalk",
+      "cast": [
+        "girl_campus"
+      ],
+      "props": [],
+      "duration_s": 2,
+      "shot_size": "近景",
+      "lighting": "偏暖侧光",
+      "camera": "固定镜头",
+      "action": "女生开口说话",
+      "prompt": "{{girl_campus}}，近景，固定镜头",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [
+        {
+          "character": "girl_campus",
+          "text": "哎……",
+          "emotion": "",
+          "kind": "spoken"
+        }
+      ],
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        7
+      ]
+    },
+    {
+      "id": "s03",
+      "scene": "sidewalk",
+      "cast": [],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "偏暖侧光",
+      "camera": "缓慢横移",
+      "action": "她低头盯着地上那根冰棍，嘴唇还微微张着，愣住不动。",
+      "prompt": "她低头盯着地上那根冰棍，嘴唇还微微张着，愣住不动。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        9
+      ]
+    }
+  ]
+}

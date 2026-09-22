@@ -1,0 +1,145 @@
+{
+  "version": 1,
+  "source_logline": "一镜享受、一镜失落——用景别从紧到松的切换外化'失去'的瞬间",
+  "policy": {
+    "target_seconds": 10,
+    "max_seconds": 15,
+    "min_generation_seconds": 5.17,
+    "split_on_cast_change": false,
+    "director_owns_unit_boundaries": true,
+    "preserves_director_shots": true
+  },
+  "units": [
+    {
+      "id": "g001",
+      "source_units": [
+        "u1"
+      ],
+      "boundary_reason": "end",
+      "content_duration_s": 8,
+      "generation_duration_s": 8,
+      "keyframe": "keyframes_render/g001.png",
+      "cast": [
+        "girl_campus"
+      ],
+      "scene": "sidewalk",
+      "props": [],
+      "why": "同一角色、同一场景、连续时间内的单一事件（冰棍脱手→反应），无需重置空间或身份锚点，适合一次生成完成",
+      "duration_reason": "镜头1：享受吮冰棍约2.5秒＋冰棍滑脱约1.5秒＝4秒；镜头2：愣住反应约1秒＋台词最低1.2秒＋尾部留白约1.8秒＝4秒；合计8秒",
+      "keyframe_start": "0秒时她双手握着冰棍木棍将冰面抵在唇边，舌头轻抵冰面，眼睛微眯，尚未松口；近景，画面截取肩部以上，竖构图将她面部置于画面中上部，冰棍位于画面中部偏下；机位正前方略偏右，浅景深虚化背景树影；画面中仅girl_campus一人，冰棍仍在她手中；冰棍尚未脱手，她尚未低头",
+      "keyframe_cast": [
+        "girl_campus"
+      ],
+      "action_complexity": {
+        "level": "medium",
+        "high_risk_events": [
+          {
+            "at_s": 3.5,
+            "type": "possession_change",
+            "description": "冰棍从她指间脱出，由手中持有变为落地"
+          }
+        ],
+        "strategy": "single_transition"
+      },
+      "end_state": "她站在人行道上保持静止，身体微微前倾，目光向下注视画面下方地面方向，嘴唇微张，双手自然垂在身侧，冰棍已不在手中",
+      "continuity": {
+        "mode": "independent",
+        "reason": "开场单元，无前段可承接"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 4,
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "sidewalk",
+          "on_screen": [
+            "girl_campus"
+          ],
+          "props": [],
+          "action": "她双手握着冰棍木棍，将所剩无几的冰面抵在唇边轻轻吮吸，眼睛微眯享受；约3.5秒时指尖一滑，冰棍从指间脱出向下坠落离开画面",
+          "emotion_analysis": [
+            {
+              "character": "girl_campus",
+              "cause": "夏日午后，她正在享用最后一口冰棍",
+              "internal_state": "满足、专注在小确幸里",
+              "visible_behavior": "眼睛微眯，眉头舒展，嘴唇包裹冰面，肩部放松下沉",
+              "gaze": "目光微微向下看着手中的冰棍",
+              "avoid_symbols": [
+                "瞪大眼睛",
+                "嘴巴大张",
+                "惊恐表情"
+              ]
+            }
+          ],
+          "lighting": "午后暖阳斜照，树影斑驳落在她肩头和背景，光比柔和",
+          "lines": [],
+          "audio": "远处蝉鸣，轻微街道环境白噪音",
+          "source": {
+            "unit": "u1",
+            "shot": 1
+          }
+        },
+        {
+          "n": 2,
+          "at": 4,
+          "cut": "the camera cuts to",
+          "duration_s": 4,
+          "framing": "中景",
+          "camera": "固定",
+          "scene": "sidewalk",
+          "on_screen": [
+            "girl_campus"
+          ],
+          "props": [],
+          "facing": {
+            "girl_campus": "toward"
+          },
+          "action": "她微微低头，目光向下注视画面下方（冰棍落地的方向），嘴唇微张，身体静止不动，愣住；随后轻轻发出一声叹息般的反应",
+          "emotion_analysis": [
+            {
+              "character": "girl_campus",
+              "cause": "冰棍刚从手中滑落摔在地上，正在化开",
+              "internal_state": "短暂的错愕和惋惜，还没到难过，只是愣住了",
+              "visible_behavior": "嘴唇微微张开未闭合，眉头轻蹙但不夸张，身体僵住不动，双手自然垂落",
+              "gaze": "目光向下看向画面下方地面",
+              "avoid_symbols": [
+                "微笑",
+                "大笑",
+                "夸张哭泣",
+                "愤怒咬牙"
+              ]
+            }
+          ],
+          "lighting": "同前，午后暖阳，树影斑驳",
+          "lines": [
+            7
+          ],
+          "audio": "蝉鸣持续，冰棍落地后轻微的融化声（几乎不可闻）",
+          "source": {
+            "unit": "u1",
+            "shot": 2
+          }
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "content_duration_s": 8,
+    "projected_delivery_duration_s": 8,
+    "keyframe_count": 1
+  },
+  "provenance": {
+    "contract": 1,
+    "project_id": "popsicle_drop",
+    "board_identity_sha256": "89fe609aed2417c91e804e36dc1361cf33ed557917fe084d5449faa7219b71bc",
+    "story_sha256": "95782c5031f1d3298c1ca3d91492ae19a676e2acf2a050284b8cdb3d663d0f4b",
+    "direction_sha256": "9c6eb089bfbd1cc0edffcddd8fe75abfa0aae4de3d5d1fcaf3c84205e1be439b",
+    "direction_receipt_sha256": "813e1628cc27421802b88d8424c82be261c78ebce557ef48fc82344fabeed5a1",
+    "direction_version": 6,
+    "direction_file": "board.direction.json",
+    "bound_at": "2026-09-18T14:32:28.527Z",
+    "plan_units_sha256": "5a0dedd972b3a304f41ca229da113d2ec1ff6285a70e709dad17566515a71ea4"
+  }
+}

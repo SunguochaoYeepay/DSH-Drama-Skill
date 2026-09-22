@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "1f48f9d5-4aa1-4fb8-bfa3-cd52f2271d5e",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 260,
+    "seconds": 10.83,
+    "profile": "fast",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+    "vsa": true
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00159_.mp4",
+      "filename": "H3_i2v_00159_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 1997356,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00159_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\units\\i2v_20260917-161215.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\units\\i2v_20260917-161215.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\beach_mosquito\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] a medium close-up shot of 苏晚与陆晨 —— 苏晚 facing the right side of the frame，陆晨 facing the left side of the frame，苏晚始终注视陆晨，头部、眼睛和瞳孔都明确朝向对方，全过程不看镜头；陆晨始终注视苏晚，头部、眼睛和瞳孔都明确朝向对方，全过程不看镜头；苏晚的可见表演：眉头紧皱，眼睛瞪圆，右手按住右肩，下颌绷紧；视线：盯着陆晨；陆晨的可见表演：身体微前倾，双手抬起，掌心朝向苏晚，嘴唇准备开口；视线：看着苏晚，东亚女性面孔，二十多岁，鹅蛋脸偏尖下巴，杏眼双眼皮，眼尾略上挑，鼻梁挺直鼻头小巧，唇形饱满唇峰明显，长卷发深棕近黑、发尾自然外翻，皮肤小麦色但细腻，右眉尾有一颗很小的浅褐色痣，**画面下边界切在锁骨上方**，画面里只有头部与颈部与裸露的双肩，颈部以下画面即结束；黑色三角比基尼上衣，细肩带，下装为高腰米白色沙滩裹裙，裙摆到膝上，赤脚，右手腕一条细银链，右肩肩头有一枚极小的黑色纹身，看上去只是肩上一点细小的黑点，不描摹图案、不放大；东亚男性面孔，二十多岁，长方脸下颌线清晰，单眼皮细长眼，眉毛平直略粗，鼻梁高挺，嘴唇偏薄，黑色短碎发发际线整齐，皮肤偏白有轻微雀斑，左侧颧骨有一道很浅的旧疤；浅灰色短袖亚麻衬衫，未系最上一颗扣，卡其色休闲短裤到膝，白色帆布鞋，左手腕戴一只深灰色运动手表，苏晚按住右肩，瞪着陆晨开口怒斥；陆晨身体前倾，双手抬到胸前，显得慌张，午后强日光，海面反光在两人背后形成高光。 苏晚 (S1)，吃痛，瞪眼，说道：<d>[Chinese] 你有病啊！</d>。\n[Shot 2] At 02.00 seconds, the camera cuts to a medium close-up shot of 陆晨 —— facing the left side of the frame，陆晨的可见表演：双手抬到胸前，掌心朝上，身体前倾，语速偏快，右掌摊开；视线：看向画面左侧的苏晚，东亚男性面孔，二十多岁，长方脸下颌线清晰，单眼皮细长眼，眉毛平直略粗，鼻梁高挺，嘴唇偏薄，黑色短碎发发际线整齐，皮肤偏白有轻微雀斑，左侧颧骨有一道很浅的旧疤；浅灰色短袖亚麻衬衫，未系最上一颗扣，卡其色休闲短裤到膝，白色帆布鞋，左手腕戴一只深灰色运动手表，陆晨双手抬到胸前，掌心朝上，身体前倾，急切解释；随后摊开右掌向前示意，掌心干净，摄影机缓慢前推，午后强日光，陆晨脸部被正面照亮，背景海面虚化。 陆晨 (S2)，语速偏快，急切，说道：<d>[Chinese] 有个蚊子，在你肩膀上！我给你打死了！</d>。\n[Shot 3] At 07.20 seconds, the camera cuts to a medium close-up shot of 苏晚 —— facing the right side of the frame，苏晚的可见表演：先低头看掌心，再抬头，右手指向自己右肩，眉头拧紧，呼吸急促；视线：先看向画面右侧陆晨的掌心，再看向陆晨，东亚女性面孔，二十多岁，鹅蛋脸偏尖下巴，杏眼双眼皮，眼尾略上挑，鼻梁挺直鼻头小巧，唇形饱满唇峰明显，长卷发深棕近黑、发尾自然外翻，皮肤小麦色但细腻，右眉尾有一颗很小的浅褐色痣，**画面下边界切在锁骨上方**，画面里只有头部与颈部与裸露的双肩，颈部以下画面即结束；黑色三角比基尼上衣，细肩带，下装为高腰米白色沙滩裹裙，裙摆到膝上，赤脚，右手腕一条细银链，右肩肩头有一枚极小的黑色纹身，看上去只是肩上一点细小的黑点，不描摹图案、不放大，苏晚先低头看向陆晨摊开的掌心，随后抬头，右手指向自己的右肩，语气更怒，午后强日光，苏晚面部清晰，海面反光虚化在背景里。 苏晚 (S1)，更气，胸口起伏，说道：<d>[Chinese] 你傻吗！我那个是纹身！</d>。\n\noverall_soundscape: 海浪声、风声\n\nnon_diegetic_music: N/A\n\non_screen_text: none. No subtitles, no captions, no text overlays of any kind.",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 93.4
+}

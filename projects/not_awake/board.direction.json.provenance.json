@@ -1,0 +1,12 @@
+{
+  "contract": 1,
+  "provider": "agent_draft",
+  "model": null,
+  "response_model": null,
+  "authored_by": "workbuddy-agent",
+  "board_sha256": "10a8528fc0e8502f417606e606a1dfee3e488f9f511d658080b620a2c5b4f77c",
+  "board_identity_sha256": "af15d44a49ae5f33566c6017ec0484e4e467275453cb6c32daf63ff8dcf596ed",
+  "story_sha256": "49f9df70165d1c48081717373561a6068e0a9eea587b5801977ebb4e0739f6f7",
+  "direction_sha256": "77fcdb72b2a026055acf2a7ff3f1be8c8ef87bd6a7b3f2fb5af7a62170694c65",
+  "recorded_at": "2026-09-21T02:06:01.587Z"
+}

@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "26ef20a2-b242-439c-8347-205939b769e9",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 158,
+    "seconds": 6.58,
+    "profile": "fast",
+    "attention": "vsa",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+    "vsa": true
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00216_.mp4",
+      "filename": "H3_i2v_00216_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 1504869,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00216_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\one_step_late\\units\\i2v_20260921-172022.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\one_step_late\\units\\i2v_20260921-172022.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\one_step_late\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: audience_knows（这一单元开始时观众与角色各自知道什么；用作表演与视线的依据，不是画面文字）：观众已经看见手机停在路缘下方的柏油面上、车轮正从画面边缘压过来；她蹲下去伸手的那一刻，视线还在手机上，没有往画面边缘看\n[Shot 1] a medium shot of 林夏 —— facing the camera，林夏的可见表演：上身前倾，右臂朝地面伸出，指尖绷着朝手机去，呼吸短促；视线：视线锁在路缘下方的手机上，二十五六岁的东亚女性；鹅蛋脸，下颌线清晰柔和；眼睛偏大、双眼皮，眼尾微微上挑；鼻梁细直、鼻头小巧；嘴唇饱满、唇色偏豆沙；眉毛自然平直；皮肤白皙，有真实毛孔与日光下的自然油光；黑色中长发披在肩上，额前有碎发，发尾微卷；短款黑色呢子外套（衣长到腰，双排扣，面料有细腻毛呢纹理），里面是米白色圆领针织衫；下身是黑色连裤丝袜，腿部线条修长，脚上是黑色尖头高跟短靴（细跟、皮质有自然光泽）。左肩挎一只黑色小方包（包身硬挺、金属链条肩带）。全片造型不变，她快走两步蹲下去，右手朝路缘下方的手机伸出去；一只车轮从画面边缘压过来，碾过手机后继续向前，走远，摄影机缓慢横移，自然日光斜照，车轮的影子扫过柏油面。\n[Shot 2] At 00:03.000, the camera cuts to a medium shot of 林夏 —— facing the camera，林夏的可见表演：伸出的手僵在半空两秒后慢慢收回，肩背塌下，蹲姿没有起身；视线：视线停在指尖前方那台手机上，二十五六岁的东亚女性；鹅蛋脸，下颌线清晰柔和；眼睛偏大、双眼皮，眼尾微微上挑；鼻梁细直、鼻头小巧；嘴唇饱满、唇色偏豆沙；眉毛自然平直；皮肤白皙，有真实毛孔与日光下的自然油光；黑色中长发披在肩上，额前有碎发，发尾微卷；短款黑色呢子外套（衣长到腰，双排扣，面料有细腻毛呢纹理），里面是米白色圆领针织衫；下身是黑色连裤丝袜，腿部线条修长，脚上是黑色尖头高跟短靴（细跟、皮质有自然光泽）。左肩挎一只黑色小方包（包身硬挺、金属链条肩带）。全片造型不变，她的手停在半空，指尖离那台手机还差一拃；她慢慢把手收回来，蹲在路缘边没有站起来，肩背塌下去，摄影机缓慢横移，自然日光斜照，路缘石的短影落在她的手与地面之间。\n\noverall_soundscape: 车轮碾过手机的闷响，随后是车轮远去的滚动声 远处车流声与风吹树叶的沙沙声\n\nnon_diegetic_music: N/A",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 57.9
+}

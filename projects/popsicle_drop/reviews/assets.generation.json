@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "stage": "assets",
+  "at": "2026-09-18T14:35:34.747Z",
+  "provider": "comfyui",
+  "model": "local-comfyui",
+  "requested_provider": "local",
+  "artifacts": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\popsicle_drop\\assets\\girl_portrait.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\popsicle_drop\\assets\\girl_campus_sheet.png",
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\popsicle_drop\\assets\\sidewalk_master.png"
+  ]
+}

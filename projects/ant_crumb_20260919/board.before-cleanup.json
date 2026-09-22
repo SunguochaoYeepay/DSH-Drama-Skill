@@ -1,0 +1,420 @@
+{
+  "meta": {
+    "title": "面包屑",
+    "project": "ant_crumb_20260919",
+    "logline": "一只可爱的小蚂蚁在草地上发现一颗比自己还大的面包碎屑，几次搬不动后灵机一动改用头顶肩扛，终于推着战利品开心地消失在草地深处。",
+    "genre": "无对白极短片",
+    "language": "zh-CN",
+    "aspect": "9:16",
+    "style": "cartoon3d",
+    "style_prompt": "拟人化微距卡通风格，可爱治愈，柔和暖调自然光，浅景深微距质感，圆润造型与大眼睛表情，草叶与土壤的细节清晰，画面干净明亮。",
+    "total_duration_s": 33,
+    "stage": "story",
+    "approvals": {
+      "story": null,
+      "shots": null,
+      "assets": null,
+      "keyframes": null
+    },
+    "music": null,
+    "final_video": null
+  },
+  "story": {
+    "synopsis": "一只小蚂蚁在草地小径上行走，忽然发现一颗体积是自己两倍的巨大面包碎屑。它惊喜地试探，随后试图搬起却完全搬不动，泄气地坐倒。低头思考后它灵机一动，绕到侧面用肩膀顶住、弓身蹬地把碎屑滚了起来，一路推着碎屑穿过草地，回头对镜头露出得意的笑容，画面暖色淡出。",
+    "beats": [
+      {
+        "text": "小蚂蚁发现比自己大两倍的面包碎屑，触角竖起、惊喜定住",
+        "purpose": "建立欲望目标，用尺度反差把“巨大”落到画面上"
+      },
+      {
+        "text": "小心翼翼触碰试探，碎屑纹丝不动，绕圈叉腰犯愁",
+        "purpose": "制造第一个小挫折，给后续成功留出反差空间"
+      },
+      {
+        "text": "深吸气搬运失败，脸涨红、小腿打颤后一屁股坐倒，触角耷拉",
+        "purpose": "把失败演足，让情绪谷底足够低"
+      },
+      {
+        "text": "灵机一动改用肩膀顶住侧面，弓身蹬地把碎屑滚起来",
+        "purpose": "转折点，用解法证明它的聪明与坚持"
+      },
+      {
+        "text": "一路推着碎屑穿过草地，回头对镜头得意一笑后走远，画面渐暖淡出",
+        "purpose": "情绪释放与温暖收尾"
+      }
+    ],
+    "source": "《面包屑》\n\n类型：极短片 / 无对白\n画幅：9:16 竖屏\n时长：约18秒\n风格：拟人化微距卡通，可爱治愈\n\n\n第一场 外景·草地小径 日\n\n一片嫩绿的草叶间，一只小蚂蚁迈着小短腿轻快地走着。它的大眼睛忽地一亮，脚步停住。\n\n镜头顺着它的视线缓缓上移——一颗金黄色的面包碎屑赫然出现在画面中央，体积是小蚂蚁的两倍还多，像一块巨大的岩石。\n\n小蚂蚁的触角\"唰\"地竖起来，嘴巴张成一个小圆。\n\n\n第二场 外景·面包碎屑旁 日\n\n小蚂蚁小跑着凑到碎屑跟前，先小心翼翼地伸出一只前足，轻轻碰了碰碎屑表面。\n\n碎屑纹丝不动。\n\n小蚂蚁绕着碎屑转了半圈，双手叉腰，歪头打量，一副\"这可怎么办\"的表情。\n\n\n第三场 外景·面包碎屑旁 日\n\n小蚂蚁深吸一口气，蹲下身，双手抵住碎屑底部，使劲往上抬。\n\n碎屑只微微晃了一下。\n\n小蚂蚁的脸涨得通红，小腿打颤，终于\"噗\"地松了手，一屁股坐在地上。它耷拉着触角，眼神黯淡了一瞬。\n\n\n第四场 外景·面包碎屑旁 日\n\n小蚂蚁低头看着碎屑，忽然眨了眨眼——触角\"叮\"地弹直，灯泡亮起般的表情。\n\n它绕到碎屑侧面，用肩膀顶住，弓起整个身体，小短腿蹬地。\n\n碎屑动了！缓缓向前滚动了一小段。\n\n小蚂蚁眼睛一亮，继续顶。碎屑又滚了一段。\n\n\n第五场 外景·草地小径 日\n\n小蚂蚁一路用小脑袋顶着碎屑往前滚，碎屑骨碌碌地翻动，带起细小的草屑。\n\n小蚂蚁回头看了一眼镜头，露出一个大大的笑容，触角得意地晃了晃，继续推着碎屑向画面深处走去。\n\n碎屑越滚越远，小蚂蚁的身影越来越小，但步子是轻快的。\n\n画面渐暖，淡出。\n\n（全片完）"
+  },
+  "characters": [
+    {
+      "id": "ant",
+      "name": "小蚂蚁",
+      "age_group": "child",
+      "face_prompt": "拟人化小蚂蚁，圆润身体、大眼睛、两根细触角，可爱治愈微距卡通造型，不是人类也不是昆虫写实标本；具体造型待人物造型师确认",
+      "identities": [
+        "ant_forager"
+      ]
+    },
+    {
+      "id": "c_753b5e45",
+      "name": "画幅",
+      "age_group": "youth",
+      "face_prompt": "画幅的面部特征（待补）",
+      "portrait": null,
+      "voice": "",
+      "identities": [
+        "c_753b5e45_default"
+      ]
+    }
+  ],
+  "identities": [
+    {
+      "id": "ant_forager",
+      "name": "小蚂蚁觅食造型",
+      "character": "ant",
+      "appearance_details": "拟人化小蚂蚁，深棕色圆润身体，大眼睛，两根细触角，六条小短腿（前足可作手用），无衣物；具体造型待人物造型师确认"
+    },
+    {
+      "id": "c_753b5e45_default",
+      "character": "c_753b5e45",
+      "name": "默认造型",
+      "appearance_details": "画幅的服装（待补）",
+      "costume_image": null,
+      "sheet": null,
+      "reference_images": [],
+      "voice_ref": null
+    }
+  ],
+  "scenes": [
+    {
+      "id": "grass_path",
+      "scene_no": 1,
+      "name": "草地小径",
+      "environment": "微距视角的草地小径，嫩绿草叶、细碎土壤与零星小石子，柔和暖调自然光"
+    },
+    {
+      "id": "crumb_side_a",
+      "scene_no": 2,
+      "name": "面包碎屑旁（初见）",
+      "environment": "草地上散落着土壤颗粒，一颗金黄色的巨大面包碎屑立在画面中央，占画面近一半"
+    },
+    {
+      "id": "crumb_side_b",
+      "scene_no": 3,
+      "name": "面包碎屑旁（尝试搬起）",
+      "environment": "面包碎屑底部特写，碎屑表面有酥脆气孔和金黄边缘，地面是细碎草屑"
+    },
+    {
+      "id": "crumb_side_c",
+      "scene_no": 4,
+      "name": "面包碎屑侧面（肩顶）",
+      "environment": "面包碎屑侧面视角，能看到碎屑与地面的接触面，草叶在前景虚化"
+    },
+    {
+      "id": "grass_path_deep",
+      "scene_no": 5,
+      "name": "草地深处",
+      "environment": "向前延伸的草地小径，草叶形成通道感，远处光线更暖更亮"
+    }
+  ],
+  "props": [
+    {
+      "id": "bread_crumb",
+      "name": "巨大面包碎屑",
+      "description": "金黄色面包碎屑，表面有酥脆气孔和焦边，体积约为小蚂蚁的两倍，边缘不规则"
+    }
+  ],
+  "shots": [
+    {
+      "id": "s01",
+      "scene": "grass_path",
+      "cast": [
+        "ant_forager"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "全景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢前推",
+      "action": "一片嫩绿的草叶间，一只小蚂蚁迈着小短腿轻快地走着。它的大眼睛忽地一亮，脚步停住。 镜头顺着它的视线缓缓上移——一颗金黄色的面包碎屑赫然出现在画面中央，体积是小蚂蚁的两倍还多，像一块巨大的岩石。",
+      "prompt": "{{ant_forager}}，一片嫩绿的草叶间，一只小蚂蚁迈着小短腿轻快地走着。它的大眼睛忽地一亮，脚步停住。 镜头顺着它的视线缓缓上移——一颗金黄色的面包碎屑赫然出现在画面中央，体积是小蚂蚁的两倍还多，像一块巨大的岩石。，全景，缓慢前推",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        11,
+        13
+      ]
+    },
+    {
+      "id": "s02",
+      "scene": "grass_path",
+      "cast": [
+        "ant_forager"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "全景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢前推",
+      "action": "小蚂蚁的触角\"唰\"地竖起来，嘴巴张成一个小圆。",
+      "prompt": "{{ant_forager}}，小蚂蚁的触角\"唰\"地竖起来，嘴巴张成一个小圆。，全景，缓慢前推",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        15
+      ]
+    },
+    {
+      "id": "s03",
+      "scene": "crumb_side_a",
+      "cast": [
+        "ant_forager"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "小蚂蚁小跑着凑到碎屑跟前，先小心翼翼地伸出一只前足，轻轻碰了碰碎屑表面。 碎屑纹丝不动。",
+      "prompt": "{{ant_forager}}，小蚂蚁小跑着凑到碎屑跟前，先小心翼翼地伸出一只前足，轻轻碰了碰碎屑表面。 碎屑纹丝不动。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        20,
+        22
+      ]
+    },
+    {
+      "id": "s04",
+      "scene": "crumb_side_a",
+      "cast": [
+        "ant_forager"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "小蚂蚁绕着碎屑转了半圈，双手叉腰，歪头打量，一副\"这可怎么办\"的表情。",
+      "prompt": "{{ant_forager}}，小蚂蚁绕着碎屑转了半圈，双手叉腰，歪头打量，一副\"这可怎么办\"的表情。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        24
+      ]
+    },
+    {
+      "id": "s05",
+      "scene": "crumb_side_b",
+      "cast": [
+        "ant_forager"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "小蚂蚁深吸一口气，蹲下身，双手抵住碎屑底部，使劲往上抬。 碎屑只微微晃了一下。",
+      "prompt": "{{ant_forager}}，小蚂蚁深吸一口气，蹲下身，双手抵住碎屑底部，使劲往上抬。 碎屑只微微晃了一下。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        29,
+        31
+      ]
+    },
+    {
+      "id": "s06",
+      "scene": "crumb_side_b",
+      "cast": [
+        "ant_forager"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "小蚂蚁的脸涨得通红，小腿打颤，终于\"噗\"地松了手，一屁股坐在地上。它耷拉着触角，眼神黯淡了一瞬。",
+      "prompt": "{{ant_forager}}，小蚂蚁的脸涨得通红，小腿打颤，终于\"噗\"地松了手，一屁股坐在地上。它耷拉着触角，眼神黯淡了一瞬。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        33
+      ]
+    },
+    {
+      "id": "s07",
+      "scene": "crumb_side_c",
+      "cast": [
+        "ant_forager"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "小蚂蚁低头看着碎屑，忽然眨了眨眼——触角\"叮\"地弹直，灯泡亮起般的表情。 它绕到碎屑侧面，用肩膀顶住，弓起整个身体，小短腿蹬地。",
+      "prompt": "{{ant_forager}}，小蚂蚁低头看着碎屑，忽然眨了眨眼——触角\"叮\"地弹直，灯泡亮起般的表情。 它绕到碎屑侧面，用肩膀顶住，弓起整个身体，小短腿蹬地。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        38,
+        40
+      ]
+    },
+    {
+      "id": "s08",
+      "scene": "crumb_side_c",
+      "cast": [
+        "ant_forager"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "碎屑动了！缓缓向前滚动了一小段。 小蚂蚁眼睛一亮，继续顶。碎屑又滚了一段。",
+      "prompt": "{{ant_forager}}，碎屑动了！缓缓向前滚动了一小段。 小蚂蚁眼睛一亮，继续顶。碎屑又滚了一段。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        42,
+        44
+      ]
+    },
+    {
+      "id": "s09",
+      "scene": "grass_path_deep",
+      "cast": [
+        "ant_forager"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "小蚂蚁一路用小脑袋顶着碎屑往前滚，碎屑骨碌碌地翻动，带起细小的草屑。 小蚂蚁回头看了一眼镜头，露出一个大大的笑容，触角得意地晃了晃，继续推着碎屑向画面深处走去。",
+      "prompt": "{{ant_forager}}，小蚂蚁一路用小脑袋顶着碎屑往前滚，碎屑骨碌碌地翻动，带起细小的草屑。 小蚂蚁回头看了一眼镜头，露出一个大大的笑容，触角得意地晃了晃，继续推着碎屑向画面深处走去。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        49,
+        51
+      ]
+    },
+    {
+      "id": "s10",
+      "scene": "grass_path_deep",
+      "cast": [
+        "ant_forager"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "碎屑越滚越远，小蚂蚁的身影越来越小，但步子是轻快的。 画面渐暖，淡出。",
+      "prompt": "{{ant_forager}}，碎屑越滚越远，小蚂蚁的身影越来越小，但步子是轻快的。 画面渐暖，淡出。，中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        53,
+        55
+      ]
+    },
+    {
+      "id": "s11",
+      "scene": "grass_path_deep",
+      "cast": [],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "中景",
+      "lighting": "均匀自然光",
+      "camera": "缓慢横移",
+      "action": "（全片完）",
+      "prompt": "（全片完），中景，缓慢横移",
+      "audio": "环境底噪与衣料摩擦声",
+      "dialogue": [],
+      "edit_note": "动作镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        57
+      ]
+    }
+  ]
+}

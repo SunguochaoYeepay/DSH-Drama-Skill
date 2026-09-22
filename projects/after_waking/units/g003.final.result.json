@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "mode": "i2v",
+  "kind": "video",
+  "prompt_id": "bd887fa5-c053-4038-9f1d-d40e6ea8caf0",
+  "params": {
+    "mode": "i2v",
+    "width": 480,
+    "height": 864,
+    "frames": 141,
+    "seconds": 5.88,
+    "profile": "fast",
+    "unet": "h3\\fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+    "vsa": true
+  },
+  "seed_used": null,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_i2v_00163_.mp4",
+      "filename": "H3_i2v_00163_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 1041079,
+      "url": "http://127.0.0.1:8188/view?filename=H3_i2v_00163_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\after_waking\\units\\i2v_20260917-232756.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\after_waking\\units\\i2v_20260917-232756.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\after_waking\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] a medium shot of 陈屿 —— 陈屿的可见表演：眼睛骤然睁开，上身快速抬起坐直，双手撑在被子上；视线：视线先落在枕边的手机上；表演边界：嘴角形态服从上述可见表演，不额外改变情绪方向，十九岁东亚面孔，圆脸偏鹅蛋形，眉眼干净，双眼皮，鼻梁挺直，唇形偏薄，右眉尾一颗小痣；深蓝色棉质睡衣套装，长袖上衣配同色长裤，无花纹；黑色短寸头，发梢略翘；赤脚，枕边的手机闹钟响起，陈屿闭着眼皱了一下眉，随即睁开眼睛，上身猛地抬起来坐直，被子滑到腰间，同一道清晨斜光落在被子上，和第一段完全一致。\n[Shot 2] At 02.50 seconds, the camera cuts to a medium close-up shot of 陈屿 —— 陈屿的可见表演：双手摊在身前反复看了一下，肩膀垮下来，嘴角上扬笑出声；视线：视线落在自己的掌纹上，十九岁东亚面孔，圆脸偏鹅蛋形，眉眼干净，双眼皮，鼻梁挺直，唇形偏薄，右眉尾一颗小痣；深蓝色棉质睡衣套装，长袖上衣配同色长裤，无花纹；黑色短寸头，发梢略翘；赤脚，陈屿低头看自己的双手，骨节分明，指腹上有薄茧，他大口喘着气，肩膀松下来，笑出了声，摄影机缓慢前推，清晨斜光正面照在手背和脸上，指尖透出暖色。 陈屿 (S1)，大口喘气，笑出来，说道：<d>[Chinese] ……吓死我了。</d>。\n\noverall_soundscape: 手机闹钟铃声刺破安静，被子弹开的摩擦声 大口喘气的声音，随后一声放松的呼气\n\nnon_diegetic_music: N/A\n\non_screen_text: none. No subtitles, no captions, no text overlays of any kind.",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 55.6
+}

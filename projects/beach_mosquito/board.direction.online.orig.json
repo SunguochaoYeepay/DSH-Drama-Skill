@@ -1,0 +1,346 @@
+{
+  "logline": "两个连续单元完成同一场海滩误会：先在不接触的关键帧里完成接近、犹豫与拍肩，再在拍肩后的稳定对峙中用正反打揭示空掌心与误认。",
+  "version": 6,
+  "units": [
+    {
+      "id": "u1",
+      "boundary_trigger": "opening",
+      "keyframe_cast": [
+        "c_82cf665a_default",
+        "c_96466668_default"
+      ],
+      "action_complexity": {
+        "level": "medium",
+        "high_risk_events": [
+          {
+            "at_s": 8.4,
+            "type": "multi_actor_contact",
+            "description": "陆晨右手从空中落到苏晚右肩，发生短暂拍肩接触后立即收回。"
+          }
+        ],
+        "strategy": "simplified_staging"
+      },
+      "why": "这一段是同一场景、同一时间里的连续动作：苏晚在水线边走，陆晨从斜后方注意到她肩头黑点、犹豫并拍肩。两人空间关系和海滩环境只需要一张开场关键帧。",
+      "duration_reason": "无台词。建立同行空间4.2秒，陆晨注视与犹豫2.4秒，肩头黑点信息1.0秒，拍肩与苏晚转身反应2.7秒，总计10.3秒。",
+      "keyframe_start": "0秒时苏晚侧身朝画面右侧沿水线缓慢移动，陆晨在她斜后方半步，双手自然下垂，尚未抬手，两人没有身体接触。",
+      "end_state": "苏晚已转身面向陆晨，右手按在自己右肩上；陆晨右手已离开苏晚肩膀，双手抬到胸前，二人没有接触。",
+      "continuity": {
+        "mode": "independent",
+        "reason": "本单元是开场，不需要承接前段。"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 4.2,
+          "framing": "近景",
+          "camera": "小幅向右跟随",
+          "scene": "scene_01",
+          "on_screen": [
+            "c_82cf665a_default",
+            "c_96466668_default"
+          ],
+          "props": [],
+          "action": "苏晚侧身朝画面右侧沿水线慢慢移动，长卷发被海风吹起；陆晨在斜后方放慢脚步，视线落在她右肩方向。",
+          "emotion_analysis": [
+            {
+              "character": "c_82cf665a_default",
+              "cause": "她正在午后海滩水线边独自走动，尚未察觉身后有人靠近。",
+              "internal_state": "放松",
+              "visible_behavior": "肩颈放松，嘴唇自然闭合，发丝被海风吹动",
+              "gaze": "看向画面右侧海面",
+              "avoid_symbols": [
+                "瞪眼",
+                "惊慌后退",
+                "夸张笑容"
+              ]
+            },
+            {
+              "character": "c_96466668_default",
+              "cause": "他注意到苏晚右肩有一个小黑点，正在判断那是什么。",
+              "internal_state": "迟疑",
+              "visible_behavior": "眉头微皱，脚步放慢，嘴唇抿住",
+              "gaze": "看向苏晚右肩",
+              "avoid_symbols": [
+                "轻浮笑容",
+                "挑衅眼神"
+              ]
+            }
+          ],
+          "lighting": "午后强日光，海面反光刺眼，人物边缘有明亮轮廓光。",
+          "lines": [],
+          "audio": "海浪声、风声、细沙脚步声"
+        },
+        {
+          "n": 2,
+          "at": 4.2,
+          "cut": "the camera cuts to",
+          "duration_s": 2.4,
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "scene_01",
+          "on_screen": [
+            "c_96466668_default"
+          ],
+          "props": [],
+          "facing": {
+            "c_96466668_default": "left"
+          },
+          "action": "陆晨眉头皱紧，右臂缓缓抬起，手掌在半空停住，指尖轻微发抖。",
+          "emotion_analysis": [
+            {
+              "character": "c_96466668_default",
+              "cause": "他认为苏晚肩上可能有蚊虫或脏东西，想帮忙下手，又担心冒犯。",
+              "internal_state": "紧张犹豫",
+              "visible_behavior": "眉头皱起，右臂微抬后停住，指尖轻颤，嘴唇绷紧",
+              "gaze": "看向画面左侧苏晚右肩",
+              "avoid_symbols": [
+                "大笑",
+                "轻松摊手",
+                "得意表情"
+              ]
+            }
+          ],
+          "lighting": "午后强日光，海面反光在他脸部形成明亮反射。",
+          "lines": [],
+          "audio": "海浪声、风声"
+        },
+        {
+          "n": 3,
+          "at": 6.6,
+          "cut": "the shot cuts to",
+          "duration_s": 1,
+          "framing": "特写",
+          "camera": "固定",
+          "scene": "scene_01",
+          "on_screen": [
+            "c_82cf665a_default"
+          ],
+          "props": [],
+          "action": "苏晚右肩肩头可见一枚极小的黑色纹身，只呈现为肩上一枚细小黑色点，不放大图案。",
+          "emotion_analysis": [
+            {
+              "character": "c_82cf665a_default",
+              "cause": "她尚未察觉身后陆晨的准备动作，只处在水中行走的日常状态里。",
+              "internal_state": "平静",
+              "visible_behavior": "肩头稳定，皮肤随呼吸轻微起伏，没有躲闪",
+              "gaze": "头部朝向画面右侧，视线在画外海面",
+              "avoid_symbols": [
+                "惊恐回头",
+                "夸张笑容"
+              ]
+            }
+          ],
+          "lighting": "午后强日光，肩头皮肤被照亮，海面反光虚化在背景里。",
+          "lines": [],
+          "audio": "海浪声、风声"
+        },
+        {
+          "n": 4,
+          "at": 7.6,
+          "cut": "the shot cuts to",
+          "duration_s": 2.7,
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "scene_01",
+          "on_screen": [
+            "c_82cf665a_default",
+            "c_96466668_default"
+          ],
+          "props": [],
+          "action": "陆晨右掌快速落下，拍到苏晚右肩后立即收回；苏晚肩膀一缩，猛地转身，抬手按住被拍的位置。",
+          "emotion_analysis": [
+            {
+              "character": "c_96466668_default",
+              "cause": "他决定拍掉自己认为存在的东西，下手后意识到可能吓到对方。",
+              "internal_state": "紧张并自认好心",
+              "visible_behavior": "右掌落下后立即收回，眉头紧锁，嘴唇张开",
+              "gaze": "看向苏晚右肩",
+              "avoid_symbols": [
+                "得意笑",
+                "挑衅眼神"
+              ]
+            },
+            {
+              "character": "c_82cf665a_default",
+              "cause": "她右肩突然被陌生人拍击，疼痛和冒犯同时发生。",
+              "internal_state": "惊怒",
+              "visible_behavior": "肩膀一缩，迅速转身，右手按住右肩，眼睛瞪圆",
+              "gaze": "转向并盯着陆晨",
+              "avoid_symbols": [
+                "微笑",
+                "崇拜眼神",
+                "卖萌歪头"
+              ]
+            }
+          ],
+          "lighting": "午后强日光，两人之间有清晰日光和浅滩反光。",
+          "lines": [],
+          "audio": "海浪声、风声、轻拍声"
+        }
+      ]
+    },
+    {
+      "id": "u2",
+      "boundary_trigger": "state_transition_anchor",
+      "keyframe_cast": [
+        "c_82cf665a_default",
+        "c_96466668_default"
+      ],
+      "action_complexity": {
+        "level": "low",
+        "high_risk_events": [],
+        "strategy": "none"
+      },
+      "why": "拍肩这一高风险接触已经完成，人物进入面对面对峙的稳定状态。对话戏需要新的身份与空间锚点，但场景、时间和人物关系都承接上一单元。",
+      "duration_reason": "第26行最低口播1.20秒，加上转身后的怒视与停顿，给2.0秒；第30行最低口播4.54秒，加上急切解释和摊掌动作，给5.2秒；第36行最低口播2.31秒，加上低头看掌心、抬头指肩的反应，给3.1秒，总计10.3秒。",
+      "keyframe_start": "0秒时两人已面对面站立，苏晚右手按在右肩上，陆晨双手抬到胸前，掌心朝向苏晚，二人没有身体接触，苏晚刚要开口。",
+      "end_state": "苏晚右手指向自己右肩，目光盯着陆晨；陆晨右掌摊开停在身前，掌心朝向苏晚，二人没有接触。",
+      "continuity": {
+        "mode": "continue_previous",
+        "previous_unit": "u1",
+        "handoff_state": "承接u1尾段：苏晚已转身面向陆晨，右手按住右肩；陆晨右手已离开苏晚肩膀，双手抬到胸前，二人没有身体接触。",
+        "deferred_keyframe": true,
+        "allowed_changes": [
+          "景别从上一单元结尾的近景调整为正反打近景",
+          "机位轻微改变以突出说话人",
+          "保持二人面对面的空间关系",
+          "保持苏晚右手按肩和陆晨双手在胸前的姿态"
+        ]
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 2,
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "scene_01",
+          "on_screen": [
+            "c_82cf665a_default",
+            "c_96466668_default"
+          ],
+          "props": [],
+          "facing": {
+            "c_82cf665a_default": "right",
+            "c_96466668_default": "left"
+          },
+          "looks_at": [
+            {
+              "who": "c_82cf665a_default",
+              "at": "c_96466668_default"
+            },
+            {
+              "who": "c_96466668_default",
+              "at": "c_82cf665a_default"
+            }
+          ],
+          "action": "苏晚按住右肩，瞪着陆晨开口怒斥；陆晨身体前倾，双手抬到胸前，显得慌张。",
+          "emotion_analysis": [
+            {
+              "character": "c_82cf665a_default",
+              "cause": "她刚被陆晨拍痛右肩，认为对方无故冒犯。",
+              "internal_state": "愤怒",
+              "visible_behavior": "眉头紧皱，眼睛瞪圆，右手按住右肩，下颌绷紧",
+              "gaze": "盯着陆晨",
+              "avoid_symbols": [
+                "微笑",
+                "星星眼",
+                "卖萌歪头"
+              ]
+            },
+            {
+              "character": "c_96466668_default",
+              "cause": "苏晚明显生气，他意识到自己的行为可能被误会。",
+              "internal_state": "慌张",
+              "visible_behavior": "身体微前倾，双手抬起，掌心朝向苏晚，嘴唇准备开口",
+              "gaze": "看着苏晚",
+              "avoid_symbols": [
+                "冷漠",
+                "挑衅笑",
+                "翻白眼"
+              ]
+            }
+          ],
+          "lighting": "午后强日光，海面反光在两人背后形成高光。",
+          "lines": [
+            26
+          ],
+          "audio": "海浪声、风声"
+        },
+        {
+          "n": 2,
+          "at": 2,
+          "cut": "the camera cuts to",
+          "duration_s": 5.2,
+          "framing": "近景",
+          "camera": "缓慢前推",
+          "scene": "scene_01",
+          "on_screen": [
+            "c_96466668_default"
+          ],
+          "props": [],
+          "facing": {
+            "c_96466668_default": "left"
+          },
+          "action": "陆晨双手抬到胸前，掌心朝上，身体前倾，急切解释；随后摊开右掌向前示意，掌心干净。",
+          "emotion_analysis": [
+            {
+              "character": "c_96466668_default",
+              "cause": "他被苏晚斥责后，急于说明自己拍肩是为了打掉她肩上的东西。",
+              "internal_state": "急切",
+              "visible_behavior": "双手抬到胸前，掌心朝上，身体前倾，语速偏快，右掌摊开",
+              "gaze": "看向画面左侧的苏晚",
+              "avoid_symbols": [
+                "笑",
+                "耸肩敷衍",
+                "得意表情"
+              ]
+            }
+          ],
+          "lighting": "午后强日光，陆晨脸部被正面照亮，背景海面虚化。",
+          "lines": [
+            30
+          ],
+          "audio": "海浪声、风声"
+        },
+        {
+          "n": 3,
+          "at": 7.2,
+          "cut": "the shot cuts to",
+          "duration_s": 3.1,
+          "framing": "近景",
+          "camera": "固定",
+          "scene": "scene_01",
+          "on_screen": [
+            "c_82cf665a_default"
+          ],
+          "props": [],
+          "facing": {
+            "c_82cf665a_default": "right"
+          },
+          "action": "苏晚先低头看向陆晨摊开的掌心，随后抬头，右手指向自己的右肩，语气更怒。",
+          "emotion_analysis": [
+            {
+              "character": "c_82cf665a_default",
+              "cause": "她看到陆晨掌心什么都没有，意识到对方可能把肩上的纹身误认成了别的东西。",
+              "internal_state": "更生气且觉得荒谬",
+              "visible_behavior": "先低头看掌心，再抬头，右手指向自己右肩，眉头拧紧，呼吸急促",
+              "gaze": "先看向画面右侧陆晨的掌心，再看向陆晨",
+              "avoid_symbols": [
+                "微笑",
+                "星星眼",
+                "崇拜眼神"
+              ]
+            }
+          ],
+          "lighting": "午后强日光，苏晚面部清晰，海面反光虚化在背景里。",
+          "lines": [
+            36
+          ],
+          "audio": "海浪声、风声"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,359 @@
+{
+  "meta": {
+    "title": "胆小猫与嘴硬老鼠",
+    "logline": "胆小的母猫被偷吃零食的老鼠吓坏，憨厚公猫本能出手后，她才想起自己本来就是猫。",
+    "genre": "萌宠喜剧",
+    "language": "zh-CN",
+    "aspect": "9:16",
+    "style": "cartoon3d",
+    "style_prompt": "高品质卡通3D电影动画质感，圆润造型，柔软蓬松毛发，明亮暖色调，温馨居家灯光，可爱幽默，不恐怖，无血腥",
+    "total_duration_s": 27,
+    "created_by": "user+codex",
+    "stage": "rendering",
+    "approvals": {
+      "story": {
+        "at": "2026-09-16T23:30:00+08:00",
+        "by": "用户"
+      },
+      "shots": {
+        "at": "2026-09-16T23:30:00+08:00",
+        "by": "用户"
+      },
+      "assets": {
+        "at": "2026-09-16T23:30:00+08:00",
+        "by": "用户"
+      },
+      "keyframes": {
+        "at": "2026-09-16T23:30:00+08:00",
+        "by": "用户"
+      }
+    },
+    "music": "轻快温馨的卡通喜剧配乐",
+    "final_video": null,
+    "project": "cat_mouse"
+  },
+  "story": {
+    "source": "story.md",
+    "synopsis": "阿橘和雪球在客厅吃零食看电视，灰豆从沙发下偷吃碎屑。雪球吓得扑进阿橘怀里，灰豆反而叉腰嘴硬。阿橘淡定解决灰豆，雪球这才恍然大悟两人本来就是猫，最后崇拜地依偎回阿橘怀里。",
+    "beats": [
+      {
+        "text": "两只猫温馨依偎看电视",
+        "purpose": "建立情侣关系和松弛日常"
+      },
+      {
+        "text": "老鼠偷吃引发母猫惊吓",
+        "purpose": "制造冲突与身份反差"
+      },
+      {
+        "text": "老鼠面对猫仍然叉腰嘴硬",
+        "purpose": "强化喜剧荒诞感"
+      },
+      {
+        "text": "公猫淡定制服老鼠",
+        "purpose": "完成动作反转并建立公猫性格"
+      },
+      {
+        "text": "母猫想起自己本来就是猫",
+        "purpose": "落下核心反转笑点"
+      },
+      {
+        "text": "母猫崇拜地依偎公猫",
+        "purpose": "以甜蜜关系收尾"
+      }
+    ],
+    "tone": "温馨、夸张、轻快的萌宠喜剧",
+    "ending": "两只猫重新依偎看电视，恢复温馨日常"
+  },
+  "characters": [
+    {
+      "id": "orange_cat",
+      "name": "阿橘",
+      "species": "cat",
+      "age_group": "youth",
+      "face_prompt": "矮壮憨厚的橘色公猫，蓬松橘黄色短毛，圆脸，小圆耳，琥珀色眼睛温和迟钝，白色口鼻，圆润腮帮",
+      "portrait": "story2video/projects/cat_mouse/assets/portrait_orange_cat_portrait.png",
+      "voice": "低沉温和，慢半拍",
+      "identities": [
+        "orange_cat_home"
+      ]
+    },
+    {
+      "id": "silver_cat",
+      "name": "雪球",
+      "species": "cat",
+      "age_group": "youth",
+      "face_prompt": "漂亮秀气的银渐层母猫，雪白蓬松毛发带浅灰渐变，大而水润的蓝灰色眼睛，小巧粉鼻，尖圆耳朵，蓬松脸颊",
+      "portrait": "story2video/projects/cat_mouse/assets/portrait_silver_cat_portrait.png",
+      "voice": "清亮娇气，情绪丰富",
+      "identities": [
+        "silver_cat_home"
+      ]
+    },
+    {
+      "id": "brown_mouse",
+      "name": "灰豆",
+      "species": "mouse",
+      "age_group": "youth",
+      "face_prompt": "灰棕色小老鼠，尖尖鼻子，圆溜溜黑眼睛，大圆耳朵，细长尾巴，个头很小",
+      "portrait": "story2video/projects/cat_mouse/assets/portrait_brown_mouse_portrait.png",
+      "voice": "尖细快速，色厉内荏",
+      "identities": [
+        "brown_mouse_default"
+      ]
+    }
+  ],
+  "identities": [
+    {
+      "id": "orange_cat_home",
+      "character": "orange_cat",
+      "name": "居家造型",
+      "appearance_details": "自然橘色毛发，不穿衣服，体型矮壮，肚子圆润，爪子宽大厚实，尾巴粗而放松",
+      "costume_image": null,
+      "sheet": "story2video/projects/cat_mouse/assets/sheet_orange_cat_home_sheet.png",
+      "reference_images": [],
+      "voice_ref": null
+    },
+    {
+      "id": "silver_cat_home",
+      "character": "silver_cat",
+      "name": "居家造型",
+      "appearance_details": "自然银渐层毛发，不穿衣服，身体纤细娇俏，胸口雪白，尾巴长而蓬松",
+      "costume_image": null,
+      "sheet": "story2video/projects/cat_mouse/assets/sheet_silver_cat_home_sheet.png",
+      "reference_images": [],
+      "voice_ref": null
+    },
+    {
+      "id": "brown_mouse_default",
+      "character": "brown_mouse",
+      "name": "默认造型",
+      "appearance_details": "自然灰棕色短毛，不穿衣服，身体小巧，细尾巴，小爪子，卡通可爱不恐怖",
+      "costume_image": null,
+      "sheet": "story2video/projects/cat_mouse/assets/sheet_brown_mouse_default_sheet.png",
+      "reference_images": [],
+      "voice_ref": null
+    }
+  ],
+  "scenes": [
+    {
+      "id": "warm_living_room",
+      "name": "温暖居家客厅",
+      "environment": "温暖居家客厅，柔软米色布艺沙发，低矮木茶几摆着小鱼干、酥脆饼干和肉条，沙发下木地板有少量零食碎屑，电视在画外发出微光，暖黄色室内灯光",
+      "time_of_day": "夜晚",
+      "scene_no": 1,
+      "master": "story2video/projects/cat_mouse/assets/master_warm_living_room_master.png",
+      "reverse_master": null,
+      "spatial_layout": null
+    }
+  ],
+  "props": [],
+  "shots": [
+    {
+      "id": "s01",
+      "scene": "warm_living_room",
+      "cast": [
+        "orange_cat_home",
+        "silver_cat_home"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "全景",
+      "lighting": "暖黄色室内灯光与电视柔光",
+      "camera": "缓慢前推",
+      "action": "阿橘半躺在沙发上，雪球依偎身侧，两只猫吃零食看电视",
+      "prompt": "{{orange_cat_home}}与{{silver_cat_home}}依偎在沙发上吃零食看电视，全景，缓慢前推",
+      "audio": "微弱电视声、饼干咔嚓声",
+      "dialogue": [],
+      "edit_note": "温馨开场",
+      "transition": {
+        "type": "cut",
+        "note": "开场"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        3
+      ]
+    },
+    {
+      "id": "s02",
+      "scene": "warm_living_room",
+      "cast": [
+        "orange_cat_home",
+        "silver_cat_home",
+        "brown_mouse_default"
+      ],
+      "props": [],
+      "duration_s": 5,
+      "shot_size": "全景",
+      "lighting": "暖黄色室内灯光",
+      "camera": "跟随老鼠后快速摇向沙发",
+      "action": "灰豆从沙发下偷吃碎屑，雪球炸毛后扑进阿橘怀里",
+      "prompt": "{{brown_mouse_default}}从沙发下偷吃，{{silver_cat_home}}受惊扑进{{orange_cat_home}}怀里，全景",
+      "audio": "碎屑咔嚓声、跳跃声",
+      "dialogue": [
+        {
+          "character": "silver_cat_home",
+          "text": "啊！老公！有老鼠！",
+          "emotion": "高音惊慌",
+          "kind": "spoken",
+          "audio": null
+        }
+      ],
+      "edit_note": "冲突爆发",
+      "transition": {
+        "type": "cut",
+        "note": "发现老鼠"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        5,
+        7
+      ]
+    },
+    {
+      "id": "s03",
+      "scene": "warm_living_room",
+      "cast": [
+        "brown_mouse_default",
+        "orange_cat_home",
+        "silver_cat_home"
+      ],
+      "props": [],
+      "duration_s": 5,
+      "shot_size": "近景",
+      "lighting": "暖黄色室内灯光",
+      "camera": "低机位固定",
+      "action": "灰豆原地一蹦后叉腰仰头，对沙发上的两只猫嘴硬",
+      "prompt": "{{brown_mouse_default}}叉腰仰头，背景有{{orange_cat_home}}与{{silver_cat_home}}，近景低机位",
+      "audio": "轻微蹦跳声",
+      "dialogue": [
+        {
+          "character": "brown_mouse_default",
+          "text": "喊什么喊！吃你一块破饼干怎么了！",
+          "emotion": "尖细逞强",
+          "kind": "spoken",
+          "audio": null
+        }
+      ],
+      "edit_note": "老鼠嘴硬",
+      "transition": {
+        "type": "cut",
+        "note": "切老鼠反应"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        9,
+        11
+      ]
+    },
+    {
+      "id": "s04",
+      "scene": "warm_living_room",
+      "cast": [
+        "orange_cat_home",
+        "silver_cat_home",
+        "brown_mouse_default"
+      ],
+      "props": [],
+      "duration_s": 5,
+      "shot_size": "全景",
+      "lighting": "暖黄色室内灯光",
+      "camera": "跟随阿橘走向地板",
+      "action": "阿橘放下雪球，淡定按住灰豆；以夸张无血腥的卡通动作吞下老鼠后拍拍爪子",
+      "prompt": "{{orange_cat_home}}淡定制服{{brown_mouse_default}}，{{silver_cat_home}}在沙发看呆，卡通夸张无血腥，全景",
+      "audio": "轻微啪声、卡通吞咽音效",
+      "dialogue": [],
+      "edit_note": "反转动作",
+      "transition": {
+        "type": "cut",
+        "note": "公猫行动"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        13
+      ]
+    },
+    {
+      "id": "s05",
+      "scene": "warm_living_room",
+      "cast": [
+        "silver_cat_home",
+        "orange_cat_home"
+      ],
+      "props": [],
+      "duration_s": 5,
+      "shot_size": "中景",
+      "lighting": "暖黄色室内灯光",
+      "camera": "缓慢前推",
+      "action": "雪球看呆后笑出来，晃尾巴拍自己脑袋",
+      "prompt": "{{silver_cat_home}}恍然大悟地笑，{{orange_cat_home}}在旁边，中景缓慢前推",
+      "audio": "轻快笑声",
+      "dialogue": [
+        {
+          "character": "silver_cat_home",
+          "text": "对哦！我们可是猫啊！",
+          "emotion": "恍然大悟，哭笑不得",
+          "kind": "spoken",
+          "audio": null
+        }
+      ],
+      "edit_note": "金句",
+      "transition": {
+        "type": "cut",
+        "note": "反应镜"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        15,
+        17
+      ]
+    },
+    {
+      "id": "s06",
+      "scene": "warm_living_room",
+      "cast": [
+        "silver_cat_home",
+        "orange_cat_home"
+      ],
+      "props": [],
+      "duration_s": 4,
+      "shot_size": "中景",
+      "lighting": "暖黄色室内灯光与电视柔光",
+      "camera": "固定后轻微拉远",
+      "action": "雪球扑回阿橘怀里蹭脖颈，两只猫依偎着继续看电视",
+      "prompt": "{{silver_cat_home}}崇拜地依偎{{orange_cat_home}}，两只猫继续看电视，中景",
+      "audio": "轻微电视声、呼噜声",
+      "dialogue": [
+        {
+          "character": "silver_cat_home",
+          "text": "老公！你真厉害！",
+          "emotion": "撒娇崇拜",
+          "kind": "spoken",
+          "audio": null
+        }
+      ],
+      "edit_note": "撒糖收尾",
+      "transition": {
+        "type": "cut",
+        "note": "结尾"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null,
+      "source_lines": [
+        19,
+        21
+      ]
+    }
+  ]
+}

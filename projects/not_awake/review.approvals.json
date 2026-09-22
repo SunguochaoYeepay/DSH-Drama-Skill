@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "approvals": {
+    "clips": {
+      "g001": {
+        "at": "2026-09-21T05:30:16.470Z",
+        "by": "用户",
+        "artifact_hash": "442a1240150717ee373b68c5843a34bd30dfc6fb1a463db92e832312c5b59b5d",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\units\\i2v_20260921-132636.mp4"
+        ]
+      },
+      "g002": {
+        "at": "2026-09-21T05:30:16.786Z",
+        "by": "用户",
+        "artifact_hash": "5edb4b6dde609e1c95ea7bd9ecd65d61253c6b987ec8e9eb56d5d64b41ebf0e7",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\units\\i2v_20260921-132726.mp4"
+        ]
+      },
+      "g003": {
+        "at": "2026-09-21T05:30:17.106Z",
+        "by": "用户",
+        "artifact_hash": "be4c905842fefbb54ba818a8e64cae3fe28b33c036575273dbe60d38fe8d878d",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\units\\i2v_20260921-132815.mp4"
+        ]
+      }
+    },
+    "assets": {
+      "at": "2026-09-21T05:20:52.647Z",
+      "by": "用户",
+      "artifact_hash": "b4b66b96742b251ce4786268b7907fb7c94e6749740cafd6cc57b4e6b8cd53c3",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\alarm_clock_ref_image.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\bedroom_wide_master.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\bedside_master.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\enamel_mug_ref_image.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\folding_glasses_ref_image.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\phone_ref_image.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\xiaoyu_night_sheet.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\xiaoyu_portrait.png"
+      ],
+      "generation": {
+        "version": 1,
+        "stage": "assets",
+        "at": "2026-09-21T05:18:24.429Z",
+        "provider": "comfyui",
+        "model": "local-comfyui",
+        "requested_provider": null,
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\xiaoyu_portrait.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\xiaoyu_night_sheet.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\bedroom_wide_master.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\bedside_master.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\alarm_clock_ref_image.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\phone_ref_image.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\enamel_mug_ref_image.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\assets\\folding_glasses_ref_image.png"
+        ]
+      }
+    },
+    "keyframes": {
+      "at": "2026-09-21T05:30:16.149Z",
+      "by": "用户",
+      "artifact_hash": "3ac42f1dcdd0afd21ab8cef0eca92d851d6881e2dc3896a2e70d79638776e033",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\keyframes_render\\g001.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\keyframes_render\\g002.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\keyframes_render\\g003.png"
+      ],
+      "generation": {
+        "version": 1,
+        "stage": "keyframes",
+        "at": "2026-09-21T05:25:30.104Z",
+        "provider": "local",
+        "model": "local-comfyui/qwen21",
+        "requested_provider": "comfyui",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\keyframes_render\\g001.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\keyframes_render\\g002.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\keyframes_render\\g003.png"
+        ],
+        "plan": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\not_awake\\render.plan.json",
+        "execution_overrides": []
+      }
+    }
+  }
+}

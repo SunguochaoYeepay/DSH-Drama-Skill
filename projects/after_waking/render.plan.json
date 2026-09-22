@@ -1,0 +1,609 @@
+{
+  "version": 1,
+  "source_logline": "一个男孩醒来变成女孩，崩溃一场后发现是梦——直到他抓了抓头发。全片四段：醒来、照镜子、梦醒、二次反转。",
+  "policy": {
+    "target_seconds": 10,
+    "max_seconds": 15,
+    "min_generation_seconds": 5.17,
+    "split_on_cast_change": false,
+    "director_owns_unit_boundaries": true,
+    "preserves_director_shots": true
+  },
+  "units": [
+    {
+      "id": "g001",
+      "source_units": [
+        "u1"
+      ],
+      "boundary_reason": "director_unit",
+      "content_duration_s": 10.5,
+      "generation_duration_s": 10.5,
+      "keyframe": "keyframes_render/g001.png",
+      "cast": [
+        "chen_yu_dream_girl"
+      ],
+      "scene": "scene_01",
+      "props": [
+        "phone"
+      ],
+      "why": "从闹钟响到抓住头发，是一次连续不断的自我检查。同一间卧室、同一套造型、没有第二个人、动作关系简单，可以共享一张 0 秒首帧。",
+      "duration_reason": "两句台词最低口播 1.85 秒与 1.20 秒，各占一镜；醒来与反复翻看双手需要额外停顿。四镜合计 10.5 秒。",
+      "keyframe_start": "0 秒时画面只有被面、枕角和一部刚亮起并开始震动的手机：一只手刚从被子边缘伸出来，指尖接近手机但还没有碰到，手背朝上，五指半张。",
+      "keyframe_cast": [
+        "chen_yu_dream_girl"
+      ],
+      "action_complexity": {
+        "level": "low",
+        "high_risk_events": [],
+        "strategy": "none"
+      },
+      "end_state": "陈屿坐在床上，被子堆在腰际，右手捏着一缕从胸前举起的及腰长发停在半空，瞳孔放大，嘴唇刚闭合。",
+      "continuity": {
+        "mode": "independent",
+        "reason": "开场，没有上一段可承接"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 3,
+          "framing": "近景",
+          "camera": "缓慢前推",
+          "scene": "scene_01",
+          "on_screen": [
+            "chen_yu_dream_girl"
+          ],
+          "props": [
+            "phone"
+          ],
+          "action": "一只白净细长的手从被子里伸出来，摸到枕边震动的手机，按下去，屋里重新安静，手停在手机上不动",
+          "lighting": "清晨斜光落在被面上，手机屏幕的冷白光映在手背上",
+          "lines": [],
+          "audio": "手机在枕边震动，被料摩擦的沙沙声，随后归于安静",
+          "emotion_analysis": [
+            {
+              "character": "chen_yu_dream_girl",
+              "cause": "闹钟把她吵醒，人还处在半睡半醒里，没有察觉到身体已经不对",
+              "internal_state": "困倦、没清醒",
+              "visible_behavior": "手背朝上，五指半张，按下手机后没有收回，动作拖沓",
+              "gaze": "视线朝下落在手机上",
+              "avoid_symbols": [
+                "惊恐瞪眼",
+                "手臂剧烈颤抖",
+                "咧嘴大笑"
+              ]
+            }
+          ],
+          "source": {
+            "unit": "u1",
+            "shot": 1
+          }
+        },
+        {
+          "n": 2,
+          "at": 3,
+          "duration_s": 3,
+          "framing": "近景",
+          "camera": "固定",
+          "cut": "the camera cuts to",
+          "scene": "scene_01",
+          "on_screen": [
+            "chen_yu_dream_girl"
+          ],
+          "props": [],
+          "action": "陈屿在被子里翻了个身，一只手僵在半空停住，眉头向内收拢，嘴唇动了两下开口说话",
+          "lighting": "清晨斜光从侧面扫过脸颊，眼下还带着刚醒的红",
+          "lines": [
+            15
+          ],
+          "audio": "被料翻动之后的静场，只有很轻的呼吸声",
+          "emotion_analysis": [
+            {
+              "character": "chen_yu_dream_girl",
+              "cause": "她发现这只手的触感、指甲和指节都与自己记忆里的不一样",
+              "internal_state": "迷糊里冒出的警觉",
+              "visible_behavior": "手掌停在半空一动不动，眉头向内收，肩膀微微抬起",
+              "gaze": "视线落在自己停住的那只手上",
+              "avoid_symbols": [
+                "夸张尖叫",
+                "抱头",
+                "闭眼装睡"
+              ]
+            }
+          ],
+          "source": {
+            "unit": "u1",
+            "shot": 2
+          }
+        },
+        {
+          "n": 3,
+          "at": 6,
+          "duration_s": 3,
+          "framing": "中景",
+          "camera": "固定",
+          "cut": "the shot cuts to",
+          "scene": "scene_01",
+          "on_screen": [
+            "chen_yu_dream_girl"
+          ],
+          "props": [],
+          "action": "陈屿坐在床上，被子堆在腰际，低头盯着自己的手，把手翻过来又翻过去，指尖一根根张开",
+          "lighting": "清晨斜光落在被子和手臂上，房间里其余部分偏暗",
+          "lines": [],
+          "audio": "床垫受压的轻响，被子滑落的摩擦声",
+          "emotion_analysis": [
+            {
+              "character": "chen_yu_dream_girl",
+              "cause": "她反复确认这双手确实不是自己的，却找不到任何解释",
+              "internal_state": "难以置信",
+              "visible_behavior": "双手来回翻动，指节张开又收拢，肩背绷直，上身略往前压",
+              "gaze": "死死盯着自己的手掌",
+              "avoid_symbols": [
+                "放声大笑",
+                "闭眼逃避",
+                "耸肩无所谓"
+              ]
+            }
+          ],
+          "source": {
+            "unit": "u1",
+            "shot": 3
+          }
+        },
+        {
+          "n": 4,
+          "at": 9,
+          "duration_s": 1.5,
+          "framing": "特写",
+          "camera": "缓慢前推",
+          "cut": "the shot changes to",
+          "scene": "scene_01",
+          "on_screen": [
+            "chen_yu_dream_girl"
+          ],
+          "props": [],
+          "action": "她抓起垂到胸口的一把及腰长发，慢慢举到眼前，手臂僵在半空，瞳孔一缩，嘴唇张开",
+          "lighting": "清晨斜光穿过发丝，发梢透出暖色边缘光",
+          "lines": [
+            20
+          ],
+          "audio": "头发从睡衣肩头滑过的细碎摩擦声",
+          "emotion_analysis": [
+            {
+              "character": "chen_yu_dream_girl",
+              "cause": "手里的东西明确无误是一把自己的长发，事情已经无法用看错解释",
+              "internal_state": "惊愕",
+              "visible_behavior": "手指捏着发梢，手臂僵在半空，瞳孔放大，嘴唇张开",
+              "gaze": "视线钉在手里的头发上",
+              "avoid_symbols": [
+                "微笑",
+                "放松肩膀",
+                "低头沉默"
+              ]
+            }
+          ],
+          "source": {
+            "unit": "u1",
+            "shot": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "g002",
+      "source_units": [
+        "u2"
+      ],
+      "boundary_reason": "director_unit",
+      "content_duration_s": 10.5,
+      "generation_duration_s": 10.5,
+      "keyframe": "keyframes_render/g002.png",
+      "cast": [
+        "chen_yu_dream_girl"
+      ],
+      "scene": "scene_01",
+      "props": [
+        "mirror"
+      ],
+      "why": "镜子前是一段独立的对镜表演：站位从床上换成镜子前，画面关系从单人床上变成人与镜中倒影，需要一张新的 0 秒首帧把站位和倒影同时锚死。",
+      "duration_reason": "两句台词各最低 1.20 秒，加上盯着倒影、同步动作与蹲下崩溃的表演，四镜合计 10.5 秒。",
+      "keyframe_start": "0 秒时陈屿已经站在穿衣镜前，双手撑在镜面两侧的边框上，肩膀抬起，胸口起伏，镜面里同时映出一个穿浅粉睡裙、及腰长发的女孩。",
+      "keyframe_cast": [
+        "chen_yu_dream_girl"
+      ],
+      "action_complexity": {
+        "level": "low",
+        "high_risk_events": [],
+        "strategy": "none"
+      },
+      "end_state": "陈屿抱头蹲在穿衣镜前，双肩向内缩起，镜面里映出同一个蹲着的女孩。",
+      "continuity": {
+        "mode": "independent",
+        "reason": "新的站位与新的人镜关系，上一单元的床上姿态不能延续到镜子前"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 2.5,
+          "framing": "中景",
+          "camera": "固定",
+          "scene": "scene_01",
+          "on_screen": [
+            "chen_yu_dream_girl"
+          ],
+          "props": [
+            "mirror"
+          ],
+          "action": "陈屿双手撑在穿衣镜两侧，胸口起伏，眼睛盯着镜面里的那个人，肩膀一点点抬起来",
+          "lighting": "清晨斜光从侧后方打来，镜面上有一道细长的高光",
+          "lines": [],
+          "audio": "急促的呼吸声，房间里很安静",
+          "emotion_analysis": [
+            {
+              "character": "chen_yu_dream_girl",
+              "cause": "镜子里站着的是一个陌生的女孩，而镜面就在她面前",
+              "internal_state": "绷紧的震惊",
+              "visible_behavior": "双手撑住镜框，肩膀抬起，呼吸起伏明显，身体前倾",
+              "gaze": "视线直直钉在镜面里的倒影上",
+              "avoid_symbols": [
+                "转过身背对镜子",
+                "双手自然下垂",
+                "闭眼"
+              ]
+            }
+          ],
+          "source": {
+            "unit": "u2",
+            "shot": 1
+          }
+        },
+        {
+          "n": 2,
+          "at": 2.5,
+          "duration_s": 3,
+          "framing": "近景",
+          "camera": "缓慢前推",
+          "cut": "the camera cuts to",
+          "scene": "scene_01",
+          "on_screen": [
+            "chen_yu_dream_girl"
+          ],
+          "props": [
+            "mirror"
+          ],
+          "facing": {
+            "chen_yu_dream_girl": "toward"
+          },
+          "action": "镜面里的女孩睁大眼睛与镜外的人对视，鼻尖几乎贴上玻璃，嘴唇动了两下开口说话",
+          "lighting": "清晨斜光切过半边脸，另一半落在镜面的反射里",
+          "lines": [
+            24
+          ],
+          "audio": "呼吸声贴得很近，玻璃上有一点极轻的气流声",
+          "emotion_analysis": [
+            {
+              "character": "chen_yu_dream_girl",
+              "cause": "倒影和他做出完全相同的表情，他没法再把这当成别人的脸",
+              "internal_state": "被逼到墙角的惊恐",
+              "visible_behavior": "身体前倾贴近镜面，眼睛睁大，嘴唇张开又合上",
+              "gaze": "与镜中的倒影正面对视",
+              "avoid_symbols": [
+                "后退离开镜子",
+                "转头看向别处",
+                "落泪"
+              ]
+            }
+          ],
+          "source": {
+            "unit": "u2",
+            "shot": 2
+          }
+        },
+        {
+          "n": 3,
+          "at": 5.5,
+          "duration_s": 2.5,
+          "framing": "中景",
+          "camera": "固定",
+          "cut": "the shot cuts to",
+          "scene": "scene_01",
+          "on_screen": [
+            "chen_yu_dream_girl"
+          ],
+          "props": [
+            "mirror"
+          ],
+          "action": "她抬起右手摸自己的左脸，镜面里的女孩几乎同时抬起同一只手摸左脸；她歪头，倒影也跟着歪头，两边动作分毫不差",
+          "lighting": "清晨斜光稳定照在人与镜面上，两侧亮度接近",
+          "lines": [],
+          "audio": "指尖擦过脸颊的轻响，衣料摩擦声",
+          "emotion_analysis": [
+            {
+              "character": "chen_yu_dream_girl",
+              "cause": "她试着用动作去验证倒影是不是自己，结果每一步都被精确复现",
+              "internal_state": "确认之后的发懵",
+              "visible_behavior": "右手贴住左脸不动，头慢慢歪向一侧，动作放得很慢",
+              "gaze": "盯着镜中倒影的手，再移到倒影的眼睛",
+              "avoid_symbols": [
+                "快速挥手",
+                "转身离开",
+                "笑出声"
+              ]
+            }
+          ],
+          "source": {
+            "unit": "u2",
+            "shot": 3
+          }
+        },
+        {
+          "n": 4,
+          "at": 8,
+          "duration_s": 2.5,
+          "framing": "近景",
+          "camera": "缓慢拉远",
+          "cut": "the shot transitions to",
+          "scene": "scene_01",
+          "on_screen": [
+            "chen_yu_dream_girl"
+          ],
+          "props": [
+            "mirror"
+          ],
+          "action": "她双手抱住头，慢慢蹲下去，双肩向内缩起，镜面里的女孩也跟着矮下去，最后只剩上半身映在镜子里",
+          "lighting": "清晨斜光从上方压下来，蹲下之后脸部落在阴影里",
+          "lines": [
+            26
+          ],
+          "audio": "布料摩擦地面的声音，压低的呼吸声",
+          "emotion_analysis": [
+            {
+              "character": "chen_yu_dream_girl",
+              "cause": "所有解释都被镜面堵死，她只能选择躲开这面镜子",
+              "internal_state": "撑不住的崩溃",
+              "visible_behavior": "双手抱头，身体往下缩成一团，肩膀一下一下地抖",
+              "gaze": "视线垂下避开镜面",
+              "avoid_symbols": [
+                "站着不动",
+                "抬头微笑",
+                "平举双手"
+              ]
+            }
+          ],
+          "source": {
+            "unit": "u2",
+            "shot": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "g003",
+      "source_units": [
+        "u3"
+      ],
+      "boundary_reason": "director_unit",
+      "content_duration_s": 5.5,
+      "generation_duration_s": 5.5,
+      "keyframe": "keyframes_render/g003.png",
+      "cast": [
+        "chen_yu_wake_boy"
+      ],
+      "scene": "scene_01",
+      "props": [
+        "phone"
+      ],
+      "why": "这里是全片的身份锚点切换：身体从梦中女装换回男装。必须换一张首帧，上一单元的身体状态不能延续过来。",
+      "duration_reason": "台词最低口播 1.85 秒占一镜；从闭眼躺着到惊醒坐起、再低头确认双手，需要一个完整的起身过程。两镜合计 5.5 秒。",
+      "keyframe_start": "0 秒时陈屿闭着眼睛仰躺在枕头上，被子盖到胸口，枕边的手机屏幕刚亮起并开始震动，头发是黑色短寸头。",
+      "keyframe_cast": [
+        "chen_yu_wake_boy"
+      ],
+      "action_complexity": {
+        "level": "low",
+        "high_risk_events": [],
+        "strategy": "none"
+      },
+      "end_state": "陈屿坐在床上，双手摊在身前，肩背松下来，嘴角刚刚扬起。",
+      "continuity": {
+        "mode": "independent",
+        "reason": "造型锚点从梦中女装换成梦醒男装，必须独立首帧"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 2.5,
+          "framing": "中景",
+          "camera": "固定",
+          "scene": "scene_01",
+          "on_screen": [
+            "chen_yu_wake_boy"
+          ],
+          "props": [
+            "phone"
+          ],
+          "action": "枕边的手机闹钟响起，陈屿闭着眼皱了一下眉，随即睁开眼睛，上身猛地抬起来坐直，被子滑到腰间",
+          "lighting": "同一道清晨斜光落在被子上，和第一段完全一致",
+          "lines": [],
+          "audio": "手机闹钟铃声刺破安静，被子弹开的摩擦声",
+          "emotion_analysis": [
+            {
+              "character": "chen_yu_wake_boy",
+              "cause": "闹钟第二次响起，把他从梦里拽出来",
+              "internal_state": "惊魂未定的戒备",
+              "visible_behavior": "眼睛骤然睁开，上身快速抬起坐直，双手撑在被子上",
+              "gaze": "视线先落在枕边的手机上",
+              "avoid_symbols": [
+                "从容缓慢",
+                "微笑",
+                "继续躺着"
+              ]
+            }
+          ],
+          "source": {
+            "unit": "u3",
+            "shot": 1
+          }
+        },
+        {
+          "n": 2,
+          "at": 2.5,
+          "duration_s": 3,
+          "framing": "近景",
+          "camera": "缓慢前推",
+          "cut": "the camera cuts to",
+          "scene": "scene_01",
+          "on_screen": [
+            "chen_yu_wake_boy"
+          ],
+          "props": [],
+          "action": "陈屿低头看自己的双手，骨节分明，指腹上有薄茧，他大口喘着气，肩膀松下来，笑出了声",
+          "lighting": "清晨斜光正面照在手背和脸上，指尖透出暖色",
+          "lines": [
+            32
+          ],
+          "audio": "大口喘气的声音，随后一声放松的呼气",
+          "emotion_analysis": [
+            {
+              "character": "chen_yu_wake_boy",
+              "cause": "他看见的是自己那双熟悉的手，刚才那一场只是个梦",
+              "internal_state": "劫后余生的释然",
+              "visible_behavior": "双手摊在身前反复看了一下，肩膀垮下来，嘴角上扬笑出声",
+              "gaze": "视线落在自己的掌纹上",
+              "avoid_symbols": [
+                "惊慌四顾",
+                "皱眉",
+                "握紧拳头"
+              ]
+            }
+          ],
+          "source": {
+            "unit": "u3",
+            "shot": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "g004",
+      "source_units": [
+        "u4"
+      ],
+      "boundary_reason": "end",
+      "content_duration_s": 5,
+      "generation_duration_s": 5.17,
+      "keyframe": "keyframes_render/g004.png",
+      "cast": [
+        "chen_yu_wake_boy_long"
+      ],
+      "scene": "scene_01",
+      "props": [],
+      "why": "同一身睡衣但发型从短寸头变成及腰长发，是第二个身份锚点切换。反转就落在这两镜之间，必须换首帧。",
+      "duration_reason": "这一拍没有台词，靠两个短促动作完成：倒回枕头、再抓一把头发。动作干净、反应要快，两镜合计 5.0 秒。",
+      "keyframe_start": "0 秒时陈屿坐在床上，肩膀完全放松，上身正向枕头方向倒下，一只手已经抬到耳侧，头发是及腰的黑色长直发，散在肩后。",
+      "keyframe_cast": [
+        "chen_yu_wake_boy_long"
+      ],
+      "action_complexity": {
+        "level": "low",
+        "high_risk_events": [],
+        "strategy": "none"
+      },
+      "end_state": "陈屿仰躺在枕头上，手指插在头发里，指缝间夹着一把及腰长发，笑容凝固，眼睛睁大。",
+      "continuity": {
+        "mode": "independent",
+        "reason": "发型锚点变化，短寸头不能延续到这一单元"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 2.5,
+          "framing": "中景",
+          "camera": "固定",
+          "scene": "scene_01",
+          "on_screen": [
+            "chen_yu_wake_boy_long"
+          ],
+          "props": [],
+          "action": "陈屿仰面倒回枕头，长出一口气，抬手伸向自己头顶，手指插进头发里",
+          "lighting": "清晨斜光照在枕头上，头发在枕面上铺开",
+          "lines": [],
+          "audio": "身体压进枕头的闷响，一声长长的呼气",
+          "emotion_analysis": [
+            {
+              "character": "chen_yu_wake_boy_long",
+              "cause": "他认定噩梦已经结束，整个人彻底放松下来",
+              "internal_state": "松弛、毫无防备",
+              "visible_behavior": "身体向后倒进枕头，肩膀摊开，手臂随意抬起伸向头顶",
+              "gaze": "视线朝上对着天花板",
+              "avoid_symbols": [
+                "警觉张望",
+                "绷紧肩膀",
+                "立刻起身"
+              ]
+            }
+          ],
+          "source": {
+            "unit": "u4",
+            "shot": 1
+          }
+        },
+        {
+          "n": 2,
+          "at": 2.5,
+          "duration_s": 2.5,
+          "framing": "特写",
+          "camera": "缓慢前推",
+          "cut": "the shot cuts to",
+          "scene": "scene_01",
+          "on_screen": [
+            "chen_yu_wake_boy_long"
+          ],
+          "props": [],
+          "action": "特写他的手指和头发：指缝间滑过一把及腰的长发，发尾散在枕头上；他的笑容停在脸上不动，眼睛慢慢睁大，画面转黑",
+          "lighting": "斜光从侧上方划过发丝，形成细密的亮边，随后画面收暗",
+          "lines": [],
+          "audio": "头发从指间滑过的细响，随后所有声音一起压低",
+          "emotion_analysis": [
+            {
+              "character": "chen_yu_wake_boy_long",
+              "cause": "手指抓到的是一把长到自己腰际的头发，说明刚才那一场根本没有结束",
+              "internal_state": "骤然冻住的恐惧",
+              "visible_behavior": "手指停在发丝里不再移动，笑容僵在脸上，眼睛慢慢睁大",
+              "gaze": "视线从发梢慢慢抬起，最后定住",
+              "avoid_symbols": [
+                "放声大笑",
+                "闭眼",
+                "坐起身"
+              ]
+            }
+          ],
+          "source": {
+            "unit": "u4",
+            "shot": 2
+          }
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "content_duration_s": 31.5,
+    "projected_delivery_duration_s": 31.67,
+    "keyframe_count": 4
+  },
+  "provenance": {
+    "contract": 1,
+    "project_id": "after_waking",
+    "board_sha256": "013374e3266c6d9fba0385512d95c0eb8bd3041ef47307bebbf36aa8674efc18",
+    "story_sha256": "a2f91bc8b3b36b5061b4578a236eb297ada0c082fa13df7e641833bc44919748",
+    "direction_sha256": "a760d028111db3cac15eb8daf45f38d29fa0488cbd2f0f876bb9a44ffc273e1f",
+    "direction_version": 6,
+    "direction_file": "board.direction.json",
+    "bound_at": "2026-09-17T14:40:48.041Z",
+    "plan_units_sha256": "90c251b583e386ac51222412dd36162a42c8162795f9fb52615fe6529f331018"
+  }
+}

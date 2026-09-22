@@ -1,0 +1,168 @@
+{
+  "version": 1,
+  "approvals": {
+    "clips": {
+      "g001": {
+        "at": "2026-09-21T14:57:04.910Z",
+        "by": "用户",
+        "artifact_hash": "8209cc5969e33ea8f76b1228d31a33eb45c8b2ae7d1f5af32a0319d4a2691691",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\units\\i2v_20260921-225418.mp4"
+        ]
+      },
+      "g002": {
+        "at": "2026-09-21T15:02:20.660Z",
+        "by": "用户",
+        "artifact_hash": "b0a2c1b8b5b6ae13e6ab3c46270fda6a2087c4e007af38833f2fd5262b9212cc",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\units\\i2v_20260921-225918.mp4"
+        ]
+      },
+      "g003": {
+        "at": "2026-09-21T15:04:38.189Z",
+        "by": "用户",
+        "artifact_hash": "e6725144aca4b7ce00006bab214aa5295b6a484ab0bde715942a731b7a83f9c9",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\units\\i2v_20260921-230413.mp4"
+        ]
+      },
+      "g004": {
+        "at": "2026-09-21T15:09:23.594Z",
+        "by": "用户",
+        "artifact_hash": "df0aac9fc87943eeb4879dd906e2b722b6912490b06b8e5ca032eb9c911c0a41",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\units\\i2v_20260921-230859.mp4"
+        ]
+      }
+    },
+    "story": {
+      "at": "2026-09-21T10:43:26.485Z",
+      "by": "用户",
+      "artifact_hash": "675139dab80b50c60f7bcc70e070077ab2ce3651b065ba8d7f222eaa3a3eeadb",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\story.md"
+      ]
+    },
+    "board": {
+      "at": "2026-09-21T14:52:02.120Z",
+      "by": "用户",
+      "artifact_hash": "0750aefe9e687c8b610a14fb67d904820400ffbacf08deae3e697750e9feab97",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\board.json"
+      ]
+    },
+    "direction": {
+      "at": "2026-09-22T02:05:51.127Z",
+      "by": "用户",
+      "artifact_hash": "1a204dd62e9cb813685d1ec825824aa2dd0d6efd41ec52009b33e0f86b86af9d",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\board.direction.json"
+      ]
+    },
+    "assets": {
+      "at": "2026-09-21T11:04:00.965Z",
+      "by": "用户",
+      "artifact_hash": "1c7652b82315e71a93efa208fdaf81587064e54d0a550ee63a92eff4505dc8bd",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\a_he_portrait.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\a_he_trail_sheet.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\di_shu_bandit_sheet.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\di_shu_portrait.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\di_shu_sack_ref_image.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\di_shu_stick_ref_image.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\lao_zhou_portrait.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\lao_zhou_trail_sheet.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\roadblock_master.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\su_qing_portrait.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\su_qing_trail_sheet.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\valley_mouth_master.png"
+      ],
+      "generation": {
+        "version": 1,
+        "stage": "assets",
+        "at": "2026-09-21T10:59:47.390Z",
+        "provider": "comfyui",
+        "model": "local-comfyui",
+        "requested_provider": null,
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\su_qing_portrait.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\lao_zhou_portrait.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\a_he_portrait.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\di_shu_portrait.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\su_qing_trail_sheet.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\lao_zhou_trail_sheet.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\a_he_trail_sheet.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\di_shu_bandit_sheet.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\valley_mouth_master.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\roadblock_master.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\di_shu_stick_ref_image.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\assets\\di_shu_sack_ref_image.png"
+        ],
+        "note": "地鼠的肖像与身份图由手工提示词生成（参数与自动通道同源）；其余 10 张走自动配方"
+      }
+    },
+    "keyframes": {
+      "at": "2026-09-22T02:07:32.029Z",
+      "by": "用户",
+      "artifact_hash": "ac5a1d60957633dfc455d4a2bd6228db98381016a16280e4506a81705967474d",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\keyframes_local_v2\\g002.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\keyframes_local_v2\\g003.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\keyframes_local_v2\\g004.png",
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\keyframes_render\\g001.png"
+      ],
+      "generation": {
+        "version": 1,
+        "stage": "keyframes",
+        "at": "2026-09-22T02:06:35.949Z",
+        "provider": "local",
+        "model": "local-comfyui/qwen21",
+        "requested_provider": "comfyui",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\keyframes_render\\g001.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\keyframes_local_v2\\g002.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\keyframes_local_v2\\g003.png",
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\keyframes_local_v2\\g004.png"
+        ],
+        "plan": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\render.plan.json",
+        "prompt_files": [
+          "keyframe-prompts/g002.txt"
+        ]
+      }
+    },
+    "handoffs": {
+      "g002": {
+        "at": "2026-09-21T14:57:05.089Z",
+        "by": "用户",
+        "artifact_hash": "d421935124fc92baa114eb4c1de3d22a2cf69d57cdf61d410dd8778fe04c2905",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\handoffs\\g002.stable-tail.png"
+        ]
+      },
+      "g003": {
+        "at": "2026-09-21T15:02:20.863Z",
+        "by": "用户",
+        "artifact_hash": "d35c25cb3b709427d094e3059fb598b87622fb5c91e4bc73f1d74e4ebdf6c796",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\handoffs\\g003.stable-tail.png"
+        ]
+      },
+      "g004": {
+        "at": "2026-09-21T15:04:38.361Z",
+        "by": "用户",
+        "artifact_hash": "bcda854c82451024f699bb52ce293f57d7699c11759fcc8831cf4d573833c29d",
+        "artifacts": [
+          "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\handoffs\\g004.stable-tail.png"
+        ]
+      }
+    },
+    "final": {
+      "at": "2026-09-21T15:09:44.172Z",
+      "by": "用户",
+      "artifact_hash": "c66d804bdc5358c8299657e53e9dfc041db25c64d5586548e5211dfa7421abe9",
+      "artifacts": [
+        "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\gopher_toll\\out\\final.mp4"
+      ]
+    }
+  }
+}

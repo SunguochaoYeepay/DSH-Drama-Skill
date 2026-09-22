@@ -1,0 +1,35 @@
+{
+  "ok": true,
+  "mode": "fl2v",
+  "kind": "video",
+  "prompt_id": "60d95b06-fd14-4a95-a485-a3f627df13e6",
+  "params": {
+    "mode": "fl2v",
+    "width": 1088,
+    "height": 1920,
+    "frames": 124,
+    "seconds": 5.17
+  },
+  "seed_used": 92596500,
+  "files": [
+    {
+      "path": "E:\\AI-Image\\ComfyUI-aki-v1.4\\output\\video\\H3_fl2v_00005_.mp4",
+      "filename": "H3_fl2v_00005_.mp4",
+      "subfolder": "video",
+      "type": "output",
+      "kind": "video",
+      "exists": true,
+      "bytes": 3518083,
+      "url": "http://127.0.0.1:8188/view?filename=H3_fl2v_00005_.mp4&subfolder=video&type=output",
+      "local_path": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\units\\fl2v_20260915-205530.mp4"
+    }
+  ],
+  "local_files": [
+    "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\units\\fl2v_20260915-205530.mp4"
+  ],
+  "out_dir": "E:\\AI-Tool\\DeepSeek\\story2video\\projects\\dashixiong\\units",
+  "prompt_used": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] The shot begins exactly on the reference image and evolves smoothly and continuously toward the final frame given as the last-frame reference. Same two people, same forest path, same morning light, same costumes. The camera holds steady. No cuts, no text, no subtitles.\n\noverall_soundscape: Quiet forest ambience, leaves rustling, soft footsteps on stone.\n\nnon_diegetic_music: N/A",
+  "lyrics_used": null,
+  "node_errors": {},
+  "elapsed_s": 219.5
+}
