@@ -13,9 +13,10 @@
  *   图变了那张关键帧票自然失效，要人重新签。）
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { mediaUrl, isVideo, videoLog, startRegenerate, fetchRegenerate } from './api.js';
+import { mediaUrl, isVideo, videoLog } from './api.js';
 import { directorUnitOf, fmtSec } from './graph.js';
 import { CopyBlock, CopyButton } from './Copy.jsx';
+import RegenModal from './RegenModal.jsx';
 
 /** `asset-design.json` 的设计类型 → 中文名。 */
 const KIND_LABEL = {
@@ -75,102 +76,27 @@ function PromptSection({ title, text, missing, right }) {
 }
 
 /**
- * 「重出图片」：改完 `keyframe-prompts/<单元>.txt` 后点一下，只重抽**这一个单元**。
+ * 「重出图片」按钮：打开 RegenModal 那个工作台（改提示词 → 重出 → 看新图 → 满意就签）。
  *
- * 为什么敢放在看板里：它**不签票**——只产出新图，`review.approvals.json` 一个字不碰。
- * 图一变，那张关键帧票就失效了（票绑的是文件内容哈希），所以成功之后必须提示去重签，
- * 这里直接把命令写出来（人复制一下就能跑），看板自己不代签。
+ * 弹窗自己负责提示词写入、任务轮询与签署；这里只是入口。
+ * 看板里**没有任何写 review.approvals.json 的代码路径** —— 签是把用户明确的「通过」
+ * 转交给唯一所有者 `cli/review-gate.mjs` 执行。
  */
-function RegenKeyframe({ project, unitId, onRefresh }) {
-  const [job, setJob] = useState(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-
-  // 跑着的时候每 2 秒问一次状态；一结束就刷新快照（图变没变、票还算不算数都要重读）
-  useEffect(() => {
-    if (!job || job.state !== 'running') return undefined;
-    const timer = setInterval(async () => {
-      try {
-        const v = await fetchRegenerate(job.id);
-        setJob(v);
-        if (v.state !== 'running') onRefresh?.();
-      } catch { /* 网络抖动就下一轮再问 */ }
-    }, 2000);
-    return () => clearInterval(timer);
-  }, [job, onRefresh]);
-
-  const run = async () => {
-    setBusy(true); setError('');
-    try {
-      const r = await startRegenerate(project, unitId);
-      setJob({ id: r.jobId, state: 'running', log: '', durationMs: 0 });
-    } catch (e) {
-      setError(e.message || '重抽起不来');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const running = job?.state === 'running';
-  const lastLine = String(job?.log || '').trim().split(/\r?\n/).filter(Boolean).pop() || '';
+function RegenButton({ onClick }) {
   return (
-    <Section
-      title="重出图片"
-      right={running ? '正在跑…' : (job?.state === 'done' ? '完成' : (job?.state === 'failed' ? '失败' : ''))}
-    >
+    <Section title="重出图片">
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={run}
-          disabled={busy || running}
-          className={[
-            'rounded-md border px-2.5 py-1 text-[12px] transition',
-            busy || running
-              ? 'border-ink-700 text-ink-500'
-              : 'border-accent/60 bg-accent/10 text-ink-100 hover:bg-accent/20',
-          ].join(' ')}
+          onClick={onClick}
+          className="rounded-md border border-accent/60 bg-accent/10 px-2.5 py-1 text-[12px] text-ink-100 transition hover:bg-accent/20"
         >
-          {running ? '重出中…' : '重出图片'}
+          重出图片…
         </button>
         <span className="text-[11px] text-ink-500">
-          改完 <span className="font-mono">keyframe-prompts/{unitId}.txt</span> 再点（只重抽这一个单元；本机 ComfyUI 约 20–35 秒）
+          改提示词 → 重出 → 看新图 → 满意就签（只重抽当前这一格）
         </span>
       </div>
-
-      {error ? <Box className="mt-2 text-bad">{error}</Box> : null}
-
-      {job ? (
-        <div className="mt-2 space-y-1">
-          {running ? (
-            <div className="text-[11.5px] text-ink-400">
-              {((job.durationMs || 0) / 1000).toFixed(0)} 秒…　{lastLine || '（等待模型）'}
-            </div>
-          ) : job.state === 'done' ? (
-            <>
-              <div className="text-[11.5px] text-ok">
-                ✓ 重出完成（{(job.durationMs / 1000).toFixed(1)} 秒）
-              </div>
-              <div className="text-[11.5px] text-warn">
-                关键帧票绑的是图片内容 —— 图变了那张票就失效了，请**重新签**：
-              </div>
-              <div className="break-all rounded border border-ink-700 bg-ink-900/60 px-2 py-1 font-mono text-[11px] text-ink-300">
-                node cli/review-gate.mjs approve --project {project} --stage keyframes
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="text-[11.5px] text-bad">
-                ✗ 重出失败（退出码 {job.exitCode ?? '—'}）
-              </div>
-              {lastLine ? (
-                <div className="break-all rounded border border-bad/40 bg-bad/5 px-2 py-1 font-mono text-[11px] text-bad">
-                  {lastLine}
-                </div>
-              ) : null}
-            </>
-          )}
-        </div>
-      ) : null}
     </Section>
   );
 }
@@ -546,6 +472,8 @@ function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine, onRefr
   const [sub, setSub] = useState('info');
   // 视频页底部那层：提示词 / 镜头（默认提示词）
   const [clipTab, setClipTab] = useState('prompt');
+  // 重出工作台弹窗
+  const [regenOpen, setRegenOpen] = useState(false);
   if (!unit) return <Box className="text-ink-500">找不到单元 {unitId}</Box>;
   const clips = snapshot.gates?.clips?.perUnit?.[unitId];
   return (
@@ -606,7 +534,17 @@ function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine, onRefr
             text={unit.keyframePrompt}
             missing={`还没有 keyframe-prompts/${unitId}.txt（直写制：这个文件逐字送模型，改它就是改下一张图）`}
           />
-          <RegenKeyframe project={project} unitId={unitId} onRefresh={onRefresh} />
+          <RegenButton onClick={() => setRegenOpen(true)} />
+          {regenOpen ? (
+            <RegenModal
+              project={project}
+              unit={unit}
+              frameCount={(snapshot.units || []).filter((u) => u.keyframe).length || (snapshot.units || []).length}
+              onClose={() => setRegenOpen(false)}
+              onRefresh={onRefresh}
+              onOpen={onOpen}
+            />
+          ) : null}
         </>
       )}
 

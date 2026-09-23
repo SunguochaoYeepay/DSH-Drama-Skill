@@ -35,7 +35,18 @@
  *   POST /api/delete              { name, confirm, archived? }  删除到系统回收站
  *   POST /api/regenerate          { name, unit }               重出某个单元的关键帧
  *   GET  /api/regenerate?id=x     重抽任务状态（轮询用）
+ *   POST /api/keyframe-prompt     { name, unit, text }         写 keyframe-prompts/<单元>.txt
+ *   POST /api/sign                { name, stage }              请 review-gate 落一张票
  *   GET  /media/<剧目>/<相对路径>  媒体文件（限剧目目录内，防目录穿越）
+ *
+ * ## 「签署」为什么不破坏"看板不代签"（2026-09-23）
+ *
+ * 原始契约是：`review.approvals.json` **只能**由 `cli/review-gate.mjs` 落笔。
+ * 这条现在是这么守住的 —— 看板里**没有任何写 approvals 的代码路径**：
+ * 「签署」按钮做的是把用户明确的「通过」**转交给唯一所有者执行**
+ * （起 `cli/review-gate.mjs approve --project <剧目> --stage keyframes`，等它退出、原样回显结果）。
+ * 票仍然是 review-gate 落的，人仍然是唯一的批准者；看板只是那个"点一下"。
+ * 可签的阶段白名单目前只有 `keyframes`（用户当前动线需要的那一张），要放开再加。
  *
  * ## 「重出图片」为什么不算越界（2026-09-23）
  *
@@ -99,6 +110,20 @@ export function regenerateArgs(projectDir, unit) {
 export function isValidUnitId(unit) {
   return /^[A-Za-z0-9_-]{1,40}$/.test(String(unit || ''));
 }
+
+/** 看板可以从界面「签署」的阶段白名单（目前只有用户当前动线需要的那一张票）。 */
+export const SIGNABLE_STAGES = ['keyframes'];
+
+/**
+ * 关键帧提示词的落点（**唯一的写入路径**：剧目内 `keyframe-prompts/<单元>.txt`）。
+ * 单元 id 已过白名单，所以这里不可能被 `..` 穿越出去。
+ */
+export function keyframePromptPath(projectDir, unit) {
+  return path.join(projectDir, 'keyframe-prompts', `${unit}.txt`);
+}
+
+/** 提示词长度上限：CLI 的自检是 500 字，这里留够并给前端一个明确的天花板。 */
+export const PROMPT_MAX_CHARS = 4000;
 
 /** 重抽日志最多留这么多字符（够看清报错，又不至于把内存吃满）。 */
 const REGEN_LOG_LIMIT = 8000;
@@ -185,7 +210,12 @@ export function startServer({ root, port = 0, webDist, gc = true, trash, spawn: 
 
   return new Promise((resolve) => {
     const server = http.createServer((req, res) => {
-      handle(req, res, projectsRoot, dist, trash, { startRegenerate, jobView }).catch((error) => {
+      handle(req, res, projectsRoot, dist, trash, {
+        startRegenerate,
+        jobView,
+        reviewGatePath: path.join(REPO_ROOT, 'cli', 'review-gate.mjs'),
+        spawnImpl,
+      }).catch((error) => {
         res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
         res.end(String((error && error.message) || error));
       });
@@ -371,7 +401,78 @@ async function handleAction(req, res, root, route, trash, regen) {
     return sendJson(res, { ok: true, jobId: r.job.id, unit, name });
   }
 
+  if (route === '/api/keyframe-prompt') {
+    // 写提示词：这是看板唯一会写**项目文件**的地方（`keyframe-prompts/<单元>.txt`）。
+    // 直写制的文件就是送模型的那份原文，改它就是改下一张图 —— 所以只写这一个文件，别的不碰。
+    const unit = String(body.unit ?? '');
+    if (!isValidUnitId(unit)) return sendJson(res, { error: '非法单元 id' }, 400);
+    const text = typeof body.text === 'string' ? body.text : null;
+    if (text === null) return sendJson(res, { error: 'text 必须是字符串' }, 400);
+    if (text.length > PROMPT_MAX_CHARS) {
+      return sendJson(res, { error: `提示词太长了（${text.length} 字，上限 ${PROMPT_MAX_CHARS}）` }, 400);
+    }
+    const projectDir = path.join(root, name);
+    if (!fs.existsSync(projectDir)) return sendJson(res, { error: '剧目不存在' }, 404);
+    fs.mkdirSync(path.join(projectDir, 'keyframe-prompts'), { recursive: true });
+    const file = keyframePromptPath(projectDir, unit);
+    const trimmed = text.trim();
+    if (!trimmed) return sendJson(res, { error: '提示词不能是空的' }, 400);
+    fs.writeFileSync(file, `${trimmed}\n`, 'utf8');
+    return sendJson(res, { ok: true, unit, chars: trimmed.length });
+  }
+
+  if (route === '/api/sign') {
+    // 签署：**转交给唯一所有者**（cli/review-gate.mjs）执行，看板自己不写 approvals 文件。
+    const stage = String(body.stage ?? '');
+    if (!SIGNABLE_STAGES.includes(stage)) {
+      return sendJson(res, { error: `看板只能签这些阶段：${SIGNABLE_STAGES.join(' / ')}` }, 400);
+    }
+    const projectDir = path.join(root, name);
+    if (!fs.existsSync(projectDir)) return sendJson(res, { error: '剧目不存在' }, 404);
+    const r = await runOnce(regen.reviewGatePath, [
+      'approve', '--project', projectDir, '--stage', stage, '--by', '用户（看板）',
+    ], { spawnImpl: regen.spawnImpl });
+    return r.code === 0
+      ? sendJson(res, { ok: true, stage, output: r.output })
+      : sendJson(res, { error: `签名失败（退出码 ${r.code}）`, output: r.output }, 400);
+  }
+
   return sendJson(res, { error: '未知操作' }, 404);
+}
+
+/**
+ * 跑一次短命令并等它结束（签署是读哈希 + 写一个 json，秒级）。
+ * 超时兜底 30 秒 —— 卡住的话宁可报错也别把请求挂着。
+ */
+function runOnce(script, args, { spawnImpl, timeoutMs = 30000 } = {}) {
+  return new Promise((resolve) => {
+    let out = '';
+    let done = false;
+    const finish = (code) => {
+      if (done) return;
+      done = true;
+      resolve({ code, output: out.trim().slice(-4000) });
+    };
+    let child;
+    try {
+      child = (spawnImpl || spawn)(process.execPath, [script, ...args], {
+        cwd: REPO_ROOT, env: process.env, stdio: ['ignore', 'pipe', 'pipe'],
+      });
+    } catch (e) {
+      return finish(null, String((e && e.message) || e));
+    }
+    const push = (b) => { out += b.toString('utf8'); };
+    child.stdout?.on('data', push);
+    child.stderr?.on('data', push);
+    child.on('error', (e) => { push(`\n[进程错误] ${(e && e.message) || e}`); finish(null); });
+    child.on('close', (code) => finish(code));
+    const timer = setTimeout(() => {
+      push('\n[超时] 30 秒没结束\n');
+      try { child.kill(); } catch { /* 已经退了 */ }
+      finish(null);
+    }, timeoutMs);
+    if (typeof timer.unref === 'function') timer.unref();
+  });
 }
 
 /**

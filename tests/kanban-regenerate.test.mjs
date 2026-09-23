@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { EventEmitter } from 'node:events';
-import { startServer, regenerateArgs, isValidUnitId } from '../web/server.mjs';
+import { startServer, regenerateArgs, isValidUnitId, keyframePromptPath, PROMPT_MAX_CHARS } from '../web/server.mjs';
 
 /**
  * 「重出图片」端点（2026-09-23）。
@@ -154,5 +154,92 @@ test('没有任务时查状态是 404，不是空 200', async () => {
   await withServer(sp.impl, async ({ base }) => {
     const r = await fetch(`${base}/api/regenerate`);
     assert.equal(r.status, 404);
+  });
+});
+
+/* ── 写提示词（看板唯一会写项目文件的地方）────────────────────────────── */
+
+test('提示词落点只可能在剧目的 keyframe-prompts 里（单元 id 已过白名单）', () => {
+  const p = keyframePromptPath(path.join('/tmp', '库', '剧'), 'g001');
+  assert.equal(p, path.join('/tmp', '库', '剧', 'keyframe-prompts', 'g001.txt'));
+});
+
+test('写提示词：缺防护头 403、空文本/超长/非法单元都拒绝，合法写入带一个尾换行', async () => {
+  const sp = fakeSpawn();
+  await withServer(sp.impl, async ({ base, p }) => {
+    const post = (body, withAction = true) => fetch(`${base}/api/keyframe-prompt`, {
+      method: 'POST',
+      headers: withAction
+        ? { 'Content-Type': 'application/json', 'X-Kanban-Action': '1' }
+        : { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    assert.equal((await post({ name: 'probe', unit: 'g001', text: 'x' }, false)).status, 403);
+    assert.equal((await post({ name: 'probe', unit: 'g001', text: '   ' })).status, 400);
+    assert.equal((await post({ name: 'probe', unit: '../x', text: 'x' })).status, 400);
+    assert.equal((await post({ name: 'nope', unit: 'g001', text: 'x' })).status, 404);
+    assert.equal((await post({ name: 'probe', unit: 'g001', text: 'x'.repeat(PROMPT_MAX_CHARS + 1) })).status, 400);
+
+    const ok = await post({ name: 'probe', unit: 'g001', text: '  一个合法的提示词  ' });
+    assert.equal(ok.status, 200);
+    assert.equal((await ok.json()).chars, 8);
+    const written = fs.readFileSync(path.join(p.dir, 'keyframe-prompts', 'g001.txt'), 'utf8');
+    assert.equal(written, '一个合法的提示词\n', '去掉首尾空白，补一个尾换行');
+    // 只写这一个文件：目录里不该多出别的
+    assert.deepEqual(fs.readdirSync(path.join(p.dir, 'keyframe-prompts')), ['g001.txt']);
+  });
+});
+
+/* ── 签署（转交 review-gate 执行）──────────────────────────────────────── */
+
+test('签署：阶段白名单之外一律拒绝，且不起进程', async () => {
+  const sp = fakeSpawn();
+  await withServer(sp.impl, async ({ base }) => {
+    const post = (body) => fetch(`${base}/api/sign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Kanban-Action': '1' },
+      body: JSON.stringify(body),
+    });
+    for (const stage of ['board', 'story', '', 'keyframes; rm -rf /']) {
+      assert.equal((await post({ name: 'probe', stage })).status, 400, stage);
+    }
+    assert.equal(sp.calls.length, 0);
+  });
+});
+
+test('签署 keyframes：起的是 review-gate approve，票由它落笔；失败原样回传', async () => {
+  const sp = fakeSpawn();
+  await withServer(sp.impl, async ({ base, p }) => {
+    const post = () => fetch(`${base}/api/sign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Kanban-Action': '1' },
+      body: JSON.stringify({ name: 'probe', stage: 'keyframes' }),
+    });
+
+    const pending = post();
+    await new Promise((r) => setTimeout(r, 30));
+    assert.equal(sp.calls.length, 1, '批准动作要落到唯一所有者身上');
+    const args = sp.calls[0].args;
+    assert.ok(args[0].endsWith(path.join('cli', 'review-gate.mjs')), args[0]);
+    assert.deepEqual(args.slice(1, 4), ['approve', '--project', p.dir]);
+    assert.deepEqual(args.slice(4, 6), ['--stage', 'keyframes']);
+
+    sp.children[0].stdout.emit('data', Buffer.from('✓ 人工确认已记录：keyframes\n'));
+    sp.children[0].emit('close', 0);
+    const ok = await pending;
+    assert.equal(ok.status, 200);
+    assert.match((await ok.json()).output, /人工确认已记录/);
+
+    // 失败那次：退出码 1 → 400，并把 CLI 的原文带回去
+    const pending2 = post();
+    await new Promise((r) => setTimeout(r, 30));
+    sp.children[1].stderr.emit('data', Buffer.from('✗ 产物已变化，旧确认自动失效\n'));
+    sp.children[1].emit('close', 1);
+    const bad = await pending2;
+    assert.equal(bad.status, 400);
+    const j = await bad.json();
+    assert.match(j.error, /退出码 1/);
+    assert.match(j.output, /旧确认自动失效/);
   });
 });

@@ -116,3 +116,16 @@ export async function fetchRegenerate(id) {
   if (!r.ok) throw new Error(j.error || `重抽状态读取失败（HTTP ${r.status}）`);
   return j;
 }
+
+/**
+ * 写关键帧提示词 —— **看板唯一会写项目文件的地方**（`keyframe-prompts/<单元>.txt`）。
+ * 直写制的那个文件就是送模型的原文，所以只写它，别的项目文件一个字不碰。
+ */
+export const saveKeyframePrompt = (name, unit, text) =>
+  writeJson('/api/keyframe-prompt', { name, unit, text });
+
+/**
+ * 请 `cli/review-gate.mjs` 落一张票 —— **看板不写 approvals 文件**，
+ * 它只是把用户明确的「通过」转交给那个唯一所有者执行（可签阶段由服务端白名单限制）。
+ */
+export const signStage = (name, stage) => writeJson('/api/sign', { name, stage });
