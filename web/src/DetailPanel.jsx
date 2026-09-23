@@ -4,7 +4,9 @@
  * 覆盖旧页面（原生 HTML 版）的五个视图，功能一个不减：
  *   ① 剧本（全文 + 行号，可跳行）  ② 导演稿 / 生成计划
  *   ③ 资源画廊（肖像/身份图/场景/道具）  ④ 关键帧与视频片段  ⑤ 成片
- * 另有：文件就位、票状态、角色名高亮、缩略图点开大图。
+ * 另有：票状态、角色名高亮、缩略图点开大图。
+ * （「文件就位」四个勾 2026-09-23 按用户要求去掉：它把"文件在不在"摊在每个剧目头上，
+ *   而看板真正要说的是"卡在哪道票上" —— 那件事由票徽标和卡点负责。）
  *
  * 只读 —— 没有任何写票入口。
  */
@@ -142,18 +144,8 @@ function StoryView({ snapshot, hitLines, jumpLine }) {
       refs.current[jumpLine].scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
   }, [jumpLine]);
-  const files = snapshot.files || {};
   return (
     <>
-      <Section title="文件就位">
-        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11.5px] text-ink-400">
-          {Object.entries(files).map(([f, ok]) => (
-            <span key={f} className={ok ? '' : 'text-bad'}>
-              {f} {ok ? '✓' : '—'}
-            </span>
-          ))}
-        </div>
-      </Section>
       <Section
         title="剧本全文"
         right={snapshot.story
