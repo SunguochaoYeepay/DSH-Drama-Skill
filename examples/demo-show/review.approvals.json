@@ -108,9 +108,9 @@
       }
     },
     "final": {
-      "at": "2026-09-23T10:41:08.437Z",
+      "at": "2026-09-23T11:21:17.155Z",
       "by": "用户（Agent 代跑）",
-      "artifact_hash": "e3e702662143fb9ab3224c3df708cdc645dc4f497546431783b5ddb7a32bc52b",
+      "artifact_hash": "2fe147d8c5986280dd4018329c5cfb21f775847409fee45399b73869be89d4e2",
       "artifacts": [
         "examples/demo-show/out/final.mp4"
       ]
