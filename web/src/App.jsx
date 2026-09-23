@@ -7,7 +7,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ReactFlow, Background, BackgroundVariant, Controls, MiniMap, MarkerType, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from '@xyflow/react';
-import { RefreshCw, CircleAlert, Archive, Trash2, ChevronRight, RotateCcw } from 'lucide-react';
+import { RefreshCw, CircleAlert, Archive, Trash2, ChevronRight, RotateCcw, Search, X } from 'lucide-react';
 import {
   fetchProjects, fetchProject, fetchArchived, mediaUrl, isVideo, videoLog,
   archiveProject, restoreProject, deleteProject,
@@ -132,6 +132,7 @@ export default function App() {
   const [showArchived, setShowArchived] = useState(false);
   const [name, setName] = useState('');
   const [snapshot, setSnapshot] = useState(null);
+  const [filter, setFilter] = useState('');   // 剧目搜索（只是过滤，不是选择器）
   const [selected, setSelected] = useState(null);
   const [lightbox, setLightbox] = useState(null);
   const [error, setError] = useState('');
@@ -281,6 +282,13 @@ export default function App() {
 
   const openMedia = useCallback((rel, label) => setLightbox({ rel, label }), []);
 
+  /** 左侧列表的搜索过滤：剧目名或标题，大小写不敏感（选中仍在列表里点）。 */
+  const shown = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    if (!q) return projects;
+    return projects.filter((p) => `${p.name} ${p.title}`.toLowerCase().includes(q));
+  }, [projects, filter]);
+
   const meta = snapshot ? [
     `${(snapshot.board?.shots || []).length} 镜`,
     `${(snapshot.units || []).length} 单元`,
@@ -291,23 +299,6 @@ export default function App() {
     <div className="flex h-full flex-col">
       <header className="shrink-0 border-b border-ink-800 bg-ink-900">
         <div className="flex items-center gap-3 px-4 py-2.5">
-          <select
-            value={name}
-            onChange={(e) => (e.target.value ? load(e.target.value) : (setName(''), setSnapshot(null)))}
-            className="rounded-md border border-ink-700 bg-ink-850 px-2 py-1 text-[12.5px] text-ink-100 outline-none focus:border-accent"
-            title="选择剧目"
-          >
-            <option value="">（选择剧目）</option>
-            {projects.map((p) => {
-              const day = fmtDay(p.createdAt);
-              return (
-                <option key={p.name} value={p.name}>
-                  {p.title === p.name ? p.name : `${p.title} · ${p.name}`}{day ? `（${day}）` : ''}
-                </option>
-              );
-            })}
-          </select>
-
           <span className="text-[14px] font-medium">{snapshot ? snapshot.title : '逐格 · 分镜看板'}</span>
           {snapshot && <span className="text-[11.5px] text-ink-500">{meta}</span>}
 
@@ -366,8 +357,36 @@ export default function App() {
 
       <div className="flex min-h-0 flex-1">
         <nav style={{ width: layout.left }} className="shrink-0 overflow-y-auto border-r border-ink-800 bg-ink-900/60 px-2 py-2">
-          <div className="px-2 pb-1.5 text-[11px] text-ink-500">剧目 · {projects.length}</div>
-          {projects.map((p) => (
+          {/* 剧目搜索：它只是一个**过滤能力**，不是"选择器" —— 选中仍然在下面的列表里点
+              （用户 2026-09-23：顶栏那个下拉挪到这里，并改成搜索）。 */}
+          <div className="relative mb-1.5">
+            <Search size={12} className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-ink-500" />
+            <input
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Escape') setFilter(''); }}
+              placeholder="搜索剧目"
+              aria-label="搜索剧目"
+              className="w-full rounded-md border border-ink-700 bg-ink-850 py-1 pl-6 pr-6 text-[12px] text-ink-100 outline-none placeholder:text-ink-600 focus:border-accent"
+            />
+            {filter ? (
+              <button
+                type="button"
+                onClick={() => setFilter('')}
+                title="清空搜索"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-ink-500 hover:text-ink-200"
+              >
+                <X size={12} />
+              </button>
+            ) : null}
+          </div>
+          <div className="px-2 pb-1.5 text-[11px] text-ink-500">
+            剧目 · {shown.length}{filter ? ` / ${projects.length}` : ''}
+          </div>
+          {!shown.length && (
+            <div className="px-2 py-3 text-[11.5px] text-ink-500">没有匹配「{filter}」的剧目</div>
+          )}
+          {shown.map((p) => (
             <div
               key={p.name}
               className={[
