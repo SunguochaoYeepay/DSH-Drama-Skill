@@ -3,27 +3,27 @@
   "approvals": {
     "clips": {
       "g001": {
-        "at": "2026-09-22T09:43:40.316Z",
-        "by": "用户",
-        "artifact_hash": "c905950bb69f91a75558264172450dec180ee83f6eaec7ce7b6c46c4b87263ac",
+        "at": "2026-09-23T11:12:39.710Z",
+        "by": "用户（Agent 代跑）",
+        "artifact_hash": "1a8f9d37270221b3fc601de7ca90fc1ca9541ab8ab6e55f7dd967cd72e97a362",
         "artifacts": [
-          "examples/demo-show/units/i2v_20260922-173609.mp4"
+          "examples/demo-show/units/i2v_20260923-190733.mp4"
         ]
       },
       "g002": {
-        "at": "2026-09-23T10:20:20.854Z",
+        "at": "2026-09-23T11:19:58.032Z",
         "by": "用户（Agent 代跑）",
-        "artifact_hash": "7e160d8bb34f269eeb2eda2236faff9f5860503bd9eb67f6eaf754d961092335",
+        "artifact_hash": "69196db0000e9d741e82838f84ca15922d859363e76f6c2f8f8566fc1cdbaf43",
         "artifacts": [
-          "examples/demo-show/units/i2v_20260923-104821_nosub2.mp4"
+          "examples/demo-show/units/i2v_20260923-191836.mp4"
         ]
       },
       "g003": {
-        "at": "2026-09-23T02:52:07.481Z",
-        "by": "用户",
-        "artifact_hash": "6799b6b3f562a0412468b39c3ba667065e215d68ac3cc86fae08cc1e0a60593c",
+        "at": "2026-09-23T11:19:58.077Z",
+        "by": "用户（Agent 代跑）",
+        "artifact_hash": "e09b6c13d0d989c971444631078d0fa26f4ad23f0c78f3b60965009f16167a31",
         "artifacts": [
-          "examples/demo-show/units/i2v_20260923-104918.mp4"
+          "examples/demo-show/units/i2v_20260923-191149.mp4"
         ]
       }
     },
@@ -81,18 +81,18 @@
       }
     },
     "keyframes": {
-      "at": "2026-09-23T06:56:34.443Z",
-      "by": "用户（看板）",
-      "artifact_hash": "8df8baf3e99d81c5675ab8772b6348c1c60fd2b920c069cd0031122ce7520925",
+      "at": "2026-09-23T11:15:50.333Z",
+      "by": "用户（Agent 代跑）",
+      "artifact_hash": "b25fa030e30fc0444c76ae7b48577025f8130a306f96ad29032288a5fa594ecf",
       "artifacts": [
-        "examples/demo-show/keyframes_local_v2/g002.png",
         "examples/demo-show/keyframes_render/g001.png",
+        "examples/demo-show/keyframes_local_v2/g002.png",
         "examples/demo-show/keyframes_render/g003.png"
       ],
       "generation": {
         "version": 1,
         "stage": "keyframes",
-        "at": "2026-09-23T06:50:22.146Z",
+        "at": "2026-09-23T11:14:57.173Z",
         "provider": "local",
         "model": "local-comfyui/qwen21",
         "requested_provider": "comfyui",
@@ -103,7 +103,7 @@
         ],
         "plan": "examples/demo-show/render.plan.json",
         "prompt_files": [
-          "keyframe-prompts/g003.txt"
+          "keyframe-prompts/g002.txt"
         ]
       }
     },
@@ -114,6 +114,16 @@
       "artifacts": [
         "examples/demo-show/out/final.mp4"
       ]
+    },
+    "handoffs": {
+      "g002": {
+        "at": "2026-09-23T11:14:20.694Z",
+        "by": "用户（Agent 代跑）",
+        "artifact_hash": "36490248b8edc2fad1dcda19599f8589f700a73008d51ce9c283e57f929a3eed",
+        "artifacts": [
+          "examples/demo-show/handoffs/g002.stable-tail.png"
+        ]
+      }
     }
   }
 }
