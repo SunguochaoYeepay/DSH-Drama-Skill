@@ -24,6 +24,17 @@
  *   node web/server.mjs [--root <剧目根>] [--port <端口>] [--web-dist <前端产物目录>]
  *   环境变量：AIH_PROJECTS_ROOT / AIH_KANBAN_PORT / AIH_WEB_DIST 同名覆盖
  *
+ * ## 剧目根可以不止一个（2026-09-23）
+ *
+ * 起因：仓库里正式那份示例在 `examples/demo-show`，而看板只扫 `projects/`，
+ * 于是有人把示例**复制**进 projects/ 才看得见 —— 副本里的交接凭证还写着原路径，
+ * 重出一跑就被凭证校验拦下（`交接凭证不属于当前项目或单元`），两份数据也开始分叉。
+ * 现在默认扫两个根：`projects`（主根，可写）+ `examples`（只读，仓库里入库的示例）。
+ *
+ * - `AIH_PROJECTS_ROOT` 可以用 `;` 分隔多个路径；**第一个是主根**；
+ * - 同名的剧目**主根优先**（不许被示例遮住自己的项目）；
+ * - 管理动作（归档 / 恢复 / 删除）**只对主根开放** —— 示例是入库文件，不该被看板搬走。
+ *
  * 路由：
  *   GET  /                        看板前端（web/dist/index.html）
  *   GET  /assets/*                前端静态资源
@@ -145,9 +156,42 @@ const REGEN_LOG_LIMIT = 8000;
  *   `spawn` 注入子进程实现（默认 node:child_process.spawn）—— 测试用它避免真去调模型。
  * @returns {Promise<{server:import('node:http').Server, port:number, root:string, webDist:string}>}
  */
-export function startServer({ root, port = 0, webDist, gc = true, trash, spawn: spawnImpl } = {}) {
-  const projectsRoot = root || process.env.AIH_PROJECTS_ROOT
-    || path.join(PROJECT_ROOT, 'projects');
+/** 默认剧目根：主根 `projects`（可写）+ `examples`（入库示例，只读）。 */
+export function defaultRoots(repoRoot = PROJECT_ROOT) {
+  return [path.join(repoRoot, 'projects'), path.join(repoRoot, 'examples')].filter((d) => fs.existsSync(d));
+}
+
+/**
+ * 解析剧目根（**纯函数**，测试钉住）：
+ * - 显式给了 root/roots 就用它（数组或单个字符串）；
+ * - 否则看 `AIH_PROJECTS_ROOT`（`;` 分隔，第一个是主根）；
+ * - 都没有就用默认两个根。
+ * @returns {string[]} 至少一个根，**第一个是主根**（管理动作只对它开放）
+ */
+export function resolveRoots({ root, roots, env = process.env, repoRoot = PROJECT_ROOT } = {}) {
+  if (Array.isArray(roots) && roots.length) return roots.map(String);
+  if (typeof root === 'string' && root.trim()) return [root.trim()];
+  if (Array.isArray(root) && root.length) return root.map(String);
+  const raw = String(env.AIH_PROJECTS_ROOT || '').trim();
+  if (raw) {
+    const list = raw.split(path.delimiter).map((s) => s.trim()).filter(Boolean);
+    if (list.length) return list;
+  }
+  return defaultRoots(repoRoot);
+}
+
+/** 剧目名 → 目录：**按根顺序找第一个有 board.json 的**（主根优先，不许被示例遮住）。 */
+export function findProjectDir(roots, name) {
+  for (const r of roots) {
+    const dir = path.join(r, name);
+    if (fs.existsSync(path.join(dir, 'board.json'))) return dir;
+  }
+  return null;
+}
+
+export function startServer({ root, roots, port = 0, webDist, gc = true, trash, spawn: spawnImpl } = {}) {
+  const projectRoots = resolveRoots({ root, roots });
+  const primaryRoot = projectRoots[0];
   const dist = webDist || process.env.AIH_WEB_DIST || path.join(HERE, 'dist');
   // 重抽任务表：单机单人工具，同一时刻只允许一个在跑，历史也只在内存里留着看完为止
   const jobs = new Map();
@@ -159,9 +203,9 @@ export function startServer({ root, port = 0, webDist, gc = true, trash, spawn: 
     if (runningJobId) {
       return { status: 409, error: '已经有一个重抽在跑，等它结束再来', jobId: runningJobId };
     }
-    const projectDir = path.join(projectsRoot, name);
-    if (!fs.existsSync(path.join(projectDir, 'board.json'))) {
-      return { status: 400, error: '这个剧目没有 board.json' };
+    const projectDir = findProjectDir(projectRoots, name);
+    if (!projectDir) {
+      return { status: 400, error: '找不到这个剧目（没有任何剧目根里有它的 board.json）' };
     }
     const id = `regen-${Date.now()}-${++seq}`;
     const job = {
@@ -219,7 +263,7 @@ export function startServer({ root, port = 0, webDist, gc = true, trash, spawn: 
 
   return new Promise((resolve) => {
     const server = http.createServer((req, res) => {
-      handle(req, res, projectsRoot, dist, trash, {
+      handle(req, res, { roots: projectRoots, primary: primaryRoot }, dist, trash, {
         startRegenerate,
         jobView,
         reviewGatePath: path.join(REPO_ROOT, 'cli', 'review-gate.mjs'),
@@ -229,10 +273,10 @@ export function startServer({ root, port = 0, webDist, gc = true, trash, spawn: 
         res.end(String((error && error.message) || error));
       });
     });
-    const gcTimer = gc ? startArchiveGc(projectsRoot, trash) : null;
+    const gcTimer = gc ? startArchiveGc(primaryRoot, trash) : null;
     server.on('close', () => { if (gcTimer) clearInterval(gcTimer); });
     server.listen(port, '127.0.0.1', () => {
-      resolve({ server, port: server.address().port, root: projectsRoot, webDist: dist });
+      resolve({ server, port: server.address().port, root: primaryRoot, roots: projectRoots, webDist: dist });
     });
   });
 }
@@ -261,7 +305,8 @@ function startArchiveGc(root, trash) {
   return timer;
 }
 
-async function handle(req, res, root, webDist, trash, regen) {
+async function handle(req, res, roots, webDist, trash, regen) {
+  const root = roots.primary;
   const url = new URL(req.url, 'http://localhost');
   let route = url.pathname;
   try {
@@ -274,7 +319,19 @@ async function handle(req, res, root, webDist, trash, regen) {
   // ── 读接口 ────────────────────────────────────────────────────────────
   if (req.method === 'GET' || req.method === 'HEAD') {
     if (route === '/api/projects') {
-      return sendJson(res, { projects: listProjects(root) });
+      // 多个根合并：同名主根优先；每个剧目带上它来自哪个根、以及是否可写
+      const seen = new Set();
+      const projects = [];
+      roots.roots.forEach((r, i) => {
+        const label = path.basename(r);
+        for (const p of listProjects(r)) {
+          if (seen.has(p.name)) continue;
+          seen.add(p.name);
+          projects.push({ ...p, root: label, dir: r, writable: i === 0 });
+        }
+      });
+      projects.sort((a, b) => Date.parse(b.createdAt || 0) - Date.parse(a.createdAt || 0) || a.name.localeCompare(b.name));
+      return sendJson(res, { projects, roots: roots.roots.map((r) => path.basename(r)) });
     }
     if (route === '/api/archived') {
       return sendJson(res, { archived: listArchived(root), retentionDays: RETENTION_DAYS });
@@ -282,7 +339,9 @@ async function handle(req, res, root, webDist, trash, regen) {
     if (route === '/api/project') {
       const name = url.searchParams.get('name') || '';
       if (!isValidProjectName(name)) return sendJson(res, { error: '非法剧目名' }, 400);
-      const snapshot = loadProject(root, name);
+      const dir = findProjectDir(roots.roots, name);
+      if (!dir) return sendJson(res, { error: `没有这个剧目：${name}` }, 404);
+      const snapshot = loadProject(path.dirname(dir), path.basename(dir));
       return sendJson(res, snapshot, snapshot.error ? 404 : 200);
     }
     if (route === '/api/regenerate') {
@@ -290,7 +349,7 @@ async function handle(req, res, root, webDist, trash, regen) {
       return view ? sendJson(res, view) : sendJson(res, { error: '没有重抽任务' }, 404);
     }
     if (route.startsWith('/media/')) {
-      return sendMedia(res, root, route.slice('/media/'.length));
+      return sendMedia(res, roots.roots, route.slice('/media/'.length));
     }
     // 没匹配上的 /api/* 不落到 SPA 回退 —— 否则拼错的接口会回一坨 HTML 200，
     // 把错误盖得严严实实（写接口必须 POST，GET 访问明确报 405）。
@@ -311,7 +370,7 @@ async function handle(req, res, root, webDist, trash, regen) {
     if (req.method !== 'POST') {
       return sendJson(res, { error: `不支持的方法 ${req.method}` }, 405);
     }
-    return handleAction(req, res, root, route, trash, regen);
+    return handleAction(req, res, roots, route, trash, regen);
   }
 
   return sendWeb(res, webDist, route);
@@ -353,8 +412,9 @@ function readBody(req, limit = 64 * 1024) {
   });
 }
 
-/** 管理动作分发：归档 / 恢复 / 删除 / 重抽关键帧。删除必须过中文名校验才落手。 */
-async function handleAction(req, res, root, route, trash, regen) {
+/** 管理动作分发：归档 / 恢复 / 删除 / 重抽 / 写提示词 / 签署。删除必须过中文名校验才落手。 */
+async function handleAction(req, res, roots, route, trash, regen) {
+  const root = roots.primary;
   const guard = writeGuard(req);
   if (!guard.ok) return sendJson(res, { error: guard.error }, guard.status);
 
@@ -368,6 +428,25 @@ async function handleAction(req, res, root, route, trash, regen) {
 
   const name = String(body.name ?? '');
   if (!isValidProjectName(name)) return sendJson(res, { error: '非法剧目名' }, 400);
+
+  // 管理动作（归档 / 恢复 / 删除）不该作用在**只读根**里的剧目上：
+  // 示例剧目是入库文件，看板可以看它、重出它，但不该把它搬走。
+  // 注意只在"它确实住在别的根里"时拦 —— 已经归档的剧目主线里当然没有，
+  // 那种情况交给各自的处理器去报它原本的 404/400，不要在这里抢答。
+  const needsPrimary = ['/api/archive', '/api/restore', '/api/delete'].includes(route);
+  if (needsPrimary) {
+    const inPrimary = fs.existsSync(path.join(root, name)) || fs.existsSync(archivedPath(root, name));
+    if (!inPrimary) {
+      const elsewhere = roots.roots.slice(1)
+        .map((r) => findProjectDir([r], name))
+        .find(Boolean);
+      if (elsewhere) {
+        return sendJson(res, {
+          error: `${name} 在只读剧目根（${path.relative(path.dirname(elsewhere), elsewhere)} 所属的根）里，看板对它只读：可以看、可以重出，但不提供归档/删除`,
+        }, 400);
+      }
+    }
+  }
 
   if (route === '/api/archive') {
     const r = archiveProject(root, name);
@@ -425,8 +504,8 @@ async function handleAction(req, res, root, route, trash, regen) {
     if (text.length > PROMPT_MAX_CHARS) {
       return sendJson(res, { error: `提示词太长了（${text.length} 字，上限 ${PROMPT_MAX_CHARS}）` }, 400);
     }
-    const projectDir = path.join(root, name);
-    if (!fs.existsSync(projectDir)) return sendJson(res, { error: '剧目不存在' }, 404);
+    const projectDir = findProjectDir(roots.roots, name);
+    if (!projectDir) return sendJson(res, { error: '剧目不存在' }, 404);
     const trimmed = text.trim();
     if (!trimmed) return sendJson(res, { error: '提示词不能是空的' }, 400);
     const file = promptPathFor(projectDir, unit, kind);
@@ -441,8 +520,8 @@ async function handleAction(req, res, root, route, trash, regen) {
     if (!SIGNABLE_STAGES.includes(stage)) {
       return sendJson(res, { error: `看板只能签这些阶段：${SIGNABLE_STAGES.join(' / ')}` }, 400);
     }
-    const projectDir = path.join(root, name);
-    if (!fs.existsSync(projectDir)) return sendJson(res, { error: '剧目不存在' }, 404);
+    const projectDir = findProjectDir(roots.roots, name);
+    if (!projectDir) return sendJson(res, { error: '剧目不存在' }, 404);
     // 片段票是**每单元一张**，必须带 --id；关键帧票是整批一张，不带。
     const args = ['approve', '--project', projectDir, '--stage', stage];
     if (stage === 'clip') {
@@ -559,7 +638,7 @@ function sendFile(res, file) {
  * `Range: bytes=…`，服务端只会回 200 全量时，部分 Chromium 媒体栈直接
  * 摆烂（进度条 0:00、播放键无响应）。所以这里按 RFC 7233 实现单区间。
  */
-function sendMedia(res, root, raw) {
+function sendMedia(res, roots, raw) {
   let rel;
   try {
     rel = decodeURIComponent(raw);
@@ -569,7 +648,9 @@ function sendMedia(res, root, raw) {
   const name = rel.split('/')[0];
   const rest = rel.slice(name.length + 1);
   if (!isValidProjectName(name) || !rest) return sendJson(res, { error: '非法媒体路径' }, 403);
-  const projectDir = path.resolve(root, name);
+  // 与 /api/project 同一套解析：多个根按顺序找，主根优先
+  const projectDir = findProjectDir(Array.isArray(roots) ? roots : [roots], name);
+  if (!projectDir) return sendJson(res, { error: '没有这个剧目' }, 404);
   const file = path.resolve(projectDir, rest);
   if (file !== projectDir && !file.startsWith(projectDir + path.sep)) {
     return sendJson(res, { error: '拒绝：路径越出剧目目录' }, 403);

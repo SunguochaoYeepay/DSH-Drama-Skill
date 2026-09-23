@@ -402,27 +402,39 @@ export default function App() {
                 <div className={`truncate text-[12.5px] ${p.name === name ? 'text-ink-100' : 'text-ink-200'}`}>{p.title}</div>
                 <div className="flex items-center gap-1.5 text-[10.5px] text-ink-500">
                   <span className="truncate">{p.name}</span>
+                  {p.writable === false && (
+                    <span
+                      className="shrink-0 rounded bg-ink-800 px-1 py-px text-[9.5px] text-ink-400"
+                      title={`来自 ${p.root} 目录：只读（可以看、可以重出，不提供归档/删除）—— 仓库里入库的示例剧目`}
+                    >
+                      {p.root} · 只读
+                    </span>
+                  )}
                   {fmtDay(p.createdAt) && <span className="ml-auto shrink-0 tabular-nums">{fmtDay(p.createdAt)}</span>}
                 </div>
               </button>
-              <div className="flex shrink-0 items-center gap-0.5 pr-1.5">
-                <button
-                  type="button"
-                  title="归档（可恢复，满 7 天自动清理）"
-                  onClick={() => { setActError(''); setPending({ kind: 'archive', name: p.name, title: p.title }); }}
-                  className="rounded p-1 text-ink-600 hover:bg-ink-800 hover:text-ink-200"
-                >
-                  <Archive size={13} />
-                </button>
-                <button
-                  type="button"
-                  title="删除（移入系统回收站，要填中文名确认）"
-                  onClick={() => { setActError(''); setPending({ kind: 'delete', name: p.name, title: p.title }); }}
-                  className="rounded p-1 text-ink-600 hover:bg-ink-800 hover:text-bad"
-                >
-                  <Trash2 size={13} />
-                </button>
-              </div>
+              {p.writable === false ? (
+                <span className="shrink-0 pr-2.5 text-[10px] text-ink-600" title="示例剧目不做归档/删除">—</span>
+              ) : (
+                <div className="flex shrink-0 items-center gap-0.5 pr-1.5">
+                  <button
+                    type="button"
+                    title="归档（可恢复，满 7 天自动清理）"
+                    onClick={() => { setActError(''); setPending({ kind: 'archive', name: p.name, title: p.title }); }}
+                    className="rounded p-1 text-ink-600 hover:bg-ink-800 hover:text-ink-200"
+                  >
+                    <Archive size={13} />
+                  </button>
+                  <button
+                    type="button"
+                    title="删除（移入系统回收站，要填中文名确认）"
+                    onClick={() => { setActError(''); setPending({ kind: 'delete', name: p.name, title: p.title }); }}
+                    className="rounded p-1 text-ink-600 hover:bg-ink-800 hover:text-bad"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
 
