@@ -13,7 +13,7 @@
  *   图变了那张关键帧票自然失效，要人重新签。）
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { mediaUrl, isVideo, videoLog } from './api.js';
+import { mediaUrl, isVideo, videoLog, signStage } from './api.js';
 import { directorUnitOf, fmtSec } from './graph.js';
 import { CopyBlock, CopyButton } from './Copy.jsx';
 import RegenModal from './RegenModal.jsx';
