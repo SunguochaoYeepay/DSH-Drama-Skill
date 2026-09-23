@@ -490,12 +490,12 @@ const TABS = [
   { key: 'detail', label: '执行细节' },
 ];
 
-/** 画布节点 → 页签。板子节点承载"资源票"，所以它落到资源页；计划落到执行细节。 */
+/** 画布节点 → 页签。资源节点承载"板子票 + 资源票"，所以它落到资源页；执行细节落到执行细节页。 */
 function tabOfNode(node) {
   if (!node) return 'story';
-  if (node === 'stage:board') return 'assets';
+  if (node === 'stage:assets' || node === 'stage:board') return 'assets';
   if (node === 'stage:direction') return 'direction';
-  if (node === 'stage:plan') return 'detail';
+  if (node === 'stage:detail' || node === 'stage:plan') return 'detail';
   if (node === 'final') return 'final';
   if (node.startsWith('unit:')) return 'keyframe';
   return 'story';

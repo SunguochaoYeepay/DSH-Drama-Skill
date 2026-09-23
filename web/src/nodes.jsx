@@ -11,9 +11,9 @@ import { mediaUrl } from './api.js';
 
 const STAGE_ICON = {
   story: FileText,
-  board: LayoutGrid,
   direction: Clapperboard,
-  plan: ListOrdered,
+  assets: LayoutGrid,
+  detail: ListOrdered,
 };
 
 /** 票徽标：已签=绿，未签=琥珀。`focus` 时加一圈描边（当前卡点）。 */
@@ -43,7 +43,7 @@ function GateRow({ gates, focusKey }) {
   );
 }
 
-/** 阶段节点：标题 + 该阶段量级 + 票。 */
+/** 阶段节点：标题 + 该阶段量级 + 票。`secondary` 的是侧挂的「执行细节」（虚线、压暗）。 */
 export const StageNode = memo(function StageNode({ data }) {
   const Icon = STAGE_ICON[data.key] || FileText;
   const missing = data.present === false;
@@ -51,13 +51,15 @@ export const StageNode = memo(function StageNode({ data }) {
     <div
       className={[
         'card flex h-full w-full flex-col gap-2 rounded-xl border bg-ink-850 px-3 py-2.5',
-        missing ? 'border-bad/40' : 'border-ink-700',
+        data.secondary
+          ? 'border-dashed border-ink-700/70 opacity-70'
+          : (missing ? 'border-bad/40' : 'border-ink-700'),
       ].join(' ')}
       style={{ width: 264, height: 96 }}
     >
       {data.key !== 'story' && <Handle type="target" id="in" position={Position.Left} />}
       <div className="flex items-center gap-2">
-        <Icon size={14} className={missing ? 'text-bad' : 'text-accent'} />
+        <Icon size={14} className={data.secondary ? 'text-ink-500' : (missing ? 'text-bad' : 'text-accent')} />
         <span className="text-[13px] font-medium">{data.title}</span>
         {missing && <span className="text-[10.5px] text-bad">缺</span>}
       </div>
@@ -67,7 +69,7 @@ export const StageNode = memo(function StageNode({ data }) {
         {!data.gates?.length && <div className="truncate text-[10.5px] text-ink-500">{data.file}</div>}
       </div>
       <Handle type="source" id="out" position={Position.Right} />
-      {data.key === 'plan' && <Handle type="source" id="units" position={Position.Bottom} />}
+      {data.hasUnitsHandle && <Handle type="source" id="units" position={Position.Bottom} />}
     </div>
   );
 });

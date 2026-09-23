@@ -54,14 +54,21 @@ function makeSnapshot({ n = 1, approvals = {}, withClip = true, withKeyframe = t
 
 const gateOf = (node, key) => (node.data.gates || []).find((g) => g.key === key);
 
-test('阶段行：固定四节点三连边，id 稳定', () => {
+test('决策链：剧本 → 导演稿 → 资源，外加侧挂的执行细节', () => {
   const g = buildGraph(makeSnapshot());
   assert.deepEqual(
     g.nodes.filter((x) => x.type === 'stage').map((x) => x.id),
-    ['stage:story', 'stage:board', 'stage:direction', 'stage:plan'],
+    ['stage:story', 'stage:direction', 'stage:assets', 'stage:detail'],
   );
   const stageEdges = g.edges.filter((e) => e.source.startsWith('stage:') && e.target.startsWith('stage:'));
+  // 主链两条 + 资源 → 执行细节一条（侧挂，虚线）
   assert.equal(stageEdges.length, 3);
+  const toDetail = stageEdges.filter((e) => e.target === 'stage:detail');
+  assert.equal(toDetail.length, 1);
+  assert.match(String(toDetail[0].style.strokeDasharray), /4/, '执行细节是次要节点，用虚线连');
+  const detail = g.nodes.find((x) => x.id === 'stage:detail');
+  assert.equal(detail.data.secondary, true);
+  assert.equal(detail.data.gates.length, 0, '执行细节不承载闸门');
   // 阶段节点水平铺开，不重叠
   const xs = g.nodes.filter((x) => x.type === 'stage').map((x) => x.position.x);
   assert.deepEqual(xs, [0, COL_STEP, COL_STEP * 2, COL_STEP * 3]);
@@ -70,7 +77,7 @@ test('阶段行：固定四节点三连边，id 稳定', () => {
 test('每个单元一条扇出边 + 一条汇聚边', () => {
   const g = buildGraph(makeSnapshot({ n: 4 }));
   assert.equal(g.nodes.filter((x) => x.type === 'unit').length, 4);
-  assert.equal(g.edges.filter((e) => e.source === 'stage:plan').length, 4);
+  assert.equal(g.edges.filter((e) => e.source === 'stage:assets' && e.target.startsWith('unit:')).length, 4);
   assert.equal(g.edges.filter((e) => e.target === 'final').length, 4);
   assert.equal(g.nodes.filter((x) => x.id === 'final').length, 1);
 });
@@ -162,10 +169,11 @@ test('单元节点携带关键帧票与片段票，clips 按单元逐张算', ()
   assert.equal(u1.data.pending, false);
 });
 
-test('票徽标文案与顺序：板子节点背板子票 + 资源票', () => {
+test('票徽标文案与顺序：资源节点背板子票 + 资源票', () => {
   const g = buildGraph(makeSnapshot());
-  const boardNode = g.nodes.find((x) => x.id === 'stage:board');
-  assert.deepEqual(boardNode.data.gates.map((x) => x.label), ['板子票', '资源票']);
+  const assetsNode = g.nodes.find((x) => x.id === 'stage:assets');
+  assert.deepEqual(assetsNode.data.gates.map((x) => x.label), ['板子票', '资源票']);
+  assert.deepEqual(assetsNode.data.gates.map((x) => x.key), ['board', 'assets']);
   const finalNode = g.nodes.find((x) => x.id === 'final');
   assert.deepEqual(finalNode.data.gates.map((x) => x.label), ['成片票']);
 });
@@ -181,14 +189,15 @@ test('directorUnitOf：按计划的 source_units 映射，绝不按序号猜', (
   assert.equal(directorUnitOf({ plan: { units: [] }, direction: null }, 'g001'), null);
 });
 
-test('总时长/行数副标题取得到真值', () => {
+test('副标题取得到真值：剧本行数 / 资源清单 / 执行细节把计划与索引合起来报', () => {
   const g = buildGraph(makeSnapshot({ n: 2 }));
   const story = g.nodes.find((x) => x.id === 'stage:story');
-  const plan = g.nodes.find((x) => x.id === 'stage:plan');
-  const boardN = g.nodes.find((x) => x.id === 'stage:board');
+  const detail = g.nodes.find((x) => x.id === 'stage:detail');
+  const assetsN = g.nodes.find((x) => x.id === 'stage:assets');
   assert.equal(story.data.subtitle, '2 行');
-  assert.equal(boardN.data.subtitle, '2 镜 · 1 角色 · 1 场景');
-  assert.equal(plan.data.subtitle, '2 单元 · 21.4s');
+  // 清单规模（只报非零类别）：夹具里 1 角色 1 场景，没有造型与道具
+  assert.equal(assetsN.data.subtitle, '1 角色 · 1 场景');
+  assert.equal(detail.data.subtitle, '2 单元 · 21.4s · 索引 2 镜');
 });
 
 test('fmtSec：没有值给破折号，不做假数据', () => {
