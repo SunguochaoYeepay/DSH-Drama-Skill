@@ -1,7 +1,13 @@
 @echo off
-rem 看板一键启动：双击本文件即可。
-rem 真正的逻辑在 cli\kanban.mjs（已在本项目的看板就不重复起、起完自动开浏览器）。
-rem 本文件只留 ASCII —— 中文交给 node 打印，免得 cmd 的代码页把它变成乱码。
+rem Kanban one-click launcher -- double-click this file.
+rem Real logic lives in cli\kanban.mjs:
+rem   * this project's board already running -> just open the browser
+rem   * port taken by something else          -> refuse and tell you to pick another
+rem   * nobody there                          -> start the server in background,
+rem                                             wait until it really answers
+rem KEEP THIS FILE ASCII-ONLY. cmd.exe parses .cmd bytes in the OEM codepage and
+rem ignores chcp while reading the file, so non-ASCII comments here break parsing
+rem (observed 2026-09-23: Chinese "rem" lines mangled "if errorlevel" into "rorlevel").
 chcp 65001 >nul
 cd /d "%~dp0"
 
@@ -13,8 +19,4 @@ if errorlevel 1 (
 )
 
 node cli\kanban.mjs %*
-if errorlevel 1 (
-  pause
-) else (
-  timeout /t 3 >nul
-)
+if errorlevel 1 pause
