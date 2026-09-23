@@ -21,10 +21,8 @@ export const FINAL_W = 264;
 export const FINAL_H = 96;
 export const COL_STEP = 304;      // 阶段节点水平步长 = STAGE_W + 40
 export const ROW_STEP = 246;      // 单元行步长 = UNIT_H + 32
-export const SCENE_W = 264;       // 场次节点
-export const SCENE_H = 96;
-export const SCENE_TOP = STAGE_H + 104;   // 场次行紧贴阶段行下面
-export const SCENE_GAP = 32;              // 场次节点与它第一个单元之间的间距
+export const MAX_UNIT_COLS = 4;   // 单元网格每行最多几个
+export const UNIT_TOP = STAGE_H + 104;    // 单元行紧贴阶段行下面
 export const EPISODE_H = 34;              // 「集」分组条（只在多集时出现）
 export const EPISODE_ROW_GAP = 40;        // 集与集之间的间距
 export const FINAL_GAP = 76;
@@ -36,18 +34,15 @@ export const GATE_ORDER = ['story', 'board', 'direction', 'assets', 'keyframes',
  * 阶段行 = **用户要审的那条决策链**（2026-09-23 用户拍板）：
  *   剧本 → 导演稿 → 资源 → 单元（关键帧 / 视频）→ 成片
  *
- * 「板子」与「生成计划」属于执行逻辑（编译产物、单元切分与时长钳制），不再占主链：
+ * 「板子」与「生成计划」属于执行逻辑（编译产物、单元切分与时长钳制），**一律不上画布**：
  * - 板子票与资源票一起挂在**资源**节点上 —— 板子里的场景/角色/造型/道具清单**就是资源**；
- * - 编译产物与计划折进侧挂的 `DETAIL_DEF`（执行细节）节点，虚线相连、视觉次要。
+ * - 编译产物与计划连侧挂节点也撤掉了（用户 2026-09-23：不想再看到执行细节）。
  */
 export const STAGE_DEFS = [
   { key: 'story', title: '剧本', file: 'story.md', gates: ['story'] },
   { key: 'direction', title: '导演稿', file: 'board.direction.json', gates: ['direction'] },
   { key: 'assets', title: '资源', file: 'board.json', gates: ['board', 'assets'] },
 ];
-
-/** 侧挂的次要节点：板子编译产物 + 生成计划。不承载任何闸门，也不在决策链上。 */
-export const DETAIL_DEF = { key: 'detail', title: '执行细节', file: 'board.json · render.plan.json', gates: [] };
 
 /** 票的中文名（界面与测试共用，改一处生效）。 */
 export const GATE_LABELS = {
@@ -153,13 +148,6 @@ function stageSubtitle(def, snapshot) {
     const shots = dirUnits.reduce((n, u) => n + (u.shots || []).length, 0);
     return dirUnits.length ? `${dirUnits.length} 单元 · ${shots} 镜` : '未读到导演稿';
   }
-  if (def.key === 'detail') {
-    const total = snapshot.plan?.totals?.content_duration_s;
-    const shots = (board.shots || []).length;
-    return units.length
-      ? `${units.length} 单元 · ${fmtSec(total)} · 索引 ${shots} 镜`
-      : `未读到生成计划 · 索引 ${shots} 镜`;
-  }
   return '';
 }
 
@@ -204,26 +192,6 @@ export function buildGraph(snapshot) {
     });
   });
 
-  // ── 侧挂的「执行细节」：板子编译产物 + 生成计划 ──────────────────────
-  nodes.push({
-    id: 'stage:detail',
-    type: 'stage',
-    position: { x: STAGE_DEFS.length * COL_STEP, y: 0 },
-    width: STAGE_W,
-    height: STAGE_H,
-    data: {
-      kind: 'stage',
-      key: DETAIL_DEF.key,
-      title: DETAIL_DEF.title,
-      file: DETAIL_DEF.file,
-      subtitle: stageSubtitle(DETAIL_DEF, snapshot),
-      present: null,
-      gates: [],
-      pending: false,
-      secondary: true,
-    },
-  });
-
   for (let i = 0; i < STAGE_DEFS.length - 1; i++) {
     edges.push(edge({
       id: `e:${STAGE_DEFS[i].key}->${STAGE_DEFS[i + 1].key}`,
@@ -234,162 +202,131 @@ export function buildGraph(snapshot) {
     }));
   }
 
-  // 侧挂的「执行细节」用虚线连到资源节点：能走到，但明显不在决策链上
-  edges.push({
-    ...edge({
-      id: 'e:assets->detail',
-      source: 'stage:assets',
-      target: 'stage:detail',
-      sourceHandle: 'out',
-      targetHandle: 'in',
-    }),
-    style: { strokeWidth: 1, opacity: 0.3, strokeDasharray: '4 4' },
-  });
-
-  // ── 场次分组 → 单元 → 成片 ────────────────────────────────────────
-  // 单元挂在**它所属的那一场**下面（用户 2026-09-23：单元的线应该挂到导演稿的场景下面）。
-  // 每个场次节点带自己的场景主图 —— 场景主图本来就是一场一张，其余资产是全片复用的。
+  // ── 单元 → 成片 ──────────────────────────────────────────────────
+  // **画布不画场次层**（用户 2026-09-23 拍板：「不要场次了，按单元来吧，这样更简单」）。
+  // 场次信息没有丢：右侧单元页的「基本」有场景名、「用到的资源」有那一场的场景主图。
+  // 「集」只在**多于一集**时才画分组带（同一条规矩：只在不止一个时才画那一层）。
   const sceneById = new Map((board.scenes || []).map((s) => [s.id, s]));
-  const groups = [];
-  const groupAt = new Map();
-  for (const u of units) {
-    const key = sceneById.has(u.scene) ? u.scene : '_none';
-    if (!groupAt.has(key)) {
-      groupAt.set(key, groups.length);
-      groups.push({ key, scene: sceneById.get(key) || null, units: [] });
-    }
-    groups[groupAt.get(key)].units.push(u);
-  }
-
-  // 集数：**只有真的多于一集时才画「集」这一层**（单集画个空壳只是视觉噪音）。
-  // 编号沿用剧本的写法（多集 `第 N 集 M-M`、单集 `M-M`），不另造一套"场次 N" ——
-  // 同一件东西造第二套编号，就是 gopher_toll 那次拿错编号的坑。
-  const episodeValues = [...new Set(groups.map((g) => g.scene?.episode).filter((v) => v != null))].sort((a, b) => a - b);
-  const multiEpisode = episodeValues.length > 1;
-  const sceneTitle = (scene) => {
-    if (!scene) return '未归场景（单元没写 scene）';
-    const name = scene.name || scene.id;
-    const no = scene.scene_no ?? null;
-    if (no == null) return name;
-    const num = `${scene.episode ?? 1}-${no}`;
-    return multiEpisode && scene.episode != null ? `第 ${scene.episode} 集 ${num} · ${name}` : `${num} · ${name}`;
+  const planByUnit = new Map((snapshot?.plan?.units || []).map((u) => [u.id, u]));
+  /** 单元所属场次：先看计划给的 `unit.scene`，没有就退回**首镜**的 scene
+   *  （场次归属是导演稿逐镜写的；跨场单元计划不提升到单元级）。 */
+  const sceneOfUnit = (u) => {
+    if (sceneById.has(u.scene)) return sceneById.get(u.scene);
+    const shots = planByUnit.get(u.id)?.shots || [];
+    const first = shots.find((s) => s.scene && sceneById.has(s.scene));
+    return first ? sceneById.get(first.scene) : null;
+  };
+  const episodes = [...new Set(units.map((u) => sceneOfUnit(u)?.episode).filter((v) => v != null))].sort((a, b) => a - b);
+  const multiEpisode = episodes.length > 1;
+  /** 这个单元的镜头是不是跨了多场（数据允许，实践上很少）—— 卡片上标一下，
+   *  免得看见的场次号只是"首镜那一场"却被当成整段都在那儿。 */
+  const isCrossScene = (u) => {
+    const shots = planByUnit.get(u.id)?.shots || [];
+    return new Set(shots.map((s) => s.scene).filter(Boolean)).size > 1;
   };
 
   const wide = units.length > 6;   // 单元多时把边画细一点，免得糊成一片
 
-  // 按集分排：多集时一集一行（行首是"集"分组条），单集时就是原来那一行
-  const episodeRows = [];
+  // 分块：多集时一集一块（块首是「集」分组带），单集时就是一块
+  const blocks = [];
   if (multiEpisode) {
-    for (const g of groups) {
-      const ep = g.scene?.episode ?? null;
-      let row = episodeRows.find((r) => r.ep === ep);
-      if (!row) { row = { ep, scenes: [], maxUnits: 0 }; episodeRows.push(row); }
-      row.scenes.push(g);
-      row.maxUnits = Math.max(row.maxUnits, g.units.length);
+    for (const u of units) {
+      const ep = sceneOfUnit(u)?.episode ?? null;
+      let b = blocks.find((x) => x.ep === ep);
+      if (!b) { b = { ep, units: [] }; blocks.push(b); }
+      b.units.push(u);
     }
-    episodeRows.sort((a, b) => (a.ep ?? -1) - (b.ep ?? -1));
+    blocks.sort((a, b) => (a.ep ?? -1) - (b.ep ?? -1));
   } else {
-    episodeRows.push({
-      ep: null,
-      scenes: groups,
-      maxUnits: groups.reduce((m, g) => Math.max(m, g.units.length), 0),
-    });
+    blocks.push({ ep: null, units });
   }
 
-  let cursorY = SCENE_TOP;
-  let bottomY = SCENE_TOP;
-  episodeRows.forEach((row) => {
+  // 单元排成网格（每行最多 MAX_UNIT_COLS 个），整块对齐在导演稿下方 —— 扇出线短
+  const unitOriginX = COL_STEP;
+  const blockWidth = (count) => (Math.min(MAX_UNIT_COLS, Math.max(1, count)) - 1) * COL_STEP + UNIT_W;
+  let cursorY = UNIT_TOP;
+  let bottomY = UNIT_TOP;
+  let widestX = unitOriginX;
+  blocks.forEach((b) => {
     const bandH = multiEpisode ? EPISODE_H + 12 : 0;
-    const scenesY = cursorY + bandH;
-    const rowWidth = Math.max(SCENE_W, (row.scenes.length - 1) * COL_STEP + SCENE_W);
-    const rowUnits = row.scenes.reduce((n, g) => n + g.units.length, 0);
+    const gridY = cursorY + bandH;
+    const cols = Math.max(1, Math.min(MAX_UNIT_COLS, b.units.length));
+    const rows = Math.ceil(b.units.length / cols);
 
     if (multiEpisode) {
       nodes.push({
-        id: `episode:${row.ep}`,
+        id: `episode:${b.ep}`,
         type: 'episode',
-        position: { x: 0, y: cursorY },
-        width: rowWidth,
+        position: { x: unitOriginX, y: cursorY },
+        width: blockWidth(b.units.length),
         height: EPISODE_H,
         data: {
           kind: 'episode',
-          title: row.ep == null ? '未分集' : `第 ${row.ep} 集`,
-          subtitle: `${row.scenes.length} 场 · ${rowUnits} 单元`,
+          title: b.ep == null ? '未分集' : `第 ${b.ep} 集`,
+          subtitle: `${b.units.length} 单元`,
         },
       });
       edges.push(edge({
-        id: `e:direction->ep${row.ep}`,
+        id: `e:direction->ep${b.ep}`,
         source: 'stage:direction',
-        target: `episode:${row.ep}`,
+        target: `episode:${b.ep}`,
         sourceHandle: 'scenes',
         targetHandle: 'in',
       }));
     }
 
-    row.scenes.forEach((g, gi) => {
-      const x = gi * COL_STEP;
+    b.units.forEach((u, i) => {
+      const c = i % cols;
+      const r = Math.floor(i / cols);
+      const x = unitOriginX + c * COL_STEP;
+      const y = gridY + r * ROW_STEP;
+      const rows2 = gateRows(['keyframes', 'clips'], gates, u.id);
+      const scene = sceneOfUnit(u);
       nodes.push({
-        id: `scene:${g.key}`,
-        type: 'scene',
-        position: { x, y: scenesY },
-        width: SCENE_W,
-        height: SCENE_H,
+        id: `unit:${u.id}`,
+        type: 'unit',
+        position: { x, y },
+        width: UNIT_W,
+        height: UNIT_H,
         data: {
-          kind: 'scene',
-          sceneId: g.key,
-          title: sceneTitle(g.scene),
-          master: g.scene?.master || null,
-          unitCount: g.units.length,
+          kind: 'unit',
+          id: u.id,
+          duration: fmtSec(u.contentDuration),
+          genDuration: fmtSec(u.generationDuration),
+          shotCount: u.shotCount || 0,
+          keyframe: u.keyframe || null,
+          clip: u.clip || null,
+          // 场次信息以**小标签**留在卡片上（画布不再画那一层，但"这段在哪个空间"要看得见）
+          sceneNo: scene?.scene_no ?? null,
+          sceneEpisode: scene?.episode ?? null,
+          sceneName: scene?.name || null,
+          crossScene: isCrossScene(u),
+          gates: rows2,
+          pending: isPendingNode(rows2, frontier),
         },
       });
       edges.push(edge({
-        id: `e:${multiEpisode ? `ep${row.ep}` : 'direction'}->${g.key}`,
-        source: multiEpisode ? `episode:${row.ep}` : 'stage:direction',
-        target: `scene:${g.key}`,
+        id: multiEpisode ? `e:ep${b.ep}->${u.id}` : `e:direction->${u.id}`,
+        source: multiEpisode ? `episode:${b.ep}` : 'stage:direction',
+        target: `unit:${u.id}`,
         sourceHandle: 'scenes',
         targetHandle: 'in',
+        faint: wide,
       }));
-
-      g.units.forEach((u, ui) => {
-        const rows2 = gateRows(['keyframes', 'clips'], gates, u.id);
-        nodes.push({
-          id: `unit:${u.id}`,
-          type: 'unit',
-          position: { x, y: scenesY + SCENE_H + SCENE_GAP + ui * ROW_STEP },
-          width: UNIT_W,
-          height: UNIT_H,
-          data: {
-            kind: 'unit',
-            id: u.id,
-            duration: fmtSec(u.contentDuration),
-            genDuration: fmtSec(u.generationDuration),
-            shotCount: u.shotCount || 0,
-            keyframe: u.keyframe || null,
-            clip: u.clip || null,
-            gates: rows2,
-            pending: isPendingNode(rows2, frontier),
-          },
-        });
-        edges.push(edge({
-          id: `e:${g.key}->${u.id}`,
-          source: `scene:${g.key}`,
-          target: `unit:${u.id}`,
-          sourceHandle: 'units',
-          targetHandle: 'in',
-          faint: wide,
-        }));
-      });
-
-      bottomY = Math.max(bottomY, scenesY + SCENE_H + SCENE_GAP + (g.units.length - 1) * ROW_STEP + UNIT_H);
+      widestX = Math.max(widestX, x);
     });
 
+    bottomY = Math.max(bottomY, gridY + (rows - 1) * ROW_STEP + UNIT_H);
     cursorY = bottomY + EPISODE_ROW_GAP;
   });
 
-  const cols = groups.length;
-  const rows = groups.reduce((m, g) => Math.max(m, g.units.length), 0);
+  const cols = units.length ? Math.min(MAX_UNIT_COLS, units.length) : 0;
+  const rows = blocks.reduce((m, b) => {
+    const c = Math.max(1, Math.min(MAX_UNIT_COLS, b.units.length));
+    return Math.max(m, Math.ceil(b.units.length / c));
+  }, 0);
   const finalY = bottomY + FINAL_GAP;
-  const finalX = cols > 1 ? ((cols - 1) * COL_STEP) / 2 : 0;
+  const finalX = (unitOriginX + widestX) / 2;
   const finalGates = gateRows(['final'], gates);
   nodes.push({
     id: 'final',
@@ -437,10 +374,18 @@ function edge({ id, source, target, sourceHandle, targetHandle, faint = false })
 /**
  * 单元 → 导演单元：计划单元的 `source_units`（如 g001 ← u1）是权威映射。
  * 拿不到（老计划没有该字段）就退回同序号，再不行给 null —— 绝不硬猜。
+ *
+ * **必须用解过正文的那份**（`directionUnits`：行号已由 board-data 就地解成台词）。
+ * 原始 `board.direction.json` 的 `shots[].lines` 只有**裸行号**（`[12]`），
+ * 拿它去渲染 `ln.text`/`ln.n` 全是 undefined —— 整片镜头都会显示"行号对不上"，
+ * 而且行号位置是空的（2026-09-23 实测，就是这个 bug）。
+ * 只有快照里没有解过的那份时（老测试夹具）才退回原始档案。
  */
 export function directorUnitOf(snapshot, unitId) {
   const planUnits = snapshot?.plan?.units || [];
-  const dirUnits = snapshot?.direction?.units || [];
+  const dirUnits = snapshot?.directionUnits?.length
+    ? snapshot.directionUnits
+    : (snapshot?.direction?.units || []);
   if (!dirUnits.length) return null;
   const idx = planUnits.findIndex((u) => u.id === unitId);
   const sources = idx >= 0 ? planUnits[idx].source_units : null;

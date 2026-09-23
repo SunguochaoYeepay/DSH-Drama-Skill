@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   buildGraph, availabilityOf, frontierOf, nextStageOf, directorUnitOf, fmtSec,
-  GATE_ORDER, COL_STEP, ROW_STEP, SCENE_TOP, SCENE_H, SCENE_GAP, EPISODE_H, UNIT_H,
+  GATE_ORDER, COL_STEP, ROW_STEP, MAX_UNIT_COLS, UNIT_H, EPISODE_H,
 } from '../web/src/graph.js';
 import { gateSummary } from '../src/board-data.mjs';
 
@@ -54,40 +54,37 @@ function makeSnapshot({ n = 1, approvals = {}, withClip = true, withKeyframe = t
 
 const gateOf = (node, key) => (node.data.gates || []).find((g) => g.key === key);
 
-test('决策链：剧本 → 导演稿 → 资源，外加侧挂的执行细节', () => {
+test('决策链只有三节：剧本 → 导演稿 → 资源（执行细节已撤）', () => {
   const g = buildGraph(makeSnapshot());
   assert.deepEqual(
     g.nodes.filter((x) => x.type === 'stage').map((x) => x.id),
-    ['stage:story', 'stage:direction', 'stage:assets', 'stage:detail'],
+    ['stage:story', 'stage:direction', 'stage:assets'],
   );
+  assert.equal(g.nodes.find((x) => x.id === 'stage:detail'), undefined, '执行细节节点已撤（用户 2026-09-23）');
   const stageEdges = g.edges.filter((e) => e.source.startsWith('stage:') && e.target.startsWith('stage:'));
-  // 主链两条 + 资源 → 执行细节一条（侧挂，虚线）
-  assert.equal(stageEdges.length, 3);
-  const toDetail = stageEdges.filter((e) => e.target === 'stage:detail');
-  assert.equal(toDetail.length, 1);
-  assert.match(String(toDetail[0].style.strokeDasharray), /4/, '执行细节是次要节点，用虚线连');
-  const detail = g.nodes.find((x) => x.id === 'stage:detail');
-  assert.equal(detail.data.secondary, true);
-  assert.equal(detail.data.gates.length, 0, '执行细节不承载闸门');
+  assert.equal(stageEdges.length, 2, '主链两条；侧挂虚线也不再有');
   // 阶段节点水平铺开，不重叠
   const xs = g.nodes.filter((x) => x.type === 'stage').map((x) => x.position.x);
-  assert.deepEqual(xs, [0, COL_STEP, COL_STEP * 2, COL_STEP * 3]);
+  assert.deepEqual(xs, [0, COL_STEP, COL_STEP * 2]);
 });
 
-test('单元挂在它所属场次下面：一场一条扇出边，单元各自汇聚成片', () => {
+test('画布不画场次层：单元排成网格直接挂导演稿', () => {
   const g = buildGraph(makeSnapshot({ n: 4 }));
   assert.equal(g.nodes.filter((x) => x.type === 'unit').length, 4);
-  // 夹具里所有单元都属于 sc1，所以是一个场次节点扇出四条边
-  assert.equal(g.nodes.filter((x) => x.type === 'scene').length, 1);
-  assert.equal(g.edges.filter((e) => e.source === 'scene:sc1' && e.target.startsWith('unit:')).length, 4);
-  // 场次节点由导演稿扇出
-  assert.equal(g.edges.filter((e) => e.source === 'stage:direction' && e.target === 'scene:sc1').length, 1);
+  assert.equal(g.nodes.filter((x) => x.type === 'scene').length, 0, '场次层已按用户拍板撤掉');
+  assert.equal(g.edges.filter((e) => e.source === 'stage:direction' && e.target.startsWith('unit:')).length, 4);
+  // 单元仍各自汇聚成片
   assert.equal(g.edges.filter((e) => e.target === 'final').length, 4);
   assert.equal(g.nodes.filter((x) => x.id === 'final').length, 1);
+  // 网格：4 个一排，从导演稿正下开始
+  assert.deepEqual(
+    g.nodes.filter((x) => x.type === 'unit').map((x) => x.position.x),
+    [COL_STEP, COL_STEP * 2, COL_STEP * 3, COL_STEP * 4],
+  );
 });
 
-test('多个场次：各自一列，单元挂到各自的场次下面', () => {
-  const s = makeSnapshot({ n: 3 });
+test('单元卡带上场次小标签（画布不画那一层，但"这段在哪个空间"要看得见）', () => {
+  const s = makeSnapshot({ n: 2 });
   s.board = {
     ...board,
     scenes: [
@@ -95,23 +92,41 @@ test('多个场次：各自一列，单元挂到各自的场次下面', () => {
       { id: 'sc2', name: '雨夜路口', scene_no: 2 },
     ],
   };
-  s.units = s.units.map((u, i) => ({ ...u, scene: i === 2 ? 'sc2' : 'sc1' }));
+  s.units = s.units.map((u, i) => ({ ...u, scene: i === 1 ? 'sc2' : 'sc1' }));
   s.plan = { ...s.plan, units: s.units };
   const g = buildGraph(s);
-  const sceneNodes = g.nodes.filter((x) => x.type === 'scene');
-  assert.deepEqual(sceneNodes.map((x) => x.id), ['scene:sc1', 'scene:sc2']);
-  // 编号沿用剧本的写法（单集就是「1-1」），不另造"场次 N"这套词
-  assert.deepEqual(sceneNodes.map((x) => x.data.title), ['1-1 · 机舱', '1-2 · 雨夜路口']);
-  assert.deepEqual(sceneNodes.map((x) => x.data.unitCount), [2, 1]);
-  assert.equal(g.nodes.filter((x) => x.type === 'episode').length, 0, '单集不画「集」分组带');
-  // 两列：第一列 x=0，第二列 x=COL_STEP
-  assert.deepEqual(sceneNodes.map((x) => x.position.x), [0, COL_STEP]);
-  const u3 = g.nodes.find((x) => x.id === 'unit:g003');
-  assert.equal(u3.position.x, COL_STEP, '第三个单元属于第二场，应落在第二列');
-  assert.equal(u3.position.y, SCENE_TOP + SCENE_H + SCENE_GAP, '它是那一场的第一个单元');
+  const u1 = g.nodes.find((x) => x.id === 'unit:g001');
+  const u2 = g.nodes.find((x) => x.id === 'unit:g002');
+  assert.deepEqual([u1.data.sceneNo, u1.data.sceneName, u1.data.sceneEpisode], [1, '机舱', null]);
+  // 夹具的板子没有 episode 字段（老板子就是这样）→ 标签退回「1-1」，不假装知道集数
+  assert.deepEqual([u2.data.sceneNo, u2.data.sceneName], [2, '雨夜路口']);
+  assert.equal(u1.data.crossScene, false);
 });
 
-test('多集：每集一条分组带，场次按集分行，标题写全「第 N 集 M-M」', () => {
+test('跨场单元：场次标签取首镜那一场，并标出「跨场」', () => {
+  const s = makeSnapshot({ n: 2 });
+  s.board = {
+    ...board,
+    scenes: [
+      { id: 'sc1', name: '机舱', scene_no: 1 },
+      { id: 'sc2', name: '雨夜路口', scene_no: 2 },
+    ],
+  };
+  // g001 的两镜跨了两场 → 计划不给单元级 scene（generation-plan 就是这么写的）
+  s.units = [
+    { ...s.units[0], scene: undefined, shots: [{ n: 1, scene: 'sc1' }, { n: 2, scene: 'sc2' }] },
+    { ...s.units[1], scene: 'sc2', shots: [{ n: 1, scene: 'sc2' }] },
+  ];
+  s.plan = { ...s.plan, units: s.units };
+  const g = buildGraph(s);
+
+  const u1 = g.nodes.find((x) => x.id === 'unit:g001');
+  assert.equal(u1.data.crossScene, true, '跨场要标出来');
+  assert.equal(u1.data.sceneName, '机舱', '标签取首镜那一场');
+  assert.equal(g.nodes.find((x) => x.id === 'unit:g002').data.crossScene, false);
+});
+
+test('多集：每集一条分组带，单元按集分块，跨集重号也分得开', () => {
   const s = makeSnapshot({ n: 3 });
   s.board = {
     ...board,
@@ -128,37 +143,34 @@ test('多集：每集一条分组带，场次按集分行，标题写全「第 N
   const eps = g.nodes.filter((x) => x.type === 'episode');
   assert.deepEqual(eps.map((x) => x.id), ['episode:1', 'episode:2']);
   assert.deepEqual(eps.map((x) => x.data.title), ['第 1 集', '第 2 集']);
+  assert.deepEqual(eps.map((x) => x.data.subtitle), ['2 单元', '1 单元']);
 
-  const scenes = g.nodes.filter((x) => x.type === 'scene');
-  assert.deepEqual(scenes.map((x) => x.data.title), [
-    '第 1 集 1-1 · 车厢',
-    '第 1 集 1-2 · 路口',
-    '第 2 集 2-1 · 车厢',
-  ], '跨集重号的 1-1 / 2-1 必须分得开');
+  // 第二集的单元换到下一块
+  const u1 = g.nodes.find((x) => x.id === 'unit:g001');
+  const u3 = g.nodes.find((x) => x.id === 'unit:g003');
+  assert.equal(u3.position.x, u1.position.x, '两集的第一个单元都从同一列开始');
+  assert.ok(u3.position.y > u1.position.y, '第二集的单元在下一块');
+  assert.ok(eps[1].position.y + EPISODE_H < u3.position.y, '集带在该集单元上面');
 
-  const ep1Scene = scenes.find((x) => x.id === 'scene:sc1');
-  const ep2Scene = scenes.find((x) => x.id === 'scene:sc3');
-  assert.equal(ep2Scene.position.x, ep1Scene.position.x, '两集的第一场都从第一列开始');
-  assert.ok(ep2Scene.position.y > ep1Scene.position.y, '第二集的场次换到下一行');
-  assert.ok(eps[1].position.y + EPISODE_H < ep2Scene.position.y, '集带在该集场次上面');
-
-  // 导演稿 → 集带 → 场次 → 单元
+  // 导演稿 → 集带 → 单元
   assert.equal(g.edges.filter((e) => e.source === 'stage:direction' && e.target.startsWith('episode:')).length, 2);
-  assert.equal(g.edges.filter((e) => e.source === 'episode:2' && e.target === 'scene:sc3').length, 1);
-  assert.equal(g.edges.filter((e) => e.source === 'scene:sc3' && e.target === 'unit:g003').length, 1);
+  assert.equal(g.edges.filter((e) => e.source === 'episode:2' && e.target === 'unit:g003').length, 1);
+  // 单元标签里的场次号按集分开：2-1 与 1-1 不同
+  assert.equal(u3.data.sceneEpisode, 2);
+  assert.equal(u3.data.sceneNo, 1);
 });
 
-test('同一场次的单元纵向排下去，成片落在最后一个单元之下', () => {
+test('单元多时按网格换行，成片落在最后一个单元之下', () => {
   const g = buildGraph(makeSnapshot({ n: 16 }));
-  assert.equal(g.info.cols, 1, '只有一个场次');
-  assert.equal(g.info.rows, 16);
+  assert.equal(g.info.cols, MAX_UNIT_COLS);
+  assert.equal(g.info.rows, 4);
   const final = g.nodes.find((x) => x.id === 'final');
   const last = g.nodes.find((x) => x.id === 'unit:g016');
   assert.ok(final.position.y > last.position.y + UNIT_H, `成片 y=${final.position.y} 应在最后一个单元之下`);
   const u1 = g.nodes.find((x) => x.id === 'unit:g001');
   const u5 = g.nodes.find((x) => x.id === 'unit:g005');
-  assert.equal(u1.position.x, u5.position.x, '同一场次的单元同一列');
-  assert.equal(u5.position.y, u1.position.y + 4 * ROW_STEP, '第 5 个单元在第 1 个下面第 4 行');
+  assert.equal(u5.position.x, u1.position.x, '第 5 个单元换行后回到第一列');
+  assert.equal(u5.position.y, u1.position.y + ROW_STEP, '换行 = 下一行');
 });
 
 test('没有任何单元时不出成片以外的空节点', () => {
@@ -243,26 +255,35 @@ test('票徽标文案与顺序：资源节点背板子票 + 资源票', () => {
   assert.deepEqual(finalNode.data.gates.map((x) => x.label), ['成片票']);
 });
 
-test('directorUnitOf：按计划的 source_units 映射，绝不按序号猜', () => {
+test('directorUnitOf：按计划的 source_units 映射，绝不按序号猜（且用解过正文的那份）', () => {
   const s = makeSnapshot();
+  // 同一份快照的两份列表永远描述同一批单元，所以两边同步改
   s.plan.units[0].source_units = ['u1'];
   s.direction.units = [{ id: 'u9', shots: [] }, { id: 'u1', shots: [] }];
+  s.directionUnits = [
+    { id: 'u9', why: '', shots: [] },
+    { id: 'u1', why: '', shots: [{ n: 1, lines: [{ n: 2, text: '你别走' }] }] },
+  ];
   assert.equal(directorUnitOf(s, 'g001').id, 'u1', '导演顺序与计划不同也必须对上');
+  // 取到的是**解过正文**的那份：行号已经带 text，前端直接渲染
+  assert.deepEqual(directorUnitOf(s, 'g001').shots[0].lines, [{ n: 2, text: '你别走' }]);
   // 有 source_units 但导演稿里找不到 → 退回同序号；没有导演稿 → null
   s.plan.units[0].source_units = ['u404'];
   assert.equal(directorUnitOf(s, 'g001').id, 'u9');
   assert.equal(directorUnitOf({ plan: { units: [] }, direction: null }, 'g001'), null);
+  // 快照里没有解过的那份（老夹具/老接口）时退回原始档案，不能崩
+  assert.equal(directorUnitOf({ plan: { units: [{ id: 'g001', source_units: ['u1'] }] }, direction: { units: [{ id: 'u1', shots: [] }] } }, 'g001').id, 'u1');
 });
 
-test('副标题取得到真值：剧本行数 / 资源清单 / 执行细节把计划与索引合起来报', () => {
+test('副标题取得到真值：剧本行数 / 资源清单 / 导演稿单元与镜数', () => {
   const g = buildGraph(makeSnapshot({ n: 2 }));
   const story = g.nodes.find((x) => x.id === 'stage:story');
-  const detail = g.nodes.find((x) => x.id === 'stage:detail');
   const assetsN = g.nodes.find((x) => x.id === 'stage:assets');
+  const dirN = g.nodes.find((x) => x.id === 'stage:direction');
   assert.equal(story.data.subtitle, '2 行');
   // 清单规模（只报非零类别）：夹具里 1 角色 1 场景，没有造型与道具
   assert.equal(assetsN.data.subtitle, '1 角色 · 1 场景');
-  assert.equal(detail.data.subtitle, '2 单元 · 21.4s · 索引 2 镜');
+  assert.equal(dirN.data.subtitle, '1 单元 · 1 镜');
 });
 
 test('fmtSec：没有值给破折号，不做假数据', () => {
