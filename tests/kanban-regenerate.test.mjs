@@ -4,7 +4,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { EventEmitter } from 'node:events';
-import { startServer, regenerateArgs, isValidUnitId, keyframePromptPath, PROMPT_MAX_CHARS } from '../web/server.mjs';
+import {
+  startServer, regenerateArgs, regenerateScript, isValidUnitId, promptPathFor,
+  PROMPT_MAX_CHARS, REGEN_KINDS,
+} from '../web/server.mjs';
 
 /**
  * 「重出图片」端点（2026-09-23）。
@@ -71,6 +74,23 @@ test('命令参数只跑一个单元，板子与计划的路径都在剧目里',
     '--direction', path.join('/tmp/库/剧', 'render.plan.json'),
     '--units', 'g001',
   ]);
+});
+
+test('视频片段那一路：参数名是单数 --unit，脚本换成 cli/unit.mjs', () => {
+  assert.deepEqual(regenerateArgs('/tmp/库/剧', 'g001', 'clip'), [
+    path.join('/tmp/库/剧', 'board.json'),
+    '--direction', path.join('/tmp/库/剧', 'render.plan.json'),
+    '--unit', 'g001',
+  ]);
+  assert.ok(regenerateScript('clip').endsWith(path.join('cli', 'unit.mjs')), regenerateScript('clip'));
+  assert.ok(regenerateScript().endsWith(path.join('cli', 'keyframes.mjs')), regenerateScript());
+  assert.deepEqual(REGEN_KINDS, ['keyframe', 'clip']);
+});
+
+test('提示词落点只有两个，且都在剧目里（单元 id 已过白名单）', () => {
+  const dir = path.join('/tmp', '库', '剧');
+  assert.equal(promptPathFor(dir, 'g001'), path.join(dir, 'keyframe-prompts', 'g001.txt'));
+  assert.equal(promptPathFor(dir, 'g001', 'clip'), path.join(dir, 'units', '.g001.prompt.txt'));
 });
 
 test('单元 id 白名单：命令注入与额外参数都进不来', () => {
@@ -159,15 +179,10 @@ test('没有任务时查状态是 404，不是空 200', async () => {
 
 /* ── 写提示词（看板唯一会写项目文件的地方）────────────────────────────── */
 
-test('提示词落点只可能在剧目的 keyframe-prompts 里（单元 id 已过白名单）', () => {
-  const p = keyframePromptPath(path.join('/tmp', '库', '剧'), 'g001');
-  assert.equal(p, path.join('/tmp', '库', '剧', 'keyframe-prompts', 'g001.txt'));
-});
-
-test('写提示词：缺防护头 403、空文本/超长/非法单元都拒绝，合法写入带一个尾换行', async () => {
+test('写提示词：缺防护头 403、坏输入拒绝，合法写入带一个尾换行且只写一个文件', async () => {
   const sp = fakeSpawn();
   await withServer(sp.impl, async ({ base, p }) => {
-    const post = (body, withAction = true) => fetch(`${base}/api/keyframe-prompt`, {
+    const post = (body, withAction = true) => fetch(`${base}/api/prompt`, {
       method: 'POST',
       headers: withAction
         ? { 'Content-Type': 'application/json', 'X-Kanban-Action': '1' }
@@ -178,16 +193,21 @@ test('写提示词：缺防护头 403、空文本/超长/非法单元都拒绝�
     assert.equal((await post({ name: 'probe', unit: 'g001', text: 'x' }, false)).status, 403);
     assert.equal((await post({ name: 'probe', unit: 'g001', text: '   ' })).status, 400);
     assert.equal((await post({ name: 'probe', unit: '../x', text: 'x' })).status, 400);
+    assert.equal((await post({ name: 'probe', unit: 'g001', kind: 'nope', text: 'x' })).status, 400);
     assert.equal((await post({ name: 'nope', unit: 'g001', text: 'x' })).status, 404);
     assert.equal((await post({ name: 'probe', unit: 'g001', text: 'x'.repeat(PROMPT_MAX_CHARS + 1) })).status, 400);
 
-    const ok = await post({ name: 'probe', unit: 'g001', text: '  一个合法的提示词  ' });
+    // 关键帧：keyframe-prompts/<单元>.txt
+    const ok = await post({ name: 'probe', unit: 'g001', kind: 'keyframe', text: '  一个合法的提示词  ' });
     assert.equal(ok.status, 200);
     assert.equal((await ok.json()).chars, 8);
-    const written = fs.readFileSync(path.join(p.dir, 'keyframe-prompts', 'g001.txt'), 'utf8');
-    assert.equal(written, '一个合法的提示词\n', '去掉首尾空白，补一个尾换行');
-    // 只写这一个文件：目录里不该多出别的
-    assert.deepEqual(fs.readdirSync(path.join(p.dir, 'keyframe-prompts')), ['g001.txt']);
+    assert.equal(fs.readFileSync(path.join(p.dir, 'keyframe-prompts', 'g001.txt'), 'utf8'), '一个合法的提示词\n');
+    assert.deepEqual(fs.readdirSync(path.join(p.dir, 'keyframe-prompts')), ['g001.txt'], '只写这一个文件');
+
+    // 视频：units/.<单元>.prompt.txt（点号文件才是直写制的那份）
+    const clip = await post({ name: 'probe', unit: 'g002', kind: 'clip', text: '视频提示词正文' });
+    assert.equal(clip.status, 200);
+    assert.equal(fs.readFileSync(path.join(p.dir, 'units', '.g002.prompt.txt'), 'utf8'), '视频提示词正文\n');
   });
 });
 
@@ -204,26 +224,29 @@ test('签署：阶段白名单之外一律拒绝，且不起进程', async () =>
     for (const stage of ['board', 'story', '', 'keyframes; rm -rf /']) {
       assert.equal((await post({ name: 'probe', stage })).status, 400, stage);
     }
+    // 片段票是每单元一张，不带单元 id 就不给签（否则会绑错一段）
+    assert.equal((await post({ name: 'probe', stage: 'clip' })).status, 400);
     assert.equal(sp.calls.length, 0);
   });
 });
 
-test('签署 keyframes：起的是 review-gate approve，票由它落笔；失败原样回传', async () => {
+test('签署 keyframes：起的是 review-gate approve（整批，不带 --id）；失败原样回传', async () => {
   const sp = fakeSpawn();
   await withServer(sp.impl, async ({ base, p }) => {
-    const post = () => fetch(`${base}/api/sign`, {
+    const post = (body) => fetch(`${base}/api/sign`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Kanban-Action': '1' },
-      body: JSON.stringify({ name: 'probe', stage: 'keyframes' }),
+      body: JSON.stringify(body),
     });
 
-    const pending = post();
+    const pending = post({ name: 'probe', stage: 'keyframes' });
     await new Promise((r) => setTimeout(r, 30));
     assert.equal(sp.calls.length, 1, '批准动作要落到唯一所有者身上');
     const args = sp.calls[0].args;
     assert.ok(args[0].endsWith(path.join('cli', 'review-gate.mjs')), args[0]);
     assert.deepEqual(args.slice(1, 4), ['approve', '--project', p.dir]);
     assert.deepEqual(args.slice(4, 6), ['--stage', 'keyframes']);
+    assert.equal(args.includes('--id'), false, '关键帧票是整批一张，不带 --id');
 
     sp.children[0].stdout.emit('data', Buffer.from('✓ 人工确认已记录：keyframes\n'));
     sp.children[0].emit('close', 0);
@@ -232,7 +255,7 @@ test('签署 keyframes：起的是 review-gate approve，票由它落笔；失�
     assert.match((await ok.json()).output, /人工确认已记录/);
 
     // 失败那次：退出码 1 → 400，并把 CLI 的原文带回去
-    const pending2 = post();
+    const pending2 = post({ name: 'probe', stage: 'keyframes' });
     await new Promise((r) => setTimeout(r, 30));
     sp.children[1].stderr.emit('data', Buffer.from('✗ 产物已变化，旧确认自动失效\n'));
     sp.children[1].emit('close', 1);
@@ -241,5 +264,21 @@ test('签署 keyframes：起的是 review-gate approve，票由它落笔；失�
     const j = await bad.json();
     assert.match(j.error, /退出码 1/);
     assert.match(j.output, /旧确认自动失效/);
+  });
+});
+
+test('签署 clip：必须带 --id <单元>，只签这一段', async () => {
+  const sp = fakeSpawn();
+  await withServer(sp.impl, async ({ base, p }) => {
+    const pending = fetch(`${base}/api/sign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Kanban-Action': '1' },
+      body: JSON.stringify({ name: 'probe', stage: 'clip', unit: 'g002' }),
+    });
+    await new Promise((r) => setTimeout(r, 30));
+    assert.deepEqual(sp.calls[0].args.slice(1, 6), ['approve', '--project', p.dir, '--stage', 'clip']);
+    assert.deepEqual(sp.calls[0].args.slice(6, 8), ['--id', 'g002']);
+    sp.children[0].emit('close', 0);
+    assert.equal((await pending).status, 200);
   });
 });

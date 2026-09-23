@@ -33,10 +33,10 @@
  *   POST /api/archive             { name }                     归档
  *   POST /api/restore             { name }                     恢复
  *   POST /api/delete              { name, confirm, archived? }  删除到系统回收站
- *   POST /api/regenerate          { name, unit }               重出某个单元的关键帧
+ *   POST /api/regenerate          { name, unit, kind }        重出某个单元的产物（关键帧/视频）
  *   GET  /api/regenerate?id=x     重抽任务状态（轮询用）
- *   POST /api/keyframe-prompt     { name, unit, text }         写 keyframe-prompts/<单元>.txt
- *   POST /api/sign                { name, stage }              请 review-gate 落一张票
+ *   POST /api/prompt              { name, unit, kind, text }  写提示词（keyframe / clip 两种落点）
+ *   POST /api/sign                { name, stage, unit? }       请 review-gate 落一张票
  *   GET  /media/<剧目>/<相对路径>  媒体文件（限剧目目录内，防目录穿越）
  *
  * ## 「签署」为什么不破坏"看板不代签"（2026-09-23）
@@ -96,30 +96,39 @@ function mimeOf(p) {
 
 /**
  * 重抽任务的命令行参数（**纯函数**，便于测试钉住：只跑一个单元、不碰别的）。
- * 用法对齐 `cli/keyframes.mjs <board.json> --direction <plan> --units <单元>`。
+ * - 关键帧：`cli/keyframes.mjs <board.json> --direction <plan> --units <单元>`
+ * - 视频片段：`cli/unit.mjs <board.json> --direction <plan> --unit <单元>`
+ *   （单数 `--unit`，两个 CLI 的参数名不同，别抄错。）
  */
-export function regenerateArgs(projectDir, unit) {
-  return [
+export function regenerateArgs(projectDir, unit, kind = 'keyframe') {
+  const common = [
     path.join(projectDir, 'board.json'),
     '--direction', path.join(projectDir, 'render.plan.json'),
-    '--units', unit,
   ];
+  return kind === 'clip' ? [...common, '--unit', unit] : [...common, '--units', unit];
 }
+
+/** 两种产物的 CLI 落点。 */
+export function regenerateScript(kind = 'keyframe') {
+  return path.join(REPO_ROOT, 'cli', kind === 'clip' ? 'unit.mjs' : 'keyframes.mjs');
+}
+
+/** 允许重抽的产物类型（白名单：它决定跑哪个脚本、写哪个文件）。 */
+export const REGEN_KINDS = ['keyframe', 'clip'];
 
 /** 单元 id 只允许字母数字下划线连字符 —— 它要进命令行，不做白名单就是命令注入。 */
 export function isValidUnitId(unit) {
   return /^[A-Za-z0-9_-]{1,40}$/.test(String(unit || ''));
 }
 
-/** 看板可以从界面「签署」的阶段白名单（目前只有用户当前动线需要的那一张票）。 */
-export const SIGNABLE_STAGES = ['keyframes'];
+/** 看板可以从界面「签署」的阶段白名单（关键帧整批一张；片段票是每单元一张）。 */
+export const SIGNABLE_STAGES = ['keyframes', 'clip'];
 
-/**
- * 关键帧提示词的落点（**唯一的写入路径**：剧目内 `keyframe-prompts/<单元>.txt`）。
- * 单元 id 已过白名单，所以这里不可能被 `..` 穿越出去。
- */
-export function keyframePromptPath(projectDir, unit) {
-  return path.join(projectDir, 'keyframe-prompts', `${unit}.txt`);
+/** 提示词落点：**看板唯一会写的那两个文件**（都由产物类型决定，单元 id 已过白名单）。 */
+export function promptPathFor(projectDir, unit, kind = 'keyframe') {
+  return kind === 'clip'
+    ? path.join(projectDir, 'units', `.${unit}.prompt.txt`)
+    : path.join(projectDir, 'keyframe-prompts', `${unit}.txt`);
 }
 
 /** 提示词长度上限：CLI 的自检是 500 字，这里留够并给前端一个明确的天花板。 */
@@ -145,8 +154,8 @@ export function startServer({ root, port = 0, webDist, gc = true, trash, spawn: 
   let runningJobId = null;
   let seq = 0;
 
-  /** 起一次关键帧重抽（只跑这一个单元）。 */
-  const startRegenerate = (name, unit) => {
+  /** 起一次重抽（只跑这一个单元）。 */
+  const startRegenerate = (name, unit, kind = 'keyframe') => {
     if (runningJobId) {
       return { status: 409, error: '已经有一个重抽在跑，等它结束再来', jobId: runningJobId };
     }
@@ -156,7 +165,7 @@ export function startServer({ root, port = 0, webDist, gc = true, trash, spawn: 
     }
     const id = `regen-${Date.now()}-${++seq}`;
     const job = {
-      id, name, unit, state: 'running',
+      id, name, unit, kind, state: 'running',
       startedAt: new Date().toISOString(), endedAt: null, exitCode: null, log: '',
     };
     jobs.set(id, job);
@@ -177,7 +186,7 @@ export function startServer({ root, port = 0, webDist, gc = true, trash, spawn: 
     try {
       child = (spawnImpl || spawn)(
         process.execPath,
-        [path.join(REPO_ROOT, 'cli', 'keyframes.mjs'), ...regenerateArgs(projectDir, unit)],
+        [regenerateScript(kind), ...regenerateArgs(projectDir, unit, kind)],
         { cwd: REPO_ROOT, env: process.env, stdio: ['ignore', 'pipe', 'pipe'] },
       );
     } catch (e) {
@@ -201,7 +210,7 @@ export function startServer({ root, port = 0, webDist, gc = true, trash, spawn: 
     if (!job) return null;
     const end = job.endedAt ? Date.parse(job.endedAt) : Date.now();
     return {
-      id: job.id, name: job.name, unit: job.unit, state: job.state,
+      id: job.id, name: job.name, unit: job.unit, kind: job.kind, state: job.state,
       exitCode: job.exitCode, startedAt: job.startedAt, endedAt: job.endedAt,
       durationMs: Math.max(0, end - Date.parse(job.startedAt)),
       log: job.log,
@@ -392,20 +401,25 @@ async function handleAction(req, res, root, route, trash, regen) {
   }
 
   if (route === '/api/regenerate') {
-    // 重出某个单元的关键帧：改词 → 重抽这条动线，看板里点一下就够。
-    // **不是签票**：只产出新图，票一个字都不碰（图变了票自然失效，要人重签）。
+    // 重出某个单元的产物（关键帧或视频片段）：改词 → 重抽这条动线，看板里点一下就够。
+    // **不是签票**：只产出新文件，票一个字都不碰（产物变了票自然失效，要人重签）。
     const unit = String(body.unit ?? '');
+    const kind = String(body.kind ?? 'keyframe');
     if (!isValidUnitId(unit)) return sendJson(res, { error: '非法单元 id' }, 400);
-    const r = regen.startRegenerate(name, unit);
+    if (!REGEN_KINDS.includes(kind)) return sendJson(res, { error: `产物类型只能是 ${REGEN_KINDS.join(' / ')}` }, 400);
+    const r = regen.startRegenerate(name, unit, kind);
     if (r.error) return sendJson(res, { error: r.error, jobId: r.jobId }, r.status);
-    return sendJson(res, { ok: true, jobId: r.job.id, unit, name });
+    return sendJson(res, { ok: true, jobId: r.job.id, unit, kind, name });
   }
 
-  if (route === '/api/keyframe-prompt') {
-    // 写提示词：这是看板唯一会写**项目文件**的地方（`keyframe-prompts/<单元>.txt`）。
-    // 直写制的文件就是送模型的那份原文，改它就是改下一张图 —— 所以只写这一个文件，别的不碰。
+  if (route === '/api/prompt') {
+    // 写提示词：这是看板唯一会写**项目文件**的地方，而且只写这两个之一 ——
+    // 关键帧 `keyframe-prompts/<单元>.txt`、视频 `units/.<单元>.prompt.txt`。
+    // 直写制的文件就是送模型的那份原文，改它就是改下一份产物 —— 别的一个字不碰。
     const unit = String(body.unit ?? '');
+    const kind = String(body.kind ?? 'keyframe');
     if (!isValidUnitId(unit)) return sendJson(res, { error: '非法单元 id' }, 400);
+    if (!REGEN_KINDS.includes(kind)) return sendJson(res, { error: `产物类型只能是 ${REGEN_KINDS.join(' / ')}` }, 400);
     const text = typeof body.text === 'string' ? body.text : null;
     if (text === null) return sendJson(res, { error: 'text 必须是字符串' }, 400);
     if (text.length > PROMPT_MAX_CHARS) {
@@ -413,12 +427,12 @@ async function handleAction(req, res, root, route, trash, regen) {
     }
     const projectDir = path.join(root, name);
     if (!fs.existsSync(projectDir)) return sendJson(res, { error: '剧目不存在' }, 404);
-    fs.mkdirSync(path.join(projectDir, 'keyframe-prompts'), { recursive: true });
-    const file = keyframePromptPath(projectDir, unit);
     const trimmed = text.trim();
     if (!trimmed) return sendJson(res, { error: '提示词不能是空的' }, 400);
+    const file = promptPathFor(projectDir, unit, kind);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, `${trimmed}\n`, 'utf8');
-    return sendJson(res, { ok: true, unit, chars: trimmed.length });
+    return sendJson(res, { ok: true, unit, kind, chars: trimmed.length });
   }
 
   if (route === '/api/sign') {
@@ -429,9 +443,15 @@ async function handleAction(req, res, root, route, trash, regen) {
     }
     const projectDir = path.join(root, name);
     if (!fs.existsSync(projectDir)) return sendJson(res, { error: '剧目不存在' }, 404);
-    const r = await runOnce(regen.reviewGatePath, [
-      'approve', '--project', projectDir, '--stage', stage, '--by', '用户（看板）',
-    ], { spawnImpl: regen.spawnImpl });
+    // 片段票是**每单元一张**，必须带 --id；关键帧票是整批一张，不带。
+    const args = ['approve', '--project', projectDir, '--stage', stage];
+    if (stage === 'clip') {
+      const unit = String(body.unit ?? '');
+      if (!isValidUnitId(unit)) return sendJson(res, { error: '签片段票要带上单元 id' }, 400);
+      args.push('--id', unit);
+    }
+    args.push('--by', '用户（看板）');
+    const r = await runOnce(regen.reviewGatePath, args, { spawnImpl: regen.spawnImpl });
     return r.code === 0
       ? sendJson(res, { ok: true, stage, output: r.output })
       : sendJson(res, { error: `签名失败（退出码 ${r.code}）`, output: r.output }, 400);

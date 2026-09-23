@@ -76,26 +76,25 @@ function PromptSection({ title, text, missing, right }) {
 }
 
 /**
- * 「重出图片」按钮：打开 RegenModal 那个工作台（改提示词 → 重出 → 看新图 → 满意就签）。
+ * 「重出」按钮：打开 RegenModal 那个工作台（改提示词 → 重出 → 看新产物 → 满意就签）。
  *
- * 弹窗自己负责提示词写入、任务轮询与签署；这里只是入口。
+ * 弹窗自己负责提示词写入、任务轮询与签署；这里只是入口。关键帧与视频共用它，
+ * 差别（CLI、提示词落点、票的口径）都在弹窗里按 `kind` 写明。
  * 看板里**没有任何写 review.approvals.json 的代码路径** —— 签是把用户明确的「通过」
  * 转交给唯一所有者 `cli/review-gate.mjs` 执行。
  */
-function RegenButton({ onClick }) {
+function RegenButton({ onClick, label = '重出图片…', hint = '改提示词 → 重出 → 看新图 → 满意就签（只重抽当前这一格）' }) {
   return (
-    <Section title="重出图片">
+    <Section title="重出">
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={onClick}
           className="rounded-md border border-accent/60 bg-accent/10 px-2.5 py-1 text-[12px] text-ink-100 transition hover:bg-accent/20"
         >
-          重出图片…
+          {label}
         </button>
-        <span className="text-[11px] text-ink-500">
-          改提示词 → 重出 → 看新图 → 满意就签（只重抽当前这一格）
-        </span>
+        <span className="text-[11px] text-ink-500">{hint}</span>
       </div>
     </Section>
   );
@@ -472,8 +471,8 @@ function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine, onRefr
   const [sub, setSub] = useState('info');
   // 视频页底部那层：提示词 / 镜头（默认提示词）
   const [clipTab, setClipTab] = useState('prompt');
-  // 重出工作台弹窗
-  const [regenOpen, setRegenOpen] = useState(false);
+  // 重出工作台弹窗：null 关着，'keyframe' / 'clip' 决定重出哪种产物
+  const [regenKind, setRegenKind] = useState(null);
   if (!unit) return <Box className="text-ink-500">找不到单元 {unitId}</Box>;
   const clips = snapshot.gates?.clips?.perUnit?.[unitId];
   return (
@@ -534,17 +533,7 @@ function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine, onRefr
             text={unit.keyframePrompt}
             missing={`还没有 keyframe-prompts/${unitId}.txt（直写制：这个文件逐字送模型，改它就是改下一张图）`}
           />
-          <RegenButton onClick={() => setRegenOpen(true)} />
-          {regenOpen ? (
-            <RegenModal
-              project={project}
-              unit={unit}
-              frameCount={(snapshot.units || []).filter((u) => u.keyframe).length || (snapshot.units || []).length}
-              onClose={() => setRegenOpen(false)}
-              onRefresh={onRefresh}
-              onOpen={onOpen}
-            />
-          ) : null}
+          <RegenButton onClick={() => setRegenKind('keyframe')} />
         </>
       )}
 
@@ -559,6 +548,11 @@ function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine, onRefr
             )}
           </Section>
           <ClipRefs snapshot={snapshot} unit={unit} onOpen={onOpen} />
+          <RegenButton
+            onClick={() => setRegenKind('clip')}
+            label="重出这一段…"
+            hint="改视频提示词 → 重出 → 看新片段 → 满意就签这一段的片段票（只重抽这一段）"
+          />
 
           {/* 提示词与镜头描述分两个小页签，**默认提示词**（用户 2026-09-23）。
               一段视频的提示词常常上千字，和镜头卡片挤在一起要滚很久。 */}
@@ -598,6 +592,20 @@ function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine, onRefr
           ) : <Box className="text-ink-500">没有对应到导演单元，读不到镜头描述</Box>}
         </>
       )}
+
+      {/* 重出工作台：**挂在 UnitView 顶层**，关键帧页与视频页共用同一个弹窗
+          （之前放在关键帧分支里，视频页点按钮只会设状态、弹窗不出现 —— 实测踩过）。 */}
+      {regenKind ? (
+        <RegenModal
+          project={project}
+          unit={unit}
+          kind={regenKind}
+          frameCount={(snapshot.units || []).filter((u) => u.keyframe).length || (snapshot.units || []).length}
+          onClose={() => setRegenKind(null)}
+          onRefresh={onRefresh}
+          onOpen={onOpen}
+        />
+      ) : null}
     </>
   );
 }

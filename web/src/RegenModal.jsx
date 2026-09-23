@@ -1,28 +1,64 @@
 /**
- * RegenModal.jsx — 「重出关键帧」工作台（用户 2026-09-23 要的弹窗流程）。
+ * RegenModal.jsx — 「重出」工作台（用户 2026-09-23 要的弹窗流程）。
  *
- * 一个单元的关键帧不满意时，原来得回终端：改 `keyframe-prompts/<单元>.txt`、
- * 拼一条 `node cli/keyframes.mjs …`。现在在这一个弹窗里走完：
+ * 一个单元的**关键帧**或**视频片段**不满意时，原来得回终端：改直写提示词、
+ * 拼一条 `node cli/keyframes.mjs …` / `node cli/unit.mjs …`。现在在这一个弹窗里走完：
  *
- *   改提示词 → 保存并重出 → 看新图（不满意就再改再出）→ 满意 → 签署
+ *   改提示词 → 保存并重出 → 看新产物（不满意就再改再出）→ 满意 → 签署
+ *
+ * 两种产物的差别（都在这里显式写出来，别靠猜）：
+ * | | 关键帧 | 视频片段 |
+ * |---|---|---|
+ * | CLI | `cli/keyframes.mjs --units <单元>` | `cli/unit.mjs --unit <单元>` |
+ * | 提示词 | `keyframe-prompts/<单元>.txt` | `units/.<单元>.prompt.txt` |
+ * | 票 | **整批一张**（绑定计划里全部关键帧） | **每单元一张**（`--id <单元>`） |
+ * | 自检 | CLI 审计 ≤500 字 | 无此限制（视频提示词本来就上千字） |
  *
  * 三条边界（和服务端一起守）：
- * 1. **提示词只写一个文件**：`keyframe-prompts/<单元>.txt`，别的项目文件一个字不碰；
- * 2. **重出只跑这一个单元**（`--units <单元>`），同一时刻只允许一个任务；
+ * 1. **提示词只写一个文件**（上表那两个之一），别的项目文件一个字不碰；
+ * 2. **重出只跑这一个单元**，同一时刻只允许一个任务；
  * 3. **签署 ≠ 看板签票**：点它只是把用户明确的「通过」转交给唯一所有者
  *    `cli/review-gate.mjs` 执行 —— 看板里没有任何写 `review.approvals.json` 的代码路径。
- *    另外关键帧票**不是每格一张**，它绑的是计划里全部关键帧：签一次覆盖全批，
- *    所以确认按钮上把这句话摆明。
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { mediaUrl, startRegenerate, fetchRegenerate, saveKeyframePrompt, signStage } from './api.js';
+import { mediaUrl, isVideo, startRegenerate, fetchRegenerate, savePrompt, signStage } from './api.js';
 
-/** CLI 的提示词自检上限（`auditPrompt`）：超过它，重出一定会被拒。 */
+/** CLI 的关键帧提示词自检上限（`auditPrompt`）：超过它，重出一定会被拒。 */
 const PROMPT_AUDIT_LIMIT = 500;
 
-export default function RegenModal({ project, unit, frameCount = 1, onClose, onRefresh, onOpen }) {
-  const [text, setText] = useState(unit.keyframePrompt || '');
-  const [version, setVersion] = useState(() => Date.now());   // 换图后用它打破浏览器缓存
+/** 两种产物的呈现口径。 */
+const KINDS = {
+  keyframe: {
+    title: '重出关键帧',
+    promptLabel: '关键帧提示词',
+    promptFile: (unit) => `keyframe-prompts/${unit}.txt`,
+    previewLabel: '这一格现在的图',
+    estimate: '本机 ComfyUI 约 20–35 秒',
+    auditLimit: PROMPT_AUDIT_LIMIT,
+    signStage: 'keyframes',
+    signTitle: '满意就签署关键帧票',
+    signNote: (n) => `关键帧票绑的是**计划里全部 ${n} 格**的图，签一次覆盖全批；`,
+  },
+  clip: {
+    title: '重出视频片段',
+    promptLabel: '视频提示词',
+    promptFile: (unit) => `units/.${unit}.prompt.txt`,
+    previewLabel: '这一段现在的视频',
+    estimate: '本机 ComfyUI 约 50–75 秒',
+    auditLimit: 0,               // 视频提示词没有 500 字这条自检
+    signStage: 'clip',
+    signTitle: '满意就签这一段的片段票',
+    signNote: () => '片段票是**每单元一张**，只签这一段；',
+  },
+};
+
+export default function RegenModal({ project, unit, kind = 'keyframe', frameCount = 1, onClose, onRefresh, onOpen }) {
+  const K = KINDS[kind] || KINDS.keyframe;
+  const initialPrompt = kind === 'clip' ? (unit.videoPrompt || '') : (unit.keyframePrompt || '');
+  const previewRel = kind === 'clip' ? unit.clip : unit.keyframe;
+
+  const [text, setText] = useState(initialPrompt);
+  const [version, setVersion] = useState(() => Date.now());   // 换产物后用它打破浏览器缓存
   const [job, setJob] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -39,7 +75,7 @@ export default function RegenModal({ project, unit, frameCount = 1, onClose, onR
       .catch(() => { /* 没有任务就是 404，正常 */ });
   }, [unit.id]);
 
-  // 跑着的时候每 2 秒问一次；一结束就刷新快照与图片
+  // 跑着的时候每 2 秒问一次；一结束就刷新快照与产物
   useEffect(() => {
     if (!job || job.state !== 'running') return undefined;
     const timer = setInterval(async () => {
@@ -59,20 +95,20 @@ export default function RegenModal({ project, unit, frameCount = 1, onClose, onR
   const run = useCallback(async () => {
     setBusy(true); setError(''); setSigned(null); setConfirmSign(false);
     try {
-      await saveKeyframePrompt(project, unit.id, text);
-      const r = await startRegenerate(project, unit.id);
+      await savePrompt(project, unit.id, kind, text);
+      const r = await startRegenerate(project, unit.id, kind);
       setJob({ id: r.jobId, state: 'running', log: '', durationMs: 0 });
     } catch (e) {
       setError(e.message || '重出起不来');
     } finally {
       setBusy(false);
     }
-  }, [project, unit.id, text]);
+  }, [project, unit.id, kind, text]);
 
   const doSign = async () => {
     setBusy(true); setError('');
     try {
-      const r = await signStage(project, 'keyframes');
+      const r = await signStage(project, K.signStage, kind === 'clip' ? unit.id : undefined);
       setSigned({ at: new Date().toLocaleTimeString(), output: r.output });
       setConfirmSign(false);
       onRefresh?.();
@@ -86,7 +122,7 @@ export default function RegenModal({ project, unit, frameCount = 1, onClose, onR
   const running = job?.state === 'running';
   const lastLine = String(job?.log || '').trim().split(/\r?\n/).filter(Boolean).pop() || '';
   const chars = text.trim().length;
-  const tooLong = chars > PROMPT_AUDIT_LIMIT;
+  const tooLong = K.auditLimit > 0 && chars > K.auditLimit;
 
   return (
     <div
@@ -95,11 +131,11 @@ export default function RegenModal({ project, unit, frameCount = 1, onClose, onR
       onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
     >
       <div
-        className="flex max-h-[88vh] w-[860px] max-w-full flex-col rounded-lg border border-ink-700 bg-ink-900 shadow-2xl"
+        className="flex max-h-[88vh] w-[880px] max-w-full flex-col rounded-lg border border-ink-700 bg-ink-900 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center gap-2 border-b border-ink-800 px-4 py-2.5">
-          <span className="text-[13.5px] font-medium">重出关键帧 · {unit.id}</span>
+          <span className="text-[13.5px] font-medium">{K.title} · {unit.id}</span>
           <span className="truncate text-[11.5px] text-ink-500">{project}</span>
           <button
             type="button"
@@ -115,13 +151,13 @@ export default function RegenModal({ project, unit, frameCount = 1, onClose, onR
           {/* 左：提示词 */}
           <div className="flex min-h-0 flex-col">
             <div className="mb-1 flex items-baseline gap-2">
-              <span className="text-[12px] text-ink-300">关键帧提示词</span>
+              <span className="text-[12px] text-ink-300">{K.promptLabel}</span>
               <span className={`text-[11px] ${tooLong ? 'text-bad' : 'text-ink-500'}`}>
-                {chars} 字{tooLong ? `（超过 CLI 自检上限 ${PROMPT_AUDIT_LIMIT}，重出会被拒）` : ''}
+                {chars} 字{tooLong ? `（超过 CLI 自检上限 ${K.auditLimit}，重出会被拒）` : ''}
               </span>
               <button
                 type="button"
-                onClick={() => setText(unit.keyframePrompt || '')}
+                onClick={() => setText(initialPrompt)}
                 className="ml-auto rounded border border-ink-700 px-1.5 py-px text-[11px] text-ink-400 hover:text-ink-200"
                 title="丢掉改动，回到文件里现在的内容"
               >
@@ -133,7 +169,7 @@ export default function RegenModal({ project, unit, frameCount = 1, onClose, onR
               onChange={(e) => setText(e.target.value)}
               spellCheck={false}
               className="min-h-[260px] flex-1 resize-y rounded-md border border-ink-700 bg-ink-850 p-2 text-[12px] leading-relaxed text-ink-100 outline-none focus:border-accent"
-              placeholder={`还没有 keyframe-prompts/${unit.id}.txt —— 在这里写下这一格要什么，点「保存并重出」`}
+              placeholder={`还没有 ${K.promptFile(unit.id)} —— 在这里写下这一段要什么，点「保存并重出」`}
             />
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <button
@@ -149,9 +185,7 @@ export default function RegenModal({ project, unit, frameCount = 1, onClose, onR
               >
                 {running ? '重出中…' : '保存并重出'}
               </button>
-              <span className="text-[11px] text-ink-500">
-                只重抽这一个单元；本机 ComfyUI 约 20–35 秒
-              </span>
+              <span className="text-[11px] text-ink-500">只重抽这一个单元；{K.estimate}</span>
             </div>
             {error ? <div className="mt-2 text-[11.5px] text-bad">{error}</div> : null}
             {job ? (
@@ -176,31 +210,45 @@ export default function RegenModal({ project, unit, frameCount = 1, onClose, onR
             ) : null}
           </div>
 
-          {/* 右：结果图 + 签署 */}
+          {/* 右：结果 + 签署 */}
           <div className="flex min-h-0 flex-col">
             <div className="mb-1 flex items-baseline gap-2">
-              <span className="text-[12px] text-ink-300">这一格现在的图</span>
-              <span className="text-[11px] text-ink-500">{unit.keyframe || '还没有关键帧'}</span>
+              <span className="text-[12px] text-ink-300">{K.previewLabel}</span>
+              <span className="truncate text-[11px] text-ink-500">{previewRel || '还没有产物'}</span>
             </div>
             <div className="flex min-h-[260px] flex-1 items-center justify-center rounded-md border border-ink-700 bg-ink-950 p-2">
-              {unit.keyframe ? (
-                <button type="button" onClick={() => onOpen(unit.keyframe, `${unit.id} 关键帧`)} className="block">
-                  <img
-                    src={`${mediaUrl(project, unit.keyframe)}?v=${version}`}
-                    alt={`${unit.id} 关键帧`}
-                    className="max-h-[46vh] max-w-full rounded"
-                  />
+              {previewRel ? (
+                <button type="button" onClick={() => onOpen(previewRel, `${unit.id} ${K.promptLabel}`)} className="block">
+                  {isVideo(previewRel) ? (
+                    <video
+                      src={`${mediaUrl(project, previewRel)}#t=0.1`}
+                      preload="metadata"
+                      muted
+                      playsInline
+                      className="max-h-[46vh] max-w-full rounded"
+                    />
+                  ) : (
+                    <img
+                      src={`${mediaUrl(project, previewRel)}?v=${version}`}
+                      alt={`${unit.id} ${K.promptLabel}`}
+                      className="max-h-[46vh] max-w-full rounded"
+                    />
+                  )}
                 </button>
               ) : (
-                <span className="text-[12px] text-ink-500">还没出图 —— 左边写好提示词，点「保存并重出」</span>
+                <span className="text-[12px] text-ink-500">
+                  还没有产物 —— 左边写好提示词，点「保存并重出」
+                </span>
               )}
             </div>
-            <div className="mt-1 text-[11px] text-ink-500">点图看大图（也可以下载自己对比）</div>
+            <div className="mt-1 text-[11px] text-ink-500">
+              {isVideo(previewRel) ? '点它开灯箱播放（详情里不内联播放）' : '点它看大图'}
+            </div>
 
             <div className="mt-3 rounded-md border border-ink-700/70 bg-ink-900/60 p-2.5">
-              <div className="text-[11.5px] text-ink-300">满意就签署关键帧票</div>
+              <div className="text-[11.5px] text-ink-300">{K.signTitle}</div>
               <div className="mt-0.5 text-[11px] text-ink-500">
-                关键帧票绑的是**计划里全部 {frameCount} 格**的图，签一次覆盖全批；
+                {K.signNote(frameCount)}
                 票由 <span className="font-mono">cli/review-gate.mjs</span> 落笔，看板自己不改 approvals 文件。
               </div>
               {signed ? (
@@ -213,7 +261,7 @@ export default function RegenModal({ project, unit, frameCount = 1, onClose, onR
                     disabled={busy}
                     className="rounded-md bg-warn px-2.5 py-1 text-[12px] font-medium text-ink-950 hover:brightness-110 disabled:opacity-50"
                   >
-                    确认签署（覆盖全部 {frameCount} 格）
+                    {kind === 'clip' ? `确认签署（只签 ${unit.id}）` : `确认签署（覆盖全部 ${frameCount} 格）`}
                   </button>
                   <button
                     type="button"
@@ -230,7 +278,7 @@ export default function RegenModal({ project, unit, frameCount = 1, onClose, onR
                   disabled={busy}
                   className="mt-2 rounded-md border border-ok/50 bg-ok/10 px-2.5 py-1 text-[12px] text-ok hover:bg-ok/20 disabled:opacity-50"
                 >
-                  满意，签关键帧票
+                  {kind === 'clip' ? '满意，签这一段的片段票' : '满意，签关键帧票'}
                 </button>
               )}
             </div>

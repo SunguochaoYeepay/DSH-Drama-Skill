@@ -105,10 +105,11 @@ export const deleteProject = (name, confirm, archived = false) =>
  * 图一变，那张关键帧票在 `review-gate status` 看来就失效了，仍然要人重新签。
  */
 
-/** 起一次重抽 → { ok, jobId, unit, name }。已经在跑时抛错（服务端 409）。 */
-export const startRegenerate = (name, unit) => writeJson('/api/regenerate', { name, unit });
+/** 起一次重抽 → { ok, jobId, unit, kind }。已经在跑时抛错（服务端 409）。 */
+export const startRegenerate = (name, unit, kind = 'keyframe') =>
+  writeJson('/api/regenerate', { name, unit, kind });
 
-/** 重抽任务状态：{ id, state:'running'|'done'|'failed', exitCode, durationMs, log }。 */
+/** 重抽任务状态：{ id, kind, state:'running'|'done'|'failed', exitCode, durationMs, log }。 */
 export async function fetchRegenerate(id) {
   const q = id ? `?id=${encodeURIComponent(id)}` : '';
   const r = await fetch(`/api/regenerate${q}`);
@@ -118,14 +119,17 @@ export async function fetchRegenerate(id) {
 }
 
 /**
- * 写关键帧提示词 —— **看板唯一会写项目文件的地方**（`keyframe-prompts/<单元>.txt`）。
- * 直写制的那个文件就是送模型的原文，所以只写它，别的项目文件一个字不碰。
+ * 写提示词 —— **看板唯一会写项目文件的地方**，且只写这两个之一：
+ * 关键帧 `keyframe-prompts/<单元>.txt`、视频 `units/.<单元>.prompt.txt`。
+ * 直写制的文件就是送模型的原文，所以只写它，别的项目文件一个字不碰。
  */
-export const saveKeyframePrompt = (name, unit, text) =>
-  writeJson('/api/keyframe-prompt', { name, unit, text });
+export const savePrompt = (name, unit, kind, text) =>
+  writeJson('/api/prompt', { name, unit, kind, text });
 
 /**
  * 请 `cli/review-gate.mjs` 落一张票 —— **看板不写 approvals 文件**，
  * 它只是把用户明确的「通过」转交给那个唯一所有者执行（可签阶段由服务端白名单限制）。
+ * 片段票是每单元一张，所以要带 `unit`（服务端会翻译成 `--id`）。
  */
-export const signStage = (name, stage) => writeJson('/api/sign', { name, stage });
+export const signStage = (name, stage, unit) =>
+  writeJson('/api/sign', unit ? { name, stage, unit } : { name, stage });
