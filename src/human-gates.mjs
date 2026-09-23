@@ -119,10 +119,37 @@ export function requireApproval(projectDir, stage, files, { id = null, skip = fa
   }
 }
 
+/**
+ * 票据里记的**展示路径**：能写成仓库相对就写相对，写不了就原样保留绝对路径。
+ *
+ * 起因（2026-09-22）：`approve()` 把 `path.resolve()` 后的绝对路径直接写进 `artifacts`，
+ * 于是示例剧目的 `review.approvals.json` 里躺着 `D:\DeepSeek\ai-images-harness\…` ——
+ * 这份文件是要发到 GitHub 的，等于把本机目录结构贴出去。事后靠脚本清洗了两次。
+ *
+ * ⚠ 只影响 `artifacts`（**记录**），**不影响 `artifact_hash`**：哈希仍按绝对路径算，
+ * 否则所有已落的票会因为换了基准而集体失效。
+ *
+ * 找不到仓库根时**原样返回**，绝不猜别人的机器 —— 宁可留绝对路径，也不写一个假的相对路径。
+ */
+function repoRootOf(startDir) {
+  let dir = path.resolve(startDir);
+  for (let i = 0; i < 10; i += 1) {
+    if (fs.existsSync(path.join(dir, '.git')) || fs.existsSync(path.join(dir, 'package.json'))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+
 export function approve(projectDir, stage, files, { id = null, by = '用户' } = {}) {
   const data = readReviews(projectDir);
   const artifact = stageFingerprint(stage, files);
-  const ticket = { at: new Date().toISOString(), by, artifact_hash: artifact.hash, artifacts: artifact.files };
+  const repo = repoRootOf(projectDir);
+  const display = (file) => (repo && file.startsWith(repo + path.sep)
+    ? path.relative(repo, file).split(path.sep).join('/')
+    : file);
+  const ticket = { at: new Date().toISOString(), by, artifact_hash: artifact.hash, artifacts: artifact.files.map(display) };
   const generation = readGenerationRecord(projectDir, stage);
   if (generation) ticket.generation = generation;
   if (stage === 'clip') {

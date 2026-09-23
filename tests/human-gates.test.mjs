@@ -102,4 +102,32 @@ addedProp.props.push({ id: 'p1', name: '木棍', description: '一根天然木�
 writeBoard(addedProp);
 assert.match(approvalStatus(bp, 'board', [boardFile]).reason, /失效/, '新增道具是语义变更，必须让票失效');
 
+// 票里记的路径必须是**仓库相对**的（2026-09-22）：`approve()` 原本直接写 `path.resolve()`
+// 后的绝对路径，示例剧目的 review.approvals.json 里因此躺着 `D:\DeepSeek\…` —— 那份文件是
+// 要发到 GitHub 的。哈希基准不变（否则所有已落的票会集体失效），只改 `artifacts` 的记法。
+// 判据是行为：在**仓库内**签一张票，读回来的路径不许带盘符；仓库外则原样保留绝对路径。
+const inRepo = fs.mkdtempSync(path.join(path.resolve('tests'), 'tmp-gates-'));
+try {
+  const relFile = path.join(inRepo, 'shot.png');
+  fs.writeFileSync(relFile, 'png');
+  const ticket = approve(inRepo, 'keyframes', [relFile]);
+  assert.equal(ticket.artifacts.length, 1);
+  assert.ok(
+    !/^[A-Za-z]:[/\\]/.test(ticket.artifacts[0]) && !ticket.artifacts[0].startsWith('/'),
+    `仓库内的票应记相对路径，实际：${ticket.artifacts[0]}`,
+  );
+  const persisted = JSON.parse(fs.readFileSync(path.join(inRepo, 'review.approvals.json'), 'utf8'));
+  assert.equal(persisted.approvals.keyframes.artifacts[0], ticket.artifacts[0]);
+  // 哈希仍按绝对路径算 → 换了记法不影响同一批文件的复核结果。
+  assert.equal(approvalStatus(inRepo, 'keyframes', [relFile]).ok, true);
+} finally {
+  fs.rmSync(inRepo, { recursive: true, force: true });
+}
+// 仓库外（比如 /tmp 下的一次性项目）找不到仓库根 → 原样保留绝对路径，绝不假造相对路径。
+const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-gates-outside-'));
+const outsideFile = path.join(outside, 'x.png');
+fs.writeFileSync(outsideFile, 'png');
+const outsideTicket = approve(outside, 'keyframes', [outsideFile]);
+assert.equal(outsideTicket.artifacts[0], path.resolve(outsideFile));
+
 console.log('human gates: passed');

@@ -14,6 +14,17 @@ export function receiptPath(storyPath) {
 }
 
 /**
+ * 修订时**旧票的归档位**：`story.provenance.v<N>.json`。
+ *
+ * 为什么归档而不是覆盖：剧本改一个字，来源票的 `story_sha256` 就对不上，
+ * 下游的人门票全部失效。此前没有修订入口，只能手删票重建 —— 于是**修订史整个丢失**，
+ * 谁也答不出"这版剧本改了什么、从哪版改来"。归档让链条可回溯。
+ */
+export function archiveReceiptPath(storyPath, revision) {
+  return path.join(path.dirname(path.resolve(storyPath)), `story.provenance.v${revision || 1}.json`);
+}
+
+/**
  * 剧本来源票据。
  *
  * 三种来源互斥，**任何一种都不得冒充另一种**：

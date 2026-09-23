@@ -179,9 +179,9 @@
       "source_units": [
         "u2"
       ],
-      "boundary_reason": "end",
-      "content_duration_s": 9.8,
-      "generation_duration_s": 9.8,
+      "boundary_reason": "director_unit",
+      "content_duration_s": 7.4,
+      "generation_duration_s": 7.4,
       "keyframe": "keyframes_render/g002.png",
       "cast": [
         "i_passenger_default",
@@ -191,7 +191,7 @@
       "props": [],
       "why": "车停下的那一刻是整个故事唯一一次「行为推翻台词」，必须锁在一次连续生成里，让减速、滑停、转向灯闪光是一条连贯的物理过程 —— 这也是全片唯一一处对已有台词作出反向解释的地方",
       "audience_knows": "观众刚刚听见司机说「那儿没站」，以为请求已经被拒绝；而观众还不知道司机会把车停下 —— 这个错位要靠车真的减速才成立，所以这一单元的起点必须是上一段实际停住的尾帧",
-      "duration_reason": "第一镜 2.8 秒装车速下降与滑停的完整减速；第二镜 3.4 秒给「下雨，走回去远」七个字留出说完后不作解释的停顿；第三镜 3.6 秒是她的内心独白与下车挥手，合计 9.8 秒",
+      "duration_reason": "第一镜 2.4 秒装减速与滑停的完整物理过程；第二镜 2.2 秒给「下雨，走回去远」七个字与说后的沉默；第三镜 2.8 秒装她站起来、笑着道谢、起身走向车门，合计 7.4 秒",
       "keyframe_start": "承接上一段尾帧：机位仍在车厢中后段过道、视线与小雨齐高。小雨仍靠窗坐着，脸已经转向车窗另一侧，嘴唇闭合、尚未开始说话；司机双手仍握在方向盘上、视线朝前挡风，身体尚未有任何转向或起身动作。画面里没有已经完成的停车状态 —— 停车是这一镜开始之后才发生的事",
       "keyframe_cast": [
         "i_passenger_default",
@@ -208,7 +208,7 @@
         ],
         "strategy": "single_transition"
       },
-      "end_state": "车已完全停稳，转向灯规律闪着，小雨起身走到前后门之间即将下车的位置、一只手扶着扶手看向驾驶座；司机仍坐在驾驶座上，视线跟着她的方向偏了半寸但没有转头",
+      "end_state": "车已完全停稳、转向灯规律闪着、前门已向内滑开；小雨已经站起来、说完「谢谢师傅」，一手扶着前排椅背站在过道里、身体朝车门方向，脸仍回向驾驶座；司机仍坐在驾驶座上，脸与肩都朝着前方挡风",
       "continuity": {
         "mode": "reference_previous",
         "previous_unit": "g001",
@@ -225,7 +225,7 @@
         {
           "n": 1,
           "at": 0,
-          "duration_s": 2.8,
+          "duration_s": 2.4,
           "framing": "中景",
           "camera": "小幅左移",
           "scene": "s_bus_night",
@@ -252,7 +252,7 @@
               "character": "i_driver_default",
               "cause": "明知那儿没站还是踩了刹车，说出口的话和自己要做的事相反",
               "internal_state": "把决定收在动作里，脸上不留解释",
-              "visible_behavior": "右手松开方向盘去拨转向灯杆后随即握回，下颌保持平直，呼吸略深但没有叹气",
+              "visible_behavior": "右手松开方向盘、向下拨动转向灯杆后随即握回方向盘，下颌保持平直，呼吸略深但没有叹气",
               "gaze": "看着前方逐渐停止的路牌与路口路面",
               "avoid_symbols": [
                 "回头看她",
@@ -271,9 +271,9 @@
         },
         {
           "n": 2,
-          "at": 2.8,
+          "at": 2.4,
           "cut": "the camera cuts to",
-          "duration_s": 3.4,
+          "duration_s": 2.2,
           "framing": "近景",
           "camera": "固定",
           "scene": "s_bus_night",
@@ -284,14 +284,14 @@
             "i_driver_default": "left"
           },
           "props": [],
-          "action": "司机没有回头，只是把下颌抬了半寸让声音往前排送出去；说完以后刻意不再补任何一句，视线停在前方",
+          "action": "他全程面朝前方挡风，头与肩都不转向车厢后方；下颌微微抬起后落回，说完闭紧嘴唇不再开口，右手在方向盘上轻轻拍一下就停住，视线始终落在画面左侧的前方路面上",
           "emotion_analysis": [
             {
               "character": "i_driver_default",
               "cause": "刚才说了没站，现在用一句天气给自己的破例找个说得过去的理由",
               "internal_state": "嘴硬，但已经把车停下了",
-              "visible_behavior": "下颌微抬后又落回原位，说完闭紧嘴唇不再发出任何音节，手在方向盘上轻轻拍了一下就停住",
-              "gaze": "始终看向画面左侧的前方挡风，不看后视镜",
+              "visible_behavior": "下颌微抬后又落回原位，说完闭紧嘴唇不再开口，手在方向盘上轻轻拍了一下就停住",
+              "gaze": "始终看向画面左侧的前方挡风与路面",
               "avoid_symbols": [
                 "回头",
                 "微笑",
@@ -311,9 +311,9 @@
         },
         {
           "n": 3,
-          "at": 6.2,
+          "at": 4.6,
           "cut": "the camera cuts to",
-          "duration_s": 3.6,
+          "duration_s": 2.8,
           "framing": "近景",
           "camera": "缓慢前推",
           "scene": "s_bus_night",
@@ -324,38 +324,152 @@
             "i_passenger_default": "right"
           },
           "props": [],
-          "action": "小雨愣了一拍才伸手解开安全带一样低下身站起来，走到车门前停住回头，朝驾驶座的方向抬起一只手挥了两下；车窗外雨还在下，画面右侧的车窗玻璃上水痕被路灯光勾亮",
+          "action": "公交车没有安全带：她撑着前排座椅靠背直接站起身，转身朝驾驶座方向，脸上绽开一个明显的笑，开口说了声谢谢，说完扶着椅背朝车门挪了两步，前门随一声气动轻响向内滑开；车窗外雨还在下，画面右侧的车窗玻璃上水痕被路灯光勾亮",
           "emotion_analysis": [
             {
               "character": "i_passenger_default",
-              "cause": "被人用一个不说破的方式帮了一次，心里有话但知道说多了反而尴尬",
-              "internal_state": "感激，压着不说破",
-              "visible_behavior": "下唇轻轻咬了一下又松开，嘴角往上提不到一半就收住，挥手的幅度克制在肩线以下",
+              "cause": "被司机用一个不说破的方式帮了，心里一暖，道谢要大声说出来",
+              "internal_state": "惊喜转成明亮的感激，笑意压不住",
+              "visible_behavior": "眼睛先弯起来，嘴角完全上扬露出一点牙齿，说话时头轻轻点了一下，转身时脚步轻快",
               "gaze": "看向画面右侧驾驶座方向，收手时短暂垂下再抬起来",
               "avoid_symbols": [
                 "含泪注视",
-                "大幅度用力挥手",
-                "笑出牙齿"
+                "幅度夸张的手势",
+                "低头不好意思"
               ]
             }
           ],
-          "lighting": "她转身后正面接住顶灯暖光，脸颊被路灯光从侧面勾出一道细亮边，发梢的水珠有一点高光",
+          "lighting": "她站起来后正面接住顶灯暖光，脸颊被路灯光从侧面勾出一道细亮边，发梢的水珠有一点高光",
           "lines": [
             19
           ],
-          "audio": "车门气动阀放气的短促嘶声，雨声在画面拉远时重新盖过车内",
+          "audio": "车门气动阀一声轻响、门向内滑开的机械声，雨声随之变大铺底",
           "source": {
             "unit": "u2",
             "shot": 3
           }
         }
       ]
+    },
+    {
+      "id": "g003",
+      "source_units": [
+        "u3"
+      ],
+      "boundary_reason": "end",
+      "content_duration_s": 5.2,
+      "generation_duration_s": 5.2,
+      "keyframe": "keyframes_render/g003.png",
+      "cast": [
+        "i_passenger_default"
+      ],
+      "scene": "s_stop_night",
+      "props": [],
+      "why": "「谢谢」说完之后故事还差最后一口气：她站在雨里看着车真的走了，那句没说出口的心里话才有落点 —— 车外与车内是两个空间，切开才不抢",
+      "audience_knows": "观众刚听见她大声道谢、看见她起身下车，知道善意已经送达；而她还不知道自己会在车开走之后露出那句独白",
+      "duration_reason": "第一镜 2.6 秒公交车驶离、尾灯在雨里拖出红线；第二镜 2.6 秒装她的目送与那句内心独白，合计 5.2 秒",
+      "keyframe_start": "雨夜路口的全景：机位在她右后侧的人行道上、从背后中景拍她。年轻的东亚女性刚下车站稳，站在路缘上，身体和脸同朝画面左前方，嘴唇闭合尚未说话；米白色针织开衫、黑色直筒长裤、左肩深灰色帆布通勤包，发梢带雨珠；公交车在她的左前方的马路上、距她约两个车身，车尾正对着她，尾灯是两点清晰的红光，车身正沿马路朝画面左外侧驶离",
+      "keyframe_cast": [
+        "i_passenger_default"
+      ],
+      "action_complexity": {
+        "level": "medium",
+        "high_risk_events": [
+          {
+            "at_s": 1,
+            "type": "large_displacement",
+            "description": "公交车整体驶离画面，尾灯在湿路面上拖出移动的红色反光"
+          }
+        ],
+        "strategy": "single_transition"
+      },
+      "end_state": "公交车已驶出画面左侧、只剩远处两点尾灯余光，小雨仍站在路口的路缘上，身体和脸仍朝画面左前方车离开的方向，嘴角扬着，嘴唇闭合",
+      "continuity": {
+        "mode": "independent",
+        "reason": "车外是全新空间，起点无法承接车内尾帧；靠同一场雨、同一套服装、同一个夜晚衔接"
+      },
+      "shots": [
+        {
+          "n": 1,
+          "at": 0,
+          "duration_s": 2.6,
+          "framing": "全景",
+          "camera": "固定",
+          "scene": "s_stop_night",
+          "on_screen": [
+            "i_passenger_default"
+          ],
+          "props": [],
+          "action": "公交车沿马路缓缓驶离，红色尾灯在湿漉漉的沥青路面上拖出两道随车移动的红线，车身逐渐出画；小雨站在路缘上，朝画面左前方车尾的方向抬起一只手挥了两下，挥幅克制",
+          "emotion_analysis": [
+            {
+              "character": "i_passenger_default",
+              "cause": "车真的为她停了、又真的载着她的一句谢谢开走了",
+              "internal_state": "踏实，还有一点点舍不得",
+              "visible_behavior": "挥手时肩膀放松，站姿不再紧绷，头一直跟着车的方向",
+              "gaze": "追着公交车的尾灯",
+              "avoid_symbols": [
+                "用力奔跑",
+                "大声喊叫",
+                "捂脸"
+              ]
+            }
+          ],
+          "lighting": "路灯的橙黄从头顶罩下来，公交车尾灯的红色在驶离时给她的侧脸扫过一层短暂暖红，湿路面的反光随车远去而变淡",
+          "lines": [],
+          "audio": "柴油机起步的低鸣、轮胎碾过积水的哗声、雨声重新盖过一切",
+          "source": {
+            "unit": "u3",
+            "shot": 1
+          }
+        },
+        {
+          "n": 2,
+          "at": 2.6,
+          "cut": "the camera cuts to",
+          "duration_s": 2.6,
+          "framing": "近景",
+          "camera": "缓慢前推",
+          "scene": "s_stop_night",
+          "on_screen": [
+            "i_passenger_default"
+          ],
+          "facing": {
+            "i_passenger_default": "left"
+          },
+          "props": [],
+          "action": "车已驶出画面，她还望着车离开的方向，嘴角慢慢扬起来，自言自语说了一句只有自己听得见的话，说完轻轻呼出一口气",
+          "emotion_analysis": [
+            {
+              "character": "i_passenger_default",
+              "cause": "预想中的拒绝换成了一个不说破的破例，这话只说给自己听",
+              "internal_state": "被接住的暖意，带着一点后知后觉",
+              "visible_behavior": "嘴角上扬但不出声地笑，呼气时肩膀轻轻落下",
+              "gaze": "望向画面左侧车离开的方向",
+              "avoid_symbols": [
+                "对镜头说话",
+                "大笑",
+                "擦眼泪"
+              ]
+            }
+          ],
+          "lighting": "路灯暖黄打在她发梢的雨珠上，背景的红绿灯杆与街灯虚成几团橙黄光斑",
+          "lines": [
+            21
+          ],
+          "audio": "雨声稳定铺底，远处路灯电流的轻微嗡声",
+          "source": {
+            "unit": "u3",
+            "shot": 2
+          }
+        }
+      ]
     }
   ],
   "totals": {
-    "content_duration_s": 19.6,
-    "projected_delivery_duration_s": 19.6,
-    "keyframe_count": 2
+    "content_duration_s": 22.400000000000002,
+    "projected_delivery_duration_s": 22.400000000000002,
+    "keyframe_count": 3
   },
   "provenance": {
     "contract": 1,
@@ -365,7 +479,7 @@
     "direction_sha256": "ead21d79df7756b17d2638bef7c47bde1fafc09af952661203daf9140a967014",
     "direction_receipt_sha256": "0dcbba30fe26be42077cb77ad223c3dd52701930d82b553b210e0a0cb60c68de",
     "direction_version": 6,
-    "direction_file": "board.direction.json",
+    "direction_file": "(手工切分：剧本修订 v2，g002 车内道谢 + g003 车外目送)",
     "bound_at": "2026-09-22T08:53:31.741Z",
     "plan_units_sha256": "e7ceaab9a9aa9fe06dcb4bcd7122dd8e62742fc9d8493318176a73e8555a98ab"
   }

@@ -1,0 +1,16 @@
+{
+  "contract": 1,
+  "source": "agent_draft",
+  "model": null,
+  "response_model": null,
+  "drafted_by": "agent",
+  "input_sha256": "8d5a030bc6195f629595b119711638bcbc118aa524dedab80bf58dceaa2999f3",
+  "story_sha256": "8d5a030bc6195f629595b119711638bcbc118aa524dedab80bf58dceaa2999f3",
+  "recorded_at": "2026-09-22T14:16:57.990Z",
+  "revision": 2,
+  "revised_from": {
+    "story_sha256": "13e4f3f3b3b92a7ca276becc01762a1931b9ee3fe40e26edfe6d7053e872cc2f",
+    "recorded_at": "2026-09-22T07:02:45.192Z"
+  },
+  "revise_reason": "v2：补「谢谢师傅！」道谢、起身下车与车外目送动作、OS 独白，时长标注 12→24 秒"
+}

@@ -4,7 +4,13 @@
   "model": null,
   "response_model": null,
   "drafted_by": "agent",
-  "input_sha256": "13e4f3f3b3b92a7ca276becc01762a1931b9ee3fe40e26edfe6d7053e872cc2f",
-  "story_sha256": "13e4f3f3b3b92a7ca276becc01762a1931b9ee3fe40e26edfe6d7053e872cc2f",
-  "recorded_at": "2026-09-22T07:02:45.192Z"
+  "input_sha256": "aa3b1816f5b2e546586e139abea4a6f43bd5ca959717ff728ae382dafdad7070",
+  "story_sha256": "aa3b1816f5b2e546586e139abea4a6f43bd5ca959717ff728ae382dafdad7070",
+  "recorded_at": "2026-09-23T02:04:10.780Z",
+  "revision": 3,
+  "revised_from": {
+    "story_sha256": "8d5a030bc6195f629595b119711638bcbc118aa524dedab80bf58dceaa2999f3",
+    "recorded_at": "2026-09-22T14:16:57.990Z"
+  },
+  "revise_reason": "补前门滑开的动作（此前她怎么下车的没有交代），下车点由「路边」钉死为「路口边」以呼应「那儿没站」；不插新行，台词行号保持不变"
 }

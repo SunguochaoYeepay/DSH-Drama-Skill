@@ -8,7 +8,7 @@
     "aspect": "9:16",
     "style": "realistic",
     "style_prompt": null,
-    "total_duration_s": 17,
+    "total_duration_s": 20,
     "stage": "story",
     "created_at": "2026-09-22T08:52:26.619Z",
     "approvals": {
@@ -46,7 +46,7 @@
     {
       "id": "c_driver",
       "name": "阿伟",
-      "age_group": "youth",
+      "age_group": "middle",
       "face_prompt": "东亚男性，约三十五岁，方脸，眉眼平直，鼻梁偏宽，唇线平实，皮肤偏黄；短发略乱，额前有几绺碎发",
       "identities": [
         "i_driver_default"
@@ -84,9 +84,16 @@
     {
       "id": "s_bus_night",
       "name": "末班公交车厢",
-      "environment": "雨夜的末班公交车厢，顶灯是暖黄色，车窗挂满水珠，外面是被雨糊成一片的路灯光斑；车厢里有两排乘客座椅与黄色扶手杆，前段是驾驶座与方向盘，司机坐在驾驶座上只露后背，中段是前后车门与刷卡机",
+      "environment": "雨夜的末班公交车厢，顶灯是暖黄色，车窗挂满水珠，外面是被雨糊成一片的路灯光斑；车厢里有两排乘客座椅（两排之间靠过道一侧立着齐胸高的椅背）与黄色扶手杆，中间是贯通前后的过道，前段是驾驶座与方向盘，司机坐在驾驶座上只露后背，中段是前后车门与刷卡机",
       "scene_no": 1,
       "master": "assets/s_bus_night_master.png"
+    },
+    {
+      "id": "s_stop_night",
+      "name": "雨夜路口",
+      "scene_no": 2,
+      "environment": "雨夜的城市路口：湿沥青的马路横过画面下方，路面上有一道白色的斑马线，人行道的路缘外侧立着红绿灯杆与路口转角的护栏，湿路面反着路灯与霓虹的橙黄光，雨丝在灯光里成斜线落下，远处是被雨糊开的路灯光斑；没有车厢、没有座椅，是开阔的室外空间",
+      "master": "assets/s_stop_night_master.png"
     }
   ],
   "props": [],
@@ -236,9 +243,9 @@
       "dialogue": [
         {
           "character": "i_passenger_default",
-          "text": "我以为会被拒绝的。",
-          "emotion": "内心独白",
-          "kind": "voiceover"
+          "text": "谢谢师傅！",
+          "emotion": "笑",
+          "kind": "spoken"
         }
       ],
       "edit_note": "台词镜",
@@ -277,6 +284,39 @@
       "source_lines": [
         20
       ]
+    },
+    {
+      "id": "s07",
+      "source_lines": [
+        21
+      ],
+      "dialogue": [
+        {
+          "character": "i_passenger_default",
+          "text": "我以为会被拒绝的。",
+          "emotion": "内心独白",
+          "kind": "voiceover"
+        }
+      ],
+      "scene": "s_stop_night",
+      "cast": [
+        "i_passenger_default"
+      ],
+      "props": [],
+      "duration_s": 3,
+      "shot_size": "近景",
+      "lighting": "低照度冷光，暗部层次",
+      "camera": "缓慢前推",
+      "action": "公交车驶出画面后，小雨仍望着车离开的方向，自言自语说了一句只有自己听得见的话。",
+      "prompt": "{{i_passenger_default}}，近景，缓慢前推",
+      "audio": "雨声铺底，远处路灯电流的轻微嗡声",
+      "edit_note": "台词镜",
+      "transition": {
+        "type": "cut"
+      },
+      "first_frame": null,
+      "last_frame": null,
+      "clip": null
     }
   ]
 }

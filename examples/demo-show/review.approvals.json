@@ -11,88 +11,99 @@
         ]
       },
       "g002": {
-        "at": "2026-09-22T09:43:40.625Z",
+        "at": "2026-09-23T02:52:07.171Z",
         "by": "用户",
-        "artifact_hash": "ca4efc46b03f20608a13d9a4ca8cf7e54f68295496f51f40ae0a0c925fb94772",
+        "artifact_hash": "eeea618a37d3879777954820309549873cbdc226835bbeb83069067dea992d63",
         "artifacts": [
-          "examples\\demo-show\\units\\i2v_20260922-173910.mp4"
+          "examples/demo-show/units/i2v_20260923-104821.mp4"
+        ]
+      },
+      "g003": {
+        "at": "2026-09-23T02:52:07.481Z",
+        "by": "用户",
+        "artifact_hash": "6799b6b3f562a0412468b39c3ba667065e215d68ac3cc86fae08cc1e0a60593c",
+        "artifacts": [
+          "examples/demo-show/units/i2v_20260923-104918.mp4"
         ]
       }
     },
     "story": {
-      "at": "2026-09-22T08:50:45.497Z",
+      "at": "2026-09-23T02:04:42.041Z",
       "by": "用户",
-      "artifact_hash": "737b7b30c7fee854efdead44ce7107b022aa473675fcbac0d07ca4050e792d54",
+      "artifact_hash": "4e43ee709b0f1f96649bd9a42e384869066a803d7695808e72cdd67da578eba6",
       "artifacts": [
         "examples/demo-show/story.md"
       ]
     },
     "direction": {
-      "at": "2026-09-22T08:53:31.432Z",
+      "at": "2026-09-23T02:51:43.737Z",
       "by": "用户",
-      "artifact_hash": "f432c9f1f8077c24eef23d73a119fa964916014d57e886878d81a153b8027758",
+      "artifact_hash": "0369e96cb277b0ea2bab24e300594ba1cfae79f3e94c697ab2a02d2ac7195044",
       "artifacts": [
         "examples/demo-show/board.direction.json"
       ]
     },
     "board": {
-      "at": "2026-09-22T09:43:30.233Z",
+      "at": "2026-09-23T02:51:43.409Z",
       "by": "用户",
-      "artifact_hash": "42a38f87e9849cf166ac2b2627e415ba6a0201b1f5743e10c5b6344297c95d41",
+      "artifact_hash": "c889e1cea013756c31ff5667de97cbdc99e95e13e2f5113608033a285ec7d300",
       "artifacts": [
-        "examples\\demo-show\\board-brief.json",
-        "examples\\demo-show\\board.json"
+        "examples/demo-show/board.json"
       ]
     },
     "assets": {
-      "at": "2026-09-22T09:43:35.477Z",
+      "at": "2026-09-23T02:51:51.808Z",
       "by": "用户",
-      "artifact_hash": "e20fb036166c112ecf857df1be2d42db562621b2af5040ed8adbb51d6582dfc0",
+      "artifact_hash": "a73bb01a7902472f34ee23d618075164af654b3ee023b3d345e3cf221bdce455",
       "artifacts": [
-        "examples\\demo-show\\assets\\c_driver_portrait.png",
-        "examples\\demo-show\\assets\\c_passenger_portrait.png",
-        "examples\\demo-show\\assets\\i_driver_default_sheet.png",
-        "examples\\demo-show\\assets\\i_passenger_default_sheet.png",
-        "examples\\demo-show\\assets\\s_bus_night_master.png"
+        "examples/demo-show/assets/c_driver_portrait.png",
+        "examples/demo-show/assets/c_passenger_portrait.png",
+        "examples/demo-show/assets/i_driver_default_sheet.png",
+        "examples/demo-show/assets/i_passenger_default_sheet.png",
+        "examples/demo-show/assets/s_bus_night_master.png",
+        "examples/demo-show/assets/s_stop_night_master.png"
       ],
       "generation": {
         "version": 1,
         "stage": "assets",
-        "at": "2026-09-22T09:32:53.375Z",
+        "at": "2026-09-23T02:44:38.336Z",
         "provider": "comfyui",
         "model": "local-comfyui",
         "requested_provider": null,
         "artifacts": [
-          "examples\\demo-show\\assets\\c_driver_portrait.png",
-          "examples\\demo-show\\assets\\c_passenger_portrait.png",
-          "examples\\demo-show\\assets\\i_driver_default_sheet.png",
-          "examples\\demo-show\\assets\\i_passenger_default_sheet.png",
-          "examples\\demo-show\\assets\\s_bus_night_master.png"
+          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\assets\\c_driver_portrait.png",
+          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\assets\\c_passenger_portrait.png",
+          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\assets\\i_driver_default_sheet.png",
+          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\assets\\i_passenger_default_sheet.png",
+          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\assets\\s_bus_night_master.png",
+          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\assets\\s_stop_night_master.png"
         ]
       }
     },
     "keyframes": {
-      "at": "2026-09-22T09:43:35.801Z",
-      "by": "用户",
-      "artifact_hash": "7ac762441ec05d27b95a02f059b942df22d120c9db192d524fa771b3879931b7",
+      "at": "2026-09-23T06:56:34.443Z",
+      "by": "用户（看板）",
+      "artifact_hash": "8df8baf3e99d81c5675ab8772b6348c1c60fd2b920c069cd0031122ce7520925",
       "artifacts": [
-        "examples\\demo-show\\keyframes_local_v2\\g002.png",
-        "examples\\demo-show\\keyframes_render\\g001.png"
+        "examples/demo-show/keyframes_local_v2/g002.png",
+        "examples/demo-show/keyframes_render/g001.png",
+        "examples/demo-show/keyframes_render/g003.png"
       ],
       "generation": {
         "version": 1,
         "stage": "keyframes",
-        "at": "2026-09-22T09:37:42.413Z",
+        "at": "2026-09-23T06:50:22.146Z",
         "provider": "local",
         "model": "local-comfyui/qwen21",
         "requested_provider": "comfyui",
         "artifacts": [
-          "examples\\demo-show\\keyframes_render\\g001.png",
-          "examples\\demo-show\\keyframes_local_v2\\g002.png"
+          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\keyframes_render\\g001.png",
+          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\keyframes_local_v2\\g002.png",
+          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\keyframes_render\\g003.png"
         ],
-        "plan": "examples\\demo-show\\render.plan.json",
+        "plan": "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\render.plan.json",
         "prompt_files": [
-          "keyframe-prompts/g002.txt"
+          "keyframe-prompts/g003.txt"
         ]
       }
     }
