@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   buildGraph, availabilityOf, frontierOf, nextStageOf, directorUnitOf, fmtSec,
-  GATE_ORDER, MAX_UNIT_COLS, COL_STEP, UNIT_TOP, ROW_STEP,
+  GATE_ORDER, COL_STEP, ROW_STEP, SCENE_TOP, SCENE_H, SCENE_GAP, UNIT_H,
 } from '../web/src/graph.js';
 import { gateSummary } from '../src/board-data.mjs';
 
@@ -74,26 +74,52 @@ test('决策链：剧本 → 导演稿 → 资源，外加侧挂的执行细节'
   assert.deepEqual(xs, [0, COL_STEP, COL_STEP * 2, COL_STEP * 3]);
 });
 
-test('每个单元一条扇出边 + 一条汇聚边', () => {
+test('单元挂在它所属场次下面：一场一条扇出边，单元各自汇聚成片', () => {
   const g = buildGraph(makeSnapshot({ n: 4 }));
   assert.equal(g.nodes.filter((x) => x.type === 'unit').length, 4);
-  assert.equal(g.edges.filter((e) => e.source === 'stage:assets' && e.target.startsWith('unit:')).length, 4);
+  // 夹具里所有单元都属于 sc1，所以是一个场次节点扇出四条边
+  assert.equal(g.nodes.filter((x) => x.type === 'scene').length, 1);
+  assert.equal(g.edges.filter((e) => e.source === 'scene:sc1' && e.target.startsWith('unit:')).length, 4);
+  // 场次节点由导演稿扇出
+  assert.equal(g.edges.filter((e) => e.source === 'stage:direction' && e.target === 'scene:sc1').length, 1);
   assert.equal(g.edges.filter((e) => e.target === 'final').length, 4);
   assert.equal(g.nodes.filter((x) => x.id === 'final').length, 1);
 });
 
-test('单元超过 4 个换行，成片落在最后一行之下', () => {
+test('多个场次：各自一列，单元挂到各自的场次下面', () => {
+  const s = makeSnapshot({ n: 3 });
+  s.board = {
+    ...board,
+    scenes: [
+      { id: 'sc1', name: '机舱', scene_no: 1 },
+      { id: 'sc2', name: '雨夜路口', scene_no: 2 },
+    ],
+  };
+  s.units = s.units.map((u, i) => ({ ...u, scene: i === 2 ? 'sc2' : 'sc1' }));
+  s.plan = { ...s.plan, units: s.units };
+  const g = buildGraph(s);
+  const sceneNodes = g.nodes.filter((x) => x.type === 'scene');
+  assert.deepEqual(sceneNodes.map((x) => x.id), ['scene:sc1', 'scene:sc2']);
+  assert.deepEqual(sceneNodes.map((x) => x.data.title), ['场次 1 · 机舱', '场次 2 · 雨夜路口']);
+  assert.deepEqual(sceneNodes.map((x) => x.data.unitCount), [2, 1]);
+  // 两列：第一列 x=0，第二列 x=COL_STEP
+  assert.deepEqual(sceneNodes.map((x) => x.position.x), [0, COL_STEP]);
+  const u3 = g.nodes.find((x) => x.id === 'unit:g003');
+  assert.equal(u3.position.x, COL_STEP, '第三个单元属于第二场，应落在第二列');
+  assert.equal(u3.position.y, SCENE_TOP + SCENE_H + SCENE_GAP, '它是那一场的第一个单元');
+});
+
+test('同一场次的单元纵向排下去，成片落在最后一个单元之下', () => {
   const g = buildGraph(makeSnapshot({ n: 16 }));
-  assert.equal(g.info.cols, MAX_UNIT_COLS);
-  assert.equal(g.info.rows, 4);
+  assert.equal(g.info.cols, 1, '只有一个场次');
+  assert.equal(g.info.rows, 16);
   const final = g.nodes.find((x) => x.id === 'final');
-  const lastRowTop = UNIT_TOP + 3 * ROW_STEP;
-  assert.ok(final.position.y > lastRowTop, `成片 y=${final.position.y} 应低于最后一行 ${lastRowTop}`);
-  // 单元纵向铺满 4 行，同一行内 x 不重复
+  const last = g.nodes.find((x) => x.id === 'unit:g016');
+  assert.ok(final.position.y > last.position.y + UNIT_H, `成片 y=${final.position.y} 应在最后一个单元之下`);
   const u1 = g.nodes.find((x) => x.id === 'unit:g001');
   const u5 = g.nodes.find((x) => x.id === 'unit:g005');
-  assert.equal(u1.position.x, u5.position.x);
-  assert.equal(u5.position.y, u1.position.y + ROW_STEP);
+  assert.equal(u1.position.x, u5.position.x, '同一场次的单元同一列');
+  assert.equal(u5.position.y, u1.position.y + 4 * ROW_STEP, '第 5 个单元在第 1 个下面第 4 行');
 });
 
 test('没有任何单元时不出成片以外的空节点', () => {

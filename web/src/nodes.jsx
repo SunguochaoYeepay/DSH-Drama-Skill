@@ -69,7 +69,38 @@ export const StageNode = memo(function StageNode({ data }) {
         {!data.gates?.length && <div className="truncate text-[10.5px] text-ink-500">{data.file}</div>}
       </div>
       <Handle type="source" id="out" position={Position.Right} />
-      {data.hasUnitsHandle && <Handle type="source" id="units" position={Position.Bottom} />}
+      {data.hasScenesHandle && <Handle type="source" id="scenes" position={Position.Bottom} />}
+    </div>
+  );
+});
+
+/**
+ * 场次节点：一场戏一个节点，挂在该场下面的单元就是这一场要拍的东西。
+ *
+ * 带自己的**场景主图** —— 资源本来就是跟着场景走的；项目级的「资源」节点只是清单视角，
+ * 两者是同一批资产的两个看面，不是两份数据。
+ */
+export const SceneNode = memo(function SceneNode({ data }) {
+  return (
+    <div
+      className="card flex h-full w-full items-center gap-3 rounded-xl border border-ink-700 bg-ink-850 px-3 py-2"
+      style={{ width: 264, height: 96 }}
+    >
+      <Handle type="target" id="in" position={Position.Left} />
+      <div className="h-[62px] w-[62px] shrink-0 overflow-hidden rounded-md bg-ink-900">
+        {data.master ? (
+          <img src={mediaUrl(data.project, data.master)} alt={data.title} loading="lazy" className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-ink-600">
+            <ImageOff size={16} />
+          </div>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[12.5px] font-medium" title={data.title}>{data.title}</div>
+        <div className="mt-0.5 text-[11px] text-ink-400">{data.unitCount} 个单元</div>
+      </div>
+      <Handle type="source" id="units" position={Position.Bottom} />
     </div>
   );
 });
@@ -146,6 +177,7 @@ export const FinalNode = memo(function FinalNode({ data }) {
 
 export const nodeTypes = {
   stage: StageNode,
+  scene: SceneNode,
   unit: UnitNode,
   final: FinalNode,
 };
