@@ -116,9 +116,20 @@ projects/<剧名>\
 
 ```powershell
 npm run web:setup       # 首次：安装前端依赖并构建（React + Vite + React Flow，装在 web/ 子包）
-npm run kanban          # http://127.0.0.1:8787
+npm run kanban          # http://127.0.0.1:8787（前台进程，关掉终端就停）
 ```
 
+**日常启动建议用启动器**（`cli/kanban.mjs`）——它会先判断再动手，不是无脑起第二个进程：
+
+```powershell
+.\start-kanban.cmd      # Windows 双击也行：已在跑就直接开浏览器，没跑就后台起好再开
+node cli/kanban.mjs     # 同上；--no-open 不弹浏览器，--port 8788 换端口
+node cli/kanban.mjs --stop   # 结束上次由它起的那个进程
+```
+
+- 端口上已经有**本项目的看板** → 只开浏览器；被**别的程序**占着 → 明确拒绝并提示换端口；
+  都没人 → 后台起服务（日志 `web/kanban.log`、PID `web/kanban.pid`），**轮询到真的就绪**再开浏览器。
+- 机器重启后服务不会自己回来（进程没了，端口就是空的）——再双击一次 `start-kanban.cmd` 即可。
 - 不跑 `web:setup` 服务也能起，但页面只会给构建引导；`npm run doctor` 会把这一项标成可选缺失。
 - 开发前端：`npm run web:dev`（5173 端口，/api 与 /media 自动反代到 8787，改前端不用重启服务）。
 - 深链：`http://127.0.0.1:8787/?p=<剧目名>&node=unit:g003` 直接落到某剧目的某个节点。
