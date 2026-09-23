@@ -338,7 +338,53 @@ function PlanView({ snapshot, onPickUnit }) {
 
 /* ── ④ 单元（关键帧 + 片段） ───────────────────────────── */
 
-function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine }) {
+/**
+ * 一个单元「用到的资源」：场景主图 + 出场身份图 + 道具图，另附连续性单元的尾帧说明。
+ *
+ * 这是**按板子与计划推导出来的"这张图由哪些既有资产锚定"**，不是运行时实际挂载清单 ——
+ * 实际挂载顺序由 `cli/keyframes.mjs` 在终端打印（本地通道：图1 场景 / 图2 身份 /
+ * 交接单元把上一段尾帧排在最前）。呈现它的用途是：不满意那张图时，一眼看出该改提示词、
+ * 还是该重出某个资产。
+ */
+function UnitResources({ snapshot, unit, board }) {
+  const planUnit = (snapshot.plan?.units || []).find((u) => u.id === unit.id) || {};
+  const scene = (board.scenes || []).find((s) => s.id === (unit.scene || planUnit.scene));
+  const cast = unit.cast?.length ? unit.cast : (planUnit.cast || []);
+  const idents = cast
+    .map((id) => (board.identities || []).find((x) => x.id === id) || (board.characters || []).find((x) => x.id === id))
+    .filter(Boolean);
+  const props = (planUnit.props || [])
+    .map((id) => (board.props || []).find((p) => p.id === id))
+    .filter(Boolean);
+  const handoff = planUnit.continuity && planUnit.continuity.mode !== 'independent';
+  const rows = [
+    scene && { key: `scene:${scene.id}`, kind: '场景', name: scene.name || scene.id, path: scene.master },
+    ...idents.map((x) => ({ key: `id:${x.id}`, kind: '身份', name: x.name || x.id, path: x.sheet })),
+    ...props.map((p) => ({ key: `prop:${p.id}`, kind: '道具', name: p.name || p.id, path: p.ref_image })),
+  ].filter(Boolean);
+  return (
+    <Section title="用到的资源" right={`${rows.length} 项`}>
+      {rows.length ? (
+        <div className="space-y-1">
+          {rows.map((r) => (
+            <div key={r.key} className="flex items-center gap-2 rounded-md border border-ink-700/70 bg-ink-900/50 px-2 py-1">
+              <span className="shrink-0 rounded bg-ink-800 px-1.5 py-px text-[10.5px] text-ink-300">{r.kind}</span>
+              <span className="min-w-0 flex-1 truncate text-[11.5px] text-ink-200" title={r.name}>{r.name}</span>
+              <span className="shrink-0 font-mono text-[10.5px] text-ink-500">{r.path || '未出图'}</span>
+            </div>
+          ))}
+        </div>
+      ) : <Box className="text-ink-500">没有推导出参考资产</Box>}
+      {handoff ? (
+        <div className="mt-2 rounded-md border border-warn/40 bg-warn/5 px-2 py-1 text-[11.5px] text-warn">
+          连续性单元：首帧另参考上一段稳定尾帧 <span className="font-mono">handoffs/{unit.id}.stable-tail.png</span>
+        </div>
+      ) : null}
+    </Section>
+  );
+}
+
+function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine, focus = 'all' }) {
   const unit = (snapshot.units || []).find((u) => u.id === unitId);
   const dirUnit = directorUnitOf(snapshot, unitId);
   const [play, setPlay] = useState(false);
@@ -351,7 +397,7 @@ function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine }) {
         <KV label="内容时长">{fmtSec(unit.contentDuration)}</KV>
         <KV label="生成时长">{fmtSec(unit.generationDuration)}</KV>
         <KV label="镜头数">{unit.shotCount ?? '—'}</KV>
-        <KV label="场景">{unit.scene ? nameOf(board, unit.scene) : '—'}</KV>
+        <KV label="场景">{(board.scenes || []).find((s) => s.id === unit.scene)?.name || unit.scene || '—'}</KV>
         <KV label="出场">{unit.cast?.length ? unit.cast.map((c) => nameOf(board, c)).join('、') : '—'}</KV>
         <KV label="导演单元">{dirUnit ? dirUnit.id : '—'}</KV>
         <KV label="票">
@@ -362,44 +408,55 @@ function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine }) {
           <span className={clips ? 'text-ok' : 'text-warn'}>片段{clips ? '已签' : '待签'}</span>
         </KV>
       </Section>
-      <Section title="关键帧">
-        {unit.keyframe
-          ? <Thumb project={project} rel={unit.keyframe} label={`${unitId} 关键帧`} onOpen={onOpen} big />
-          : <Box className="text-bad">无关键帧</Box>}
-      </Section>
-      <Section title="视频片段" right={unit.clip ? '' : '未生成'}>
-        {unit.clip ? (
-          play ? (
-            <video src={mediaUrl(project, unit.clip)} controls autoPlay playsInline {...videoLog('片段', unit.clip)} className="w-full rounded-lg bg-black" />
-          ) : (
-            <button type="button" onClick={() => setPlay(true)} className="block w-full">
-              <Thumb project={project} rel={unit.clip} label={`${unitId} 片段`} onOpen={onOpen} big />
-            </button>
-          )
-        ) : (
-          <Box className="text-ink-500">这个单元还没有视频片段</Box>
-        )}
-      </Section>
-      <PromptSection
-        title="关键帧提示词"
-        text={unit.keyframePrompt}
-        missing={`还没有 keyframe-prompts/${unitId}.txt（LLM 直写制：这个文件逐字送模型）`}
-      />
-      <PromptSection
-        title="视频提示词"
-        text={unit.videoPrompt}
-        missing={`还没有 units/.${unitId}.prompt.txt`}
-      />
       {unit.audienceKnows && <Section title="观众已知"><Box copy={unit.audienceKnows}>{unit.audienceKnows}</Box></Section>}
       {unit.why && <Section title="切分理由"><Box copy={unit.why}>{unit.why}</Box></Section>}
-      {dirUnit && (
-        <Section title={`镜头（导演单元 ${dirUnit.id}）`} right={`${(dirUnit.shots || []).length} 镜`}>
-          <div className="space-y-2">
-            {(dirUnit.shots || []).map((s) => (
-              <ShotCard key={s.n} shot={s} board={board} onJumpLine={onJumpLine} />
-            ))}
-          </div>
-        </Section>
+
+      {(focus === 'all' || focus === 'keyframe') && (
+        <>
+          <Section title="关键帧">
+            {unit.keyframe
+              ? <Thumb project={project} rel={unit.keyframe} label={`${unitId} 关键帧`} onOpen={onOpen} big />
+              : <Box className="text-bad">无关键帧</Box>}
+          </Section>
+          <UnitResources snapshot={snapshot} unit={unit} board={board} />
+          <PromptSection
+            title="关键帧提示词"
+            text={unit.keyframePrompt}
+            missing={`还没有 keyframe-prompts/${unitId}.txt（直写制：这个文件逐字送模型，改它就是改下一张图）`}
+          />
+        </>
+      )}
+
+      {(focus === 'all' || focus === 'clip') && (
+        <>
+          <Section title="视频片段" right={unit.clip ? '' : '未生成'}>
+            {unit.clip ? (
+              play ? (
+                <video src={mediaUrl(project, unit.clip)} controls autoPlay playsInline {...videoLog('片段', unit.clip)} className="w-full rounded-lg bg-black" />
+              ) : (
+                <button type="button" onClick={() => setPlay(true)} className="block w-full">
+                  <Thumb project={project} rel={unit.clip} label={`${unitId} 片段`} onOpen={onOpen} big />
+                </button>
+              )
+            ) : (
+              <Box className="text-ink-500">这个单元还没有视频片段</Box>
+            )}
+          </Section>
+          <PromptSection
+            title="视频提示词"
+            text={unit.videoPrompt}
+            missing={`还没有 units/.${unitId}.prompt.txt`}
+          />
+          {dirUnit && (
+            <Section title="这一段的镜头" right={`${(dirUnit.shots || []).length} 镜 · 导演单元 ${dirUnit.id}`}>
+              <div className="space-y-2">
+                {(dirUnit.shots || []).map((s) => (
+                  <ShotCard key={s.n} shot={s} board={board} onJumpLine={onJumpLine} />
+                ))}
+              </div>
+            </Section>
+          )}
+        </>
       )}
     </>
   );
@@ -416,13 +473,50 @@ function FinalView({ snapshot, project }) {
   );
 }
 
-/* ── 主组件 ─────────────────────────────────────────────── */
+/* ── 主组件：**按"决策物"组织呈现** ─────────────────────────
+ * 用户关注的是六件事：剧本 / 导演稿 / 资源 / 关键帧 / 视频 / 成片。
+ * 「板子」与「生成计划」属于执行逻辑（编译产物、单元切分与时长钳制），
+ * 折进底部的「执行细节」，不再占据主视线。
+ * 画布上的节点点击依旧有效：它只负责把页签切到对应的那一件，并定位到具体单元。
+ */
+
+const TABS = [
+  { key: 'story', label: '剧本' },
+  { key: 'direction', label: '导演稿' },
+  { key: 'assets', label: '资源' },
+  { key: 'keyframe', label: '关键帧' },
+  { key: 'clip', label: '视频' },
+  { key: 'final', label: '成片' },
+  { key: 'detail', label: '执行细节' },
+];
+
+/** 画布节点 → 页签。板子节点承载"资源票"，所以它落到资源页；计划落到执行细节。 */
+function tabOfNode(node) {
+  if (!node) return 'story';
+  if (node === 'stage:board') return 'assets';
+  if (node === 'stage:direction') return 'direction';
+  if (node === 'stage:plan') return 'detail';
+  if (node === 'final') return 'final';
+  if (node.startsWith('unit:')) return 'keyframe';
+  return 'story';
+}
 
 export default function DetailPanel({ snapshot, project, selected, width = 560, onOpen }) {
   const [view, setView] = useState(null);   // {kind:'story', line} —— 从镜头跳剧本时用
+  const [tab, setTab] = useState(() => tabOfNode(selected));
+  const [unitId, setUnitId] = useState(null);
   useEffect(() => { setView(null); }, [selected]);
 
+  // 画布点节点 → 切页签 + 定位单元（点击优先于上一次的手动选择）
+  useEffect(() => {
+    if (!selected) return;
+    setTab(tabOfNode(selected));
+    if (selected.startsWith('unit:')) setUnitId(selected.slice(5));
+  }, [selected]);
+
   const board = snapshot?.board || {};
+  const units = snapshot?.units || [];
+  const currentUnitId = unitId || units[0]?.id || null;
   const node = selected || 'stage:story';
 
   const hitLines = useMemo(() => {
@@ -441,40 +535,77 @@ export default function DetailPanel({ snapshot, project, selected, width = 560, 
   }, [node, snapshot]);
 
   const jumpLine = view?.line ?? null;
-  const jumpUnitId = node.startsWith('unit:') ? node.slice(5) : null;
 
-  const goStory = (line) => setView({ kind: 'story', line });
+  const goStory = (line) => { setTab('story'); setView({ kind: 'story', line }); };
 
-  const title = node === 'final' ? '成片'
-    : node.startsWith('unit:') ? `单元 ${node.slice(5)}`
-    : { 'stage:story': '剧本', 'stage:board': '板子', 'stage:direction': '导演稿', 'stage:plan': '生成计划' }[node] || node;
+  // 页签上的小计数：一眼看出哪一件还没做完（不替代票徽标，只是导航提示）
+  const assetCount = (snapshot?.assets || []).filter((a) => a.tab === 1).length;
+  const kfDone = units.filter((u) => u.keyframe).length;
+  const clipDone = units.filter((u) => u.clip).length;
+  const tabHint = {
+    assets: assetCount ? String(assetCount) : '—',
+    keyframe: units.length ? `${kfDone}/${units.length}` : '—',
+    clip: units.length ? `${clipDone}/${units.length}` : '—',
+    final: snapshot?.finalRel ? '✓' : '—',
+  };
+  const title = TABS.find((t) => t.key === tab)?.label || tab;
 
   return (
     <aside style={{ width }} className="flex h-full shrink-0 flex-col border-l border-ink-800 bg-ink-900">
-      <header className="flex items-center gap-2 border-b border-ink-800 px-4 py-2.5">
+      <header className="flex items-center gap-2 px-4 pt-2.5">
         <h2 className="text-[13px] font-medium">{title}</h2>
-        {hitLines?.size ? <span className="text-[11px] text-ink-500">涉及剧本 {hitLines.size} 行</span> : null}
+        <span className="truncate text-[11px] text-ink-500" title={snapshot?.title}>{snapshot?.title || project}</span>
+        {hitLines?.size ? <span className="shrink-0 text-[11px] text-ink-500">剧本 {hitLines.size} 行</span> : null}
         {view && (
-          <button type="button" onClick={() => setView(null)} className="ml-auto rounded border border-ink-700 px-2 py-0.5 text-[11px] text-ink-300 hover:border-accent/60">
-            返回
+          <button type="button" onClick={() => setView(null)} className="ml-auto shrink-0 rounded border border-ink-700 px-2 py-0.5 text-[11px] text-ink-300 hover:border-accent/60">
+            返回剧本
           </button>
         )}
       </header>
+      <div className="flex flex-wrap gap-1 border-b border-ink-800 px-3 pb-2 pt-2">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => { setTab(t.key); setView(null); }}
+            className={[
+              'inline-flex items-baseline gap-1 rounded-md border px-2 py-0.5 text-[11.5px] transition',
+              tab === t.key ? 'border-accent/60 bg-accent/10 text-ink-100' : 'border-ink-700 text-ink-400 hover:text-ink-200',
+              t.key === 'detail' ? 'ml-auto opacity-75' : '',
+            ].join(' ')}
+          >
+            {t.label}
+            {tabHint[t.key] ? <span className="text-[10px] text-ink-500">{tabHint[t.key]}</span> : null}
+          </button>
+        ))}
+      </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-        {view?.kind === 'story' || node === 'stage:story' ? (
+        {view?.kind === 'story' || tab === 'story' ? (
           <StoryView snapshot={snapshot} hitLines={hitLines} jumpLine={jumpLine} />
-        ) : node === 'stage:board' ? (
+        ) : tab === 'direction' ? (
+          <DirectionView snapshot={snapshot} board={board} jumpUnitId={currentUnitId} onJumpLine={goStory} />
+        ) : tab === 'assets' ? (
           <>
-            <Section title="板子">
-              <KV label="片名">{snapshot.title}</KV>
-              <KV label="一句话">{snapshot.logline || '—'}</KV>
-              <KV label="画幅 / 风格">{[snapshot.aspect, snapshot.style].filter(Boolean).join(' · ') || '—'}</KV>
-              <KV label="镜头">{`${(board.shots || []).length} 镜 · 共 ${fmtSec((board.shots || []).reduce((n, s) => n + (Number(s.duration_s) || 0), 0))}`}</KV>
+            <Section title="资源清单" right="板子里的决策物">
+              <div className="space-y-1">
+                {(board.characters || []).map((c) => (
+                  <AssetRow key={`c:${c.id}`} kind="角色" name={c.name || c.id} id={c.id} path={c.portrait} />
+                ))}
+                {(board.identities || []).map((x) => (
+                  <AssetRow key={`i:${x.id}`} kind="造型" name={x.name || x.id} id={x.id} path={x.sheet} />
+                ))}
+                {(board.scenes || []).map((s) => (
+                  <AssetRow key={`s:${s.id}`} kind="场景" name={s.name || s.id} id={s.id} path={s.master} />
+                ))}
+                {(board.props || []).map((p) => (
+                  <AssetRow key={`p:${p.id}`} kind="道具" name={p.name || p.id} id={p.id} path={p.ref_image} />
+                ))}
+              </div>
             </Section>
-            <Section title="资源" right={`${(snapshot.assets || []).filter((a) => a.tab === 1).length} 项`}>
+            <Section title="资源图" right={`${assetCount} 项`}>
               <Gallery snapshot={snapshot} project={project} onOpen={onOpen} />
             </Section>
-            <Section title="图提示词" right={`${(snapshot.assetPrompts || []).length} 条`}>
+            <Section title="生图提示词" right={`${(snapshot.assetPrompts || []).length} 条`}>
               {(snapshot.assetPrompts || []).length ? (
                 <div className="space-y-2">
                   {(snapshot.assetPrompts || []).map((p, i) => (
@@ -493,7 +624,48 @@ export default function DetailPanel({ snapshot, project, selected, width = 560, 
                 <Box className="text-ink-500">没有 asset-design.json 的设计提示词（场景图 / 角色图）</Box>
               )}
             </Section>
-            <Section title="分镜" right={`${(board.shots || []).length} 镜`}>
+          </>
+        ) : tab === 'keyframe' || tab === 'clip' ? (
+          <>
+            {units.length > 1 && (
+              <div className="mb-3 flex flex-wrap gap-1">
+                {units.map((u) => (
+                  <button
+                    key={u.id}
+                    type="button"
+                    onClick={() => setUnitId(u.id)}
+                    className={[
+                      'rounded-md border px-2 py-0.5 text-[11.5px]',
+                      u.id === currentUnitId ? 'border-accent/60 bg-accent/10 text-ink-100' : 'border-ink-700 text-ink-400 hover:text-ink-200',
+                    ].join(' ')}
+                  >
+                    {u.id}
+                    <span className="ml-1 text-[10px] text-ink-500">{u.keyframe ? '帧✓' : '帧—'} {u.clip ? '片✓' : '片—'}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {currentUnitId ? (
+              <UnitView
+                snapshot={snapshot}
+                project={project}
+                board={board}
+                unitId={currentUnitId}
+                onOpen={onOpen}
+                onJumpLine={goStory}
+                focus={tab === 'keyframe' ? 'keyframe' : 'clip'}
+              />
+            ) : <Box className="text-ink-500">这个剧目还没有生成计划（所以没有单元）</Box>}
+          </>
+        ) : tab === 'detail' ? (
+          <>
+            <Section title="板子 · 编译产物" right="执行细节，不是决策物">
+              <KV label="片名">{snapshot.title}</KV>
+              <KV label="一句话">{snapshot.logline || '—'}</KV>
+              <KV label="画幅 / 风格">{[snapshot.aspect, snapshot.style].filter(Boolean).join(' · ') || '—'}</KV>
+              <KV label="索引镜头">{`${(board.shots || []).length} 镜 · 共 ${fmtSec((board.shots || []).reduce((n, s) => n + (Number(s.duration_s) || 0), 0))}`}</KV>
+            </Section>
+            <Section title="板子编译出的索引镜头" right={`${(board.shots || []).length} 镜`}>
               <div className="space-y-2">
                 {(board.shots || []).map((s) => (
                   <div key={s.id} className="rounded-lg border border-ink-700/70 bg-ink-900/50 p-2.5">
@@ -523,19 +695,29 @@ export default function DetailPanel({ snapshot, project, selected, width = 560, 
                 ))}
               </div>
             </Section>
+            <PlanView snapshot={snapshot} onPickUnit={(id) => { setTab('keyframe'); setUnitId(id); }} />
           </>
-        ) : node === 'stage:direction' ? (
-          <DirectionView snapshot={snapshot} board={board} jumpUnitId={null} onJumpLine={goStory} />
-        ) : node === 'stage:plan' ? (
-          <>
-            <PlanView snapshot={snapshot} onPickUnit={(id) => onOpen(`unit:${id}`)} />
-          </>
-        ) : node.startsWith('unit:') ? (
-          <UnitView snapshot={snapshot} project={project} board={board} unitId={node.slice(5)} onOpen={onOpen} onJumpLine={goStory} />
         ) : (
           <FinalView snapshot={snapshot} project={project} />
         )}
       </div>
     </aside>
+  );
+}
+
+/**
+ * 资源清单的一行：类型 + 名字 + id + 有没有出图。
+ *
+ * 这一节是**决策物**（用户在板子票上确认过的那份清单），与「资源图」「生图提示词」
+ * 放在同一页，方便"看到不满意的图 → 找到它的提示词 → 手工改词重抽"这条动线。
+ */
+function AssetRow({ kind, name, id, path }) {
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-ink-700/70 bg-ink-900/50 px-2 py-1 text-[11.5px]">
+      <span className="shrink-0 rounded bg-ink-800 px-1.5 py-px text-[10.5px] text-ink-300">{kind}</span>
+      <span className="min-w-0 flex-1 truncate text-ink-200" title={name}>{name}</span>
+      <span className="shrink-0 font-mono text-[10.5px] text-ink-500">{id}</span>
+      <span className={path ? 'shrink-0 text-ok' : 'shrink-0 text-warn'}>{path ? '已出图' : '未出图'}</span>
+    </div>
   );
 }
