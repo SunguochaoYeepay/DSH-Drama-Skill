@@ -7,7 +7,7 @@
         "by": "用户",
         "artifact_hash": "c905950bb69f91a75558264172450dec180ee83f6eaec7ce7b6c46c4b87263ac",
         "artifacts": [
-          "examples\\demo-show\\units\\i2v_20260922-173609.mp4"
+          "examples/demo-show/units/i2v_20260922-173609.mp4"
         ]
       },
       "g002": {
@@ -71,12 +71,12 @@
         "model": "local-comfyui",
         "requested_provider": null,
         "artifacts": [
-          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\assets\\c_driver_portrait.png",
-          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\assets\\c_passenger_portrait.png",
-          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\assets\\i_driver_default_sheet.png",
-          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\assets\\i_passenger_default_sheet.png",
-          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\assets\\s_bus_night_master.png",
-          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\assets\\s_stop_night_master.png"
+          "examples/demo-show/assets/c_driver_portrait.png",
+          "examples/demo-show/assets/c_passenger_portrait.png",
+          "examples/demo-show/assets/i_driver_default_sheet.png",
+          "examples/demo-show/assets/i_passenger_default_sheet.png",
+          "examples/demo-show/assets/s_bus_night_master.png",
+          "examples/demo-show/assets/s_stop_night_master.png"
         ]
       }
     },
@@ -97,11 +97,11 @@
         "model": "local-comfyui/qwen21",
         "requested_provider": "comfyui",
         "artifacts": [
-          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\keyframes_render\\g001.png",
-          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\keyframes_local_v2\\g002.png",
-          "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\keyframes_render\\g003.png"
+          "examples/demo-show/keyframes_render/g001.png",
+          "examples/demo-show/keyframes_local_v2/g002.png",
+          "examples/demo-show/keyframes_render/g003.png"
         ],
-        "plan": "D:\\DeepSeek\\ai-images-harness\\examples\\demo-show\\render.plan.json",
+        "plan": "examples/demo-show/render.plan.json",
         "prompt_files": [
           "keyframe-prompts/g003.txt"
         ]
