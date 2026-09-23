@@ -484,8 +484,7 @@ const TABS = [
   { key: 'story', label: '剧本' },
   { key: 'direction', label: '导演稿' },
   { key: 'assets', label: '资源' },
-  { key: 'keyframe', label: '关键帧' },
-  { key: 'clip', label: '视频' },
+  { key: 'unit', label: '单元' },
   { key: 'final', label: '成片' },
   { key: 'detail', label: '执行细节' },
 ];
@@ -497,7 +496,7 @@ function tabOfNode(node) {
   if (node === 'stage:direction') return 'direction';
   if (node === 'stage:detail' || node === 'stage:plan') return 'detail';
   if (node === 'final') return 'final';
-  if (node.startsWith('unit:')) return 'keyframe';
+  if (node.startsWith('unit:')) return 'unit';
   return 'story';
 }
 
@@ -544,8 +543,8 @@ export default function DetailPanel({ snapshot, project, selected, width = 560, 
   const clipDone = units.filter((u) => u.clip).length;
   const tabHint = {
     assets: assetCount ? String(assetCount) : '—',
-    keyframe: units.length ? `${kfDone}/${units.length}` : '—',
-    clip: units.length ? `${clipDone}/${units.length}` : '—',
+    // 单元页里关键帧与视频都在，所以这一个提示把两件事一起报（原来是两个页签各报一个）
+    unit: units.length ? `帧 ${kfDone}/${units.length} · 片 ${clipDone}/${units.length}` : '—',
     final: snapshot?.finalRel ? '✓' : '—',
   };
   const title = TABS.find((t) => t.key === tab)?.label || tab;
@@ -625,7 +624,7 @@ export default function DetailPanel({ snapshot, project, selected, width = 560, 
               )}
             </Section>
           </>
-        ) : tab === 'keyframe' || tab === 'clip' ? (
+        ) : tab === 'unit' ? (
           <>
             {units.length > 1 && (
               <div className="mb-3 flex flex-wrap gap-1">
@@ -646,6 +645,7 @@ export default function DetailPanel({ snapshot, project, selected, width = 560, 
               </div>
             )}
             {currentUnitId ? (
+              // focus='all'：单元页里关键帧与视频都在（用户 2026-09-23：不要拆成两个页签）
               <UnitView
                 snapshot={snapshot}
                 project={project}
@@ -653,7 +653,7 @@ export default function DetailPanel({ snapshot, project, selected, width = 560, 
                 unitId={currentUnitId}
                 onOpen={onOpen}
                 onJumpLine={goStory}
-                focus={tab === 'keyframe' ? 'keyframe' : 'clip'}
+                focus="all"
               />
             ) : <Box className="text-ink-500">这个剧目还没有生成计划（所以没有单元）</Box>}
           </>
@@ -695,7 +695,7 @@ export default function DetailPanel({ snapshot, project, selected, width = 560, 
                 ))}
               </div>
             </Section>
-            <PlanView snapshot={snapshot} onPickUnit={(id) => { setTab('keyframe'); setUnitId(id); }} />
+            <PlanView snapshot={snapshot} onPickUnit={(id) => { setTab('unit'); setUnitId(id); }} />
           </>
         ) : (
           <FinalView snapshot={snapshot} project={project} />
