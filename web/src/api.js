@@ -97,3 +97,22 @@ export const restoreProject = (name) => writeJson('/api/restore', { name });
  */
 export const deleteProject = (name, confirm, archived = false) =>
   writeJson('/api/delete', { name, confirm, archived });
+
+/* ── 重出关键帧（2026-09-23）─────────────────────────────────────────────
+ *
+ * 改完 `keyframe-prompts/<单元>.txt` 后在看板里直接重抽这一个单元，不必回终端拼命令。
+ * **它不是签票**：只产出新图，`review.approvals.json` 一个字都不碰 ——
+ * 图一变，那张关键帧票在 `review-gate status` 看来就失效了，仍然要人重新签。
+ */
+
+/** 起一次重抽 → { ok, jobId, unit, name }。已经在跑时抛错（服务端 409）。 */
+export const startRegenerate = (name, unit) => writeJson('/api/regenerate', { name, unit });
+
+/** 重抽任务状态：{ id, state:'running'|'done'|'failed', exitCode, durationMs, log }。 */
+export async function fetchRegenerate(id) {
+  const q = id ? `?id=${encodeURIComponent(id)}` : '';
+  const r = await fetch(`/api/regenerate${q}`);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || `重抽状态读取失败（HTTP ${r.status}）`);
+  return j;
+}

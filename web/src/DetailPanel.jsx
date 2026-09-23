@@ -9,9 +9,11 @@
  *   而看板真正要说的是"卡在哪道票上" —— 那件事由票徽标和卡点负责。）
  *
  * 只读 —— 没有任何写票入口。
+ * （2026-09-23 唯一的例外是「重出图片」：它可以**产出新图**，但依旧不碰票 ——
+ *   图变了那张关键帧票自然失效，要人重新签。）
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { mediaUrl, isVideo, videoLog } from './api.js';
+import { mediaUrl, isVideo, videoLog, startRegenerate, fetchRegenerate } from './api.js';
 import { directorUnitOf, fmtSec } from './graph.js';
 import { CopyBlock, CopyButton } from './Copy.jsx';
 
@@ -68,6 +70,107 @@ function PromptSection({ title, text, missing, right }) {
       {text
         ? <CopyBlock text={text} />
         : <Box className="text-ink-500">{missing}</Box>}
+    </Section>
+  );
+}
+
+/**
+ * 「重出图片」：改完 `keyframe-prompts/<单元>.txt` 后点一下，只重抽**这一个单元**。
+ *
+ * 为什么敢放在看板里：它**不签票**——只产出新图，`review.approvals.json` 一个字不碰。
+ * 图一变，那张关键帧票就失效了（票绑的是文件内容哈希），所以成功之后必须提示去重签，
+ * 这里直接把命令写出来（人复制一下就能跑），看板自己不代签。
+ */
+function RegenKeyframe({ project, unitId, onRefresh }) {
+  const [job, setJob] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  // 跑着的时候每 2 秒问一次状态；一结束就刷新快照（图变没变、票还算不算数都要重读）
+  useEffect(() => {
+    if (!job || job.state !== 'running') return undefined;
+    const timer = setInterval(async () => {
+      try {
+        const v = await fetchRegenerate(job.id);
+        setJob(v);
+        if (v.state !== 'running') onRefresh?.();
+      } catch { /* 网络抖动就下一轮再问 */ }
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [job, onRefresh]);
+
+  const run = async () => {
+    setBusy(true); setError('');
+    try {
+      const r = await startRegenerate(project, unitId);
+      setJob({ id: r.jobId, state: 'running', log: '', durationMs: 0 });
+    } catch (e) {
+      setError(e.message || '重抽起不来');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const running = job?.state === 'running';
+  const lastLine = String(job?.log || '').trim().split(/\r?\n/).filter(Boolean).pop() || '';
+  return (
+    <Section
+      title="重出图片"
+      right={running ? '正在跑…' : (job?.state === 'done' ? '完成' : (job?.state === 'failed' ? '失败' : ''))}
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={run}
+          disabled={busy || running}
+          className={[
+            'rounded-md border px-2.5 py-1 text-[12px] transition',
+            busy || running
+              ? 'border-ink-700 text-ink-500'
+              : 'border-accent/60 bg-accent/10 text-ink-100 hover:bg-accent/20',
+          ].join(' ')}
+        >
+          {running ? '重出中…' : '重出图片'}
+        </button>
+        <span className="text-[11px] text-ink-500">
+          改完 <span className="font-mono">keyframe-prompts/{unitId}.txt</span> 再点（只重抽这一个单元；本机 ComfyUI 约 20–35 秒）
+        </span>
+      </div>
+
+      {error ? <Box className="mt-2 text-bad">{error}</Box> : null}
+
+      {job ? (
+        <div className="mt-2 space-y-1">
+          {running ? (
+            <div className="text-[11.5px] text-ink-400">
+              {((job.durationMs || 0) / 1000).toFixed(0)} 秒…　{lastLine || '（等待模型）'}
+            </div>
+          ) : job.state === 'done' ? (
+            <>
+              <div className="text-[11.5px] text-ok">
+                ✓ 重出完成（{(job.durationMs / 1000).toFixed(1)} 秒）
+              </div>
+              <div className="text-[11.5px] text-warn">
+                关键帧票绑的是图片内容 —— 图变了那张票就失效了，请**重新签**：
+              </div>
+              <div className="break-all rounded border border-ink-700 bg-ink-900/60 px-2 py-1 font-mono text-[11px] text-ink-300">
+                node cli/review-gate.mjs approve --project {project} --stage keyframes
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-[11.5px] text-bad">
+                ✗ 重出失败（退出码 {job.exitCode ?? '—'}）
+              </div>
+              {lastLine ? (
+                <div className="break-all rounded border border-bad/40 bg-bad/5 px-2 py-1 font-mono text-[11px] text-bad">
+                  {lastLine}
+                </div>
+              ) : null}
+            </>
+          )}
+        </div>
+      ) : null}
     </Section>
   );
 }
@@ -437,7 +540,7 @@ const UNIT_TABS = [
   { key: 'clip', label: '视频' },
 ];
 
-function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine }) {
+function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine, onRefresh }) {
   const unit = (snapshot.units || []).find((u) => u.id === unitId);
   const dirUnit = directorUnitOf(snapshot, unitId);
   const [sub, setSub] = useState('info');
@@ -503,6 +606,7 @@ function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine }) {
             text={unit.keyframePrompt}
             missing={`还没有 keyframe-prompts/${unitId}.txt（直写制：这个文件逐字送模型，改它就是改下一张图）`}
           />
+          <RegenKeyframe project={project} unitId={unitId} onRefresh={onRefresh} />
         </>
       )}
 
@@ -602,7 +706,7 @@ function tabOfNode(node) {
   return 'story';
 }
 
-export default function DetailPanel({ snapshot, project, selected, width = 560, onOpen }) {
+export default function DetailPanel({ snapshot, project, selected, width = 560, onOpen, onRefresh }) {
   const [view, setView] = useState(null);   // {kind:'story', line} —— 从镜头跳剧本时用
   const [tab, setTab] = useState(() => tabOfNode(selected));
   const [unitId, setUnitId] = useState(null);
@@ -754,6 +858,7 @@ export default function DetailPanel({ snapshot, project, selected, width = 560, 
                 unitId={currentUnitId}
                 onOpen={onOpen}
                 onJumpLine={goStory}
+                onRefresh={onRefresh}
               />
             ) : <Box className="text-ink-500">这个剧目还没有生成计划（所以没有单元）</Box>}
           </>

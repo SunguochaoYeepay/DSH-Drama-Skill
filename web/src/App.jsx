@@ -505,6 +505,7 @@ export default function App() {
               selected={selected}
               width={layout.right}
               onOpen={openMedia}
+              onRefresh={() => load(name)}
             />
           </>
         )}

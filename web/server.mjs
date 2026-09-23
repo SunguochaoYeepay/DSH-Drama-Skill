@@ -33,12 +33,25 @@
  *   POST /api/archive             { name }                     归档
  *   POST /api/restore             { name }                     恢复
  *   POST /api/delete              { name, confirm, archived? }  删除到系统回收站
+ *   POST /api/regenerate          { name, unit }               重出某个单元的关键帧
+ *   GET  /api/regenerate?id=x     重抽任务状态（轮询用）
  *   GET  /media/<剧目>/<相对路径>  媒体文件（限剧目目录内，防目录穿越）
+ *
+ * ## 「重出图片」为什么不算越界（2026-09-23）
+ *
+ * 用户改完 `keyframe-prompts/<单元>.txt` 后想在看板里直接重抽，不必回终端拼命令。
+ * 这不是闸门动作：它**只产出新图**，一个字都不碰 `review.approvals.json`；
+ * 图一变，那张关键帧票在 `review-gate status` 看来就失效了（票绑的是文件内容哈希），
+ * 得由人重新签 —— 代签的口子仍然一个都没有。
+ * 同时它是一条**执行动作**（要占 GPU、要写项目文件），所以：
+ * - 只允许跑**当前这一个单元**（`--units <单元>`），不接受"跑全批"；
+ * - 同一时刻只允许一个任务在跑，第二个请求回 409。
  */
 
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { listProjects, loadProject, isValidProjectName } from '../src/board-data.mjs';
 import {
@@ -48,6 +61,9 @@ import {
 import { PROJECT_ROOT } from '../src/config.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
+
+/** 仓库根：CLI 与 .env 都在这里，子进程的 cwd 必须是它。 */
+const REPO_ROOT = path.resolve(HERE, '..');
 
 /** 定时清理间隔：6 小时扫一次归档区。 */
 const GC_INTERVAL_MS = 6 * 60 * 60 * 1000;
@@ -68,19 +84,108 @@ function mimeOf(p) {
 }
 
 /**
+ * 重抽任务的命令行参数（**纯函数**，便于测试钉住：只跑一个单元、不碰别的）。
+ * 用法对齐 `cli/keyframes.mjs <board.json> --direction <plan> --units <单元>`。
+ */
+export function regenerateArgs(projectDir, unit) {
+  return [
+    path.join(projectDir, 'board.json'),
+    '--direction', path.join(projectDir, 'render.plan.json'),
+    '--units', unit,
+  ];
+}
+
+/** 单元 id 只允许字母数字下划线连字符 —— 它要进命令行，不做白名单就是命令注入。 */
+export function isValidUnitId(unit) {
+  return /^[A-Za-z0-9_-]{1,40}$/.test(String(unit || ''));
+}
+
+/** 重抽日志最多留这么多字符（够看清报错，又不至于把内存吃满）。 */
+const REGEN_LOG_LIMIT = 8000;
+
+/**
  * 起服务（可导入：测试用 port 0 拿临时端口）。
- * @param {{root?:string, port?:number, webDist?:string, gc?:boolean, trash?:Function}} [options]
+ * @param {{root?:string, port?:number, webDist?:string, gc?:boolean, trash?:Function, spawn?:Function}} [options]
  *   `gc:false` 关掉归档区定时清理；`trash` 注入回收站实现 —— 两者都是给测试用的，
  *   免得测试真往用户回收站里扔东西。
+ *   `spawn` 注入子进程实现（默认 node:child_process.spawn）—— 测试用它避免真去调模型。
  * @returns {Promise<{server:import('node:http').Server, port:number, root:string, webDist:string}>}
  */
-export function startServer({ root, port = 0, webDist, gc = true, trash } = {}) {
+export function startServer({ root, port = 0, webDist, gc = true, trash, spawn: spawnImpl } = {}) {
   const projectsRoot = root || process.env.AIH_PROJECTS_ROOT
     || path.join(PROJECT_ROOT, 'projects');
   const dist = webDist || process.env.AIH_WEB_DIST || path.join(HERE, 'dist');
+  // 重抽任务表：单机单人工具，同一时刻只允许一个在跑，历史也只在内存里留着看完为止
+  const jobs = new Map();
+  let runningJobId = null;
+  let seq = 0;
+
+  /** 起一次关键帧重抽（只跑这一个单元）。 */
+  const startRegenerate = (name, unit) => {
+    if (runningJobId) {
+      return { status: 409, error: '已经有一个重抽在跑，等它结束再来', jobId: runningJobId };
+    }
+    const projectDir = path.join(projectsRoot, name);
+    if (!fs.existsSync(path.join(projectDir, 'board.json'))) {
+      return { status: 400, error: '这个剧目没有 board.json' };
+    }
+    const id = `regen-${Date.now()}-${++seq}`;
+    const job = {
+      id, name, unit, state: 'running',
+      startedAt: new Date().toISOString(), endedAt: null, exitCode: null, log: '',
+    };
+    jobs.set(id, job);
+    runningJobId = id;
+
+    const push = (buf) => {
+      job.log = (job.log + buf.toString('utf8')).slice(-REGEN_LOG_LIMIT);
+    };
+    const finish = (state, exitCode) => {
+      if (job.state !== 'running') return;
+      job.state = state;
+      job.exitCode = exitCode;
+      job.endedAt = new Date().toISOString();
+      if (runningJobId === id) runningJobId = null;
+    };
+
+    let child;
+    try {
+      child = (spawnImpl || spawn)(
+        process.execPath,
+        [path.join(REPO_ROOT, 'cli', 'keyframes.mjs'), ...regenerateArgs(projectDir, unit)],
+        { cwd: REPO_ROOT, env: process.env, stdio: ['ignore', 'pipe', 'pipe'] },
+      );
+    } catch (e) {
+      job.log = `[起进程失败] ${(e && e.message) || e}`;
+      finish('failed', null);
+      return { job };
+    }
+    child.stdout?.on('data', push);
+    child.stderr?.on('data', push);
+    child.on('error', (e) => {
+      push(Buffer.from(`\n[进程错误] ${(e && e.message) || e}\n`));
+      finish('failed', null);
+    });
+    child.on('close', (code) => finish(code === 0 ? 'done' : 'failed', code));
+    return { job };
+  };
+
+  /** 任务状态（轮询用）：给 id 就查它，不给就查"正在跑的 / 最近一个"。 */
+  const jobView = (id) => {
+    const job = (id && jobs.get(id)) || (runningJobId && jobs.get(runningJobId)) || [...jobs.values()].pop();
+    if (!job) return null;
+    const end = job.endedAt ? Date.parse(job.endedAt) : Date.now();
+    return {
+      id: job.id, name: job.name, unit: job.unit, state: job.state,
+      exitCode: job.exitCode, startedAt: job.startedAt, endedAt: job.endedAt,
+      durationMs: Math.max(0, end - Date.parse(job.startedAt)),
+      log: job.log,
+    };
+  };
+
   return new Promise((resolve) => {
     const server = http.createServer((req, res) => {
-      handle(req, res, projectsRoot, dist, trash).catch((error) => {
+      handle(req, res, projectsRoot, dist, trash, { startRegenerate, jobView }).catch((error) => {
         res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
         res.end(String((error && error.message) || error));
       });
@@ -117,7 +222,7 @@ function startArchiveGc(root, trash) {
   return timer;
 }
 
-async function handle(req, res, root, webDist, trash) {
+async function handle(req, res, root, webDist, trash, regen) {
   const url = new URL(req.url, 'http://localhost');
   let route = url.pathname;
   try {
@@ -141,6 +246,10 @@ async function handle(req, res, root, webDist, trash) {
       const snapshot = loadProject(root, name);
       return sendJson(res, snapshot, snapshot.error ? 404 : 200);
     }
+    if (route === '/api/regenerate') {
+      const view = regen.jobView(url.searchParams.get('id') || null);
+      return view ? sendJson(res, view) : sendJson(res, { error: '没有重抽任务' }, 404);
+    }
     if (route.startsWith('/media/')) {
       return sendMedia(res, root, route.slice('/media/'.length));
     }
@@ -163,7 +272,7 @@ async function handle(req, res, root, webDist, trash) {
     if (req.method !== 'POST') {
       return sendJson(res, { error: `不支持的方法 ${req.method}` }, 405);
     }
-    return handleAction(req, res, root, route, trash);
+    return handleAction(req, res, root, route, trash, regen);
   }
 
   return sendWeb(res, webDist, route);
@@ -205,8 +314,8 @@ function readBody(req, limit = 64 * 1024) {
   });
 }
 
-/** 管理动作分发：归档 / 恢复 / 删除。删除必须过中文名校验才落手。 */
-async function handleAction(req, res, root, route, trash) {
+/** 管理动作分发：归档 / 恢复 / 删除 / 重抽关键帧。删除必须过中文名校验才落手。 */
+async function handleAction(req, res, root, route, trash, regen) {
   const guard = writeGuard(req);
   if (!guard.ok) return sendJson(res, { error: guard.error }, guard.status);
 
@@ -250,6 +359,16 @@ async function handleAction(req, res, root, route, trash) {
     return r.ok
       ? sendJson(res, { ok: true, name, title, verified: r.verified })
       : sendJson(res, { error: r.error }, 500);
+  }
+
+  if (route === '/api/regenerate') {
+    // 重出某个单元的关键帧：改词 → 重抽这条动线，看板里点一下就够。
+    // **不是签票**：只产出新图，票一个字都不碰（图变了票自然失效，要人重签）。
+    const unit = String(body.unit ?? '');
+    if (!isValidUnitId(unit)) return sendJson(res, { error: '非法单元 id' }, 400);
+    const r = regen.startRegenerate(name, unit);
+    if (r.error) return sendJson(res, { error: r.error, jobId: r.jobId }, r.status);
+    return sendJson(res, { ok: true, jobId: r.job.id, unit, name });
   }
 
   return sendJson(res, { error: '未知操作' }, 404);
