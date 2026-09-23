@@ -11,11 +11,11 @@
         ]
       },
       "g002": {
-        "at": "2026-09-23T02:52:07.171Z",
-        "by": "用户",
-        "artifact_hash": "eeea618a37d3879777954820309549873cbdc226835bbeb83069067dea992d63",
+        "at": "2026-09-23T10:20:20.854Z",
+        "by": "用户（Agent 代跑）",
+        "artifact_hash": "7e160d8bb34f269eeb2eda2236faff9f5860503bd9eb67f6eaf754d961092335",
         "artifacts": [
-          "examples/demo-show/units/i2v_20260923-104821.mp4"
+          "examples/demo-show/units/i2v_20260923-104821_nosub2.mp4"
         ]
       },
       "g003": {
