@@ -26,6 +26,41 @@ import { mediaUrl, isVideo, startRegenerate, fetchRegenerate, savePrompt, signSt
 /** CLI 的关键帧提示词自检上限（`auditPrompt`）：超过它，重出一定会被拒。 */
 const PROMPT_AUDIT_LIMIT = 500;
 
+/**
+ * 把 CLI 那几句"机制话"翻成人话 + 给出下一步命令。
+ *
+ * 这些都是**真踩过的**：看板里点重出，报的是 CLI 的原文（比如「交接凭证不属于当前项目或单元」），
+ * 但人真正需要知道的是"为什么"和"那我该怎么办"。
+ */
+function hintFor(text) {
+  const t = String(text || '');
+  if (/交接凭证不属于当前项目或单元/.test(t)) {
+    return {
+      why: '这份交接凭证是**另一个路径**下签发的 —— 当前剧目多半是从别处复制过来的副本。',
+      fix: 'node cli/prepare-handoff.mjs --plan <剧目>/render.plan.json --unit <单元>（在副本里重跑一次交接准备，凭证就绑到当前路径）',
+    };
+  }
+  if (/缺少实际尾帧交接凭证/.test(t)) {
+    return {
+      why: '上一段还没生成、或还没人工确认，尾帧交接凭证建不起来。',
+      fix: '先把上一段的视频生成并签片段票，再回来重出这一段。',
+    };
+  }
+  if (/人工闸门未通过|旧确认自动失效/.test(t)) {
+    return {
+      why: '上游产物的票已失效（产物改过，或换了目录/副本）。',
+      fix: 'node cli/review-gate.mjs approve --project <剧目> --stage assets（按提示里的阶段补签上游）',
+    };
+  }
+  if (/实际使用的关键帧与连续性交接凭证不一致/.test(t)) {
+    return {
+      why: '关键帧换过了，但交接凭证里还绑着旧那张。',
+      fix: '先重出这一格的关键帧并签票，再重出视频。',
+    };
+  }
+  return null;
+}
+
 /** 两种产物的呈现口径。 */
 const KINDS = {
   keyframe: {
@@ -204,6 +239,15 @@ export default function RegenModal({ project, unit, kind = 'keyframe', frameCoun
                         {lastLine}
                       </div>
                     ) : null}
+                    {(() => {
+                      const h = hintFor(job.log);
+                      return h ? (
+                        <div className="rounded border border-warn/40 bg-warn/5 px-2 py-1.5 text-[11.5px] text-warn">
+                          <div>{h.why}</div>
+                          <div className="mt-0.5 break-all font-mono text-[11px] text-ink-300">{h.fix}</div>
+                        </div>
+                      ) : null;
+                    })()}
                   </>
                 )}
               </div>
