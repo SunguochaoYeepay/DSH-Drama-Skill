@@ -191,6 +191,9 @@ export async function compileLiteral(board, opts = {}) {
         environment: env,
         time_of_day: s.time_of_day || '无',
         scene_no: s.scene_no,
+        // 集数来自剧本场次头（`第 1 集 1-1 场景：…`）。**解析器一直有，板子一直丢** ——
+        // 没有它，多集剧本的 scene_no 会跨集重号（1-1 与 2-1 都是 1），看板无法按集分组。
+        episode: s.episode ?? null,
         master: null, reverse_master: null, spatial_layout: null,
       });
     }
@@ -198,6 +201,11 @@ export async function compileLiteral(board, opts = {}) {
   // Brief 提供的场景若未写 scene_no，只允许按明确的剧本顺序补齐一次，随后即冻结映射。
   for (const [i, s] of parsed.scenes.entries()) {
     if (sceneList[i] && sceneList[i].scene_no == null) sceneList[i].scene_no = s.scene_no;
+  }
+  // 集数同理补一次（显式写过的值不覆盖）：它是剧本的事实，不是 Brief 的决策项。
+  for (const s of parsed.scenes) {
+    const target = sceneList.find((x) => x.scene_no === s.scene_no);
+    if (target && target.episode == null) target.episode = s.episode ?? null;
   }
   for (const s of parsed.scenes) {
     if (s.scene_no == null || !sceneList.some((x) => x.scene_no === s.scene_no)) {

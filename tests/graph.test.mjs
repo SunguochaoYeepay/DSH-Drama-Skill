@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   buildGraph, availabilityOf, frontierOf, nextStageOf, directorUnitOf, fmtSec,
-  GATE_ORDER, COL_STEP, ROW_STEP, SCENE_TOP, SCENE_H, SCENE_GAP, UNIT_H,
+  GATE_ORDER, COL_STEP, ROW_STEP, SCENE_TOP, SCENE_H, SCENE_GAP, EPISODE_H, UNIT_H,
 } from '../web/src/graph.js';
 import { gateSummary } from '../src/board-data.mjs';
 
@@ -100,13 +100,52 @@ test('多个场次：各自一列，单元挂到各自的场次下面', () => {
   const g = buildGraph(s);
   const sceneNodes = g.nodes.filter((x) => x.type === 'scene');
   assert.deepEqual(sceneNodes.map((x) => x.id), ['scene:sc1', 'scene:sc2']);
-  assert.deepEqual(sceneNodes.map((x) => x.data.title), ['场次 1 · 机舱', '场次 2 · 雨夜路口']);
+  // 编号沿用剧本的写法（单集就是「1-1」），不另造"场次 N"这套词
+  assert.deepEqual(sceneNodes.map((x) => x.data.title), ['1-1 · 机舱', '1-2 · 雨夜路口']);
   assert.deepEqual(sceneNodes.map((x) => x.data.unitCount), [2, 1]);
+  assert.equal(g.nodes.filter((x) => x.type === 'episode').length, 0, '单集不画「集」分组带');
   // 两列：第一列 x=0，第二列 x=COL_STEP
   assert.deepEqual(sceneNodes.map((x) => x.position.x), [0, COL_STEP]);
   const u3 = g.nodes.find((x) => x.id === 'unit:g003');
   assert.equal(u3.position.x, COL_STEP, '第三个单元属于第二场，应落在第二列');
   assert.equal(u3.position.y, SCENE_TOP + SCENE_H + SCENE_GAP, '它是那一场的第一个单元');
+});
+
+test('多集：每集一条分组带，场次按集分行，标题写全「第 N 集 M-M」', () => {
+  const s = makeSnapshot({ n: 3 });
+  s.board = {
+    ...board,
+    scenes: [
+      { id: 'sc1', name: '车厢', scene_no: 1, episode: 1 },
+      { id: 'sc2', name: '路口', scene_no: 2, episode: 1 },
+      { id: 'sc3', name: '车厢', scene_no: 1, episode: 2 },   // 跨集重号：scene_no 又是 1
+    ],
+  };
+  s.units = s.units.map((u, i) => ({ ...u, scene: ['sc1', 'sc2', 'sc3'][i] }));
+  s.plan = { ...s.plan, units: s.units };
+  const g = buildGraph(s);
+
+  const eps = g.nodes.filter((x) => x.type === 'episode');
+  assert.deepEqual(eps.map((x) => x.id), ['episode:1', 'episode:2']);
+  assert.deepEqual(eps.map((x) => x.data.title), ['第 1 集', '第 2 集']);
+
+  const scenes = g.nodes.filter((x) => x.type === 'scene');
+  assert.deepEqual(scenes.map((x) => x.data.title), [
+    '第 1 集 1-1 · 车厢',
+    '第 1 集 1-2 · 路口',
+    '第 2 集 2-1 · 车厢',
+  ], '跨集重号的 1-1 / 2-1 必须分得开');
+
+  const ep1Scene = scenes.find((x) => x.id === 'scene:sc1');
+  const ep2Scene = scenes.find((x) => x.id === 'scene:sc3');
+  assert.equal(ep2Scene.position.x, ep1Scene.position.x, '两集的第一场都从第一列开始');
+  assert.ok(ep2Scene.position.y > ep1Scene.position.y, '第二集的场次换到下一行');
+  assert.ok(eps[1].position.y + EPISODE_H < ep2Scene.position.y, '集带在该集场次上面');
+
+  // 导演稿 → 集带 → 场次 → 单元
+  assert.equal(g.edges.filter((e) => e.source === 'stage:direction' && e.target.startsWith('episode:')).length, 2);
+  assert.equal(g.edges.filter((e) => e.source === 'episode:2' && e.target === 'scene:sc3').length, 1);
+  assert.equal(g.edges.filter((e) => e.source === 'scene:sc3' && e.target === 'unit:g003').length, 1);
 });
 
 test('同一场次的单元纵向排下去，成片落在最后一个单元之下', () => {

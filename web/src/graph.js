@@ -25,6 +25,8 @@ export const SCENE_W = 264;       // 场次节点
 export const SCENE_H = 96;
 export const SCENE_TOP = STAGE_H + 104;   // 场次行紧贴阶段行下面
 export const SCENE_GAP = 32;              // 场次节点与它第一个单元之间的间距
+export const EPISODE_H = 34;              // 「集」分组条（只在多集时出现）
+export const EPISODE_ROW_GAP = 40;        // 集与集之间的间距
 export const FINAL_GAP = 76;
 
 /** 票的流水线顺序。`handoffs` 不在此列：它是交接记录，不是阶段闸门。 */
@@ -246,8 +248,7 @@ export function buildGraph(snapshot) {
 
   // ── 场次分组 → 单元 → 成片 ────────────────────────────────────────
   // 单元挂在**它所属的那一场**下面（用户 2026-09-23：单元的线应该挂到导演稿的场景下面）。
-  // 场次号与场景名来自 board.scenes；每个场次节点带自己的场景主图 —— 资源本来就是跟着场景走的。
-  // 集数（"第 N 集"）目前**板子里没有**：`scenes[].episode` 还没进 schema，有值时这里会自动显示。
+  // 每个场次节点带自己的场景主图 —— 场景主图本来就是一场一张，其余资产是全片复用的。
   const sceneById = new Map((board.scenes || []).map((s) => [s.id, s]));
   const groups = [];
   const groupAt = new Map();
@@ -260,72 +261,134 @@ export function buildGraph(snapshot) {
     groups[groupAt.get(key)].units.push(u);
   }
 
-  const maxPerGroup = groups.reduce((m, g) => Math.max(m, g.units.length), 0);
+  // 集数：**只有真的多于一集时才画「集」这一层**（单集画个空壳只是视觉噪音）。
+  // 编号沿用剧本的写法（多集 `第 N 集 M-M`、单集 `M-M`），不另造一套"场次 N" ——
+  // 同一件东西造第二套编号，就是 gopher_toll 那次拿错编号的坑。
+  const episodeValues = [...new Set(groups.map((g) => g.scene?.episode).filter((v) => v != null))].sort((a, b) => a - b);
+  const multiEpisode = episodeValues.length > 1;
+  const sceneTitle = (scene) => {
+    if (!scene) return '未归场景（单元没写 scene）';
+    const name = scene.name || scene.id;
+    const no = scene.scene_no ?? null;
+    if (no == null) return name;
+    const num = `${scene.episode ?? 1}-${no}`;
+    return multiEpisode && scene.episode != null ? `第 ${scene.episode} 集 ${num} · ${name}` : `${num} · ${name}`;
+  };
+
   const wide = units.length > 6;   // 单元多时把边画细一点，免得糊成一片
 
-  groups.forEach((g, gi) => {
-    const x = gi * COL_STEP;
-    const episode = g.scene?.episode ?? null;
-    const no = g.scene?.scene_no ?? null;
-    nodes.push({
-      id: `scene:${g.key}`,
-      type: 'scene',
-      position: { x, y: SCENE_TOP },
-      width: SCENE_W,
-      height: SCENE_H,
-      data: {
-        kind: 'scene',
-        sceneId: g.key,
-        // 有集数就写「第N集 M-M」，没有就只写场次号 —— 不假装知道没有的信息
-        title: g.scene
-          ? (episode != null ? `第 ${episode} 集 ${episode}-${no ?? '?'} · ${g.scene.name || g.scene.id}` : `场次 ${no ?? '?'} · ${g.scene.name || g.scene.id}`)
-          : '未归场景（单元没写 scene）',
-        master: g.scene?.master || null,
-        unitCount: g.units.length,
-      },
+  // 按集分排：多集时一集一行（行首是"集"分组条），单集时就是原来那一行
+  const episodeRows = [];
+  if (multiEpisode) {
+    for (const g of groups) {
+      const ep = g.scene?.episode ?? null;
+      let row = episodeRows.find((r) => r.ep === ep);
+      if (!row) { row = { ep, scenes: [], maxUnits: 0 }; episodeRows.push(row); }
+      row.scenes.push(g);
+      row.maxUnits = Math.max(row.maxUnits, g.units.length);
+    }
+    episodeRows.sort((a, b) => (a.ep ?? -1) - (b.ep ?? -1));
+  } else {
+    episodeRows.push({
+      ep: null,
+      scenes: groups,
+      maxUnits: groups.reduce((m, g) => Math.max(m, g.units.length), 0),
     });
-    edges.push(edge({
-      id: `e:direction->${g.key}`,
-      source: 'stage:direction',
-      target: `scene:${g.key}`,
-      sourceHandle: 'scenes',
-      targetHandle: 'in',
-    }));
+  }
 
-    g.units.forEach((u, ui) => {
-      const rows2 = gateRows(['keyframes', 'clips'], gates, u.id);
+  let cursorY = SCENE_TOP;
+  let bottomY = SCENE_TOP;
+  episodeRows.forEach((row) => {
+    const bandH = multiEpisode ? EPISODE_H + 12 : 0;
+    const scenesY = cursorY + bandH;
+    const rowWidth = Math.max(SCENE_W, (row.scenes.length - 1) * COL_STEP + SCENE_W);
+    const rowUnits = row.scenes.reduce((n, g) => n + g.units.length, 0);
+
+    if (multiEpisode) {
       nodes.push({
-        id: `unit:${u.id}`,
-        type: 'unit',
-        position: { x, y: SCENE_TOP + SCENE_H + SCENE_GAP + ui * ROW_STEP },
-        width: UNIT_W,
-        height: UNIT_H,
+        id: `episode:${row.ep}`,
+        type: 'episode',
+        position: { x: 0, y: cursorY },
+        width: rowWidth,
+        height: EPISODE_H,
         data: {
-          kind: 'unit',
-          id: u.id,
-          duration: fmtSec(u.contentDuration),
-          genDuration: fmtSec(u.generationDuration),
-          shotCount: u.shotCount || 0,
-          keyframe: u.keyframe || null,
-          clip: u.clip || null,
-          gates: rows2,
-          pending: isPendingNode(rows2, frontier),
+          kind: 'episode',
+          title: row.ep == null ? '未分集' : `第 ${row.ep} 集`,
+          subtitle: `${row.scenes.length} 场 · ${rowUnits} 单元`,
         },
       });
       edges.push(edge({
-        id: `e:${g.key}->${u.id}`,
-        source: `scene:${g.key}`,
-        target: `unit:${u.id}`,
-        sourceHandle: 'units',
+        id: `e:direction->ep${row.ep}`,
+        source: 'stage:direction',
+        target: `episode:${row.ep}`,
+        sourceHandle: 'scenes',
         targetHandle: 'in',
-        faint: wide,
       }));
+    }
+
+    row.scenes.forEach((g, gi) => {
+      const x = gi * COL_STEP;
+      nodes.push({
+        id: `scene:${g.key}`,
+        type: 'scene',
+        position: { x, y: scenesY },
+        width: SCENE_W,
+        height: SCENE_H,
+        data: {
+          kind: 'scene',
+          sceneId: g.key,
+          title: sceneTitle(g.scene),
+          master: g.scene?.master || null,
+          unitCount: g.units.length,
+        },
+      });
+      edges.push(edge({
+        id: `e:${multiEpisode ? `ep${row.ep}` : 'direction'}->${g.key}`,
+        source: multiEpisode ? `episode:${row.ep}` : 'stage:direction',
+        target: `scene:${g.key}`,
+        sourceHandle: 'scenes',
+        targetHandle: 'in',
+      }));
+
+      g.units.forEach((u, ui) => {
+        const rows2 = gateRows(['keyframes', 'clips'], gates, u.id);
+        nodes.push({
+          id: `unit:${u.id}`,
+          type: 'unit',
+          position: { x, y: scenesY + SCENE_H + SCENE_GAP + ui * ROW_STEP },
+          width: UNIT_W,
+          height: UNIT_H,
+          data: {
+            kind: 'unit',
+            id: u.id,
+            duration: fmtSec(u.contentDuration),
+            genDuration: fmtSec(u.generationDuration),
+            shotCount: u.shotCount || 0,
+            keyframe: u.keyframe || null,
+            clip: u.clip || null,
+            gates: rows2,
+            pending: isPendingNode(rows2, frontier),
+          },
+        });
+        edges.push(edge({
+          id: `e:${g.key}->${u.id}`,
+          source: `scene:${g.key}`,
+          target: `unit:${u.id}`,
+          sourceHandle: 'units',
+          targetHandle: 'in',
+          faint: wide,
+        }));
+      });
+
+      bottomY = Math.max(bottomY, scenesY + SCENE_H + SCENE_GAP + (g.units.length - 1) * ROW_STEP + UNIT_H);
     });
+
+    cursorY = bottomY + EPISODE_ROW_GAP;
   });
 
   const cols = groups.length;
-  const rows = maxPerGroup;
-  const finalY = SCENE_TOP + SCENE_H + SCENE_GAP + maxPerGroup * ROW_STEP + FINAL_GAP - ROW_STEP + UNIT_H;
+  const rows = groups.reduce((m, g) => Math.max(m, g.units.length), 0);
+  const finalY = bottomY + FINAL_GAP;
   const finalX = cols > 1 ? ((cols - 1) * COL_STEP) / 2 : 0;
   const finalGates = gateRows(['final'], gates);
   nodes.push({

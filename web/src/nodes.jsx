@@ -75,9 +75,27 @@ export const StageNode = memo(function StageNode({ data }) {
 });
 
 /**
+ * 「集」分组条：**只有多集时才出现**，一条横带盖住这一集的场次。
+ * 单集不画 —— 一层只装一件事的空壳是视觉噪音。
+ */
+export const EpisodeNode = memo(function EpisodeNode({ data }) {
+  return (
+    <div
+      className="flex h-full w-full items-center gap-2 rounded-lg border border-dashed border-accent/40 bg-accent/5 px-3 text-[11.5px] text-ink-300"
+      style={{ minWidth: 264, height: 34 }}
+    >
+      <Handle type="target" id="in" position={Position.Left} />
+      <span className="font-medium text-ink-100">{data.title}</span>
+      <span className="text-ink-500">{data.subtitle}</span>
+      <Handle type="source" id="scenes" position={Position.Bottom} />
+    </div>
+  );
+});
+
+/**
  * 场次节点：一场戏一个节点，挂在该场下面的单元就是这一场要拍的东西。
  *
- * 带自己的**场景主图** —— 资源本来就是跟着场景走的；项目级的「资源」节点只是清单视角，
+ * 带自己的**场景主图** —— 场景主图本来就是一场一张；项目级的「资源」节点只是清单视角，
  * 两者是同一批资产的两个看面，不是两份数据。
  */
 export const SceneNode = memo(function SceneNode({ data }) {
@@ -177,6 +195,7 @@ export const FinalNode = memo(function FinalNode({ data }) {
 
 export const nodeTypes = {
   stage: StageNode,
+  episode: EpisodeNode,
   scene: SceneNode,
   unit: UnitNode,
   final: FinalNode,
