@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { clipResultPath, readReviews, requireAllClips, writeReviewNote } from '../src/human-gates.mjs';
+import { resolveRecordedPath } from '../src/recorded-path.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { VIDEO_QUALITY, VIDEO_NORMAL_SIZE, VIDEO_HIGH_SIZE } from '../src/config.mjs';
 import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
@@ -89,13 +90,21 @@ function loudnessFilterArgs(measured) {
 for (const [index, unit] of plan.units.entries()) {
   const entry = reviews.approvals.clips[unit.id];
   const ticket = entry?.artifact_hash ? entry : entry?.final;
-  let input = ticket?.artifacts?.[0];
-  if (!input || !fs.existsSync(input)) {
+  // 票里的 artifacts 是**展示路径**（多为仓库相对），三种历史写法都由
+  // `src/recorded-path.mjs` 统一解析 —— 过去这里直接 `fs.existsSync(input)`，
+  // 按 cwd 解析，于是"票上写着、实际找不到"时只能走下面的调试兜底（2026-09-23 实测）。
+  // 另：`artifacts` 现在**按签票时给的顺序**记（不再排序），所以 `[0]` 就是当时那条主产物。
+  let input = resolveRecordedPath(projectDir, ticket?.artifacts?.[0]);
+  if (!input) {
     // 调试模式下没有人工票，回退到该单元的实际产物；正式流程仍必须持有票。
     if (!SKIP_GATE) throw new Error(`${unit.id}: 人工确认票没有可用视频`);
     const resultFile = clipResultPath(projectDir, unit.id);
     const result = resultFile ? JSON.parse(fs.readFileSync(resultFile, 'utf8')) : null;
-    input = (result?.files || []).map((x) => (typeof x === 'string' ? x : x?.local_path || x?.path)).find((x) => x && fs.existsSync(x));
+    for (const x of result?.files || []) {
+      const p = typeof x === 'string' ? x : (x?.local_path || x?.path);
+      input = p ? resolveRecordedPath(projectDir, p) : null;
+      if (input) break;
+    }
     if (!input) throw new Error(`${unit.id}: 既没有人工确认票，也没有可用视频产物`);
   }
   const out = path.join(tmp, `${String(index + 1).padStart(3, '0')}_${unit.id}.mp4`);

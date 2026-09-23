@@ -21,6 +21,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { resolveRecordedPath } from './recorded-path.mjs';
 
 function readJson(file) {
   try {
@@ -194,52 +195,12 @@ export function gateSummary(tickets, unitIds = []) {
 }
 
 /**
- * 一条记录下来的媒体路径 → 「剧目内相对路径」的**候选**（按可信度排序，调用方逐个验存在性）。
- *
- * 为什么要多候选：产物路径有三种历史写法 ——
- * 1. 剧目内相对（`units/x.mp4`）—— 现在的写法；
- * 2. **相对仓库根**（`projects/desk_quake/units/x.mp4`）—— 老 CLI 就是这么写的；
- * 3. 当时所在盘的绝对路径（`E:\…`）—— 搬家后落到剧目外。
- *
- * 只按 1 处理会出事：2 会被 `relInside` 原样返回，看板拼成
- * `/media/<剧>/projects/<剧>/units/x.mp4` → **404**（desk_quake 2026-09-23 实测：
- * `units/g001.result.json` 写着 `projects\desk_quake\units\i2v_….mp4`）。
- * 所以这里把三种写法都列成候选，**由调用方验存在性**决定用哪个。
- * @returns {string[]} 剧目内相对路径候选（不含明显越界的）
- */
-function candidateRels(projectDir, p) {
-  const out = [];
-  const push = (v) => {
-    if (!v) return;
-    const norm = String(v).replace(/\\/g, '/').replace(/^\/+/, '');
-    if (!norm || norm === '.' || norm.startsWith('..') || out.includes(norm)) return;
-    out.push(norm);
-  };
-  const s = String(p).replace(/\\/g, '/');
-  const projectName = path.basename(projectDir);
-  // 2) 相对仓库根：砍掉开头的 `<…>/<剧名>/` 前缀
-  if (!/^[A-Za-z]:[\\/]|^\//.test(s)) {
-    const marker = `/${projectName}/`;
-    const at = s.lastIndexOf(marker);
-    if (s.startsWith(`${projectName}/`)) push(s.slice(projectName.length + 1));
-    else if (at >= 0) push(s.slice(at + marker.length));
-  }
-  // 1) 剧目内相对 → 原样；绝对在剧目内 → 转相对；绝对在剧目外 → null
-  push(relInside(projectDir, p));
-  // 3) 兜底：末级目录名/文件名（老项目把产物随项目一起搬过的情况）
-  push(`${path.basename(path.dirname(s))}/${path.basename(s)}`);
-  return out;
-}
-
-/**
  * 读一个单元的视频片段路径（units/<id>.result.json 的 files[].local_path）。
- * 多条时优先**项目内是否存在**（result.json 同时记着 ComfyUI 原始路径与项目内路径）。
  *
- * 迁移坑（2026-09-22 实测）：老项目的 result.json 里 local_path 是**当时所在盘**
- * 的绝对路径（E:\…），项目搬进仓库后它落在项目外 —— 但产物实体已随项目一起搬。
- * 第二种坑（2026-09-23 实测）：路径是**相对仓库根**的（`projects/<剧>/units/…`），
- * 而 `relInside` 对相对路径原样返回、不检查是否真在剧目内，于是前端拼出双层前缀 404。
- * 两种坑都由 `candidateRels` + **存在性校验**兜住：拿到候选逐个试，存在才算数。
+ * 三种历史写法的解析（仓库相对 / 剧目相对 / 本机绝对）**统一交给
+ * `src/recorded-path.mjs`** —— 过去这里有一份自己的候选表，而 `cli/` 那边按另一套解析，
+ * 结果是"同一份记录，看板认得、CLI 当它不存在"（2026-09-23 实测踩到）。
+ * 这里只需要：拿到第一个**真实存在**的文件，再换算成剧目内相对路径给前端用。
  * @returns {string|null} 剧目内相对路径。
  */
 function clipOf(projectDir, unitId) {
@@ -247,9 +208,10 @@ function clipOf(projectDir, unitId) {
   for (const f of (result?.files) || []) {
     const p = typeof f === 'string' ? f : (f?.local_path || f?.localPath || f?.path);
     if (!p || !isVideoPath(p)) continue;
-    for (const rel of candidateRels(projectDir, p)) {
-      if (fs.existsSync(path.join(projectDir, rel))) return rel;
-    }
+    const abs = resolveRecordedPath(projectDir, p);
+    if (!abs) continue;
+    const rel = path.relative(projectDir, abs);
+    if (rel && !rel.startsWith('..') && !path.isAbsolute(rel)) return rel.split(path.sep).join('/');
   }
   return null;                     // 所有候选都不存在才按缺处理
 }

@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { approve, approvalStatus, clipResultPath, planKeyframeFiles, requireAllClips } from '../src/human-gates.mjs';
+import { resolveRecordedPath } from '../src/recorded-path.mjs';
 import { projectAssetFiles } from '../src/asset-resolver.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 
@@ -53,7 +54,13 @@ if (!files.length && stage === 'clip' && id) {
   const actual = clipResultPath(project, id);
   if (actual) {
     const data = JSON.parse(fs.readFileSync(actual, 'utf8'));
-    files = (data.files || []).map((file) => typeof file === 'string' ? file : file?.local_path || file?.localPath || file?.path).filter((file) => file && fs.existsSync(file));
+    // 记录里的路径三种写法（仓库相对 / 剧目相对 / 本机绝对）统一由 recorded-path 解析。
+    // **保持记录里的顺序** —— 它会一路传进票的 artifacts，而 assemble-units 取的正是
+    // `artifacts[0]`；顺序在这里丢掉，就等于"想用哪条产物"这件事在票上无从表达。
+    files = (data.files || [])
+      .map((file) => (typeof file === 'string' ? file : file?.local_path || file?.localPath || file?.path))
+      .map((p) => (p ? resolveRecordedPath(project, p) : null))
+      .filter(Boolean);
   }
 }
 if (!['approve', 'status'].includes(command) || !stages.includes(stage) || !files.length) {

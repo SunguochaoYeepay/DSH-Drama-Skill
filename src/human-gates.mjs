@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { handoffPath, requireHandoff } from './continuity-handoff.mjs';
 import { readGenerationRecord } from './generation-records.mjs';
+import { recordedPathFor } from './recorded-path.mjs';
 
 export const REVIEW_FILE = 'review.approvals.json';
 
@@ -119,37 +120,31 @@ export function requireApproval(projectDir, stage, files, { id = null, skip = fa
   }
 }
 
-/**
- * 票据里记的**展示路径**：能写成仓库相对就写相对，写不了就原样保留绝对路径。
- *
- * 起因（2026-09-22）：`approve()` 把 `path.resolve()` 后的绝对路径直接写进 `artifacts`，
- * 于是示例剧目的 `review.approvals.json` 里躺着 `D:\DeepSeek\ai-images-harness\…` ——
- * 这份文件是要发到 GitHub 的，等于把本机目录结构贴出去。事后靠脚本清洗了两次。
- *
- * ⚠ 只影响 `artifacts`（**记录**），**不影响 `artifact_hash`**：哈希仍按绝对路径算，
- * 否则所有已落的票会因为换了基准而集体失效。
- *
- * 找不到仓库根时**原样返回**，绝不猜别人的机器 —— 宁可留绝对路径，也不写一个假的相对路径。
- */
-function repoRootOf(startDir) {
-  let dir = path.resolve(startDir);
-  for (let i = 0; i < 10; i += 1) {
-    if (fs.existsSync(path.join(dir, '.git')) || fs.existsSync(path.join(dir, 'package.json'))) return dir;
-    const parent = path.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return null;
-}
+// 票据里 `artifacts` 记的**展示路径**（能写仓库相对就写相对）现在归
+// `src/recorded-path.mjs` 一处所有 —— 这里过去那份私有实现已经删掉，
+// 免得同一个规则有两个所有者、两边慢慢长歪。
 
 export function approve(projectDir, stage, files, { id = null, by = '用户' } = {}) {
   const data = readReviews(projectDir);
   const artifact = stageFingerprint(stage, files);
-  const repo = repoRootOf(projectDir);
-  const display = (file) => (repo && file.startsWith(repo + path.sep)
-    ? path.relative(repo, file).split(path.sep).join('/')
-    : file);
-  const ticket = { at: new Date().toISOString(), by, artifact_hash: artifact.hash, artifacts: artifact.files.map(display) };
+  // **按调用方给的顺序**记录 artifacts（去重、保留首次出现），而不是排序后的顺序。
+  // 为什么重要：`fingerprint()` 为了"同一批文件换个顺序也算同一票"会把路径**排序**，
+  // 于是 `artifacts[0]` 变成了字母序最小的那个；而 `cli/assemble-units.mjs` 恰恰取
+  // `artifacts[0]` 当输入片段 —— 结果"在旁边放一条更好的版本（如去字幕版）再签票"
+  // 天然不成立（`…104821.mp4` 永远排在 `…104821_nosub2.mp4` 前面）。2026-09-23 实测。
+  // 哈希仍按那份**排序去重**的集合算（顺序无关），所以老票不会因为这条改动失效。
+  const ordered = [];
+  for (const f of artifact.files) {
+    const abs = path.resolve(f);
+    if (!ordered.includes(abs)) ordered.push(abs);
+  }
+  const callerOrder = [];
+  for (const f of files) {
+    const abs = path.resolve(f);
+    if (ordered.includes(abs) && !callerOrder.includes(abs)) callerOrder.push(abs);
+  }
+  for (const abs of ordered) if (!callerOrder.includes(abs)) callerOrder.push(abs);
+  const ticket = { at: new Date().toISOString(), by, artifact_hash: artifact.hash, artifacts: callerOrder.map((abs) => recordedPathFor(projectDir, abs)) };
   const generation = readGenerationRecord(projectDir, stage);
   if (generation) ticket.generation = generation;
   if (stage === 'clip') {

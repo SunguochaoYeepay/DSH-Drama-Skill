@@ -1,26 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { recordedPathFor } from './recorded-path.mjs';
 
 export function generationRecordPath(projectDir, stage) {
   return path.join(projectDir, 'reviews', `${stage}.generation.json`);
-}
-
-/**
- * 仓库根：往上找 `.git` 或 `package.json`。
- *
- * ⚠ `src/human-gates.mjs` 里有一份**同名同规则的私有实现**（票的 `artifacts` 也做这件事）。
- * 这是一次有意的暂时重复：那个文件当时正被另一路工作改着，硬合会撞车。
- * 两边都稳定后应该提成一个公共所有者 —— 记在这里，免得下一个人以为是"忘了"。
- */
-function repoRootOf(startDir) {
-  let dir = path.resolve(startDir);
-  for (let i = 0; i < 10; i += 1) {
-    if (fs.existsSync(path.join(dir, '.git')) || fs.existsSync(path.join(dir, 'package.json'))) return dir;
-    const parent = path.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return null;
 }
 
 /**
@@ -29,26 +12,13 @@ function repoRootOf(startDir) {
  * 起因（2026-09-23）：票的 `artifacts` 早就归一了，但**生成记录**这一路没有 ——
  * `cli/keyframes.mjs` 把 `planKeyframeFiles()` 的绝对路径原样交给 `writeGenerationRecord()`，
  * 签票时被整块复制进票里，于是入库示例的 `review.approvals.json` 里躺着
- * `D:\DeepSeek\ai-images-harness\…`，`tests/example-demo.test.mjs`（"入库示例不含本机绝对路径"）
- * 一直是红的。一道规则管一半，等于没管。
+ * `D:\DeepSeek\ai-images-harness\…`，`tests/example-demo.test.mjs` 一直是红的。
  *
- * ⚠ 只改**展示形式**：没有任何地方拿记录里的路径去读文件（消费者只有 `approve()` 把它
- * 复制进票里），所以动的不是判据 —— `artifact_hash` 仍按 `approve()` 收到的绝对路径算，
- * 老票不会集体失效。
- *
- * 找不到仓库根时**原样返回**，绝不猜 —— 宁可留绝对路径，也不写一个假的相对路径。
+ * 规则本体已经收敛到 `src/recorded-path.mjs`（**一个所有者**）——
+ * 这里只是把"记录里要归一的字段"挑出来交给它。
  */
 export function displayPathOf(projectDir, p) {
-  const s = String(p || '');
-  if (!s) return s;
-  // 本来就是相对路径 → 一个字都不动。**不要拿 cwd 去 resolve** ——
-  // 那会按"当前在哪跑的"猜出一个路径，比原样留着更糟。
-  if (!path.isAbsolute(s)) return s;
-  const repo = repoRootOf(projectDir);
-  if (!repo) return s;
-  const abs = path.resolve(s);
-  if (!abs.startsWith(repo + path.sep)) return s;
-  return path.relative(repo, abs).split(path.sep).join('/');
+  return recordedPathFor(projectDir, p);
 }
 
 /** 记录里需要归一的字段：产物的展示路径与计划的展示路径。 */
