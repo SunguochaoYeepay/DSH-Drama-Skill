@@ -282,3 +282,36 @@ test('签署 clip：必须带 --id <单元>，只签这一段', async () => {
     assert.equal((await pending).status, 200);
   });
 });
+
+test('签署 final：必须显式绑定 out/final.mp4；没有成片时 400 且不起进程', async () => {
+  const sp = fakeSpawn();
+  await withServer(sp.impl, async ({ base, p }) => {
+    const post = () => fetch(`${base}/api/sign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Kanban-Action': '1' },
+      body: JSON.stringify({ name: 'probe', stage: 'final' }),
+    });
+
+    // 还没有成片 → 明确报"先合成"，不起进程
+    const missing = await post();
+    assert.equal(missing.status, 400);
+    assert.match((await missing.json()).error, /还没有成片/);
+    assert.equal(sp.calls.length, 0);
+
+    // 成片就位 → 起 review-gate，并把产物显式绑上（final 阶段没有默认产物）
+    fs.mkdirSync(path.join(p.dir, 'out'), { recursive: true });
+    fs.writeFileSync(path.join(p.dir, 'out', 'final.mp4'), Buffer.from([0, 0, 0, 0x18]));
+    const pending = post();
+    await new Promise((r) => setTimeout(r, 30));
+    assert.equal(sp.calls.length, 1);
+    const args = sp.calls[0].args;
+    assert.ok(args[0].endsWith(path.join('cli', 'review-gate.mjs')), args[0]);
+    assert.deepEqual(args.slice(1, 6), ['approve', '--project', p.dir, '--stage', 'final']);
+    assert.deepEqual(args.slice(6, 8), ['--artifacts', path.join(p.dir, 'out', 'final.mp4')]);
+    sp.children[0].stdout.emit('data', Buffer.from('✓ 人工确认已记录：final\n'));
+    sp.children[0].emit('close', 0);
+    const ok = await pending;
+    assert.equal(ok.status, 200);
+    assert.match((await ok.json()).output, /人工确认已记录/);
+  });
+});

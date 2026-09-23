@@ -612,13 +612,81 @@ function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine, onRefr
 
 /* ── ⑤ 成片 ─────────────────────────────────────────────── */
 
-function FinalView({ snapshot, project, onOpen }) {
+/**
+ * 成片页：看一眼 → 满意就签成片票。
+ *
+ * 与关键帧/片段同一套口径：看板**不写任何 approvals 文件**，点「签署」只是把用户明确的
+ * 「通过」转交给唯一所有者 `cli/review-gate.mjs`（这里还会带上 `--artifacts out/final.mp4`，
+ * 因为 review-gate 对 final 没有默认产物）。两步确认，避免误点。
+ */
+function FinalView({ snapshot, project, onOpen, onRefresh }) {
+  const [confirmSign, setConfirmSign] = useState(false);
+  const [signed, setSigned] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
   if (!snapshot.finalRel) return <Box className="text-ink-500">还没有成片（约定路径：out/final.mp4）</Box>;
+
+  const sign = async () => {
+    setBusy(true); setError('');
+    try {
+      const r = await signStage(project, 'final');
+      setSigned({ at: new Date().toLocaleTimeString(), output: r.output });
+      setConfirmSign(false);
+      onRefresh?.();
+    } catch (e) {
+      setError(e.message || '签署失败');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const gate = snapshot.gates?.final;
   return (
-    <Section title="成片" right="点击在弹层里播放">
-      {/* 与片段一致：详情里不内联播放，点开灯箱看 */}
-      <Thumb project={project} rel={snapshot.finalRel} label="成片" onOpen={onOpen} big />
-    </Section>
+    <>
+      <Section title="成片" right="点击在弹层里播放">
+        {/* 与片段一致：详情里不内联播放，点开灯箱看 */}
+        <Thumb project={project} rel={snapshot.finalRel} label="成片" onOpen={onOpen} big />
+      </Section>
+      <Section title="成片票" right={gate?.signed ? '已签' : '未签'}>
+        <div className="text-[11.5px] text-ink-400">
+          {gate?.signed
+            ? <>已人工确认{gate.by ? `（${gate.by}）` : ''}{gate.at ? ` · ${gate.at}` : ''}</>
+            : '看过成片、觉得可以，就签这张票；签了它就是交付版本。'}
+        </div>
+        {error ? <Box className="mt-2 text-bad">{error}</Box> : null}
+        {signed ? (
+          <div className="mt-2 text-[11.5px] text-ok">✓ 已签署（{signed.at}）</div>
+        ) : confirmSign ? (
+          <div className="mt-2 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={sign}
+              disabled={busy}
+              className="rounded-md bg-warn px-2.5 py-1 text-[12px] font-medium text-ink-950 hover:brightness-110 disabled:opacity-50"
+            >
+              确认签署成片票
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmSign(false)}
+              className="rounded-md border border-ink-700 px-2 py-1 text-[12px] text-ink-300"
+            >
+              再想想
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmSign(true)}
+            disabled={busy || Boolean(gate?.signed)}
+            className="mt-2 rounded-md border border-ok/50 bg-ok/10 px-2.5 py-1 text-[12px] text-ok hover:bg-ok/20 disabled:opacity-40"
+          >
+            {gate?.signed ? '这张票已经签过了' : '看过成片，签成片票'}
+          </button>
+        )}
+      </Section>
+    </>
   );
 }
 
@@ -809,7 +877,7 @@ export default function DetailPanel({ snapshot, project, selected, width = 560, 
             ) : <Box className="text-ink-500">这个剧目还没有生成计划（所以没有单元）</Box>}
           </>
         ) : (
-          <FinalView snapshot={snapshot} project={project} onOpen={onOpen} />
+          <FinalView snapshot={snapshot} project={project} onOpen={onOpen} onRefresh={onRefresh} />
         )}
       </div>
     </aside>

@@ -132,8 +132,13 @@ export function isValidUnitId(unit) {
   return /^[A-Za-z0-9_-]{1,40}$/.test(String(unit || ''));
 }
 
-/** 看板可以从界面「签署」的阶段白名单（关键帧整批一张；片段票是每单元一张）。 */
-export const SIGNABLE_STAGES = ['keyframes', 'clip'];
+/** 看板可以从界面「签署」的阶段白名单（关键帧整批一张；片段票每单元一张；成片整片一张）。 */
+export const SIGNABLE_STAGES = ['keyframes', 'clip', 'final'];
+
+/** 成片票绑的产物：约定落点 `out/final.mp4`（与 `loadProject` 的 finalRel 同一条约定）。 */
+export function finalArtifactPath(projectDir) {
+  return path.join(projectDir, 'out', 'final.mp4');
+}
 
 /** 提示词落点：**看板唯一会写的那两个文件**（都由产物类型决定，单元 id 已过白名单）。 */
 export function promptPathFor(projectDir, unit, kind = 'keyframe') {
@@ -528,6 +533,14 @@ async function handleAction(req, res, roots, route, trash, regen) {
       const unit = String(body.unit ?? '');
       if (!isValidUnitId(unit)) return sendJson(res, { error: '签片段票要带上单元 id' }, 400);
       args.push('--id', unit);
+    }
+    if (stage === 'final') {
+      // 成片票必须显式绑定产物（review-gate 对 final 没有默认产物）
+      const finalFile = finalArtifactPath(projectDir);
+      if (!fs.existsSync(finalFile)) {
+        return sendJson(res, { error: '还没有成片（约定路径 out/final.mp4），先合成再来签' }, 400);
+      }
+      args.push('--artifacts', finalFile);
     }
     args.push('--by', '用户（看板）');
     const r = await runOnce(regen.reviewGatePath, args, { spawnImpl: regen.spawnImpl });
