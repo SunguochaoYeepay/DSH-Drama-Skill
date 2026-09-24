@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { clipResultPath, readReviews, requireAllClips, writeReviewNote } from '../src/human-gates.mjs';
 import { resolveRecordedPath } from '../src/recorded-path.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { isSilentSegment, SILENT_LUFS as LOUDNESS_SILENT_LUFS } from '../src/loudness-policy.mjs';
 import { VIDEO_QUALITY, VIDEO_NORMAL_SIZE, VIDEO_HIGH_SIZE } from '../src/config.mjs';
 import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
 
@@ -77,6 +78,13 @@ function measureLoudness(input, label) {
   try { return JSON.parse(r.stderr.slice(start, end + 1)); } catch { return null; }
 }
 
+/**
+ * **静音段跳过响度归一** —— 判据在 `src/loudness-policy.mjs`（含实测依据），
+ * 这里只负责把阈值从环境变量接进来。
+ */
+const SILENT_LUFS = Number(process.env.AIH_ASSEMBLE_SILENT_LUFS || LOUDNESS_SILENT_LUFS);
+if (!Number.isFinite(SILENT_LUFS)) throw new Error('AIH_ASSEMBLE_SILENT_LUFS 必须是数字');
+
 /** 第二遍：linear 模式应用。测量失败（如静音段打出 -inf）时退回单遍动态模式，好过不做。 */
 function loudnessFilterArgs(measured) {
   const base = `I=${LOUD.I}:TP=${LOUD.TP}:LRA=${LOUD.LRA}`;
@@ -113,13 +121,18 @@ for (const [index, unit] of plan.units.entries()) {
   const hasDialogue = (unit.shots || []).some((shot) => (shot.lines || []).length > 0);
   const trimArgs = hasDialogue ? [] : ['-t', Number(unit.content_duration_s).toFixed(3)];
   // 响度统一只对有音轨的段生效；无音轨段照常转码（loudnorm 会把无音频段直接弄失败）。
-  const loudArgs = hasAudioStream(input) ? loudnessFilterArgs(measureLoudness(input, unit.id)) : [];
+  const measured = hasAudioStream(input) ? measureLoudness(input, unit.id) : null;
+  const silent = isSilentSegment(measured, SILENT_LUFS);
+  const loudArgs = silent ? [] : loudnessFilterArgs(measured);
+  const loudNote = !hasAudioStream(input) ? '（无音轨，跳过响度归一）'
+    : silent ? `（静音段 ${Number(measured?.input_i).toFixed(1)} LUFS，跳过响度归一：归一会把底噪放大）`
+      : `，响度归一 ${LOUD.I} LUFS`;
   run(['-y', '-v', 'error', '-i', input, ...trimArgs,
     '-vf', `scale=${width}:${height}:flags=lanczos,fps=24,format=yuv420p`,
     ...loudArgs,
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '18',
     '-c:a', 'aac', '-ar', '44100', '-ac', '2', '-b:a', '192k', '-movflags', '+faststart', out], unit.id);
-  console.log(`  ${unit.id}: ${hasDialogue ? '含台词，保留完整生成时长' : `无台词，裁到 ${unit.content_duration_s.toFixed(2)}s`}${loudArgs.length ? `，响度归一 ${LOUD.I} LUFS` : '（无音轨，跳过响度归一）'}`);
+  console.log(`  ${unit.id}: ${hasDialogue ? '含台词，保留完整生成时长' : `无台词，裁到 ${unit.content_duration_s.toFixed(2)}s`}${loudNote}`);
   normalized.push(out);
 }
 

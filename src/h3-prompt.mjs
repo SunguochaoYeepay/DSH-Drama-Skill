@@ -172,16 +172,21 @@ export function buildUnitPrompt(unit, ctx) {
   const contractCine = compileCinematography(ctx.contract, { lang: 'en' });
   if (contractCine.header) body.push(contractCine.header);
   if (contractCine.negatives) body.push(contractCine.negatives);
-  // 单元级的知情状态：它管的是「观众与角色的知情错位」，是**表演与视线**的依据，
-  // 不是某一镜的属性 —— 所以放在逐镜描述之前，作为这一单元的前提。
+  // ---------------------------------------------------------------- audience_knows **不进提示词**
   //
-  // 为什么值得进提示词：`pot_hit`（2026-09-20）实测过 —— 没人问这一句时，调度会把
-  // "观众已知、角色未知"的错位拍丢：花盆从角色身后飞上来、开场先说人再给飞机。
-  // 两者的根因都是"0 秒首帧的约束改写了叙事顺序"，而这一行是把叙事顺序写进生成提示词的落点。
-  const knows = clean(unit.audience_knows);
-  if (knows) {
-    body.push(`audience_knows（这一单元开始时观众与角色各自知道什么；用作表演与视线的依据，不是画面文字）：${knows}`);
-  }
+  // 它曾经被当成一行普通中文叙述塞在这里（`integrated_multimodal_description` 的最前面）。
+  // 2026-09-24 `divorce_standoff` 实测：**H3 把这行旁白念了出来** —— g003 那一段没有台词，
+  // 音频里却有明显人声（2.0s 处峰值 -12.1 dB、高频 -29.8 dB）；用户直接听出来了。
+  // 同一部剧里 `shot.action` 的中文叙述也被念过（并在另一版里漏成画面字幕）。
+  // 教训是同一个：**这个字段是 H3 拿来读"片子在讲什么"的通道，写进去的中文白话会被当旁白。**
+  //
+  // 那为什么当初写进来？注释引的是 `pot_hit`（2026-09-20）"没人问这一句时，
+  // **调度**会把知情错位拍丢"。注意那是**导演层**的问题：调度已经由 `keyframe_start`、
+  // `action`、`gaze`、`visible_behavior`、`facing` 承载了。把白话塞进生成提示词是推断，
+  // 不是实测 —— 而实测反例有两个。
+  //
+  // 所以：`audience_knows` 留在**导演稿**里当纪律与人工审阅项（见
+  // `references/director/schema.md` 与导演闸门），**不再进任何生成提示词**。
   for (const [index, shot] of unit.shots.entries()) {
     const action = replaceAll(clean(shot.action), DEACT);
     const faces = Object.entries(shot.facing || {})

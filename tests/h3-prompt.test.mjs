@@ -141,18 +141,24 @@ test('同镜不说话的画内角色有嘴唇闭合兜底；单人镜头与说�
   assert.doesNotMatch(single, /不出声/);
 });
 
-// 知情状态是**单元级**前提：它进提示词（作为表演依据），缺字段时不得留下空标签。
-// 依据：pot_hit 2026-09-20 —— 没人写这一句时，"观众已知、角色未知"的错位会被调度拍丢。
-test('audience_knows 作为单元级前提进入提示词，缺字段时不出现空标签', () => {
+// `audience_knows` **不再进提示词**（2026-09-24 divorce_standoff 实测翻转）。
+//
+// 原先那条断言要求它必须出现，依据是 pot_hit 的"调度会把知情错位拍丢"——
+// 但那是**导演层**的问题（调度由 keyframe_start / action / gaze / facing 承载）。
+// 实际后果是：它被写成一行中文白话塞进 integrated_multimodal_description 的最前面，
+// **H3 把它当旁白念了出来** —— g003 无台词却有明显人声（2.0s 峰值 -12.1 dB）。
+// 所以断言反过来：它在导演稿里，但**绝不进生成提示词**。
+test('audience_knows 留在导演稿里，但不进生成提示词', () => {
   const withKnows = structuredClone(unit);
   withKnows.audience_knows = '观众已经看见猫踩翻了花盆；她还低着头什么都不知道。';
   const prompt = buildUnitPrompt(withKnows, { ...ctx, refs: [] });
-  assert.match(prompt, /audience_knows/);
-  assert.match(prompt, /观众已经看见猫踩翻了花盆/);
-  assert.match(prompt, /不是画面文字/);
+  assert.doesNotMatch(prompt, /audience_knows/);
+  assert.doesNotMatch(prompt, /观众已经看见猫踩翻了花盆/);
 
-  const without = buildUnitPrompt(unit, { ...ctx, refs: [] });
-  assert.doesNotMatch(without, /audience_knows/);
+  // 有它没它，提示词必须逐字一致 —— 否则等于"偷偷多了一层输入"
+  const without = structuredClone(unit);
+  delete without.audience_knows;
+  assert.equal(prompt, buildUnitPrompt(without, { ...ctx, refs: [] }));
 });
 
 // 实测来自 mosquito_tattoo/g001：action 里写「脸颊涨红」、导演约束里写「脸颊泛红」，
