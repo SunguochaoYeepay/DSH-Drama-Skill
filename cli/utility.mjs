@@ -90,9 +90,18 @@ if (DRY) {
 const { promptId, history, seconds } = await runGraph(graph, { timeoutMs });
 console.log(`  跑完：${seconds} 秒（prompt_id=${promptId}）`);
 
-const outputs = collectOutputs(history);
+// **排除"原片回声"**：图里常有节点把上传的输入原样再吐出来（LoadVideo 的预览、
+// 或某个 SaveVideo 写的是输入）。这类"产物"与源片逐字节相同，下载它等于"成功地把原片
+// 复制了一遍"——2026-09-24 实测：SeedVR2 放大 OOM 失败后，正是这个回声让 CLI 报出
+// "产物 1 个 ✓"。所以先按文件名排掉输入，再判断有没有真产物。
+const echo = video ? path.basename(video).toLowerCase() : null;
+const all = collectOutputs(history);
+const outputs = all.filter((o) => String(o.filename || '').toLowerCase() !== echo);
 if (!outputs.length) {
-  console.log('  ⚠ 这个工作流没有产出可下载的产物（可能只有 Preview 节点）');
+  const seen = all.map((o) => `${o.kind}:${o.filename}`).join('、') || '(无)';
+  console.error(`  ✗ 这一轮没有真正的产物。图里报出来的：${seen}`);
+  if (echo && all.length) console.error(`    （其中 ${echo} 是**上传的原片回声**，不算产物）`);
+  console.error('    常见原因：显存不足 / 工作流里的输出节点没执行。上面若已打印失败原因，按它处理。');
   process.exit(1);
 }
 const saved = await downloadOutputs(outputs, outDir);

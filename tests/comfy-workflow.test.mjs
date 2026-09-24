@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 跑「现成 ComfyUI API 工作流」那层的地基：加载、改参、视频输入替换、产物收集。
  *
  * 为什么要有测试：这批 utility（SeedVR2 / VOID / SAM3 / SDPose / DA3 / 补帧）
@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { addNode, applySets, coerce, collectOutputs, linkInput, loadWorkflow, patchVideoInputs, setInput } from '../src/comfy-workflow.mjs';
+import { addNode, applySets, coerce, collectOutputs, failedRun, linkInput, loadWorkflow, patchVideoInputs, setInput } from '../src/comfy-workflow.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let pass = 0;
@@ -105,6 +105,36 @@ console.log('工作流入参：加节点与接线（forceInput 的前提）');
   check('接线写成 [节点id, slot]', JSON.stringify(g['114:101'].inputs.positive_coords) === '["pt",0]', JSON.stringify(l));
   check('接不存在的源节点要报错', (() => { try { linkInput(g, '114:101', 'positive_coords', 'nope'); return false; } catch { return true; } })());
   check('接不存在的目标节点要报错', (() => { try { linkInput(g, 'nope', 'x', 'pt'); return false; } catch { return true; } })());
+}
+
+console.log('\n执行失败必须被认出来（不能伪装成成功）');
+{
+  // 2026-09-24 实测：SeedVR2 放大 768×1344×2（=1536×2688）显存不足，
+  // ComfyUI 的 history **照样有记录**，outputs 里只剩 LoadVideo 的上传回声，
+  // 于是一次彻底失败被显示成"产物 1 个 ✓"。判据就是 history.status。
+  const okHistory = { status: { status_str: 'success', completed: true, messages: [] }, outputs: {} };
+  check('成功的一轮：failedRun 返回 null', failedRun(okHistory) === null);
+
+  const oom = {
+    status: {
+      status_str: 'error',
+      completed: false,
+      messages: [
+        ['execution_start', { prompt_id: 'x' }],
+        ['execution_error', {
+          node_id: '66:55', node_type: 'SeedVR2', exception_type: 'torch.cuda.OutOfMemoryError',
+          exception_message: 'Allocation on device\nThis error means you ran out of memory on your GPU.',
+        }],
+      ],
+    },
+    outputs: { 73: { images: [{ filename: 'input.mp4' }] } },
+  };
+  const f = failedRun(oom);
+  check('失败的一轮：认出异常类型', f && f.type === 'torch.cuda.OutOfMemoryError', JSON.stringify(f));
+  check('失败的一轮：带上节点与信息', Boolean(f) && f.nodeId === '66:55' && /OutOfMemory|out of memory/i.test(f.message));
+  check('有异常记录但缺 execution_error：也要判失败',
+    failedRun({ status: { status_str: 'error', completed: false, messages: [] }, outputs: {} }) !== null);
+  check('没有 status 字段（老版本 ComfyUI）：不误判失败', failedRun({ outputs: {} }) === null);
 }
 
 console.log(`\n结果：${pass} 通过 / ${fail} 失败`);

@@ -112,7 +112,35 @@ export async function uploadVideo(localFile, baseUrl = comfyUrl()) {
   return j.name || j.filename;
 }
 
-/** 提交并等它跑完。返回 {prompt_id, history, seconds}。 */
+/**
+ * 从 history 里抠出**执行失败**的信息。成功返回 null。
+ *
+ * 为什么必须查：ComfyUI 的 `/history/<id>` **只要这一轮结束就返回**，失败的 prompt 也一样
+ * ——`outputs` 里可能只剩上游节点（比如 LoadVideo）产出的"原片回声"。
+ * 2026-09-24 实测（SeedVR2 放大 768×1344×2 → 1536×2688，OOM）：
+ * `runGraph` 正常返回，`collectOutputs` 拿到 1 个"产物"（其实是上传的原片），
+ * CLI 报"产物 1 个 ✓" —— **一次彻底失败被显示成成功**。所以这里必须把 status 检查接上。
+ */
+export function failedRun(history) {
+  const status = history?.status;
+  if (!status) return null;
+  const completed = status.completed !== false && status.status_str !== 'error';
+  if (completed) return null;
+  for (const m of status.messages || []) {
+    const [kind, info] = Array.isArray(m) ? m : [null, null];
+    if (kind !== 'execution_error' || !info) continue;
+    return {
+      type: info.exception_type || 'execution_error',
+      message: info.exception_message || '(没有异常信息)',
+      nodeId: info.node_id != null ? String(info.node_id) : null,
+      nodeType: info.node_type || null,
+      traceback: String(info.traceback || '').trim() || null,
+    };
+  }
+  return { type: 'execution_error', message: 'ComfyUI 报告这一轮失败，但没有给出异常细节', nodeId: null, nodeType: null, traceback: null };
+}
+
+/** 提交并等它跑完。失败**抛出**（见 `failedRun` 的说明）。返回 {prompt_id, history, seconds}。 */
 export async function runGraph(graph, { baseUrl = comfyUrl(), timeoutMs = 30 * 60 * 1000, pollMs = 2000 } = {}) {
   const res = await fetch(`${baseUrl}/prompt`, {
     method: 'POST',
@@ -130,7 +158,19 @@ export async function runGraph(graph, { baseUrl = comfyUrl(), timeoutMs = 30 * 6
     if (Date.now() - started > timeoutMs) throw new Error(`等待超时（${Math.round(timeoutMs / 1000)}s），prompt_id=${promptId}`);
     await new Promise((r) => setTimeout(r, pollMs));
     const h = await fetch(`${baseUrl}/history/${promptId}`).then((r) => r.json());
-    if (h[promptId]) return { promptId, history: h[promptId], seconds: Math.round((Date.now() - started) / 1000) };
+    if (h[promptId]) {
+      const fail = failedRun(h[promptId]);
+      if (fail) {
+        const where = fail.nodeId ? `节点 ${fail.nodeId}${fail.nodeType ? `(${fail.nodeType})` : ''}` : '（未指明节点）';
+        // 显存不足是最常见的一类，单独点出来 —— 它几乎总是"这次的输入太大"，
+        // 而不是"这台机器不行"（2026-09-24：768×1344 再 ×2 = 4.1MP 直接炸).
+        const hint = /OutOfMemory|out of memory|Allocation on device/i.test(`${fail.type} ${fail.message}`)
+          ? `\n  → **显存不足**：换更小的输入、把放大倍数降到 1、或缩短片段后重试（不是机器坏了）。`
+          : '';
+        throw new Error(`ComfyUI 执行失败：${fail.type} @ ${where} —— ${fail.message}${hint}`);
+      }
+      return { promptId, history: h[promptId], seconds: Math.round((Date.now() - started) / 1000) };
+    }
   }
 }
 
