@@ -20,16 +20,19 @@ import { spawnSync } from 'node:child_process';
 import { FFMPEG } from './runtime-paths.mjs';
 
 /**
- * 往返编码底噪（灰度均值差）。实测来源：480×864 的 3 秒片段，
- * 全白掩码（= 什么都不修、原样透传）跑完两趟后 带内 4.6 / 带外 3.9。
- * 低于这个量级的变化判成"没动"，否则会把编码噪声当成功劳。
+ * 往返编码底噪（灰度均值差）。两个实测来源：
+ *   · 本地 VOID 通道（已删除）全白掩码=透传：带内 4.6 / 带外 3.9；
+ *   · VSR 通道真实一趟（正确的带）：带外 2.5 —— 它只动带内，带外就是噪声。
+ * 取 6 偏保守：低于这个量级的变化判成"没动"，否则会把编码噪声当成功劳。
  */
 export const NOISE_FLOOR = 6;
 
 /** 百分比带 → 像素矩形；越界钳制，保证至少 1 像素。
  *
- *  **必须与 `tools/band_mask.py` 算出同一个矩形** —— 否则"我量的带"和"我修的带"不是一个带，
- *  量出来的数就答非所问。两边都按"两条边各算各的再相减"来取整。 */
+ *  **这是"带 → 像素"的唯一一份实现**：`cli/desub.mjs` 切给 VSR 的
+ *  `-c ymin ymax xmin xmax` 与这里的核查窗口都走它。两处各算一遍取整，
+ *  就会出现"我量的带"和"我修的带"差 1 像素 —— 静默的错（踩过一次）。
+ *  按"两条边各算各的再相减"取整。 */
 export function rectOf(band, width, height) {
   const x0 = Math.max(0, Math.min(width - 1, Math.round(Number(band.left) * width)));
   const y0 = Math.max(0, Math.min(height - 1, Math.round(Number(band.top) * height)));
@@ -80,9 +83,10 @@ export function diffStats(a, b, { width, height, frames, rect, noiseFloor = NOIS
 
   // 判读阈值写死在这里，免得每个调用方各拍一个数。
   //
-  // **底噪必须先扣掉**：VOID 一趟本身就是"解码→推理→再编码"，即使一概不改，
-  // 带内带外也各有 ~4 的灰度差（实测：全白掩码=透传时 带内 4.6 / 带外 3.9）。
-  // 所以"带内没动"不能写成 band < 2 —— 那样永远判不出来。
+  // **底噪必须先扣掉**：一趟修复本身就是"解码→推理→再编码"，即使一概不改，
+  // 带内带外也各有几个灰度的差（实测见 NOISE_FLOOR）。所以"带内没动"不能写成 band < 2
+  // —— 那样永远判不出来。注：VSR 通道在带里找不到字幕时**直接报错不产出**，
+  // 所以这条判读主要挡的是"带对了但修复没生效"和"整帧被重画"两类。
   let verdict;
   if (band < noiseFloor && outside < noiseFloor) verdict = 'band_untouched';
   else if (ratio >= 1.5) verdict = 'band_only';

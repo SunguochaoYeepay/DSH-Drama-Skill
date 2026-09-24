@@ -27,7 +27,7 @@ const W = 20;
 const H = 20;
 const BAND = { x: 4, y: 8, width: 12, height: 4 };
 
-test('rectOf：与 band_mask.py 同取整（两条边各算各的）', () => {
+test('rectOf：两条边各算各的（"宽度=比例×宽"会差 1 像素）', () => {
   assert.deepEqual(rectOf({ top: 0.695, bottom: 0.805, left: 0.28, right: 0.72 }, 480, 864),
     { x: 134, y: 600, width: 212, height: 96 });
   // 0.72*480=345.6→346，0.28*480=134.4→134，差 212（"宽度=比例×宽"的算法会给 211）

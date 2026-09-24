@@ -108,8 +108,7 @@ projects/<剧名>\
 3. 机器侧前置（体量大、不入仓）：
    - **ComfyUI 引擎**（含 H3 视频模型与 Qwen 生图模型），装好后设 `AIH_PYTHON` 指向其 `python.exe`；
    - **ffmpeg**：`winget install Gyan.FFmpeg`（或设 `AIH_FFMPEG` 指向 ffmpeg.exe）；
-   - **Docker**（可选）：只有 `cli/desub.mjs`（VSR 通道）去字幕用得上，不跑它可以不装；
-     另一条去字幕通道 `cli/desub-void.mjs`（VOID 通道）在本机 ComfyUI 里跑，**不需要 Docker**。
+   - **Docker**（可选）：只有 `cli/desub.mjs` 去字幕用得上，不跑它可以不装。
 4. 参照 [`.env.example`](.env.example) 配置本机 `.env`（模型、通道与规格；`.env` 不入库）。
 5. 自检：`npm run doctor` —— 逐项报有/缺，必需项全绿即可跑。
 

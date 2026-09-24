@@ -127,11 +127,11 @@ if (rect.topRatio > 0.02 || rect.bottomRatio < 0.98) {
 console.log(`  放大倍数 约 ${(1 / WIN).toFixed(1)}×（全帧缩略图看不清字幕，就是因为少了这一下）`);
 console.log(`  网格      ${cols}×${rows}`);
 console.log(`\n  → ${OUT}`);
-console.log(`  看完这张图再决定要不要去字幕：**有字就去**，两条通道二选一 ——`);
-console.log(`    · node cli/desub.mjs <视频> --top/--bottom      （VSR，走 Docker；句子长、吃显存）`);
-console.log(`    · node cli/desub-void.mjs <视频> --auto-band（VOID，本地 ComfyUI，免 Docker）`);
-console.log(`  --auto-band 自己找候选（tools/band_detect.py）；显式给 --top/--bottom/--left/--right 会覆盖它，`);
-console.log(`  找不到候选时它**拒绝跑**而不是拿默认带蒙一个位置。VOID 跑完会自带"带内差/带外差"核查。`);
-console.log(`  两条通道都别用默认带（默认值只是兜底）；完成后原片仍在，另存新文件。`);
+console.log(`  看完这张图再决定要不要去字幕：**有字就去** ——`);
+console.log(`    · node cli/desub.mjs <视频> --auto-band              （VSR，走 Docker；11.5 秒片段约 37 秒）`);
+console.log(`    · node cli/desub.mjs <视频> --top 0.71 --bottom 0.87  （自己量的带，覆盖自动结果）`);
+console.log(`  --auto-band 自己找候选（tools/band_detect.py）；找不到候选时它**拒绝跑**而不是拿默认带蒙一个位置。`);
+console.log(`  跑完会自带"带内差/带外差"核查；去字幕换了产物之后记得：`);
+console.log(`    node cli/record-clip.mjs <项目> --unit <单元> --clip <干净版>  →  再用 review-gate 重签 clip 票`);
 console.log(`  ⚠ 换了产物就要按 references/qa-and-review.md 重批该段的 clip 票，否则合成取的还是带字幕的原片。`);
 console.log(`  别只看"文件存在" ✗\n`);
