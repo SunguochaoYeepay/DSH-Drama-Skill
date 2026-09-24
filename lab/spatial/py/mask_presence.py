@@ -52,10 +52,24 @@ def main() -> int:
         return 2
 
     rows = []
+    boxes = []
     for f in files:
         with Image.open(f) as im:
             arr = np.asarray(im.convert("L"))
-        cover = float((arr > args.threshold).mean())
+        ih, iw = arr.shape[:2]
+        mask = arr > args.threshold
+        cover = float(mask.mean())
+        ys, xs = np.where(mask)
+        boxes.append(
+            {
+                "y0": round(ys.min() / ih, 4),
+                "y1": round(ys.max() / ih, 4),
+                "x0": round(xs.min() / iw, 4),
+                "x1": round(xs.max() / iw, 4),
+            }
+            if len(ys)
+            else None
+        )
         rows.append({"file": str(f), "coverage": round(cover, 5), "has_subject": cover > 1e-5})
 
     covs = [r["coverage"] for r in rows]
@@ -76,6 +90,15 @@ def main() -> int:
         "coverage_median": round(float(np.median(covs)), 5),
         "coverage_min": round(float(np.min(covs)), 5),
         "coverage_max": round(float(np.max(covs)), 5),
+        # 包围盒（取有掩码帧的中位）—— 看"圈出来的是不是一条横向的窄带"就能认出字幕
+        "bbox_median": (
+            {
+                k: round(float(np.median([b[k] for b in boxes if b])), 4)
+                for k in ("y0", "y1", "x0", "x1")
+            }
+            if any(boxes)
+            else None
+        ),
         "per_frame": rows,
     }
 

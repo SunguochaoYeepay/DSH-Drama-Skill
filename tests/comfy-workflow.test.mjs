@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 跑「现成 ComfyUI API 工作流」那层的地基：加载、改参、视频输入替换、产物收集。
  *
  * 为什么要有测试：这批 utility（SeedVR2 / VOID / SAM3 / SDPose / DA3 / 补帧）
@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { applySets, coerce, collectOutputs, loadWorkflow, patchVideoInputs, setInput } from '../src/comfy-workflow.mjs';
+import { addNode, applySets, coerce, collectOutputs, linkInput, loadWorkflow, patchVideoInputs, setInput } from '../src/comfy-workflow.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let pass = 0;
@@ -93,6 +93,18 @@ console.log('工作流入参：产物收集');
   check('图片与视频都收上来', out.length === 2, JSON.stringify(out.map((o) => o.filename)));
   check('带上类型与来源节点', out[0].kind === 'image' && out[0].nodeId === '95' && out[1].kind === 'video');
   check('空输出不算', !out.some((o) => o.nodeId === '114:101'));
+}
+
+console.log('工作流入参：加节点与接线（forceInput 的前提）');
+{
+  const g = { '114:101': { class_type: 'SAM3_Detect', inputs: { threshold: 0.5 } } };
+  addNode(g, 'pt', 'PrimitiveString', { value: '[{"x":240,"y":644}]' });
+  check('加节点成功且带初值', g.pt.class_type === 'PrimitiveString' && g.pt.inputs.value.includes('240'));
+  check('重复 id 要报错', (() => { try { addNode(g, 'pt', 'PrimitiveString'); return false; } catch { return true; } })());
+  const l = linkInput(g, '114:101', 'positive_coords', 'pt', 0);
+  check('接线写成 [节点id, slot]', JSON.stringify(g['114:101'].inputs.positive_coords) === '["pt",0]', JSON.stringify(l));
+  check('接不存在的源节点要报错', (() => { try { linkInput(g, '114:101', 'positive_coords', 'nope'); return false; } catch { return true; } })());
+  check('接不存在的目标节点要报错', (() => { try { linkInput(g, 'nope', 'x', 'pt'); return false; } catch { return true; } })());
 }
 
 console.log(`\n结果：${pass} 通过 / ${fail} 失败`);

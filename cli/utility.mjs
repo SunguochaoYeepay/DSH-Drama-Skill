@@ -12,10 +12,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {
+  addNode,
   applySets,
   collectOutputs,
   comfyUrl,
   downloadOutputs,
+  linkInput,
   loadWorkflow,
   patchVideoInputs,
   runGraph,
@@ -43,7 +45,22 @@ const timeoutMs = Number(flag('timeout', 1800)) * 1000;
 const DRY = has('dry-run');
 
 const graph = loadWorkflow(path.resolve(workflowFile));
+
+// 先加节点（有些输入是 forceInput，必须先有源节点才能接）
+for (const spec of flagAll('add-node')) {
+  const m = /^([^=]+)=(.+)$/.exec(spec);
+  if (!m) throw new Error(`--add-node 格式应为 <id>=<ClassType>，收到：${spec}`);
+  const node = addNode(graph, m[1], m[2]);
+  console.log(`  加节点：${m[1]} = ${m[2]}`);
+  void node;
+}
 const applied = applySets(graph, flagAll('set'));
+for (const spec of flagAll('link')) {
+  const m = /^([^.]+)\.([^=]+)=([^:]+)(?::(\d+))?$/.exec(spec);
+  if (!m) throw new Error(`--link 格式应为 <节点>.<输入>=<源节点>[:slot]，收到：${spec}`);
+  const l = linkInput(graph, m[1], m[2], m[3], m[4] ?? 0);
+  console.log(`  接线：${l.nodeId}.${l.inputName} ← ${l.from}[${l.slot}]`);
+}
 
 console.log(`工作流：${path.basename(workflowFile)}（${Object.keys(graph).length} 节点）`);
 if (applied.length) {

@@ -74,6 +74,29 @@ export function patchVideoInputs(graph, fileName) {
   return patched;
 }
 
+/**
+ * 往图里**加一个节点**。
+ *
+ * 为什么需要：有些输入是 `forceInput`（必须由节点给，不能当控件填）——
+ * 例如 `SAM3_Detect.positive_coords`（点提示）就是。要给它值，就得加一个
+ * 输出 STRING 的节点（`PrimitiveString`）再接过去。
+ */
+export function addNode(graph, id, classType, inputs = {}) {
+  const key = String(id);
+  if (graph[key]) throw new Error(`节点 ${key} 已经存在，不能覆盖`);
+  graph[key] = { class_type: classType, inputs: { ...inputs }, _meta: { title: `注入：${classType}` } };
+  return graph[key];
+}
+
+/** 把 `node.input` 接到 `sourceId` 的第 slot 个输出上。 */
+export function linkInput(graph, nodeId, inputName, sourceId, slot = 0) {
+  const node = graph[String(nodeId)];
+  if (!node) throw new Error(`工作流里没有节点 ${nodeId}`);
+  if (!graph[String(sourceId)]) throw new Error(`要接的源节点 ${sourceId} 不存在`);
+  node.inputs[inputName] = [String(sourceId), Number(slot)];
+  return { nodeId: String(nodeId), inputName, from: String(sourceId), slot: Number(slot) };
+}
+
 /** 上传本地视频到 ComfyUI 的 input/（LoadVideo 认的是那里的文件名）。 */
 export async function uploadVideo(localFile, baseUrl = comfyUrl()) {
   if (!fs.existsSync(localFile)) throw new Error(`视频不存在：${localFile}`);
