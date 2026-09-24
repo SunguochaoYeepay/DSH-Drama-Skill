@@ -1,0 +1,57 @@
+{
+  "id": "spatial-pilot-06-camera-move",
+  "purpose": "业界说白模最值钱的那一档：**复杂运镜**。人物不动，只让镜头动 —— 看会不会跳变/空间错乱，以及 fl2v（钉住落幅）能不能压住",
+  "aspect": "16:9",
+  "style": "realistic",
+  "scene": {
+    "id": "s_suluan_bedchamber",
+    "name": "苏鸾寝殿",
+    "master": "E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\output\\local\\JST\\assets\\scenes\\苏鸾寝殿\\master.png",
+    "pano": "E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\output\\local\\JST\\director_worlds\\苏鸾寝殿\\v1\\pano_360.png",
+    "lighting": "暖黄烛光与宫灯顶光",
+    "environment": "中式古典寝室：画面正中是一张深色木质雕花架子床，挂着白色纱帐，床上有绣花枕头与蓝金织锦被面；床头上方悬一盏方形宫灯；左侧是一组雕花衣柜与梳妆台，墙上挂着黄底书法立轴，旁边有烛台；右侧是一排青花瓷长柜，墙上挂着山水画，最右侧有一扇向外开着的深色木门；地面是深色木地板，整体暖黄烛光"
+  },
+  "identities": [
+    { "id": "i_suluan", "name": "苏鸾", "sheet": "E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\output\\local\\JST\\assets\\characters\\苏鸾\\portrait.png", "appearance": "古装年轻女子，长发挽起，浅色襦裙" }
+  ],
+  "shots": [
+    {
+      "id": "c1_push_in",
+      "duration_s": 5,
+      "camera_move": "push_in",
+      "camera_text": "机位在床尾一侧正对床与床头方向，镜头从原处缓慢前推，匀速靠近画面里的人",
+      "action_text": "画面里的人站在原地不动，只是随着镜头推近而从全身中景变成半身近景，光影随之变化",
+      "first": {
+        "landmark": "站在床尾前面的地板上，中景全身入画",
+        "subjects": [
+          { "id": "i_suluan", "u": 0.46, "v": 0.74, "h": 0.46, "depth": "near", "facing": "front", "note": "站在床尾前，中景全身入画" }
+        ]
+      },
+      "last": {
+        "landmark": "仍然站在床尾前原地不动，但镜头已经推近，她变成半身近景、占据画面更大比例",
+        "subjects": [
+          { "id": "i_suluan", "u": 0.46, "v": 0.66, "h": 0.72, "depth": "near", "facing": "front", "note": "镜头推近后的半身近景，人明显变大，仍站在床尾前" }
+        ]
+      }
+    },
+    {
+      "id": "c2_orbit",
+      "duration_s": 5,
+      "camera_move": "orbit",
+      "camera_text": "镜头从正面开始，绕着画面里的人向左缓慢环绕约四十度，全程对着她，最后停在她的左前方",
+      "action_text": "画面里的人站在原地不动，只是被镜头从正面绕到左前方拍摄，因此她在画面里相对转身、背景换到房间的另一侧",
+      "first": {
+        "landmark": "站在床尾前面的地板上，正对镜头",
+        "subjects": [
+          { "id": "i_suluan", "u": 0.5, "v": 0.74, "h": 0.46, "depth": "near", "facing": "front", "note": "站在床尾前，正对镜头，中景全身入画" }
+        ]
+      },
+      "last": {
+        "landmark": "仍然站在床尾前原地不动；此时镜头已绕到她的左前方，她相对镜头转过约四十度，背景里能看到房间的另一个方向",
+        "subjects": [
+          { "id": "i_suluan", "u": 0.5, "v": 0.72, "h": 0.5, "depth": "near", "facing": "screen_right", "note": "镜头绕到左前方后的三分之四侧身像，背景是房间另一侧" }
+        ]
+      }
+    }
+  ]
+}

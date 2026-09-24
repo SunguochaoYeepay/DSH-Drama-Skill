@@ -280,7 +280,7 @@ export async function compileLiteral(board, opts = {}) {
       dialogue,
       edit_note: dialogueLine ? '台词镜' : '动作镜',
       transition: { type: 'cut' },
-      first_frame: null, last_frame: null, clip: null,
+      first_frame: null, last_frame: null, last_keyframe: null, clip: null,
       // 溯源：这一镜是从剧本哪几行来的
       source_lines: lines.map((l) => l.no),
     });
@@ -319,7 +319,7 @@ export async function compileLiteral(board, opts = {}) {
           dialogue: [],
           edit_note: '片尾字幕',
           transition: { type: 'cut' },
-          first_frame: null, last_frame: null, clip: null,
+          first_frame: null, last_frame: null, last_keyframe: null, clip: null,
           source_lines: [l.no],
         });
         break;

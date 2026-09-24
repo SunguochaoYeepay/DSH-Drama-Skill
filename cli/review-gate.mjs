@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
-import { approve, approvalStatus, clipResultPath, planKeyframeFiles, requireAllClips } from '../src/human-gates.mjs';
+import { approve, approvalStatus, clipResultPath, planKeyframeFiles, planLastKeyframeFiles, requireAllClips } from '../src/human-gates.mjs';
 import { resolveRecordedPath } from '../src/recorded-path.mjs';
 import { projectAssetFiles } from '../src/asset-resolver.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
@@ -43,7 +43,8 @@ if (!files.length && stage === 'assets') {
 if (stage === 'keyframes') {
   const planPath = path.resolve(value('plan', path.join(project, 'render.plan.json')));
   const plan = JSON.parse(fs.readFileSync(planPath, 'utf8'));
-  const expected = planKeyframeFiles(project, plan);
+  // 首帧 + 落幅一起签：落幅决定"这一镜停在哪"，只在出片时才发现画错了等于白出一遍视频。
+  const expected = [...planKeyframeFiles(project, plan), ...planLastKeyframeFiles(project, plan)];
   if (!expected.length) throw new Error('计划槽位里没有可审阅的关键帧');
   if (files.length && (files.length !== expected.length || files.some((file) => !expected.includes(file)))) {
     throw new Error('关键帧确认必须绑定计划实际使用的图片；请省略 --artifacts 使用计划槽位');

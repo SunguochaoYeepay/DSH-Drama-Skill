@@ -1,0 +1,111 @@
+{
+  "id": "spatial-pilot-01",
+  "purpose": "压力场景：三人同框 + 一组反打。用于验证『只用提示词够不够』（E2）与『控制图有没有用』（E3）",
+  "aspect": "9:16",
+  "style": "realistic",
+  "note": "复用 demo-show 的现成资产，避免为试验额外造资产；第三个身份刻意只给文字，作为已知混淆项，见 confounders",
+  "confounders": [
+    "i_stranger 没有身份图，只有文字描述 —— 若它长得飘，属于身份问题而非空间问题，判读时要分开",
+    "控制图是『目标框渲染』，不是几何投影 —— 只测『构图当图给模型看』的收益"
+  ],
+  "scene": {
+    "id": "s_bus_night",
+    "name": "末班公交车厢",
+    "master": "examples/demo-show/assets/s_bus_night_master.png",
+    "lighting": "雨夜的暖黄顶灯",
+    "environment": "雨夜的末班公交车厢，顶灯是暖黄色，车窗挂满水珠，外面是被雨糊成一片的路灯光斑；车厢地面是深灰防滑胶板，前排是驾驶区，中间是两排相对的蓝色绒面座椅，车尾有一根竖直的金属扶手杆"
+  },
+  "axis": {
+    "name": "车头↔车尾",
+    "a": "车头（驾驶区）",
+    "b": "车尾（扶手杆）"
+  },
+  "identities": [
+    {
+      "id": "i_driver",
+      "name": "阿伟（司机）",
+      "sheet": "examples/demo-show/assets/i_driver_default_sheet.png"
+    },
+    {
+      "id": "i_passenger",
+      "name": "小雨（乘客）",
+      "sheet": "examples/demo-show/assets/i_passenger_default_sheet.png"
+    },
+    {
+      "id": "i_stranger",
+      "name": "后座陌生人",
+      "sheet": null,
+      "appearance": "灰色连帽外套的中年男人，帽子戴着，脸看不清，身材偏壮"
+    }
+  ],
+  "shots": [
+    {
+      "id": "g1",
+      "shot_size": "中景",
+      "camera_side": "A",
+      "camera_text": "机位在车厢前部、司机一侧的过道上，向车尾方向拍，镜头高度与坐姿视线齐平",
+      "subjects": [
+        {
+          "id": "i_driver",
+          "u": 0.22,
+          "v": 0.46,
+          "depth": "far",
+          "facing": "screen_right",
+          "note": "在驾驶座上，只露侧脸与肩背，位于画面左侧远景"
+        },
+        {
+          "id": "i_passenger",
+          "u": 0.66,
+          "v": 0.52,
+          "depth": "mid",
+          "facing": "screen_left_front",
+          "note": "坐在画面右侧靠窗的蓝色绒面座椅上，身体朝画面左前方，是这一镜的实焦主体"
+        },
+        {
+          "id": "i_stranger",
+          "u": 0.42,
+          "v": 0.74,
+          "depth": "near",
+          "facing": "away",
+          "note": "站在过道靠近镜头处，背对镜头，只占画面下方中央，处于前景失焦状态"
+        }
+      ],
+      "occlusion": "陌生人在最前（最近），小雨在中间，阿伟在最远",
+      "prompt_extra": "画面里只有这三个人，没有第四个人"
+    },
+    {
+      "id": "g2",
+      "shot_size": "中近景",
+      "camera_side": "B",
+      "camera_text": "机位在车厢后部、过道中间，向车头方向拍（与 g1 相反的机位方向），镜头略低",
+      "subjects": [
+        {
+          "id": "i_passenger",
+          "u": 0.48,
+          "v": 0.56,
+          "depth": "near",
+          "facing": "away",
+          "note": "在最前景，背对镜头，占据画面中央，肩膀挡住一部分车厢纵深"
+        },
+        {
+          "id": "i_stranger",
+          "u": 0.76,
+          "v": 0.5,
+          "depth": "mid",
+          "facing": "screen_left",
+          "note": "坐在画面右侧的座椅上，身体朝画面左，正在看向小雨的方向"
+        },
+        {
+          "id": "i_driver",
+          "u": 0.14,
+          "v": 0.42,
+          "depth": "far",
+          "facing": "away",
+          "note": "在最远处车头位置，只是一个小小的人影，几乎被车厢纵深的暗部吞掉"
+        }
+      ],
+      "occlusion": "小雨在最前，陌生人在中间，阿伟在最远",
+      "prompt_extra": "画面里只有这三个人，没有第四个人"
+    }
+  ]
+}

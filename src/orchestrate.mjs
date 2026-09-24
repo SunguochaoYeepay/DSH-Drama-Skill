@@ -289,11 +289,20 @@ export function flfPlan(board) {
     const next = shots[i + 1];
     const chained = shot.transition && shot.transition.type === 'last_frame_first';
     const first = shot.first_frame || null;
-    const last = shot.last_frame || (chained && next ? next.first_frame : null) || null;
+    // 声明的落幅优先：它是**画出来的**（keyframe-prompts/<unit>.last.txt），
+    // 决定"这一镜该停在哪"。没有它才退回衔接推导出的末帧。
+    // 为什么这条优先：实测（lab/spatial pilot-05/06）落点波动 0.089→0.001、
+    // 复杂运镜的相邻帧差 19–23→2.8–3.7；而衔接推导的末帧是"下一镜的首帧"，
+    // 管的是剪辑连续性，不管本镜的落点。
+    const declaredLast = shot.last_keyframe || null;
+    const last = declaredLast || shot.last_frame || (chained && next ? next.first_frame : null) || null;
 
     let mode = 'i2v';
     let why = '本镜自己的首帧起步';
-    if (chained && first && last) {
+    if (first && declaredLast) {
+      mode = 'fl2v';
+      why = '首帧 + 声明的落幅（fl2v）：本镜停在哪由导演钉住';
+    } else if (chained && first && last) {
       mode = 'fl2v';
       why = `首尾帧夹逼：从本镜首帧走到下一镜 ${next.id} 的首帧`;
     } else if (chained && first && !last) {

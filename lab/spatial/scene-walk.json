@@ -1,0 +1,53 @@
+{
+  "id": "spatial-pilot-05-walk",
+  "purpose": "业界点名的第 1 号翻车场景：一镜到底/连续运动。**镜头固定不动**，只让人走动 —— 背景只要变，就是真失败",
+  "aspect": "16:9",
+  "style": "realistic",
+  "scene": {
+    "id": "s_suluan_bedchamber",
+    "name": "苏鸾寝殿",
+    "master": "E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\output\\local\\JST\\assets\\scenes\\苏鸾寝殿\\master.png",
+    "pano": "E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\output\\local\\JST\\director_worlds\\苏鸾寝殿\\v1\\pano_360.png",
+    "lighting": "暖黄烛光与宫灯顶光",
+    "environment": "中式古典寝室：画面正中是一张深色木质雕花架子床，挂着白色纱帐，床上有绣花枕头与蓝金织锦被面；床头上方悬一盏方形宫灯；左侧是一组雕花衣柜与梳妆台，墙上挂着黄底书法立轴，旁边有烛台；右侧是一排青花瓷长柜，墙上挂着山水画，最右侧有一扇向外开着的深色木门；地面是深色木地板，整体暖黄烛光"
+  },
+  "identities": [
+    { "id": "i_suluan", "name": "苏鸾", "sheet": "E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\output\\local\\JST\\assets\\characters\\苏鸾\\portrait.png", "appearance": "古装年轻女子，长发挽起，浅色襦裙" }
+  ],
+  "shots": [
+    {
+      "id": "w1_walk_left",
+      "duration_s": 5,
+      "camera_text": "机位完全固定不动，从床尾一侧正对床与床头方向",
+      "first": {
+        "landmark": "站在床尾前面的地板上，正对镜头，全身入画",
+        "subjects": [
+          { "id": "i_suluan", "u": 0.45, "v": 0.74, "h": 0.46, "depth": "near", "facing": "front", "note": "站在床尾雕花床沿前方的地板上，全身入画" }
+        ]
+      },
+      "last": {
+        "landmark": "走到画面最左侧的梳妆台前面站住，身体朝向镜头",
+        "subjects": [
+          { "id": "i_suluan", "u": 0.16, "v": 0.6, "h": 0.44, "depth": "mid", "facing": "front", "note": "走到最左侧梳妆台前站住，全身入画" }
+        ]
+      }
+    },
+    {
+      "id": "w2_walk_right",
+      "duration_s": 5,
+      "camera_text": "机位完全固定不动，从床尾一侧正对床与床头方向",
+      "first": {
+        "landmark": "站在床尾前面的地板上，正对镜头，全身入画",
+        "subjects": [
+          { "id": "i_suluan", "u": 0.5, "v": 0.74, "h": 0.46, "depth": "near", "facing": "front", "note": "站在床尾雕花床沿前方的地板上，全身入画" }
+        ]
+      },
+      "last": {
+        "landmark": "走到画面最右侧的青花瓷长柜前面站住，身体朝向镜头",
+        "subjects": [
+          { "id": "i_suluan", "u": 0.84, "v": 0.6, "h": 0.44, "depth": "mid", "facing": "front", "note": "走到最右侧长柜前站住，全身入画" }
+        ]
+      }
+    }
+  ]
+}

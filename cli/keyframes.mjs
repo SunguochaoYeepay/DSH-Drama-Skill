@@ -26,7 +26,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { projectAssetFiles, unitAssets } from '../src/asset-resolver.mjs';
-import { planKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
+import { planKeyframeFiles, planLastKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { COMFY_GEN, NODE, requireComfyPython } from '../src/runtime-paths.mjs';
 import * as bailian from '../src/providers/bailian.mjs';
 import * as volcengine from '../src/providers/volcengine.mjs';
@@ -58,6 +58,9 @@ const DRY = argv.includes('--dry-run');
 const SIZE = String(flag('size', KEYFRAME_SIZE));
 const BAILIAN_SIZE = String(flag('bailian-size', BAILIAN_KEYFRAME_SIZE));
 const ONLY = String(flag('units', '')).split(',').map((s) => s.trim()).filter(Boolean);
+// 落幅（fl2v 的尾帧）。提示词与首帧同构：`keyframe-prompts/<unit>.last.txt`。
+// **没有该文件的单元照旧走 i2v** —— 所以这个开关对老项目零影响，不需要迁移。
+const WITH_LAST = argv.includes('--with-last');
 const PROVIDER_SETTING = String(flag('provider', KEYFRAME_PROVIDER)).toLowerCase();
 const PROVIDER = PROVIDER_SETTING === 'comfyui' ? 'local' : PROVIDER_SETTING;
 if (!['huimeng', 'local', 'bailian', 'volcengine'].includes(PROVIDER)) throw new Error('--provider 只能是 huimeng / local / bailian / volcengine / comfyui');
@@ -183,10 +186,10 @@ function refsFor(shot, unit) {
 // ── 本地通道真正下发给 gen.py 的 argv ───────────────────────────────────────
 // 干跑与实际出图共用这一个来源，保证「看到的」就是「跑的」。
 // 2026-09-20 排查"画面发黑"，根因之一正是当时看不到真正下发的参数。
-function localGenArgs(unit, refs, prompt) {
+function localGenArgs(unit, refs, prompt, tag = '') {
   const a = [LOCAL_GEN, 'edit', '--prompt', prompt, '--ratio', ASPECT,
     '--style', LOCAL_STYLE, '--out-dir', LOCAL_OUT,
-    '--result-file', path.join(LOCAL_OUT, `.${unit.id}.result.json`),
+    '--result-file', path.join(LOCAL_OUT, `.${unit.id}${tag}.result.json`),
     // 家族显式下发，不依赖上游默认值（上游改默认时本仓行为不能跟着漂）。
     '--image-model', IMAGE_MODEL];
   if (IS_QWEN21) {
@@ -378,11 +381,68 @@ for (const unit of dir.units) {
   }
   console.log(`    ${got ? '✓' : '✗'} ${got ? `${(fs.statSync(out).size / 1048576).toFixed(2)} MB　${secs} 秒` : txt.slice(0, 200)}`);
 }
+// ── 落幅（fl2v 的尾帧）：与首帧同构的第二遍 ─────────────────────────────────
+//
+// 为什么要有它：`cli/unit.mjs` 早就能用 `--last-keyframe` 走 fl2v，但**没有任何东西
+// 生产落幅**，于是这条杠杆一直睡着。实测（lab/spatial pilot-05/06）：
+// 落点波动 0.089→0.001；复杂运镜相邻帧差 19–23→2.8–3.7、背景漂移降到约 1/3。
+//
+// 约定与首帧完全一致：提示词是 **LLM 直写文件** `keyframe-prompts/<unit>.last.txt`，
+// 逐字送模型；缺文件就跳过该单元（它继续走 i2v），**不是错误**。
+if (WITH_LAST && !DRY) {
+  if (PROVIDER !== 'local') {
+    console.log(`\n落幅：当前只实现了本地通道（--provider local）；本次通道是 ${PROVIDER}，跳过。`);
+  } else {
+    for (const unit of dir.units) {
+      if (ONLY.length && !ONLY.includes(unit.id)) continue;
+      if (!unit.last_keyframe) {
+        console.log(`  落幅 ${unit.id}: 计划里没有 last_keyframe 槽位，跳过`);
+        continue;
+      }
+      const lastPromptFile = path.join(PROJ, 'keyframe-prompts', `${unit.id}.last.txt`);
+      if (!fs.existsSync(lastPromptFile)) {
+        console.log(`  落幅 ${unit.id}: 没有 keyframe-prompts/${unit.id}.last.txt，跳过（该单元仍走 i2v）`);
+        continue;
+      }
+      const lastPrompt = fs.readFileSync(lastPromptFile, 'utf8').trim();
+      const lastRefs = refsFor(unit.shots?.[0] || {}, unit);
+      const draft = path.join(LOCAL_OUT, `${unit.id}_last.png`);
+      const slot = path.resolve(PROJ, unit.last_keyframe);
+      fs.mkdirSync(path.dirname(draft), { recursive: true });
+      const audit = auditPrompt(lastPrompt);
+      console.log(`\n  落幅【${unit.id}】参考图 ${lastRefs.length} 张；直写 ${audit.chars} 字${audit.violations.length ? `，⚠ ${audit.violations.length} 项违规` : '，自检通过'}`);
+      const started = Date.now();
+      const r2 = spawnSync(LOCAL_PY(), localGenArgs(unit, lastRefs, lastPrompt, '.last'), {
+        encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 900000,
+      });
+      const secs2 = Math.round((Date.now() - started) / 1000);
+      let got2 = false;
+      try {
+        const result = JSON.parse(fs.readFileSync(path.join(LOCAL_OUT, `.${unit.id}.last.result.json`), 'utf8'));
+        const produced = result.local_files && result.local_files[0];
+        if (result.ok && produced && fs.existsSync(produced)) {
+          fs.copyFileSync(produced, draft);
+          got2 = true;
+        }
+      } catch { /* 失败统一在下面报 */ }
+      if (!got2) {
+        failures++;
+        console.log(`    ✗ 落幅生成失败：${(String(r2.stdout || '') + String(r2.stderr || '')).slice(0, 200)}`);
+        continue;
+      }
+      // 与首帧同一条契约：通道目录只是草稿区，成功了就必须落到计划槽位。
+      fs.mkdirSync(path.dirname(slot), { recursive: true });
+      fs.copyFileSync(draft, slot);
+      console.log(`    ✓ 落幅 ${(fs.statSync(slot).size / 1048576).toFixed(2)} MB　${secs2} 秒 → ${path.relative(PROJ, slot)}`);
+    }
+  }
+}
+
 if (failures) {
   console.error(`\n✗ ${failures} 个关键帧生成失败`);
   process.exitCode = 1;
 } else {
-  const generated = planKeyframeFiles(PROJ, dir);
+  const generated = [...planKeyframeFiles(PROJ, dir), ...planLastKeyframeFiles(PROJ, dir)];
   const generationRecord = writeGenerationRecord(PROJ, 'keyframes', {
     provider: PROVIDER,
     model: PROVIDER === 'local' ? `local-comfyui/${IMAGE_MODEL}` : PROVIDER === 'bailian' ? BAILIAN_MODEL : PROVIDER === 'volcengine' ? process.env.AIH_VOLCENGINE_IMAGE_MODEL : HUIMENG_IMAGE_MODEL,

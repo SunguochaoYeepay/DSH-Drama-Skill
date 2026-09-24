@@ -1,0 +1,94 @@
+{
+  "id": "spatial-pilot-02-period-room",
+  "purpose": "自出题：把同一个人（苏鸾）依次放到 6 个互不混淆的屋内位置，检验『只用文字说位置』vs『在真实空间照上把位置标出来』",
+  "aspect": "16:9",
+  "style": "realistic",
+  "scene": {
+    "id": "s_suluan_bedchamber",
+    "name": "苏鸾寝殿",
+    "master": "E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\output\\local\\JST\\assets\\scenes\\苏鸾寝殿\\master.png",
+    "pano": "E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\output\\local\\JST\\director_worlds\\苏鸾寝殿\\v1\\pano_360.png",
+    "lighting": "暖黄烛光与宫灯顶光",
+    "environment": "中式古典寝室：画面正中是一张深色木质雕花架子床，挂着白色纱帐，床上有绣花枕头与蓝金织锦被面；床头上方悬一盏方形宫灯；左侧是一组雕花衣柜与梳妆台，墙上挂着黄底书法立轴，旁边有烛台；右侧是一排青花瓷长柜，墙上挂着山水画，最右侧有一扇向外开着的深色木门；地面是深色木地板，整体暖黄烛光"
+  },
+  "identities": [
+    {
+      "id": "i_suluan",
+      "name": "苏鸾",
+      "sheet": "E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\output\\local\\JST\\assets\\characters\\苏鸾\\portrait.png",
+      "appearance": "古装女子，长发挽起，浅色襦裙"
+    }
+  ],
+  "confounders": [
+    "苏鸾只有肖像图（没有四视图身份图），身份保真度不是本次要测的东西；位置才是",
+    "h（画面内相对高度）只用于画站位人形，不参与度量"
+  ],
+  "shots": [
+    {
+      "id": "p1_wardrobe",
+      "landmark": "站在画面最左侧那组雕花衣柜前面，身体朝向镜头",
+      "shot_size": "中景",
+      "camera_side": "A",
+      "camera_text": "固定机位，正对床的方向，与主图同一机位、同一取景",
+      "subjects": [
+        { "id": "i_suluan", "u": 0.08, "v": 0.56, "h": 0.42, "depth": "mid", "facing": "front", "note": "站在最左侧雕花衣柜前，全身入画" }
+      ],
+      "prompt_extra": "画面里只有她一个人"
+    },
+    {
+      "id": "p2_bedside",
+      "landmark": "站在床头柜旁边、挂着黄底书法立轴的那面墙前，紧挨着烛台",
+      "shot_size": "中景",
+      "camera_side": "A",
+      "camera_text": "固定机位，正对床的方向，与主图同一机位、同一取景",
+      "subjects": [
+        { "id": "i_suluan", "u": 0.25, "v": 0.54, "h": 0.40, "depth": "mid", "facing": "front", "note": "站在左侧挂轴下、烛台旁的小几边上" }
+      ],
+      "prompt_extra": "画面里只有她一个人"
+    },
+    {
+      "id": "p3_bed_head",
+      "landmark": "坐在架子床的床头上（里侧），就在绣花枕头旁边，纱帐之内",
+      "shot_size": "中景",
+      "camera_side": "A",
+      "camera_text": "固定机位，正对床的方向，与主图同一机位、同一取景",
+      "subjects": [
+        { "id": "i_suluan", "u": 0.47, "v": 0.52, "h": 0.30, "depth": "far", "facing": "front", "note": "坐在床里侧床头，只露出上半身，身后是雕花床栏" }
+      ],
+      "prompt_extra": "画面里只有她一个人"
+    },
+    {
+      "id": "p4_bed_foot",
+      "landmark": "站在架子床的床尾前面（雕花床沿之前的地板上），正对镜头",
+      "shot_size": "中景",
+      "camera_side": "A",
+      "camera_text": "固定机位，正对床的方向，与主图同一机位、同一取景",
+      "subjects": [
+        { "id": "i_suluan", "u": 0.45, "v": 0.74, "h": 0.46, "depth": "near", "facing": "front", "note": "站在床尾雕花床沿前方的地板上，全身入画，挡住一部分床" }
+      ],
+      "prompt_extra": "画面里只有她一个人"
+    },
+    {
+      "id": "p5_door",
+      "landmark": "站在画面最右侧那扇向外开着的木门门口",
+      "shot_size": "中景",
+      "camera_side": "A",
+      "camera_text": "固定机位，正对床的方向，与主图同一机位、同一取景",
+      "subjects": [
+        { "id": "i_suluan", "u": 0.7, "v": 0.52, "h": 0.44, "depth": "mid", "facing": "front", "note": "站在右侧敞开的门框里" }
+      ],
+      "prompt_extra": "画面里只有她一个人"
+    },
+    {
+      "id": "p6_cabinet",
+      "landmark": "站在右侧那排青花瓷长柜前面",
+      "shot_size": "中景",
+      "camera_side": "A",
+      "camera_text": "固定机位，正对床的方向，与主图同一机位、同一取景",
+      "subjects": [
+        { "id": "i_suluan", "u": 0.84, "v": 0.6, "h": 0.44, "depth": "mid", "facing": "front", "note": "站在右侧青花瓷长柜前，背靠长柜" }
+      ],
+      "prompt_extra": "画面里只有她一个人"
+    }
+  ]
+}

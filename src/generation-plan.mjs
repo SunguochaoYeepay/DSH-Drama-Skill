@@ -44,6 +44,9 @@ function finalize(group, index, boundaryReason, forcedDuration = null) {
         Math.max(MIN_GENERATION_SECONDS, contentSeconds),
       ),
     keyframe: `keyframes_render/g${String(index).padStart(3, '0')}.png`,
+    // 落幅槽位：与 keyframe 同构。声明了它、且直写提示词存在时，出片会用 fl2v
+    // （首帧 + 落幅夹逼），把"这一镜停在哪"从提示词的祈祷变成硬约束。
+    last_keyframe: `keyframes_render/g${String(index).padStart(3, '0')}_last.png`,
     cast: [...new Set(group.flatMap((x) => x.shot.on_screen || []))],
     ...([...(new Set(group.map((x) => x.shot.scene).filter(Boolean)))].length === 1
       ? { scene: [...(new Set(group.map((x) => x.shot.scene).filter(Boolean)))][0] }

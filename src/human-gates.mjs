@@ -81,6 +81,22 @@ export function planKeyframeFiles(projectDir, plan) {
   }).filter(Boolean);
 }
 
+/**
+ * 落幅文件（计划槽位里已存在、且有 LLM 直写提示词的那些单元）。
+ *
+ * 为什么要它进**关键帧票**：落幅决定"这一镜停在哪"，它和首帧一样是导演该看的产物；
+ * 只在出片时才发现落幅画错了，等于白出一遍视频。所以它随首帧一起签署。
+ * 没写 `keyframe-prompts/<unit>.last.txt` 的单元不进这张票 —— 老项目零影响。
+ */
+export function planLastKeyframeFiles(projectDir, plan) {
+  return (plan.units || []).map((unit) => {
+    if (!unit.last_keyframe) return null;
+    if (!fs.existsSync(path.join(projectDir, 'keyframe-prompts', `${unit.id}.last.txt`))) return null;
+    const file = path.resolve(projectDir, unit.last_keyframe);
+    return fs.existsSync(file) ? file : null;
+  }).filter(Boolean);
+}
+
 export function readReviews(projectDir) {
   const file = reviewPath(projectDir);
   if (!fs.existsSync(file)) return { version: 1, approvals: { clips: {} } };

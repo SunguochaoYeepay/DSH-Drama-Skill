@@ -1,0 +1,111 @@
+{
+  "id": "spatial-pilot-04-multiperson",
+  "purpose": "多人 + 机位：2/3/4 个人，同一套站位分别用『正面机位』与『反打机位』拍，检验多人左右/前后关系与换机位的一致性",
+  "aspect": "16:9",
+  "style": "realistic",
+  "scene": {
+    "id": "s_suluan_bedchamber",
+    "name": "苏鸾寝殿",
+    "master": "E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\output\\local\\JST\\assets\\scenes\\苏鸾寝殿\\master.png",
+    "pano": "E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\output\\local\\JST\\director_worlds\\苏鸾寝殿\\v1\\pano_360.png",
+    "lighting": "暖黄烛光与宫灯顶光",
+    "environment": "中式古典寝室：画面正中是一张深色木质雕花架子床，挂着白色纱帐，床上有绣花枕头与蓝金织锦被面；床头上方悬一盏方形宫灯；左侧是一组雕花衣柜与梳妆台，墙上挂着黄底书法立轴，旁边有烛台；右侧是一排青花瓷长柜，墙上挂着山水画，最右侧有一扇向外开着的深色木门；地面是深色木地板，整体暖黄烛光"
+  },
+  "geometry_note": "正面机位在床尾一侧（床尾离镜头近、床头在远处）；反打机位在床头一侧，因此同一批人的**纵深关系整体反转**（床头的人变近、床尾的人变远），左右也镜像。",
+  "identities": [
+    { "id": "i_suluan", "name": "苏鸾", "sheet": "E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\output\\local\\JST\\assets\\characters\\苏鸾\\portrait.png", "appearance": "古装年轻女子，长发挽起，浅色襦裙" },
+    { "id": "i_sutang", "name": "苏糖", "sheet": "E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\output\\local\\JST\\assets\\characters\\苏糖\\identities\\青年时期.png" },
+    { "id": "i_jinxiu", "name": "锦绣", "sheet": "E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\output\\local\\JST\\assets\\characters\\锦绣\\identities\\青年时期.png" },
+    { "id": "i_huangdi", "name": "皇帝", "sheet": "E:\\AI-Image\\DramaClaw\\DramaClawLocalhost\\output\\local\\tett\\assets\\characters\\皇帝\\portrait.png", "appearance": "古装中年男子，深色龙纹常服" }
+  ],
+  "confounders": [
+    "四个身份来自两个项目（皇帝借用 tett），身份保真不是本轮的考核项",
+    "反打镜的场景参考是从全景 yaw=180 现裁的空场景照（该方向是一面关闭的双开木门墙）"
+  ],
+  "shots": [
+    {
+      "id": "m2_front",
+      "landmark": "苏鸾坐在床头，苏糖站在床尾前，两人正对着镜头",
+      "shot_size": "中景",
+      "camera_side": "A",
+      "camera_text": "机位在床尾一侧，正对床与床头方向，镜头高度与坐姿视线齐平",
+      "scene_ref": "master",
+      "subjects": [
+        { "id": "i_suluan", "u": 0.5, "v": 0.52, "depth": "far", "facing": "front", "note": "坐在架子床的床头上，位于画面正中央远处，只露上半身" },
+        { "id": "i_sutang", "u": 0.38, "v": 0.74, "depth": "near", "facing": "away", "note": "站在床尾雕花床沿前方，离镜头最近，背对镜头挡住一部分床，位于画面中央偏左" }
+      ],
+      "prompt_extra": "画面里只有这两个人"
+    },
+    {
+      "id": "m3_front",
+      "landmark": "苏鸾坐床头，苏糖站床尾偏左，锦绣站右侧长柜前",
+      "shot_size": "中景",
+      "camera_side": "A",
+      "camera_text": "机位在床尾一侧，正对床与床头方向，镜头高度与坐姿视线齐平",
+      "scene_ref": "master",
+      "subjects": [
+        { "id": "i_suluan", "u": 0.46, "v": 0.5, "depth": "far", "facing": "front", "note": "坐在架子床的床头上，画面中央偏右的远处" },
+        { "id": "i_sutang", "u": 0.28, "v": 0.74, "depth": "near", "facing": "away", "note": "站在床尾前方，离镜头最近，位于画面左侧，背对镜头" },
+        { "id": "i_jinxiu", "u": 0.8, "v": 0.58, "depth": "mid", "facing": "screen_left", "note": "站在右侧青花瓷长柜前，位于画面最右侧，中景，身体朝画面左" }
+      ],
+      "prompt_extra": "画面里只有这三个人"
+    },
+    {
+      "id": "m4_front",
+      "landmark": "苏鸾坐床头，皇帝站左侧梳妆台旁，苏糖站床尾偏左，锦绣站右侧长柜前",
+      "shot_size": "全景",
+      "camera_side": "A",
+      "camera_text": "机位在床尾一侧，正对床与床头方向，略微后退取全景",
+      "scene_ref": "master",
+      "subjects": [
+        { "id": "i_suluan", "u": 0.46, "v": 0.5, "depth": "far", "facing": "front", "note": "坐在架子床的床头上，画面中央偏右的远处" },
+        { "id": "i_huangdi", "u": 0.15, "v": 0.56, "depth": "mid", "facing": "screen_right", "note": "站在最左侧雕花衣柜与梳妆台之间，位于画面最左侧，身体朝画面右" },
+        { "id": "i_sutang", "u": 0.32, "v": 0.74, "depth": "near", "facing": "away", "note": "站在床尾前方偏左，离镜头最近，背对镜头" },
+        { "id": "i_jinxiu", "u": 0.82, "v": 0.58, "depth": "mid", "facing": "screen_left", "note": "站在右侧青花瓷长柜前，位于画面最右侧，身体朝画面左" }
+      ],
+      "prompt_extra": "画面里只有这四个人"
+    },
+    {
+      "id": "m2_rev",
+      "landmark": "反打机位：苏鸾在近处床头，苏糖在远处床尾",
+      "shot_size": "中景",
+      "camera_side": "B",
+      "camera_text": "机位在床头一侧，从床头方向朝床尾方向拍（与正面机位相反），背景是那面关闭的双开木门墙",
+      "scene_ref": "@pano:180",
+      "subjects": [
+        { "id": "i_suluan", "u": 0.52, "v": 0.58, "depth": "near", "facing": "away", "note": "坐在床头上，离镜头最近，背对镜头，位于画面中央偏右" },
+        { "id": "i_sutang", "u": 0.64, "v": 0.5, "depth": "far", "facing": "front", "note": "站在远处床尾前，正对镜头，位于画面右侧，身影变小" }
+      ],
+      "prompt_extra": "画面里只有这两个人"
+    },
+    {
+      "id": "m3_rev",
+      "landmark": "反打机位：苏鸾近处床头，锦绣在左，苏糖远处床尾",
+      "shot_size": "中景",
+      "camera_side": "B",
+      "camera_text": "机位在床头一侧，从床头方向朝床尾方向拍，背景是那面关闭的双开木门墙",
+      "scene_ref": "@pano:180",
+      "subjects": [
+        { "id": "i_suluan", "u": 0.52, "v": 0.58, "depth": "near", "facing": "away", "note": "坐在床头上，离镜头最近，背对镜头" },
+        { "id": "i_jinxiu", "u": 0.2, "v": 0.58, "depth": "mid", "facing": "screen_right", "note": "站在画面左侧的长柜前（换机位后原本的右侧长柜到了画面左边），身体朝画面右" },
+        { "id": "i_sutang", "u": 0.68, "v": 0.5, "depth": "far", "facing": "front", "note": "站在远处床尾前，正对镜头，位于画面右侧" }
+      ],
+      "prompt_extra": "画面里只有这三个人"
+    },
+    {
+      "id": "m4_rev",
+      "landmark": "反打机位：苏鸾近处床头，锦绣在左，皇帝在右，苏糖远处床尾",
+      "shot_size": "全景",
+      "camera_side": "B",
+      "camera_text": "机位在床头一侧，从床头方向朝床尾方向拍，略微后退取全景，背景是那面关闭的双开木门墙",
+      "scene_ref": "@pano:180",
+      "subjects": [
+        { "id": "i_suluan", "u": 0.52, "v": 0.58, "depth": "near", "facing": "away", "note": "坐在床头上，离镜头最近，背对镜头" },
+        { "id": "i_jinxiu", "u": 0.18, "v": 0.58, "depth": "mid", "facing": "screen_right", "note": "站在画面左侧的长柜前，身体朝画面右" },
+        { "id": "i_huangdi", "u": 0.84, "v": 0.56, "depth": "mid", "facing": "screen_left", "note": "站在画面右侧的衣柜梳妆台一带，身体朝画面左" },
+        { "id": "i_sutang", "u": 0.66, "v": 0.5, "depth": "far", "facing": "front", "note": "站在远处床尾前，正对镜头" }
+      ],
+      "prompt_extra": "画面里只有这四个人"
+    }
+  ]
+}

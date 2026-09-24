@@ -32,7 +32,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { unitAssets } from '../src/asset-resolver.mjs';
-import { clipResultPath, planKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
+import { clipResultPath, planKeyframeFiles, planLastKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
+import { resolveDeclaredLastKeyframe } from '../src/last-keyframe.mjs';
 import { buildUnitPrompt } from '../src/h3-prompt.mjs';
 import { auditContractRules, readCinematography } from '../src/cinematography.mjs';
 import { COMFY_GEN, requireComfyPython } from '../src/runtime-paths.mjs';
@@ -94,7 +95,9 @@ if (!unit) { console.error(`找不到单元 ${unitId}`); process.exit(2); }
 const projectDir = path.dirname(path.resolve(boardPath));
 const continuityHandoff = requireHandoff(projectDir, unit);
 const skipGate = argv.includes('--skip-gate');
-const keyframes = planKeyframeFiles(projectDir, dir);
+// 关键帧票里**既绑首帧也绑落幅**（与 review-gate --stage keyframes 同一份清单）。
+// 少了落幅这一项，票刚签完就会报"关键帧 产物已变化" —— 这处不一致吃过一次。
+const keyframes = [...planKeyframeFiles(projectDir, dir), ...planLastKeyframeFiles(projectDir, dir)];
 requireApproval(projectDir, 'keyframes', keyframes, { skip: skipGate });
 const unitIndex = (dir.units || []).findIndex((u) => u.id === unitId);
 if (unitIndex > 0) {
@@ -159,8 +162,13 @@ function pickKeyframe() {
   return first ? path.resolve(WS, first.first_frame) : null;
 }
 const keyframe = pickKeyframe();
+
 const lastKeyframeArg = flag('last-keyframe', null);
-const lastKeyframe = lastKeyframeArg ? path.resolve(WS, String(lastKeyframeArg)) : null;
+// 没显式给 `--last-keyframe` 时，从**计划槽位 / 板子声明**里找落幅（纯函数，见 src/last-keyframe.mjs）。
+// 找不到就 null —— 该单元退回 i2v，行为与从前一字不差。
+const lastKeyframe = lastKeyframeArg
+  ? path.resolve(WS, String(lastKeyframeArg))
+  : resolveDeclaredLastKeyframe({ unit, board, boardPath, workspace: WS, firstKeyframe: keyframe });
 if (lastKeyframe && !fs.existsSync(lastKeyframe)) throw new Error(`尾帧不存在：${lastKeyframe}`);
 if (continuityHandoff && path.resolve(keyframe || '') !== path.resolve(continuityHandoff.keyframe)) {
   throw new Error(`${unit.id}: 实际使用的关键帧与连续性交接凭证不一致`);
@@ -409,6 +417,18 @@ try {
   }
   const res = JSON.parse(fs.readFileSync(resultFile, 'utf8'));
   ok = Boolean(res.ok);
+  /**
+   * **落幅要进产物清单。**
+   *
+   * `review-gate --stage clip` 读的正是这个 `files[]`，而 `assemble-units` 取 `files[0]`。
+   * 追加在**末尾** → 片段仍是 [0]，而"落幅被改过"会让 clip 票自动失效（哈希绑定）——
+   * 这正是我们想要的：换了落幅就等于换了这一镜的落点，旧确认不该继续有效。
+   */
+  if (ok && lastKeyframe && fs.existsSync(lastKeyframe) && Array.isArray(res.files) && !res.files.includes(lastKeyframe)) {
+    res.files.push(lastKeyframe);
+    fs.writeFileSync(resultFile, JSON.stringify(res, null, 2) + '\n', 'utf8');
+    console.log(`  落幅已并入本单元产物清单（fl2v 尾帧）：${path.relative(projectDir, lastKeyframe)}`);
+  }
   const rawFile = res.files && res.files[0];
   const f = typeof rawFile === 'string' ? rawFile : rawFile?.local_path || rawFile?.localPath || rawFile?.path;
   console.log(`\n${ok ? '✓' : '✗'} ${ok ? f : res.error}`);

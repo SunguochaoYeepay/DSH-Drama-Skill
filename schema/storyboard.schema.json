@@ -635,6 +635,13 @@
               "null"
             ]
           },
+          "last_keyframe": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "声明的落幅（由 keyframe-prompts/<unit>.last.txt 直写生成）。出片时当 --last-keyframe → fl2v，让一镜的**两端**都由导演钉住。与 last_frame 不是一回事：last_frame 是从成片抽出的实际末帧（用于衔接），落幅是**画出来的**、决定镜头该停在哪。实测（lab/spatial pilot-05/06）：落点波动 0.089→0.001；复杂运镜相邻帧差 19–23→2.8–3.7。"
+          },
           "clip": {
             "type": [
               "string",

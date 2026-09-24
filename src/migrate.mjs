@@ -84,6 +84,8 @@ for (const sh of board.shots || []) {
   delete sh.characters;
   sh.cast = cast;
   sh.props = sh.props || [];
+  // 声明的落幅（画出来的尾帧）。缺省为空 = 该镜仍走 i2v，行为与从前一致。
+  sh.last_keyframe = sh.last_keyframe ?? null;
   for (const d of sh.dialogue || []) {
     d.character = castMap.get(d.character) || d.character;
     d.kind = d.kind || 'spoken';
