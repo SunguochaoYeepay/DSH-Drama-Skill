@@ -73,6 +73,7 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import { pipeline } from 'node:stream';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { listProjects, loadProject, isValidProjectName } from '../src/board-data.mjs';
@@ -651,6 +652,37 @@ function sendFile(res, file) {
  * `Range: bytes=…`，服务端只会回 200 全量时，部分 Chromium 媒体栈直接
  * 摆烂（进度条 0:00、播放键无响应）。所以这里按 RFC 7233 实现单区间。
  */
+
+/**
+ * 媒体响应允许的**空闲**时长：这么久一个字节都没动，就把连接收掉、释放文件句柄。
+ * 3 分钟够长（正常播放/拖动都在动），又短到不会让"占着文件不放"拖过一整天。
+ */
+const MEDIA_IDLE_MS = 3 * 60 * 1000;
+
+/**
+ * 把文件流送到响应上，**并且保证任何一条不正常的收尾都把文件句柄还回去**。
+ *
+ * 为什么不能用 `src.pipe(res)`（2026-09-24 实测的坑）：
+ * `pipe` 只管搬运，不管收尾 —— 客户端中途断开（关标签、拖动进度条、`<video>` 停止缓冲）时
+ * 它只做 unpipe，**不 destroy 源流**，于是那个 mp4 的句柄在这个进程里一直开着，
+ * 直到服务重启。实测后果不是"浪费一个句柄"，而是：
+ *   · 剧目目录里那个片段被看板进程占住，整个剧目**删不掉**（Windows 拒绝移动/删目录）；
+ *   · 用户看到的是"目录仍在，删除未生效"，完全不知道是谁占着、为什么。
+ * `pipeline` 会在任一端提前收尾时 destroy 所有流，这正是要的语义。
+ * `tests/kanban-media-lock.test.mjs` 用一个跨进程独占打开守着这件事。
+ */
+export function streamFileTo(res, file, opts, idleMs = MEDIA_IDLE_MS) {
+  const src = fs.createReadStream(file, opts);
+  src.on('error', () => { if (!res.headersSent) res.writeHead(500); res.destroy(); });
+  // 客户端**连着但不读**（<video> 停住不动）也会把句柄一直占着 —— 那种情况下没有"断开事件"，
+  // 只有一个静默的 socket。给响应一个空闲上限：超过它就把这条连接收掉。
+  // 浏览器发现连接没了会重发 Range 请求，播放不受影响；而"开着网页放着一整天、剧目就删不掉"
+  // 这种事不会再发生。
+  if (idleMs > 0) res.setTimeout(idleMs, () => res.destroy());
+  pipeline(src, res, () => { /* 收尾靠 pipeline 自己 destroy，这里不用再做什么 */ });
+  return src;
+}
+
 function sendMedia(res, roots, raw) {
   let rel;
   try {
@@ -679,7 +711,7 @@ function sendMedia(res, roots, raw) {
   const range = /^bytes=(\d*)-(\d*)$/.exec(String(res.req?.headers?.range || ''));
   if (!range || (!range[1] && !range[2])) {
     res.writeHead(200, { ...base, 'Content-Length': size });
-    return fs.createReadStream(file).pipe(res);
+    return streamFileTo(res, file);
   }
 
   // 单区间解析：bytes=a-b / bytes=a- / bytes=-suffix。start > size 是真越界；
@@ -702,7 +734,7 @@ function sendMedia(res, roots, raw) {
     'Content-Range': `bytes ${start}-${end}/${size}`,
     'Content-Length': end - start + 1,
   });
-  fs.createReadStream(file, { start, end }).pipe(res);
+  streamFileTo(res, file, { start, end });
 }
 
 // ── 作为脚本直跑时才监听；被 import（测试）时不占端口 ──────────────────────

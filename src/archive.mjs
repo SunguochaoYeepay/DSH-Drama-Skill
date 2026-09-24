@@ -230,6 +230,23 @@ export function recycleBinCount(name) {
 }
 
 /**
+ * 目录里**被别的进程独占打开**的文件（最多 limit 个）。
+ *
+ * 用途：删除失败时告诉人"是谁占着"，而不是只回一句"删除未生效"。
+ * 2026-09-24 实测就是这么被坑的：看板的媒体流在客户端断开后没释放句柄，
+ * 那个 mp4 被看板进程占住 → 整个剧目删不掉，而报错什么也没说。
+ */
+export function lockedFilesIn(dir, limit = 3) {
+  // 注意 `$f = $_`：catch 里的 `$_` 是**错误记录**，不是当前文件 —— 直接写 `$_.FullName`
+  // 会静默输出空字符串（这个坑写错过一次：函数永远返回空，看着像"没有文件被占用"）。
+  const script = `Get-ChildItem -LiteralPath ${psQuote(dir)} -Recurse -File -Force -ErrorAction SilentlyContinue | `
+    + 'ForEach-Object { $f = $_; try { $fs = [IO.File]::Open($f.FullName, [IO.FileMode]::Open, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None); $fs.Close() } '
+    + `catch { $f.FullName } } | Select-Object -First ${Number(limit)}`;
+  const r = runPowerShell(script, 120000);
+  return String(r.stdout || '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+}
+
+/**
  * 把一个目录移入系统回收站，并用**状态验证**判成功（不看退出码）。
  *
  * `trash` 可注入：测试用假实现跑纯逻辑，不碰真回收站、不污染用户环境。
@@ -245,10 +262,13 @@ export function sendDirToTrash(dir) {
   const before = recycleBinCount(name);
   if (before < 0) return { ok: false, reason: '读不到系统回收站（Shell.Application 不可用），不敢删' };
 
+  // 异常信息要**留下来**：成功与否仍按状态判（退出码不可信，见文件头），
+  // 但失败时它是唯一能说明"为什么没删掉"的线索。
   const script = 'try { Add-Type -AssemblyName Microsoft.VisualBasic; '
     + `[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory(${psQuote(path.resolve(dir))},'OnlyErrorDialogs','SendToRecycleBin') `
-    + '} catch { }';                  // 退出码不可信（见文件头），异常一律吞掉，只认状态
-  runPowerShell(script, 300000);
+    + '} catch { $e = $_.Exception; if ($e.InnerException) { $e = $e.InnerException }; Write-Output ("__ERR__" + $e.Message) }';
+  const r = runPowerShell(script, 300000);
+  const sysMsg = String(r.stdout || '').split(/\r?\n/).find((l) => l.startsWith('__ERR__'))?.slice(7).trim() || '';
 
   const gone = !fs.existsSync(dir);
   const after = recycleBinCount(name);
@@ -258,7 +278,16 @@ export function sendDirToTrash(dir) {
   if (gone) {
     return { ok: false, reason: '目录消失了但回收站条目没增加 —— 可能被永久删除，请立刻检查回收站' };
   }
-  return { ok: false, reason: '目录仍在，删除未生效' };
+  // 没删掉：把"谁占着"查出来一起报 —— 只回一句"删除未生效"等于把排查丢回给用户。
+  const locked = lockedFilesIn(dir);
+  const detail = [
+    sysMsg ? `系统说：${sysMsg}` : '',
+    locked.length ? `被别的进程占着：${locked.join('、')}` : '',
+  ].filter(Boolean).join('；');
+  const hint = locked.length
+    ? '（看板/播放器可能还开着那个文件：关掉正在播放的片段，或重启看板服务后重试）'
+    : '';
+  return { ok: false, reason: `目录仍在，删除未生效${detail ? ` —— ${detail}` : ''}${hint}` };
 }
 
 /**
