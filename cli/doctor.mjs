@@ -74,12 +74,29 @@ const checks = [
     test: () => fileExists(BAILIAN_ENTRY),
   }),
   check({
-    name: 'Docker（可选项：desub 去字幕）',
+    name: 'Docker（可选项：desub 去字幕 · VSR 通道）',
     required: false,
-    hint: '只有跑 cli/desub.mjs 才需要；docker desktop 起着即可',
+    hint: '只有跑 cli/desub.mjs 才需要；跑 cli/desub-void.mjs（VOID 通道）不需要 Docker',
     test: () => {
       const r = spawnSync('docker', ['--version'], { encoding: 'utf8', timeout: 8000, windowsHide: true });
       return { ok: r.status === 0, detail: (r.stdout || '').trim().split('\n')[0] || 'docker' };
+    },
+  }),
+  check({
+    // 第二条去字幕通道：VOID（ComfyUI 内跑），不依赖 Docker。
+    // 三条前置都在仓内/引擎侧，缺哪条这里点哪条 —— 别等跑起来才报节点不存在。
+    name: 'VOID 去字幕通道（本地，免 Docker）',
+    required: false,
+    hint: '需要 AIH_PYTHON（生成掩码用）+ tools/band_mask.py + workflows/void-video-inpainting.json；'
+      + 'ComfyUI 里还要有 VOIDQuadmaskPreprocess 节点（VOID 那套自定义节点）',
+    test: () => {
+      const bits = [
+        ['python', Boolean(COMFY_PYTHON) && fs.existsSync(COMFY_PYTHON)],
+        ['band_mask.py', fs.existsSync(path.join(PROJECT_ROOT, 'tools', 'band_mask.py'))],
+        ['workflow', fs.existsSync(path.join(PROJECT_ROOT, 'workflows', 'void-video-inpainting.json'))],
+      ];
+      const missing = bits.filter(([, ok]) => !ok).map(([n]) => n);
+      return { ok: missing.length === 0, detail: missing.length ? `缺 ${missing.join('、')}` : '就位' };
     },
   }),
   check({

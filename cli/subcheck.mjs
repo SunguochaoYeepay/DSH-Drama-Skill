@@ -127,5 +127,11 @@ if (rect.topRatio > 0.02 || rect.bottomRatio < 0.98) {
 console.log(`  放大倍数 约 ${(1 / WIN).toFixed(1)}×（全帧缩略图看不清字幕，就是因为少了这一下）`);
 console.log(`  网格      ${cols}×${rows}`);
 console.log(`\n  → ${OUT}`);
-console.log(`  看完这张图再决定要不要去字幕：**有字就去**，跑 node cli/desub.mjs <视频>（必要时带 --top/--bottom）。`);
+console.log(`  看完这张图再决定要不要去字幕：**有字就去**，两条通道二选一 ——`);
+console.log(`    · node cli/desub.mjs <视频> --top/--bottom      （VSR，走 Docker；句子长、吃显存）`);
+console.log(`    · node cli/desub-void.mjs <视频> --auto-band（VOID，本地 ComfyUI，免 Docker）`);
+console.log(`  --auto-band 自己找候选（tools/band_detect.py）；显式给 --top/--bottom/--left/--right 会覆盖它，`);
+console.log(`  找不到候选时它**拒绝跑**而不是拿默认带蒙一个位置。VOID 跑完会自带"带内差/带外差"核查。`);
+console.log(`  两条通道都别用默认带（默认值只是兜底）；完成后原片仍在，另存新文件。`);
+console.log(`  ⚠ 换了产物就要按 references/qa-and-review.md 重批该段的 clip 票，否则合成取的还是带字幕的原片。`);
 console.log(`  别只看"文件存在" ✗\n`);
