@@ -59,11 +59,11 @@ test('例外：禁文字与身份锚不算违规', () => {
 });
 
 test('超字数要被报出来，且报出实际字数', () => {
-  const long = CLEAN.repeat(12); // 上限放宽到 500 后，6 倍不再超线
+  const long = '字'.repeat(900); // 上限 800（2026-09-24 由 500 放宽）
   const a = auditPrompt(long);
   const over = a.violations.find((v) => v.rule === '超字数');
   assert.ok(over, '超字数必须被报出来');
-  assert.match(over.hit, /^\d+ 字 > 500$/);
+  assert.match(over.hit, /900 字 > 800$/);
 });
 
 // ---------------------------------------------------------------- 最终整理

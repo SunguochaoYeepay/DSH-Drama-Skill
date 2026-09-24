@@ -148,7 +148,7 @@ export function promptPathFor(projectDir, unit, kind = 'keyframe') {
     : path.join(projectDir, 'keyframe-prompts', `${unit}.txt`);
 }
 
-/** 提示词长度上限：CLI 的自检是 500 字，这里留够并给前端一个明确的天花板。 */
+/** 提示词长度上限：CLI 的自检是 800 字（2026-09-24 由 500 放宽），这里留够并给前端一个明确的天花板。 */
 export const PROMPT_MAX_CHARS = 4000;
 
 /** 重抽日志最多留这么多字符（够看清报错，又不至于把内存吃满）。 */

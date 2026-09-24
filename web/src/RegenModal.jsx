@@ -12,7 +12,7 @@
  * | CLI | `cli/keyframes.mjs --units <单元>` | `cli/unit.mjs --unit <单元>` |
  * | 提示词 | `keyframe-prompts/<单元>.txt` | `units/.<单元>.prompt.txt` |
  * | 票 | **整批一张**（绑定计划里全部关键帧） | **每单元一张**（`--id <单元>`） |
- * | 自检 | CLI 审计 ≤500 字 | 无此限制（视频提示词本来就上千字） |
+ * | 自检 | CLI 审计 ≤800 字 | 无此限制（视频提示词本来就上千字） |
  *
  * 三条边界（和服务端一起守）：
  * 1. **提示词只写一个文件**（上表那两个之一），别的项目文件一个字不碰；
@@ -80,7 +80,7 @@ const KINDS = {
     promptFile: (unit) => `units/.${unit}.prompt.txt`,
     previewLabel: '这一段现在的视频',
     estimate: '本机 ComfyUI 约 50–75 秒',
-    auditLimit: 0,               // 视频提示词没有 500 字这条自检
+    auditLimit: 0,               // 视频提示词没有 800 字这条自检
     signStage: 'clip',
     signTitle: '满意就签这一段的片段票',
     signNote: () => '片段票是**每单元一张**，只签这一段；',
