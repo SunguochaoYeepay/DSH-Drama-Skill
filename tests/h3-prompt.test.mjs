@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildUnitPrompt } from '../src/h3-prompt.mjs';
+import { buildUnitPrompt, narrationWarnings } from '../src/h3-prompt.mjs';
 
 const board = {
   meta: { music: null },
@@ -172,4 +172,32 @@ test('「脸颊+红」必须换成不带颜色词的表演描述，且 action �
   // 实验 B：retention 那段不得再出现任何「妆」词汇，否则等于给模型递词表。
   assert.doesNotMatch(ref2v, /blush|rouge|lipstick|makeup|flush on the cheeks|redden the lips/i);
   assert.match(ref2v, /Skin and lips must stay exactly as they are in the reference pictures/);
+});
+
+// 2026-09-24 divorce_standoff g002 实测：`shot.action` 里写
+// 「他一把拍在桌沿上……他连喊三声好，最后压着声音说出离婚」，这段叙述被逐字拼进提示词，
+// **H3 把它当台词念了出来** —— 音频里多出一整句不该存在的话。
+// 台词只该走 `<d>…</d>`；`action` / `visible_behavior` 里的"叙述说话"必须被点出来。
+test('叙述说话的 action / visible_behavior 要被点出来（且只盯带台词的镜头）', () => {
+  const bad = structuredClone(unit);
+  bad.shots[0].n = 1;                              // 夹具的镜头没有 n，这里补上（警告要报"第几镜"）
+  bad.shots[0].action = '他一把拍在桌沿上；他连喊三声好，最后压着声音说出离婚';
+  bad.shots[0].emotion_analysis[0].visible_behavior = '手掌拍在桌沿上，说到最后两个字时声音反而放低';
+
+  const warns = narrationWarnings(bad);
+  assert.equal(warns.length, 2, JSON.stringify(warns));
+  assert.deepEqual(warns.map((w) => w.field).sort(), ['action', 'visible_behavior(c1_home)']);
+  assert.ok(warns.every((w) => w.shot === 1));
+
+  // 干净写法不报：只描述画面，不叙述说话
+  const good = structuredClone(unit);
+  good.shots[0].action = '他一把拍在桌沿上，上身向前压，肩背发抖';
+  good.shots[0].emotion_analysis[0].visible_behavior = '手掌拍在桌沿上，下颌绷紧';
+  assert.deepEqual(narrationWarnings(good), []);
+
+  // 没台词的镜头不报 —— 那个位置不会把叙述念成台词（只报告，不阻断）
+  const silent = structuredClone(good);
+  silent.shots[0].lines = [];
+  silent.shots[0].action = '他冲着门口喊了一嗓子，桌子被拍得直响';
+  assert.deepEqual(narrationWarnings(silent), []);
 });

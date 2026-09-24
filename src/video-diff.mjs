@@ -100,7 +100,7 @@ function dumpGray(file, { width, height, step, tmpDir, tag }) {
   const raw = path.join(tmpDir, `${tag}.raw`);
   const r = spawnSync(FFMPEG, ['-v', 'error', '-y', '-i', file,
     '-vf', `select='not(mod(n\\,${step}))',format=gray`, '-fps_mode', 'passthrough',
-    '-f', 'rawvideo', raw], { encoding: 'utf8' });
+    '-f', 'rawvideo', raw], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   if (r.status !== 0) throw new Error(`抽帧失败（${path.basename(file)}）：${String(r.stderr || '').slice(0, 200)}`);
   return fs.readFileSync(raw);
 }

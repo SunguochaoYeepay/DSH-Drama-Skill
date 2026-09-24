@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { handoffPath, requireHandoff } from './continuity-handoff.mjs';
 import { readGenerationRecord } from './generation-records.mjs';
+import { resolveRecordedPath } from './recorded-path.mjs';
 import { recordedPathFor } from './recorded-path.mjs';
 
 export const REVIEW_FILE = 'review.approvals.json';
@@ -191,6 +192,37 @@ export function clipResultPath(projectDir, id) {
   return fs.statSync(old).mtimeMs > fs.statSync(current).mtimeMs ? old : current;
 }
 
+/** 一个单元的产物记录里，**按记录顺序**取出来的路径（不判存在）。 */
+function recordedClipPaths(projectDir, id) {
+  const resultFile = clipResultPath(projectDir, id);
+  if (!resultFile) return [];
+  let data;
+  try { data = JSON.parse(fs.readFileSync(resultFile, 'utf8')); } catch { return []; }
+  return (data.files || [])
+    .map((file) => (typeof file === 'string' ? file : file?.local_path || file?.localPath || file?.path))
+    .filter(Boolean)
+    .map((file) => resolveRecordedPath(projectDir, file))
+    .filter(Boolean);
+}
+
+/**
+ * 这一段的**当前产物**（票要绑的全部文件，按记录顺序、只留真实存在的）。
+ *
+ * 为什么必须只有一份实现：2026-09-24 实测，三个消费者各写各的，同一张票在三个地方
+ * 给出不同答案 —— `cli/unit.mjs` 与 `requireAllClips`（合成）绑**全部**存在的产物，
+ * 而 `cli/prepare-handoff.mjs` 只绑**第一条**。于是刚签好的 clip 票换一个 CLI 就被判
+ * "产物已变化"。规矩是：**票绑这一段当前的全部产物**，其中 `artifacts[0]` 是主产物
+ * （去字幕版就该在第一条，见 `cli/record-clip.mjs`）。
+ */
+export function clipArtifactFiles(projectDir, id) {
+  return recordedClipPaths(projectDir, id);
+}
+
+/** 这一段的**主产物**（第一条存在的）—— 抽交接尾帧、合成取源都用它。 */
+export function primaryClipFile(projectDir, id) {
+  return recordedClipPaths(projectDir, id)[0] || null;
+}
+
 export function requireAllClips(projectDir, plan, { skip = false } = {}) {
   if (skip) {
     console.error('⚠ --skip-gate：仅限调试，已跳过所有片段的人工确认');
@@ -199,10 +231,7 @@ export function requireAllClips(projectDir, plan, { skip = false } = {}) {
   for (const unit of plan.units || []) {
     const actualResult = clipResultPath(projectDir, unit.id);
     if (!actualResult) throw new Error(`不能合成：${unit.id} 尚未生成`);
-    const result = JSON.parse(fs.readFileSync(actualResult, 'utf8'));
-    const files = (result.files || [])
-      .map((file) => typeof file === 'string' ? file : file?.local_path || file?.localPath || file?.path)
-      .filter((file) => file && fs.existsSync(file));
+    const files = clipArtifactFiles(projectDir, unit.id);
     if (!files.length) throw new Error(`不能合成：${unit.id} 没有可审阅的视频产物`);
     requireApproval(projectDir, 'clip', files, { id: unit.id });
   }

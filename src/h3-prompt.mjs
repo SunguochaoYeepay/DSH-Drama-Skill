@@ -76,9 +76,37 @@ function clean(text) {
   return String(text || '').replace(/[。．.]+$/, '').trim();
 }
 
+/**
+ * 「叙述说话」的词表 —— 出现在**带台词的镜头**的 `action` 或 `visible_behavior` 里就会出事。
+ *
+ * 2026-09-24 `divorce_standoff` g002 实测：`shot.action` 写的是
+ * 「他一把拍在桌沿上……；**他连喊三声好，最后压着声音说出离婚**」，
+ * 它被逐字拼进 H3 提示词（还在 `summary:` 里出现第二次），结果 **H3 把这段叙述念了出来** ——
+ * 音频里多了一句本不该存在的"台词"。台词原文只该走 `<d>…</d>` 那一段；
+ * `action` 里的"谁说了什么、怎么说的"既多余、又会被当成台词。
+ *
+ * 所以这里只**报告**（和 `auditPrompt` 一样不阻断）：写到就该改写法，而不是祈祷抽卡。
+ * 判据刻意保守 —— 只看带台词的镜头；命中词表即提醒，宁可误报也不漏报。
+ */
+const SPEECH_NARRATION = /(说|喊|念|道|问|答|接话|回击|出声|开口|台词|质问|低语|嘟囔|絮语)/;
+
+/** @returns {Array<{shot:number, field:string, word:string, text:string}>} */
+export function narrationWarnings(unit) {
+  const out = [];
+  for (const shot of unit?.shots || []) {
+    if (!(shot.lines || []).length) continue;      // 只有带台词的镜头才会被当成台词
+    const fields = [['action', shot.action]];
+    for (const e of shot.emotion_analysis || []) fields.push([`visible_behavior(${e.character})`, e.visible_behavior]);
+    for (const [field, text] of fields) {
+      const hit = SPEECH_NARRATION.exec(String(text || ''));
+      if (hit) out.push({ shot: shot.n, field, word: hit[0], text: String(text || '') });
+    }
+  }
+  return out;
+}
+
 /** 官方切镜时间戳格式：MM:SS.mmm（如 00:03.500）。 */
-function mmss(t) {
-  const total = Math.max(0, Number(t) || 0);
+function mmss(t) {  const total = Math.max(0, Number(t) || 0);
   const m = Math.floor(total / 60);
   const s = total - m * 60;
   return `${String(m).padStart(2, '0')}:${s.toFixed(3).padStart(6, '0')}`;

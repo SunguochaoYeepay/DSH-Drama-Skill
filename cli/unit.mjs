@@ -32,9 +32,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { unitAssets } from '../src/asset-resolver.mjs';
-import { clipResultPath, planKeyframeFiles, planLastKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
+import { clipArtifactFiles, clipResultPath, planKeyframeFiles, planLastKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { resolveDeclaredLastKeyframe } from '../src/last-keyframe.mjs';
-import { buildUnitPrompt } from '../src/h3-prompt.mjs';
+import { lastKeyframeAdvice } from '../src/plan-checks.mjs';
+import { buildUnitPrompt, narrationWarnings } from '../src/h3-prompt.mjs';
 import { auditContractRules, readCinematography } from '../src/cinematography.mjs';
 import { COMFY_GEN, requireComfyPython } from '../src/runtime-paths.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
@@ -102,12 +103,10 @@ requireApproval(projectDir, 'keyframes', keyframes, { skip: skipGate });
 const unitIndex = (dir.units || []).findIndex((u) => u.id === unitId);
 if (unitIndex > 0) {
   const previous = dir.units[unitIndex - 1];
-  const previousResult = clipResultPath(projectDir, previous.id);
-  if (!previousResult) throw new Error(`上一段 ${previous.id} 尚未生成并确认`);
-  const previousData = JSON.parse(fs.readFileSync(previousResult, 'utf8'));
-  const previousFiles = (previousData.files || [])
-    .map((file) => typeof file === 'string' ? file : file?.local_path || file?.localPath || file?.path)
-    .filter((file) => file && fs.existsSync(file));
+  // 「这一段当前的全部产物」只有一份实现（`src/human-gates.mjs`）——
+  // 三个消费者各写一遍的结果是同一张票在三个地方给出不同答案（2026-09-24 实测）。
+  const previousFiles = clipArtifactFiles(projectDir, previous.id);
+  if (!previousFiles.length) throw new Error(`上一段 ${previous.id} 尚未生成并确认`);
   requireApproval(projectDir, 'clip', previousFiles, { id: previous.id, skip: skipGate });
 }
 
@@ -170,6 +169,17 @@ const lastKeyframe = lastKeyframeArg
   ? path.resolve(WS, String(lastKeyframeArg))
   : resolveDeclaredLastKeyframe({ unit, board, boardPath, workspace: WS, firstKeyframe: keyframe });
 if (lastKeyframe && !fs.existsSync(lastKeyframe)) throw new Error(`尾帧不存在：${lastKeyframe}`);
+// 缺落幅是**静默**的（自动退回 i2v），而 i2v 会自行改机位 —— 把这件事说出来，
+// 别让人以为走了 fl2v。（table_for_two 的 g001 就是这么裸奔出去的。）
+{
+  const advice = lastKeyframeAdvice({
+    unitId: unit.id,
+    hasLastKeyframe: Boolean(lastKeyframe),
+    planDeclaresSlot: Boolean(unit.last_keyframe),
+    hasLastPromptFile: fs.existsSync(path.join(path.dirname(boardPath), 'keyframe-prompts', `${unit.id}.last.txt`)),
+  });
+  if (advice) console.log(advice);
+}
 if (continuityHandoff && path.resolve(keyframe || '') !== path.resolve(continuityHandoff.keyframe)) {
   throw new Error(`${unit.id}: 实际使用的关键帧与连续性交接凭证不一致`);
 }
@@ -284,6 +294,17 @@ const CINE = readCinematography(projectDir);
 }
 const prompt = buildUnitPrompt(unit, { nameOf, lineText, board, scene, hasFirstFrame, refs: promptRefs, contract: CINE });
 
+// 「叙述说话」自检（不阻断，只报告）：`action` / `visible_behavior` 里写"他连喊三声好、
+// 最后说出离婚"这类句子，会被 H3 当成台词念出来 —— 台词只该走 `<d>…</d>`。
+// 2026-09-24 g002 实测踩过：音频里多出一整句本不该存在的话。
+{
+  const warns = narrationWarnings(unit);
+  if (warns.length) {
+    console.log(`  ⚠ 这台镜头里可能有"叙述说话"的句子，会被当成台词念出来（建议改写成纯画面动作）：`);
+    for (const w of warns) console.log(`     · 镜 ${w.shot} 的 ${w.field}：命中「${w.word}」—— ${w.text}`);
+  }
+}
+
 // `generation_duration_s` 是执行预算；导演内容时长不变，后期按
 // `content_duration_s` 裁回。`--seconds` 只用于显式对照实验。
 const requestedSeconds = Number(flag('seconds', 0))
@@ -391,6 +412,8 @@ const r = spawnSync(PY(), args, {
   encoding: 'utf8',
   maxBuffer: 32 * 1024 * 1024,
   timeout: (VIDEO_TIMEOUT_SECONDS + 30) * 1000,
+  // stdio：本机 Node 派生子进程对 stdin 管道过敏，固定 ['ignore','pipe','pipe']（同 src/providers/comfyui.mjs）。
+  stdio: ['ignore', 'pipe', 'pipe'],
 });
 if (r.stdout) process.stdout.write(r.stdout);
 if (r.stderr && r.status !== 0) process.stderr.write(String(r.stderr).slice(0, 800));
@@ -439,7 +462,7 @@ try {
   if (ok && f) {
     const sheet = path.join(outDir, `${unit.id}_review_frames.png`);
     const inspected = spawnSync(process.execPath, [path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/(?:[A-Za-z]:)/, (m) => m.slice(1))), 'inspect.mjs'), f,
-      '--frames', '8', '--aspect', aspectOf(board), '--first-last', '--out', sheet], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+      '--frames', '8', '--aspect', aspectOf(board), '--first-last', '--out', sheet], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
     if (inspected.stdout) process.stdout.write(inspected.stdout);
     if (inspected.status !== 0) {
       if (inspected.stderr) process.stderr.write(inspected.stderr);

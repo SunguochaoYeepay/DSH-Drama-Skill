@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { allowedChangesList, carryOverKeyframeBinding, createHandoffRecord, handoffPath, writeHandoff } from '../src/continuity-handoff.mjs';
-import { clipResultPath, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
+import { clipArtifactFiles, clipResultPath, primaryClipFile, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 
 installCliErrorHandler();
@@ -23,10 +23,12 @@ if (!unit || !['reference_previous', 'continue_previous'].includes(unit.continui
 const sourceUnit = unit.continuity.previous_unit;
 const resultFile = clipResultPath(project, sourceUnit);
 if (!resultFile) throw new Error(`上一段 ${sourceUnit} 尚未生成`);
-const result = JSON.parse(fs.readFileSync(resultFile, 'utf8'));
-const clip = (result.files || []).map((x) => typeof x === 'string' ? x : x?.local_path || x?.path).find((x) => x && fs.existsSync(x));
+// 尾帧从**主产物**截（第一条），但票要绑**这一段当前的全部产物** —— 两者的所有者
+// 都在 `src/human-gates.mjs`。这里过去只绑第一条，于是同一张 clip 票在
+// `cli/unit.mjs`（绑全部）通过、到这里却被判"产物已变化"（2026-09-24 实测）。
+const clip = primaryClipFile(project, sourceUnit);
 if (!clip) throw new Error(`上一段 ${sourceUnit} 没有有效视频产物`);
-requireApproval(project, 'clip', [clip], { id: sourceUnit, skip: SKIP_GATE });
+requireApproval(project, 'clip', clipArtifactFiles(project, sourceUnit), { id: sourceUnit, skip: SKIP_GATE });
 
 let ffmpeg = 'ffmpeg';
 try {

@@ -168,9 +168,10 @@ if (!fs.existsSync(OUT)) {
   // 而不是给你一个"看起来没动"的文件 —— 这是好行为，但报错得说清楚，
   // 否则人会去查 Docker（我第一眼就是这么想的）。
   if (/NoSubtitleDetected|No subtitles detected/i.test(err)) {
-    console.error(`\n✗ 带里没有检测到字幕 —— 带画错了？`);
-    console.error(`  你给的带：x ${xmin}–${xmax} / y ${ymin}–${ymax}（y ${band.top}–${band.bottom}）`);
-    console.error('  先跑 node cli/subcheck.mjs <视频> 抽帧看字幕到底在哪，或直接用 --auto-band。');
+    console.error(`\n✗ 带里没有检测到字幕。两种可能：`);
+    console.error(`    ① 带画错了 —— 你给的带是 x ${xmin}–${xmax} / y ${ymin}–${ymax}（y ${band.top}–${band.bottom}）`);
+    console.error(`    ② 这段的字**已经去过了**（拿干净版再跑一遍就会这样）`);
+    console.error('  先用 node cli/subcheck.mjs <视频> 抽帧确认，或直接用 --auto-band。');
     process.exit(1);
   }
   console.error('\n✗ 没产出。检查：docker 是否在跑、镜像是否拉过、代理是否配好。');

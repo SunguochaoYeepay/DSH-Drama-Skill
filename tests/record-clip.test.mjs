@@ -71,9 +71,16 @@ test('片段不存在 / 单元记录不存在：报错而不是记一条坏路�
   assert.notEqual(run(PROJ, '--unit', 'g999', '--clip', path.relative(PROJ, CLEAN)).status, 0);
 });
 
-test('输出里给出下一步的重签命令（票只能由 review-gate 落笔）', () => {
-  writeResult([]);
+test('输出里给出下一步的重签命令，且**列全所有存在的产物**', () => {
+  writeResult([{ kind: 'video', local_path: path.relative(ROOT, RAW).replace(/\\/g, '/') }]);
   const r = run(PROJ, '--unit', 'g001', '--clip', path.relative(PROJ, CLEAN));
   assert.match(r.stdout, /review-gate\.mjs approve/);
   assert.match(r.stdout, /--stage clip --id g001/);
+  // unit.mjs 校验上一段时绑的是 files[] 里所有存在的条目 —— 只列主产物会被判"产物已变化"
+  const m = /--artifacts "([^"]+)"/.exec(r.stdout);
+  assert.ok(m, r.stdout);
+  const listed = m[1].split(',');
+  assert.equal(listed.length, 2, `应列出干净版与原片两条：${m[1]}`);
+  assert.ok(listed[0].endsWith('g001_vsr.mp4'), m[1]);
+  assert.ok(listed[1].endsWith('i2v_raw.mp4'), m[1]);
 });

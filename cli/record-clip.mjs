@@ -69,11 +69,16 @@ const entry = {
 data.files = flag('append') ? [...keep, entry] : [entry, ...keep];
 fs.writeFileSync(resultFile, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
 
-console.log(`✓ ${path.relative(process.cwd(), resultFile)}`);
+console.log('✓ ' + path.relative(process.cwd(), resultFile));
 console.log(`  主产物 ${shown}${flag('append') ? '（追加到末尾）' : '（已前插到最前）'}`);
+const existing = [];
 for (const [i, x] of data.files.entries()) {
   const p = pathOf(x);
-  console.log(`   ${i === 0 ? '→' : ' '} [${i}] ${p}${resolveRecordedPath(projectDir, p) ? '' : '  ⚠ 文件不存在'}`);
+  const ok = Boolean(resolveRecordedPath(projectDir, p));
+  if (ok) existing.push(p);
+  console.log(`   ${i === 0 ? '→' : ' '} [${i}] ${p}${ok ? '' : '  ⚠ 文件不存在'}` );
 }
-console.log('\n下一步（票只能由 review-gate 落笔）：');
-console.log(`  node cli/review-gate.mjs approve --project "${projectDir}" --stage clip --id ${unitId} --artifacts "${shown}"`);
+// 重签命令必须列**全部存在的产物**：`cli/unit.mjs` 校验上一段时绑的就是
+// `files[]` 里所有存在的条目（2026-09-24 实测：只列主产物会被判"产物已变化"）。
+console.log('\n下一步（票只能由 review-gate 落笔）——**要列全部存在的产物**：');
+console.log(`  node cli/review-gate.mjs approve --project "${projectDir}" --stage clip --id ${unitId} --artifacts "${existing.join(',')}"`);
