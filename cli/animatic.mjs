@@ -34,20 +34,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { WINGET_PACKAGES } from '../src/runtime-paths.mjs';
-
-const FFMPEG = (() => {
-  const base = WINGET_PACKAGES;
-  try {
-    for (const d of fs.readdirSync(base)) {
-      if (!d.startsWith('Gyan.FFmpeg_')) continue;
-      const c = path.join(base, d, 'ffmpeg-7.1.1-full_build', 'bin', 'ffmpeg.exe');
-      if (fs.existsSync(c)) return c;
-    }
-  } catch { /* 退回 PATH */ }
-  return 'ffmpeg';
-})();
-const FFPROBE = FFMPEG.replace(/ffmpeg\.exe$/i, 'ffprobe.exe');
+import { FFMPEG, FFPROBE } from '../src/runtime-paths.mjs';
 
 const argv = process.argv.slice(2);
 function flag(name, def) {

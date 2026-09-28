@@ -29,6 +29,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { speechSegmentsFromSilence, pickSampleTimes, windowRect, coverageText } from '../src/subcheck.mjs';
+import { FFMPEG, FFPROBE } from '../src/runtime-paths.mjs';
 
 const argv = process.argv.slice(2);
 const flag = (n, d) => {
@@ -58,7 +59,7 @@ const PANEL = Number(flag('panel', 640));
 const AT = flag('at', null);
 
 // ---- 1. 量源视频 ----
-const probe = spawnSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0',
+const probe = spawnSync(FFPROBE, ['-v', 'error', '-select_streams', 'v:0',
 	'-show_entries', 'stream=width,height,r_frame_rate', '-show_entries', 'format=duration',
 	'-of', 'default=nw=1', srcAbs], { encoding: 'utf8' });
 const num = (key) => {
@@ -83,7 +84,7 @@ if (AT && AT !== true) {
 	times = String(AT).split(',').map((s) => Number(s.trim())).filter((t) => Number.isFinite(t) && t >= 0);
 	speech = null;
 } else {
-	const sd = spawnSync('ffmpeg', ['-hide_banner', '-i', srcAbs,
+	const sd = spawnSync(FFMPEG, ['-hide_banner', '-i', srcAbs,
 		'-af', 'silencedetect=noise=-35dB:d=0.25', '-f', 'null', '-'], { encoding: 'utf8' });
 	speech = speechSegmentsFromSilence(sd.stderr, DUR);
 	times = pickSampleTimes(speech, DUR, FRAMES);
@@ -98,7 +99,7 @@ const rows = Math.ceil(times.length / cols);
 const select = times.map((t) => `eq(n\\,${Math.round(t * FPS)})`).join('+');
 const vf = `select='${select}',crop=${rect.w}:${rect.h}:${rect.x}:${rect.y},scale=${PANEL}:-1,tile=${cols}x${rows}`;
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
-const run = spawnSync('ffmpeg', ['-hide_banner', '-y', '-i', srcAbs, '-vf', vf, '-frames:v', '1', OUT], { encoding: 'utf8' });
+const run = spawnSync(FFMPEG, ['-hide_banner', '-y', '-i', srcAbs, '-vf', vf, '-frames:v', '1', OUT], { encoding: 'utf8' });
 if (!fs.existsSync(OUT)) {
 	console.error('✗ 没产出。ffmpeg 最后几行：');
 	console.error(String(run.stderr || '').split('\n').slice(-6).join('\n'));

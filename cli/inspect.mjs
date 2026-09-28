@@ -28,22 +28,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { WINGET_PACKAGES } from '../src/runtime-paths.mjs';
+import { FFMPEG, FFPROBE } from '../src/runtime-paths.mjs';
 
-// ---------------------------------------------------------------- 工具定位
-
-const FFMPEG = (() => {
-  const base = WINGET_PACKAGES;
-  try {
-    for (const dir of fs.readdirSync(base)) {
-      if (!dir.startsWith('Gyan.FFmpeg_')) continue;
-      const c = path.join(base, dir, 'ffmpeg-7.1.1-full_build', 'bin', 'ffmpeg.exe');
-      if (fs.existsSync(c)) return c;
-    }
-  } catch { /* 退回 PATH */ }
-  return 'ffmpeg';
-})();
-const FFPROBE = FFMPEG.replace(/ffmpeg\.exe$/i, 'ffprobe.exe');
 const NUL = process.platform === 'win32' ? 'NUL' : '-';
 
 const run = (bin, args) => spawnSync(bin, args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
