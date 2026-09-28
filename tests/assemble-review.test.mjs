@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { runNode, runCommand } from './helpers/spawn.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -13,7 +13,7 @@ const root = path.resolve(import.meta.dirname, '..');
 
 /** 生成一段定音量正弦音轨的测试片。 */
 function makeClip(file, volume) {
-  const r = spawnSync('ffmpeg', ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'testsrc2=size=320x180:rate=24',
+  const r = runCommand('ffmpeg', ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'testsrc2=size=320x180:rate=24',
     '-f', 'lavfi', '-i', `sine=frequency=440:sample_rate=44100,volume=${volume}`,
     '-t', '2', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-c:a', 'aac', file], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
@@ -21,7 +21,7 @@ function makeClip(file, volume) {
 
 /** ebur128 测综合响度（LUFS）。逐时刻行里也有 I:，只认 Summary 段的最终值。 */
 function integratedLufs(file) {
-  const r = spawnSync('ffmpeg', ['-v', 'info', '-i', file, '-af', 'ebur128', '-f', 'null', '-'],
+  const r = runCommand('ffmpeg', ['-v', 'info', '-i', file, '-af', 'ebur128', '-f', 'null', '-'],
     { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
   assert.equal(r.status, 0, r.stderr);
   const summary = r.stderr.slice(r.stderr.lastIndexOf('Summary:'));
@@ -61,12 +61,12 @@ test('assembly scales clips to the project aspect and evens out loudness', () =>
     - integratedLufs(path.join(project, 'clip_quiet.mp4')));
   assert.ok(before > 10, `夹具响度差应大于 10 LU 才有说服力，实测 ${before}`);
 
-  const run = () => spawnSync(process.execPath, [path.join(root, 'cli/assemble-units.mjs'), planPath], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+  const run = () => runNode([path.join(root, 'cli/assemble-units.mjs'), planPath], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
   const valid = run();
   assert.equal(valid.status, 0, valid.stderr);
 
   const film = path.join(project, 'out', 'final.mp4');
-  const probed = spawnSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries',
+  const probed = runCommand('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries',
     'stream=width,height', '-of', 'csv=p=0', film], { encoding: 'utf8' });
   assert.equal(probed.stdout.trim(), '864,480');
   // 成片不再做机器检查：能不能用由人在终审时判断，代码不拦。

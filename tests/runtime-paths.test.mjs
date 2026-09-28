@@ -3,7 +3,7 @@ import test from 'node:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { runNode } from './helpers/spawn.mjs';
 import { fileURLToPath } from 'node:url';
 
 /**
@@ -29,7 +29,7 @@ function evalIn(env, body) {
     const m = await import(pathToFileURL(process.env.AIH_MOD).href);
     console.log(JSON.stringify((${body})(m)));
   `;
-  const r = spawnSync(process.execPath, ['--input-type=module', '-e', code], {
+  const r = runNode(['--input-type=module', '-e', code], {
     cwd: ROOT,
     env: { ...process.env, AIH_MOD: MOD, ...env },
     encoding: 'utf8',
@@ -46,7 +46,7 @@ function thrownIn(env, body) {
     (${body})(m);
     console.log('NO_THROW');
   `;
-  const r = spawnSync(process.execPath, ['--input-type=module', '-e', code], {
+  const r = runNode(['--input-type=module', '-e', code], {
     cwd: ROOT,
     env: { ...process.env, AIH_MOD: MOD, ...env },
     encoding: 'utf8',

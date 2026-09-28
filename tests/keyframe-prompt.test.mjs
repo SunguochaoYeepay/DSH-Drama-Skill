@@ -16,7 +16,7 @@ import test from 'node:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { runNode } from './helpers/spawn.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 
@@ -55,7 +55,7 @@ function makeProject({ withPrompt = true, promptText = PROMPT_TEXT } = {}) {
 }
 
 function runCli(dir) {
-  return spawnSync(process.execPath, [
+  return runNode([
     path.join(root, 'cli', 'keyframes.mjs'),
     path.join(dir, 'board.json'),
     '--direction', path.join(dir, 'render.plan.json'),

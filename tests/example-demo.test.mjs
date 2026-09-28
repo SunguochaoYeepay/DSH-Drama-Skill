@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import test from 'node:test';
-import { spawnSync } from 'node:child_process';
+import { runCommand } from './helpers/spawn.mjs';
 import { checkBoard } from '../src/board.mjs';
 import { parseScript, spokenLines } from '../src/parse-script.mjs';
 import { auditPrompt, PROMPT_MAX_CHARS } from '../src/draw-specialist.mjs';
@@ -25,7 +25,7 @@ const sha256 = (text) => crypto.createHash('sha256').update(text).digest('hex');
 
 /** git 当前跟踪的示例文件（仓库相对路径）。 */
 function gitTrackedDemoFiles() {
-  const r = spawnSync('git', ['ls-files', '--', 'examples/demo-show'], { encoding: 'utf8' });
+  const r = runCommand('git', ['ls-files', '--', 'examples/demo-show'], { encoding: 'utf8' });
   if (r.status !== 0) throw new Error(`git ls-files 失败：${r.stderr}`);
   return r.stdout.split('\n').map((s) => s.trim()).filter(Boolean);
 }

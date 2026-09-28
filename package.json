@@ -6,6 +6,7 @@
     "test": "node tests/run-all.mjs",
     "kanban": "node web/server.mjs",
     "doctor": "node cli/doctor.mjs",
+    "bootstrap": "node cli/bootstrap.mjs",
     "web:install": "npm --prefix web install",
     "web:build": "npm --prefix web run build",
     "web:setup": "npm run web:install && npm run web:build",

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { runNode } from './helpers/spawn.mjs';
 import test from 'node:test';
 
 const NODE = process.execPath;
@@ -10,7 +10,7 @@ const SCRIPT = path.resolve(path.dirname(new URL(import.meta.url).pathname.repla
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '..');
 
 function run(args, env = {}) {
-  return spawnSync(NODE, [SCRIPT, ...args], { cwd: root, env: { ...process.env, ...env }, encoding: 'utf8' });
+  return runNode([SCRIPT, ...args], { cwd: root, env: { ...process.env, ...env }, encoding: 'utf8' });
 }
 
 test('register-agent 登记 Agent 直写剧本并写入 agent_draft 票据', () => {

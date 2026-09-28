@@ -20,7 +20,7 @@ import test from 'node:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { runNode } from './helpers/spawn.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const CLI = path.join(root, 'cli', 'dump-payload.mjs');
@@ -53,7 +53,7 @@ function makeFixture(extra = {}, historyFor = PID) {
 }
 
 function run(args) {
-  return spawnSync(process.execPath, [CLI, ...args], { encoding: 'utf8' });
+  return runNode([CLI, ...args], { encoding: 'utf8' });
 }
 
 test('单节点同时给正负向时，两个字段都被认出来', () => {

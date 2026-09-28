@@ -111,6 +111,7 @@ projects/<剧名>\
    - **Docker**（可选）：只有 `cli/desub.mjs` 去字幕用得上，不跑它可以不装。
 4. 参照 [`.env.example`](.env.example) 配置本机 `.env`（模型、通道与规格；`.env` 不入库）。
 5. 自检：`npm run doctor` —— 逐项报有/缺，必需项全绿即可跑。
+6. 一键验收：`npm run bootstrap` —— 依赖 + 示例剧目契约链 + 确定性测试三层一起验（不烧卡不联网）；只想几秒钟验完用 `npm run bootstrap -- --no-tests`。
 
 看板（链路画布：阶段与单元连成节点图、关键帧缩略图直接上节点、闸门票挂在节点上、点节点看实际产物；独立服务，不需要 DSH）：
 

@@ -13,7 +13,7 @@
  */
 
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { runNode } from './helpers/spawn.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -98,7 +98,7 @@ test('带（完）的剧本走 init-board 能建板、过契约、无垃圾镜�
 
   const root = path.resolve(import.meta.dirname, '..');
   const command = [path.join(root, 'cli/init-board.mjs'), '--story', storyPath, '--brief', briefPath, '--out', boardPath];
-  const result = spawnSync(process.execPath, command, { encoding: 'utf8' });
+  const result = runNode(command, { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr || result.stdout);
 
   const board = JSON.parse(fs.readFileSync(boardPath, 'utf8'));

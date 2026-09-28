@@ -15,7 +15,7 @@ import test from 'node:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { runNode, runCommand, pipesAvailable } from './helpers/spawn.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const CLI = path.join(root, 'cli', 'audit-audio.mjs');
@@ -30,7 +30,7 @@ const LATE = path.join(dir, 'late.m4a');
 const NOAUDIO = path.join(dir, 'silent.mp4');
 
 function ffmpeg(args) {
-  const r = spawnSync('ffmpeg', ['-y', '-v', 'error', ...args], { encoding: 'utf8', maxBuffer: 1e8 });
+  const r = runCommand('ffmpeg', ['-y', '-v', 'error', ...args], { encoding: 'utf8', maxBuffer: 1e8 });
   assert.equal(r.status, 0, `造夹具失败：${r.stderr}`);
 }
 
@@ -40,27 +40,35 @@ ffmpeg(['-f', 'lavfi', '-i', 'sine=frequency=3000:duration=3',
 ffmpeg(['-f', 'lavfi', '-i', 'testsrc2=size=64x64:rate=10:duration=1', '-pix_fmt', 'yuv420p', NOAUDIO]);
 
 function run(file, extra = []) {
-  return spawnSync(process.execPath, [CLI, file, '--no-out', '--step', '0.5', ...extra], { encoding: 'utf8' });
+  return runNode([CLI, file, '--no-out', '--step', '0.5', ...extra], { encoding: 'utf8' });
 }
 
-test('全程有声的片段判为通过', () => {
-  const r = run(TONE);
-  assert.equal(r.status, 0, r.stderr);
-  assert.match(r.stdout, /全频/);
-  assert.match(r.stdout, /✓/, `应判通过：${r.stdout}`);
-});
+// 这个 CLI 自己还要 spawn ffprobe 去探音轨。管道建不起来的终端里它一律报"没有音轨"，
+// 那是环境不是代码 —— 先探一次，探不到就跳过并写明，别把环境当回归（desub-vsr 同款写法）。
+if (!pipesAvailable()) {
+  test('ffprobe 输出本机取不到 —— 跳过（受限终端，不是代码问题）', (t) => {
+    t.skip('本机无法给子进程接管道：cli/audit-audio.mjs 内部的 ffprobe 拿不到输出，正常终端与 CI 仍会执行');
+  });
+} else {
+  test('全程有声的片段判为通过', () => {
+    const r = run(TONE);
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stdout, /全频/);
+    assert.match(r.stdout, /✓/, `应判通过：${r.stdout}`);
+  });
 
-test('开场静音、后面才响的片段要判出来（声音迟到）', () => {
-  const r = run(LATE);
-  assert.equal(r.status, 0, r.stderr);
-  assert.match(r.stdout, /⚠/, `应判警告：${r.stdout}`);
-  assert.match(r.stdout, /静音|缺席|迟到/, `应说明原因：${r.stdout}`);
-});
+  test('开场静音、后面才响的片段要判出来（声音迟到）', () => {
+    const r = run(LATE);
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stdout, /⚠/, `应判警告：${r.stdout}`);
+    assert.match(r.stdout, /静音|缺席|迟到/, `应说明原因：${r.stdout}`);
+  });
 
-test('没有音轨是硬问题：退出码 1', () => {
-  const r = run(NOAUDIO);
-  assert.equal(r.status, 1, `应失败：${r.stdout}`);
-  assert.match(r.stderr + r.stdout, /没有音轨/);
-});
+  test('没有音轨是硬问题：退出码 1', () => {
+    const r = run(NOAUDIO);
+    assert.equal(r.status, 1, `应失败：${r.stdout}`);
+    assert.match(r.stderr + r.stdout, /没有音轨/);
+  });
+}
 
 console.log('audit-audio: 3/3 passed');

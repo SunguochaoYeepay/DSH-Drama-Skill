@@ -70,6 +70,11 @@ __pycache__/
 /examples/demo-show/reviews/
 /examples/demo-show/out/
 /examples/demo-show/assets/
+# ── 实验室产物：lab/ 下的脚本入库，跑出来的结果不入库 ──────────────────
+# 2026-09-28 拍板：lab/ 存的是验证脚本（Blender 白膜、H3 控制旋钮），
+# 产物一律可重跑还原 —— 白膜 168 帧 + 对照图合计 56 MB，进仓库只是负担。
+# mp4/png/pyc 已被上面的全局规则挡住，这条补上 out/ 里的 json 等零碎。
+/lab/**/out/
 /projects/**
 !/projects/
 !/projects/README.md

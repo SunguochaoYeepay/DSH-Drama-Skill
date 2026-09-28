@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { runNode } from './helpers/spawn.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -20,11 +20,11 @@ test('channel draft cannot be approved in place of plan keyframe', () => {
   approve(project, 'keyframes', [draft]);
   assert.equal(approvalStatus(project, 'keyframes', [slot]).ok, false);
   const root = path.resolve(import.meta.dirname, '..');
-  const wrong = spawnSync(process.execPath, [path.join(root, 'cli/review-gate.mjs'), 'approve',
+  const wrong = runNode([path.join(root, 'cli/review-gate.mjs'), 'approve',
     '--project', project, '--stage', 'keyframes', '--artifacts', draft], { encoding: 'utf8' });
   assert.equal(wrong.status, 1);
   assert.match(wrong.stderr, /计划实际使用的图片/);
-  const correct = spawnSync(process.execPath, [path.join(root, 'cli/review-gate.mjs'), 'approve',
+  const correct = runNode([path.join(root, 'cli/review-gate.mjs'), 'approve',
     '--project', project, '--stage', 'keyframes'], { encoding: 'utf8' });
   assert.equal(correct.status, 0, correct.stderr);
   assert.equal(approvalStatus(project, 'keyframes', [slot]).ok, true);

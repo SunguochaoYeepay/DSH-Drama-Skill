@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { runNode } from './helpers/spawn.mjs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
@@ -41,7 +41,7 @@ function run(dir, units) {
     fs.writeFileSync(unitsFile, JSON.stringify(units));
     args.push('--units', unitsFile);
   }
-  const result = spawnSync(process.execPath, args, { encoding: 'utf8', cwd: root });
+  const result = runNode(args, { encoding: 'utf8', cwd: root });
   return { ...result, plan: fs.existsSync(out) ? JSON.parse(fs.readFileSync(out, 'utf8')) : null, out };
 }
 

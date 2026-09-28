@@ -1,0 +1,27 @@
+[reference generation]
+
+<Subject 1> is the man in <Picture 1> and <Picture 2> — short cropped black hair, dark grey long-sleeve crew-neck top, loose black trousers, bare ankles, his exact face, build and clothing preserved without change.
+<Subject 2> is the woman in <Picture 3> and <Picture 4> — long straight black hair parted down the middle, cream ribbed long-sleeve top, dark wide-leg trousers, her exact face, build and clothing preserved without change.
+
+summary: [reference generation] Live-action domestic confrontation inside a bare room. Subject 1 crosses the room toward Subject 2, the standoff crests, he throws one punch that lands on her jaw; she is driven back, loses her footing, and collapses to a seated position on the floor. One continuous take, 7.3 seconds.
+
+retention_analysis:
+<Subject 1> fully_preserved
+<Subject 2> fully_preserved
+<Picture 1> attribute_transfer
+<Picture 2> attribute_transfer
+<Picture 3> attribute_transfer
+<Picture 4> attribute_transfer
+
+detailed_description:
+[0s-2.3s] Medium shot, bare room with plain grey walls and a bare concrete floor. Subject 1 walks in from the far end of the room toward Subject 2, weight settling heavily on each step, arms hanging loose at his sides. Subject 2 stands still and faces him, arms down, chin slightly lifted, watching him come.
+[2.3s-3.5s] He stops just short of her. Both hold position, chests rising, eyes locked on each other. His right shoulder draws back and his weight sinks onto his rear leg.
+[3.5s-3.75s] He drives his right arm forward. The fist lands on her jaw. Her head snaps to the side.
+[3.75s-5.4s] She is shoved backward, heels skidding on the floor, both forearms swinging up toward her face; her knees give and she loses her balance.
+[5.4s-7.3s] She drops to the floor and lands seated, legs folded under her, one hand braced flat on the ground behind her. He stays where he is, right arm still half raised, chest heaving.
+
+Camera: one continuous take, medium shot held from the doorway side, slow dolly-in across the whole action, the frame staying on both figures together; the camera drops slightly with her as she falls.
+
+overall_soundscape: Footsteps on bare concrete and the scuff of shoe soles; a sharp exhaled breath at the moment the arm swings; a single dull thud where the fist meets the jaw; cloth rustling as she is driven back; a heavier impact and a sliding scrape as her body lands on the floor; his heavy breathing throughout and a short nasal grunt from her on impact.
+
+non_diegetic_music: N/A

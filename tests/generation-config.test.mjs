@@ -9,7 +9,7 @@
  * 那种断言在源码换个等价写法时会假红，在行为真坏了时却绿。
  */
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { runNode } from './helpers/spawn.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -21,7 +21,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 /** 在子进程里 import 配置模块，拿真实导出值（env 覆盖必须是新进程才生效）。 */
 function configValues(names, env) {
   const code = `import { ${names.join(', ')} } from './src/config.mjs'; console.log(JSON.stringify([${names.join(', ')}]))`;
-  const result = spawnSync(process.execPath, ['--input-type=module', '-e', code], {
+  const result = runNode(['--input-type=module', '-e', code], {
     cwd: root, encoding: 'utf8', env: { ...process.env, ...(env || {}) },
   });
   return result;
@@ -50,7 +50,7 @@ function makeUnitProject() {
 }
 
 test('legacy from-story cannot generate an untracked storyboard', () => {
-  const result = spawnSync(process.execPath, ['src/board.mjs', 'from-story'], {
+  const result = runNode(['src/board.mjs', 'from-story'], {
     cwd: root, encoding: 'utf8',
   });
   assert.notEqual(result.status, 0);
@@ -61,7 +61,7 @@ test('legacy from-story cannot generate an untracked storyboard', () => {
 // 这里断言的是干跑**打印出来的档位**，不是源码里写没写那行参数。
 test('default video run really is FastH3 + VSA on the small canvas', () => {
   const dir = makeUnitProject();
-  const result = spawnSync(process.execPath, [
+  const result = runNode([
     path.join(root, 'cli', 'unit.mjs'),
     path.join(dir, 'board.json'),
     '--direction', path.join(dir, 'render.plan.json'),
@@ -89,7 +89,7 @@ function makeAssetProject() {
 }
 
 function runCli(entry, args, env) {
-  return spawnSync(process.execPath, [path.join(root, 'cli', entry), ...args], {
+  return runNode([path.join(root, 'cli', entry), ...args], {
     encoding: 'utf8', env: { ...process.env, ...(env || {}) },
   });
 }

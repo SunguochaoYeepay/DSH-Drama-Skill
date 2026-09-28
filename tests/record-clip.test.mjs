@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { runNode } from './helpers/spawn.mjs';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -28,7 +28,7 @@ fs.writeFileSync(CLEAN, 'clean');
 const RESULT = path.join(PROJ, 'units', 'g001.result.json');
 const writeResult = (files) => fs.writeFileSync(RESULT, JSON.stringify({ unit: 'g001', files }, null, 2));
 
-const run = (...args) => spawnSync(process.execPath, [CLI, ...args], { cwd: ROOT, encoding: 'utf8' });
+const run = (...args) => runNode([CLI, ...args], { cwd: ROOT, encoding: 'utf8' });
 const filesOf = () => JSON.parse(fs.readFileSync(RESULT, 'utf8')).files.map((x) => (typeof x === 'string' ? x : (x.local_path || x.path)));
 
 test('默认前插：干净版成为第一条（下游"取第一条存在的"才拿到它）', () => {

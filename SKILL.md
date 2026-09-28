@@ -210,6 +210,10 @@ node cli/record-clip.mjs <项目目录> --unit g001 --clip units/g001_vsr.mp4   
 # ComfyUI utility 加工（非生成：放大/修复/遮罩/姿态/深度/补帧；2026-09-24 起）
 node cli/utility.mjs <workflow.json> --video in.mp4 --out-dir out/ [--set 节点.参数=值] [--dry-run]
 
+# 新机器 / 换机器：一键验收（依赖 + 示例契约链 + 确定性测试，不烧卡不联网）
+node cli/bootstrap.mjs                                       # 三层全验
+node cli/bootstrap.mjs --no-tests                            # 只验依赖与示例链，几秒钟
+
 # 排查与体检（不产出资产，只回答"实际发生了什么"）
 node cli/doctor.mjs                                          # 新机器依赖自检，必需项全绿才能跑
 node cli/dump-payload.mjs --project <项目目录> --unit <单元 id>   # 摊开这次生图真正提交给 ComfyUI 的原文

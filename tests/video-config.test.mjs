@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { runNode } from './helpers/spawn.mjs';
 import test from 'node:test';
 import { VIDEO_ATTENTION, VIDEO_PROFILE, VIDEO_QUALITY, VIDEO_NORMAL_SIZE, VIDEO_HIGH_SIZE } from '../src/config.mjs';
 
@@ -12,7 +12,7 @@ test('默认视频档使用 FastH3 和 VSA', () => {
 });
 
 test('非法注意力配置被明确拒绝', () => {
-  const result = spawnSync(process.execPath, ['-e', "import('./src/config.mjs')"], {
+  const result = runNode(['-e', "import('./src/config.mjs')"], {
     cwd: new URL('..', import.meta.url),
     encoding: 'utf8',
     env: { ...process.env, AIH_VIDEO_ATTENTION: 'unknown' },
@@ -22,7 +22,7 @@ test('非法注意力配置被明确拒绝', () => {
 });
 
 test('dense 不再是允许的注意力模式', () => {
-  const result = spawnSync(process.execPath, ['-e', "import('./src/config.mjs')"], {
+  const result = runNode(['-e', "import('./src/config.mjs')"], {
     cwd: new URL('..', import.meta.url),
     encoding: 'utf8',
     env: { ...process.env, AIH_VIDEO_ATTENTION: 'dense' },
@@ -32,7 +32,7 @@ test('dense 不再是允许的注意力模式', () => {
 });
 
 test('视频尺寸配置可由环境变量覆盖', () => {
-  const result = spawnSync(process.execPath, ['--input-type=module', '-e',
+  const result = runNode(['--input-type=module', '-e',
     "import { VIDEO_QUALITY, VIDEO_NORMAL_SIZE, VIDEO_HIGH_SIZE } from './src/config.mjs'; console.log(JSON.stringify([VIDEO_QUALITY, VIDEO_NORMAL_SIZE, VIDEO_HIGH_SIZE]))"], {
     cwd: new URL('..', import.meta.url), encoding: 'utf8',
     env: { ...process.env, AIH_VIDEO_QUALITY: 'high', AIH_VIDEO_NORMAL_SIZE: '432x768', AIH_VIDEO_HIGH_SIZE: '768x1344' },

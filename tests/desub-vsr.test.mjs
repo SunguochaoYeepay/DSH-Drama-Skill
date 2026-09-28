@@ -15,7 +15,7 @@ import test from 'node:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { runNode, runCommand, pipesAvailable } from './helpers/spawn.mjs';
 import { fileURLToPath } from 'node:url';
 import { COMFY_PYTHON, FFMPEG } from '../src/runtime-paths.mjs';
 import { rectOf } from '../src/video-diff.mjs';
@@ -25,9 +25,9 @@ const CLI = path.join(ROOT, 'cli', 'desub.mjs');
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-desub-vsr-'));
 test.after(() => fs.rmSync(TMP, { recursive: true, force: true }));
 
-const ffmpegOk = spawnSync(FFMPEG, ['-version'], { encoding: 'utf8' }).status === 0;
+const ffmpegOk = runCommand(FFMPEG, ['-version'], { encoding: 'utf8' }).status === 0;
 const pythonOk = Boolean(COMFY_PYTHON) && fs.existsSync(COMFY_PYTHON)
-  && spawnSync(COMFY_PYTHON, ['-c', 'import numpy, PIL'], { encoding: 'utf8' }).status === 0;
+  && runCommand(COMFY_PYTHON, ['-c', 'import numpy, PIL'], { encoding: 'utf8' }).status === 0;
 
 const W = 240;
 const H = 432;
@@ -43,14 +43,14 @@ function makeVideo(out, withText) {
   const args = ['-v', 'error', '-y', '-f', 'lavfi', '-i', `color=c=0x303030:s=${W}x${H}:d=1:r=12`];
   if (vf) args.push('-vf', vf);
   args.push('-c:v', 'libx264', '-pix_fmt', 'yuv420p', out);
-  const r = spawnSync(FFMPEG, args, { encoding: 'utf8' });
+  const r = runCommand(FFMPEG, args, { encoding: 'utf8' });
   if (r.status !== 0) throw new Error(`合成视频失败：${String(r.stderr).slice(0, 200)}`);
   return out;
 }
 
 /** 跑 CLI（默认加 --dry-run），返回 {code, out}。 */
 function runCli(args) {
-  const r = spawnSync(process.execPath, [CLI, ...args], { cwd: ROOT, encoding: 'utf8' });
+  const r = runNode([CLI, ...args], { cwd: ROOT, encoding: 'utf8' });
   return { code: r.status, out: `${r.stdout || ''}${r.stderr || ''}` };
 }
 
@@ -60,8 +60,12 @@ function cropOf(out) {
   return m ? m.slice(1).map(Number) : null;
 }
 
-if (!ffmpegOk) {
-  test('ffmpeg 不可用 —— 跳过（机器侧前置，不是代码问题）', () => { assert.ok(true); });
+// 管道建不起来的终端里，desub 自己 spawn 的 ffprobe/python 也拿不到输出，
+// 干跑会直接失败 —— 那是环境不是代码，跳过并写明（audit-audio 同款写法）。
+if (!ffmpegOk || !pipesAvailable()) {
+  test('ffmpeg 或子进程管道不可用 —— 跳过（机器侧前置，不是代码问题）', (t) => {
+    t.skip(`ffmpeg=${ffmpegOk} 管道=${pipesAvailable()}：机器侧前置缺失，正常终端与 CI 仍会执行`);
+  });
 } else {
   makeVideo(VIDEO, true);
 
@@ -99,7 +103,9 @@ if (!ffmpegOk) {
   });
 }
 
-if (ffmpegOk && pythonOk) {
+// --auto-band 要 CLI 内部再 spawn 一次 python（tools/band_detect.py）——
+// 管道不可用时它也只能退出，同上：那是环境不是代码。
+if (ffmpegOk && pythonOk && pipesAvailable()) {
   test('--auto-band：找到的带被用上；显式给的项覆盖它', () => {
     const auto = runCli([VIDEO, '--auto-band', '--dry-run']);
     assert.equal(auto.code, 0, auto.out);

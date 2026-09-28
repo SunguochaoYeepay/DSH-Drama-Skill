@@ -11,7 +11,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { runCommand } from './helpers/spawn.mjs';
 import { fileURLToPath } from 'node:url';
 import { COMFY_PYTHON, FFMPEG } from '../src/runtime-paths.mjs';
 
@@ -26,8 +26,8 @@ const check = (name, ok, detail = '') => {
 const skipAll = (why) => { skip++; console.log(`  ⚠ 跳过：${why}`); };
 
 const pythonOk = Boolean(COMFY_PYTHON) && fs.existsSync(COMFY_PYTHON)
-  && spawnSync(COMFY_PYTHON, ['-c', 'import numpy, PIL'], { encoding: 'utf8' }).status === 0;
-const ffmpegOk = spawnSync(FFMPEG, ['-version'], { encoding: 'utf8' }).status === 0;
+  && runCommand(COMFY_PYTHON, ['-c', 'import numpy, PIL'], { encoding: 'utf8' }).status === 0;
+const ffmpegOk = runCommand(FFMPEG, ['-version'], { encoding: 'utf8' }).status === 0;
 
 if (!pythonOk || !ffmpegOk) {
   skipAll(!pythonOk ? '没有可用的 ComfyUI python（numpy/PIL）' : '没有可用的 ffmpeg');
@@ -49,13 +49,13 @@ function makeVideo(out, withText) {
   const args = ['-v', 'error', '-y', '-f', 'lavfi', '-i', `color=c=0x303030:s=${W}x${H}:d=1:r=12`];
   if (vf) args.push('-vf', vf);
   args.push('-c:v', 'libx264', '-pix_fmt', 'yuv420p', out);
-  const r = spawnSync(FFMPEG, args, { encoding: 'utf8' });
+  const r = runCommand(FFMPEG, args, { encoding: 'utf8' });
   if (r.status !== 0) throw new Error(`合成视频失败：${String(r.stderr).slice(0, 300)}`);
   return out;
 }
 
 function detect(video, samples = 12) {
-  const r = spawnSync(COMFY_PYTHON, [SCRIPT, '--video', video, '--ffmpeg', FFMPEG, '--samples', String(samples)], { encoding: 'utf8' });
+  const r = runCommand(COMFY_PYTHON, [SCRIPT, '--video', video, '--ffmpeg', FFMPEG, '--samples', String(samples)], { encoding: 'utf8' });
   try { return JSON.parse(String(r.stdout).trim().split('\n').pop()); } catch { return { error: `解析不出 JSON：${String(r.stdout).slice(0, 200)}` }; }
 }
 

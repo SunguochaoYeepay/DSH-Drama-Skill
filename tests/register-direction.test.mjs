@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { runNode } from './helpers/spawn.mjs';
 import test from 'node:test';
 
 const NODE = process.execPath;
@@ -11,14 +11,14 @@ const CLI = path.join(root, 'cli', 'register-direction.mjs');
 const GATE = path.join(root, 'cli', 'review-gate.mjs');
 
 function run(args) {
-  return spawnSync(NODE, [CLI, ...args], { cwd: root, encoding: 'utf8' });
+  return runNode([CLI, ...args], { cwd: root, encoding: 'utf8' });
 }
 
 /** 预置一张人工票。登记入口现在与 cli/direct.mjs 一样查剧本闸门，测试必须先过这一关。 */
 function approve(dir, stage, artifacts = []) {
   const args = [GATE, 'approve', '--project', dir, '--stage', stage];
   if (artifacts.length) args.push('--artifacts', ...artifacts);
-  const r = spawnSync(NODE, args, { cwd: root, encoding: 'utf8' });
+  const r = runNode(args, { cwd: root, encoding: 'utf8' });
   if (r.status !== 0) throw new Error(`预置 ${stage} 票失败：${r.stderr || r.stdout}`);
 }
 

@@ -3,7 +3,7 @@ import test from 'node:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { runNode } from './helpers/spawn.mjs';
 import { fileURLToPath } from 'node:url';
 
 /**
@@ -17,7 +17,7 @@ const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-doctor-'));
 test.after(() => fs.rmSync(TMP, { recursive: true, force: true }));
 
 function runDoctor(env) {
-  const r = spawnSync(process.execPath, ['cli/doctor.mjs', '--json'], {
+  const r = runNode(['cli/doctor.mjs', '--json'], {
     cwd: ROOT,
     env: { ...process.env, ...env },
     encoding: 'utf8',
