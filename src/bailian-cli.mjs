@@ -53,6 +53,7 @@ export function runBailian(args, { timeoutMs = 600000 } = {}) {
     timeout: timeoutMs,
     maxBuffer: 32 * 1024 * 1024,
     windowsHide: true,
+    stdio: ['ignore', 'pipe', 'pipe'],
   });
   return { status: r.status, stdout: r.stdout || '', stderr: r.stderr || '', error: r.error, argv };
 }

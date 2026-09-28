@@ -208,7 +208,7 @@ function psQuote(s) {
 function runPowerShell(script, timeout) {
   try {
     return spawnSync(PS, ['-NoProfile', '-NonInteractive', '-Command', script],
-      { encoding: 'utf8', timeout, windowsHide: true });
+      { encoding: 'utf8', timeout, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
   } catch (e) {
     return { status: -1, stdout: '', stderr: String(e.message), error: e };
   }

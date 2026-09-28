@@ -46,7 +46,7 @@ const FFMPEG = (() => {
 const FFPROBE = FFMPEG.replace(/ffmpeg\.exe$/i, 'ffprobe.exe');
 const NUL = process.platform === 'win32' ? 'NUL' : '-';
 
-const run = (bin, args) => spawnSync(bin, args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+const run = (bin, args) => spawnSync(bin, args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
 
 // ---------------------------------------------------------------- 参数
 

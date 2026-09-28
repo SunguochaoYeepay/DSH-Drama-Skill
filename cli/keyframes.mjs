@@ -27,6 +27,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { projectAssetFiles, unitAssets } from '../src/asset-resolver.mjs';
 import { planKeyframeFiles, planLastKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
+import { referenceAdvice } from '../src/plan-checks.mjs';
 import { COMFY_GEN, NODE, requireComfyPython } from '../src/runtime-paths.mjs';
 import * as bailian from '../src/providers/bailian.mjs';
 import * as volcengine from '../src/providers/volcengine.mjs';
@@ -275,6 +276,17 @@ for (const unit of dir.units) {
 
   console.log(`\n${'─'.repeat(68)}`);
   console.log(`  【${unit.id}】${shot.framing}　参考图 ${refs.length} 张：${refTable}`);
+  // 把"声明了什么"和"这一通道实际下发什么"摆在一起 —— 看板的资源清单会把道具列出来，
+  // 而本地/百炼/火山通道**不传道具**；不写清楚，人（和 AI）都会往错误的方向找原因。
+  {
+    const advice = referenceAdvice({
+      unitId: unit.id,
+      channel: PROVIDER,
+      refCount: refs.length,
+      declaredProps: Array.isArray(unit.props) ? unit.props : [],
+    });
+    if (advice) console.log(`  ${advice}`);
+  }
   console.log(`  ── LLM 直写提示词（keyframe-prompts/${unit.id}.txt，逐字送模型）`);
   console.log(modelPrompt.split('\n').map((l) => '    ' + l).join('\n'));
   // 机器审计跑在直写文件上 —— 送进模型的是它，要审的也是它。只报告不阻断（废机器审核的边界）。
@@ -309,7 +321,8 @@ for (const unit of dir.units) {
     // 与干跑同源：真正跑的就是刚才打印的那一串
     const a = localGenArgs(unit, refs, modelPrompt);
     const started = Date.now();
-    r = spawnSync(LOCAL_PY(), a, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 900000 });
+    // stdio：本机 Node 派生子进程对 stdin 管道过敏，固定 ['ignore','pipe','pipe']（同 src/providers/comfyui.mjs）。
+    r = spawnSync(LOCAL_PY(), a, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 900000, stdio: ['ignore', 'pipe', 'pipe'] });
     secs = String(Math.round((Date.now() - started) / 1000));
     txt = String(r.stdout || '') + String(r.stderr || '');
     try {
@@ -356,7 +369,7 @@ for (const unit of dir.units) {
       '--model', HUIMENG_IMAGE_MODEL];
     for (const ref of refs) a.push('--ref', ref.file);
     a.push('--out', out);
-    r = spawnSync(NODE, a, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 900000, cwd: ROOT });
+    r = spawnSync(NODE, a, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 900000, cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
     txt = String(r.stdout || '') + String(r.stderr || '');
     got = /✓/.test(txt) && fs.existsSync(out);
     secs = (txt.match(/用时 (\d+) 秒/) || [])[1] || '?';
@@ -413,7 +426,7 @@ if (WITH_LAST && !DRY) {
       console.log(`\n  落幅【${unit.id}】参考图 ${lastRefs.length} 张；直写 ${audit.chars} 字${audit.violations.length ? `，⚠ ${audit.violations.length} 项违规` : '，自检通过'}`);
       const started = Date.now();
       const r2 = spawnSync(LOCAL_PY(), localGenArgs(unit, lastRefs, lastPrompt, '.last'), {
-        encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 900000,
+        encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 900000, stdio: ['ignore', 'pipe', 'pipe'],
       });
       const secs2 = Math.round((Date.now() - started) / 1000);
       let got2 = false;
@@ -466,9 +479,15 @@ if (failures) {
       `- **${t.id}**：${t.file}，送模型 ${t.chars} 字${t.violations.length ? `，⚠ ${t.violations.join('；')}` : '，自检通过'}`,
     ]).flat(), '',
     `生成记录：${generationRecord}`,
+    // 空间核查挂在**签字前必读的地方**：两人以上同框 / 对谈 / 机位换边 / 没有落幅时尤其要跑。
+    // 它不判"两人是否相向"（只能人眼看），只判纯逻辑能判的：人数、轴的视线方向、逐内部镜头的视线一致性。
+    `空间核查（签字前建议跑）：node cli/space-check.mjs "${PROJ}"　→ reviews/space-check.md`,
+    `主体/人数：node cli/check-subjects.mjs "${PROJ}"　（没人 → 退出码 1）`,
+    `（声明写在 space.json；怎么填见 references/space-check.md）`,
     `确认命令：node cli/review-gate.mjs approve --project "${PROJ}" --stage keyframes --plan "${DIRECTION_PATH}"`,
   ]);
   console.log('\n关键帧绝对路径（请直接打开并逐张确认）：');
   for (const file of generated) console.log(`  · ${path.resolve(file)}`);
+  console.log(`\n空间核查：node cli/space-check.mjs "${PROJ}"　（见 references/space-check.md）`);
   console.log(`\n完成。等待人工审阅：${note}`);
 }

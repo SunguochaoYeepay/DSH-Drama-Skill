@@ -74,7 +74,7 @@ if (!targets.length) {
 const args = [path.join(HERE, 'lib', 'presence.py'), '--weights', weights, '--json'];
 for (const t of targets) args.push('--image', t);
 // cwd 设成权重目录：ultralytics 首次会自动下载权重，落到那里而不是仓库根
-const r = spawnSync(requireComfyPython(), args, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, cwd: path.dirname(weights) });
+const r = spawnSync(requireComfyPython(), args, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, cwd: path.dirname(weights), stdio: ['ignore', 'pipe', 'pipe'] });
 if (r.status === 2 || (!r.stdout && r.stderr)) {
   console.error(`检测器不可用：${String(r.stderr || '').slice(-400)}`);
   process.exit(2);

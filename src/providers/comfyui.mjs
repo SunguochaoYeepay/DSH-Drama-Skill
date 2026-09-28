@@ -108,7 +108,26 @@ function snapshot(dir) {
 
 function run(args, timeoutMs) {
   const py = requireComfyPython();
-  const r = spawnSync(py, [GEN, ...args], { encoding: 'utf8', timeout: timeoutMs, maxBuffer: 32 * 1024 * 1024 });
+  // ⚠ stdin **必须**显式给 `'ignore'`，不能留默认的 `'pipe'`（2026-09-24 实测）。
+  //
+  // 本机 Node 的同步派生对 stdin 管道过敏：留给默认 `pipe` 时 `spawnSync` 一律返回
+  // `status=null / signal=null / error.code=EBUSY`，**任何 exe 都起不来**（五个不同 exe 全中招，
+  // 连 `spawnSync(node.exe)` 派生 Node 自己都失败）。真正的原因是这一层，不是 gen.py、
+  // 不是 ComfyUI 没就绪、也不是 Python 路径 —— 异步 `spawn()` 同一时刻完全正常。
+  //
+  // 改成 `ignore` 后立刻 `status=0`，且 **stdout / stderr 照样能捕获**（本函数要的就是
+  // "同步拿到结果 + 读末行 JSON"，并不需要往 gen.py 喂 stdin，gen.py 也不读 stdin）。
+  // 实测矩阵：`inherit` 与 `'ignore'` 都通，但 `inherit` 会把子进程输出混进父进程、
+  // 且 stdout 捕不到，只有 `['ignore','pipe','pipe']` 既通又拿得到值。
+  //
+  // 别改回默认 —— 那时资产生成会退化成 0.9 秒返回「未产出文件（exit null）」，
+  // 报错里既没有 status 也没有 stderr，看一眼很容易误判成"模型没出图"。
+  const r = spawnSync(py, [GEN, ...args], {
+    encoding: 'utf8',
+    timeout: timeoutMs,
+    maxBuffer: 32 * 1024 * 1024,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
   let parsed = null;
   try { parsed = JSON.parse((r.stdout || '').trim().split('\n').pop()); } catch { /* 非 JSON 输出就忽略 */ }
   return { status: r.status, stderr: r.stderr || '', json: parsed };

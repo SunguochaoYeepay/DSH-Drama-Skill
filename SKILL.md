@@ -2,7 +2,7 @@
 name: story2video
 description: 将故事或成品剧本编译为导演方案、视觉资产、关键帧、逐段视频和最终成片；适用于继续现有项目、审阅阶段产物或排查故事转视频流水线。
 metadata:
-  version: 3.1.0
+  version: 3.2.0
 ---
 
 # Story to Video（工程代号「逐格」）
@@ -115,6 +115,7 @@ metadata:
 | 生成设计参谋方案（可选，产出不进提示词） | `references/scene-designer.md`、`references/character-designer.md` |
 | 立项定摄影语言、改镜头 / 光 / 风格头 | `references/cinematography.md`；题材取值参考 `references/art/<style>.md`（若存在） |
 | 生成 FastH3/H3 视频、选择时长和规格 | `references/video-h3.md` |
+| 关键帧签署前做空间/人数核查（多人同框、换边、缺落幅） | `references/space-check.md` |
 | 人工送审、合成与终审 | `references/qa-and-review.md` |
 | **`final` 票已记录，准备收工** | `references/workflow.md` 的「收工与知识回流」 |
 | ComfyUI、音频、字幕、尺寸或进程异常 | `references/troubleshooting.md` |
@@ -157,6 +158,7 @@ metadata:
 | 摄影语言契约（镜头 / 光 / 锁定风格头） | `references/cinematography.md` |
 | 分题材视觉语言（契约取值参考与契约外表演/造型语言） | `references/art/<style>.md` |
 | H3 执行参数 | `references/video-h3.md` |
+| 空间核查（声明对照 + 主体存在性，只核查不控制画面） | `references/space-check.md` |
 | 抽卡师：LLM 直写关键帧提示词（`keyframe-prompts/<unit>.txt`，逐字送模型） | `references/draw-specialist.md`（岗位、工作流与工程接线）+ `references/prompt-rules.md`（禁令与正向工艺）+ `references/draw-vocabulary.md`（词汇弹药） |
 | 人工送审规则 | `references/qa-and-review.md` |
 | 确定性行为 | `src/`、`cli/` 和对应测试 |
@@ -169,6 +171,10 @@ metadata:
 # 查看板子与旧四阶段票据
 node src/board.mjs validate <board.json>
 node src/board.mjs table <board.json>
+
+# 立项建板（先记 story 人工票，再建板）
+node cli/review-gate.mjs approve --project <项目目录> --stage story
+node cli/init-board.mjs --story <项目/story.md> --brief <项目/board-brief.json> --out <项目/board.json>
 
 # 导演与生成计划
 node cli/register-direction.mjs <board.json> --input <草稿.json>   # 默认：Agent 直写导演稿后登记
@@ -191,7 +197,21 @@ node cli/review-gate.mjs approve --project <项目目录> --stage keyframes --pl
 node cli/review-gate.mjs approve --project <项目目录> --stage clip --id g001 --artifacts <g001.mp4>
 node cli/review-gate.mjs ready-assemble --project <项目目录> --plan <render.plan.json>
 
+# 空间核查（关键帧签署前；规则在 references/space-check.md）
+node cli/check-subjects.mjs <项目目录>      # 画里有没有人、人数对不对；检出没人 → 退出码 1
+node cli/space-check.mjs <项目目录>         # 核查单，同时写 reviews/space-check.md
+
+# 去除硬字幕（唯一通道 VSR/Docker；规则在 references/troubleshooting.md）
+node cli/subcheck.mjs <视频>                                  # 先量字幕真实位置，别按固定比例猜
+node cli/desub.mjs <视频>                                     # 去字幕（自带带内/带外差核查）
+node cli/band-diff.mjs 原片.mp4 处理后.mp4 --top .. --bottom ..   # 单独核查任意两版改在哪
+node cli/record-clip.mjs <项目目录> --unit g001 --clip units/g001_vsr.mp4   # 把干净版记成主产物，再重签 clip 票
+
+# ComfyUI utility 加工（非生成：放大/修复/遮罩/姿态/深度/补帧；2026-09-24 起）
+node cli/utility.mjs <workflow.json> --video in.mp4 --out-dir out/ [--set 节点.参数=值] [--dry-run]
+
 # 排查与体检（不产出资产，只回答"实际发生了什么"）
+node cli/doctor.mjs                                          # 新机器依赖自检，必需项全绿才能跑
 node cli/dump-payload.mjs --project <项目目录> --unit <单元 id>   # 摊开这次生图真正提交给 ComfyUI 的原文
 node cli/dump-payload.mjs <result.json 路径>                      # 同上，直接给 result.json
 node cli/audit-audio.mjs --project <项目目录> --units g001,g002   # 按时域切片量音轨（响不响、什么时候响）
