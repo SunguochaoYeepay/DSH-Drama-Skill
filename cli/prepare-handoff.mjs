@@ -7,7 +7,7 @@ import { clipArtifactFiles, clipResultPath, primaryClipFile, requireApproval, wr
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 
 installCliErrorHandler();
-import { WINGET_PACKAGES } from '../src/runtime-paths.mjs';
+import { FFMPEG } from '../src/runtime-paths.mjs';
 
 const argv = process.argv.slice(2);
 const flag = (name, fallback = null) => { const i = argv.indexOf(`--${name}`); return i >= 0 && argv[i + 1] ? argv[i + 1] : fallback; };
@@ -30,16 +30,10 @@ const clip = primaryClipFile(project, sourceUnit);
 if (!clip) throw new Error(`上一段 ${sourceUnit} 没有有效视频产物`);
 requireApproval(project, 'clip', clipArtifactFiles(project, sourceUnit), { id: sourceUnit, skip: SKIP_GATE });
 
-let ffmpeg = 'ffmpeg';
-try {
-  for (const dir of fs.readdirSync(WINGET_PACKAGES)) if (dir.startsWith('Gyan.FFmpeg_')) {
-    const candidate = path.join(WINGET_PACKAGES, dir, 'ffmpeg-7.1.1-full_build', 'bin', 'ffmpeg.exe');
-    if (fs.existsSync(candidate)) { ffmpeg = candidate; break; }
-  }
-} catch { /* PATH fallback */ }
+// ffmpeg 真身解析归 runtime-paths 独有（winget 升级改版本目录名，写死就静默落空）。
 const frame = path.join(project, 'handoffs', `${unitId}.stable-tail.png`);
 fs.mkdirSync(path.dirname(frame), { recursive: true });
-const extracted = spawnSync(ffmpeg, ['-y', '-v', 'error', '-sseof', `-${offset}`, '-i', clip, '-frames:v', '1', frame], { encoding: 'utf8' });
+const extracted = spawnSync(FFMPEG, ['-y', '-v', 'error', '-sseof', `-${offset}`, '-i', clip, '-frames:v', '1', frame], { encoding: 'utf8' });
 if (extracted.status !== 0 || !fs.existsSync(frame)) throw new Error(`稳定尾帧提取失败：${String(extracted.stderr || '').slice(0, 300)}`);
 const record = createHandoffRecord({ projectDir: project, unit, sourceUnit, sourceClip: clip, stableFrame: frame, tailOffsetS: offset });
 
