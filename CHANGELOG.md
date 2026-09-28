@@ -2,6 +2,30 @@
 
 记录工程级行为变化。具体剧目的抽卡结果、耗时和逐帧评价留在对应项目目录，不写入这里。
 
+## 2026-09-28 - 外部体检后的两类收编：ffmpeg 解析与 argv 解析各归一个所有者
+
+一次工程体检发现「测试不遵守产品自己的规则」：测试裸调 `'ffmpeg'` 而产品代码走
+`runtime-paths` 的真身解析，本机 winget 装的 ffmpeg 不在 PATH，`npm test` 2/75 红。
+排查中挖出真 bug 和一批同款裂缝，逐层收编：
+
+- **`cli/assemble-units.mjs` 是真 bug，不只是测试问题**：合成主流程内部裸调
+  `'ffmpeg'`/`'ffprobe'`，本机直接 ENOENT——修前只要跑合成必炸。
+- **写死 winget 版本目录名的活雷 ×3**：`prepare-handoff` / `inspect` / `animatic`
+  各自私有扫 winget 目录找 ffmpeg，且都写死 `ffmpeg-7.1.1-full_build` —— 正是
+  `runtime-paths` 注释里明令禁止的写法，winget 一升级就静默落空退化成裸调。
+  三处连同 `subcheck` 的裸调一起收编为 `runtime-paths` 的 `FFMPEG`/`FFPROBE`，
+  至此全仓 ffmpeg 真身解析只剩一个所有者（`doctor` 的裸调是故意探测 PATH 兜底，不动）。
+- **测试侧**：`assemble-review` / `audit-audio` 的裸调改走同一解析；
+  `audit-audio` 夹具失败从模块级 uncaught 改成 `ffmpegOk` 守卫转 skip
+  （与 `desub-vsr`/`band-detect` 既有写法对齐）。
+- **argv 解析收编**：26 个 CLI 各写一份 `argv.indexOf` 解析，三种语义同名不同义
+  （有的 `flag` 缺值回退 fallback、有的返回 `true`、有的裸取 `undefined`）。
+  新建 `cli/lib/argv.mjs`，按缺值行为定名 `value`（裸取）/ `flag`（严格回退）/
+  `opt`（布尔开关）三种语义，逐个按原语义迁移（`kanban` 的 `parsePort` 是
+  纯函数契约不动；位置参数逻辑留在各 CLI）。strict 语义统一补上 `--` 防护
+  （`band-diff` 原有写法）。
+- 测试：新增 `tests/cli-argv.test.mjs` 钉三种语义边界；修后 `npm test` 76/76 全绿。
+
 ## 2026-09-22 - 跑通第一部真剧后的清账：四处缺陷 + 契约规则写前自检
 
 《工位上的地震》（`projects/desk_quake`）是第一部从立项走到成片的真剧（8 张人工票全由人签、
