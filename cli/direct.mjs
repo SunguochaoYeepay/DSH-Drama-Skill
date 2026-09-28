@@ -8,15 +8,13 @@ import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { writeDirectionReceipt } from '../src/direction-provenance.mjs';
 import { DIRECTOR_MODEL, DIRECTOR_MAX_OUTPUT_TOKENS } from '../src/config.mjs';
 import { generateBatchedDirection } from '../src/director-batch.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 installCliErrorHandler();
 
 const argv = process.argv.slice(2);
 const boardArg = argv.find((value) => /\.json$/i.test(value) && !value.startsWith('--'));
-const flag = (name, fallback) => {
-  const at = argv.indexOf(`--${name}`);
-  return at >= 0 && argv[at + 1] ? argv[at + 1] : fallback;
-};
+const { flag } = makeArgs();
 if (!boardArg) {
   console.error('用法：node cli/direct.mjs <board.json> [--story story.md] [--out board.direction.json] [--feedback revision.md] [--batched] [--model <模型>] [--thinking] [--max-tokens 12000]');
   process.exit(2);

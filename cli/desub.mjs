@@ -49,10 +49,11 @@ import { spawnSync } from 'node:child_process';
 import { COMFY_PYTHON, FFMPEG, FFPROBE } from '../src/runtime-paths.mjs';
 import { PROJECT_ROOT } from '../src/config.mjs';
 import { rectOf, verifyBandEdit } from '../src/video-diff.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 const IMAGE = 'eritpchy/video-subtitle-remover:1.4.0-cuda12.6';
 const argv = process.argv.slice(2);
-const flag = (n, d) => { const i = argv.indexOf(`--${n}`); return i < 0 ? d : (argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : true); };
+const { opt } = makeArgs();
 const DRY = argv.includes('--dry-run');
 
 const src = argv.find((a) => !a.startsWith('--') && fs.existsSync(a));
@@ -68,8 +69,8 @@ if (!src) {
 }
 
 const srcAbs = path.resolve(src);
-const OUT = path.resolve(String(flag('out', path.join(path.dirname(srcAbs), `${path.basename(srcAbs, path.extname(srcAbs))}_nosub.mp4`))));
-const MODE = String(flag('mode', 'sttn-det'));
+const OUT = path.resolve(String(opt('out', path.join(path.dirname(srcAbs), `${path.basename(srcAbs, path.extname(srcAbs))}_nosub.mp4`))));
+const MODE = String(opt('mode', 'sttn-det'));
 
 // 量源视频尺寸，把比例换成像素（VSR 要的是 ymin ymax xmin xmax）
 const probe = spawnSync(FFPROBE, ['-v', 'error', '-select_streams', 'v:0',
@@ -90,8 +91,8 @@ if (!W || !H) {
 // 「带 → 像素」的取整走 `rectOf`（唯一一份实现，两条边各算各的再相减）：
 // 核查窗口与切给 VSR 的窗口必须是**同一个矩形**，否则量出来的数答非所问。
 const DECLARED = {
-  top: Number(flag('top', 0.71)), bottom: Number(flag('bottom', 0.87)),
-  left: Number(flag('left', 0)), right: Number(flag('right', 1)),
+  top: Number(opt('top', 0.71)), bottom: Number(opt('bottom', 0.87)),
+  left: Number(opt('left', 0)), right: Number(opt('right', 1)),
 };
 const EXPLICIT = Object.fromEntries(Object.entries(DECLARED).filter(([k]) => argv.includes(`--${k}`)));
 let band = { ...DECLARED };
@@ -99,7 +100,7 @@ if (argv.includes('--auto-band')) {
   if (!COMFY_PYTHON) throw new Error('--auto-band 需要 AIH_PYTHON（ComfyUI 的 python，含 numpy/PIL）');
   const d = spawnSync(COMFY_PYTHON, [
     path.join(PROJECT_ROOT, 'tools', 'band_detect.py'),
-    '--video', srcAbs, '--ffmpeg', FFMPEG, '--samples', String(flag('samples', 24)),
+    '--video', srcAbs, '--ffmpeg', FFMPEG, '--samples', String(opt('samples', 24)),
   ], { encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
   let j = null;
   try { j = JSON.parse(String(d.stdout).trim().split('\n').pop()); } catch { j = null; }

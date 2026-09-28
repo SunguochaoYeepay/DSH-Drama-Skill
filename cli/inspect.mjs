@@ -29,6 +29,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { FFMPEG, FFPROBE } from '../src/runtime-paths.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 const NUL = process.platform === 'win32' ? 'NUL' : '-';
 
@@ -40,13 +41,7 @@ const argv = process.argv.slice(2);
 const src = argv.find((a) => !a.startsWith('--') && argv.indexOf(a) > 0 ? !argv[argv.indexOf(a) - 1].startsWith('--') : false)
   || argv.find((a) => !a.startsWith('--'));
 
-function flag(name, def) {
-  const i = argv.indexOf(`--${name}`);
-  if (i < 0) return def;
-  const v = argv[i + 1];
-  if (v === undefined || v.startsWith('--')) return true;
-  return v;
-}
+const { opt } = makeArgs();
 
 if (!src || argv.includes('--help') || argv.includes('-h')) {
   console.log(`
@@ -65,14 +60,14 @@ if (!src || argv.includes('--help') || argv.includes('-h')) {
 const srcAbs = path.resolve(src);
 if (!fs.existsSync(srcAbs)) { console.error(`✗ 找不到文件：${srcAbs}`); process.exit(2); }
 
-const NFRAMES = Math.max(2, Number(flag('frames', 6)) || 6);
-const RAW_H = Number(flag('height', 360)) || 360;
+const NFRAMES = Math.max(2, Number(opt('frames', 6)) || 6);
+const RAW_H = Number(opt('height', 360)) || 360;
 const HEIGHT = RAW_H % 2 === 0 ? RAW_H : RAW_H - 1;   // **偶数** —— yuv420p 的硬要求
-const EXPECT = flag('aspect', null);
-const TOL = Number(flag('tolerance', 0.02)) || 0.02;
-const WANT_EDGES = Boolean(flag('first-last', false));
+const EXPECT = opt('aspect', null);
+const TOL = Number(opt('tolerance', 0.02)) || 0.02;
+const WANT_EDGES = Boolean(opt('first-last', false));
 const isImage = /\.(png|jpe?g|webp|bmp)$/i.test(srcAbs);
-const outSheet = flag('out', null) || path.join(path.dirname(srcAbs), `${path.basename(srcAbs, path.extname(srcAbs))}_frames.png`);
+const outSheet = opt('out', null) || path.join(path.dirname(srcAbs), `${path.basename(srcAbs, path.extname(srcAbs))}_frames.png`);
 
 // ---------------------------------------------------------------- 探测
 

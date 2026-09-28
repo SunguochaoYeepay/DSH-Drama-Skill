@@ -4,28 +4,26 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { buildBrief, callDirector, readBrief } from '../src/director.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { makeArgs } from './lib/argv.mjs';
 import { requireApproval } from '../src/human-gates.mjs';
 import { writeDirectionReceipt } from '../src/direction-provenance.mjs';
 import { DIRECTOR_MAX_OUTPUT_TOKENS, DIRECTOR_MODEL } from '../src/config.mjs';
 
 installCliErrorHandler();
 const argv = process.argv.slice(2);
-const value = (name, fallback = null) => {
-  const i = argv.indexOf(`--${name}`);
-  return i >= 0 && argv[i + 1] ? argv[i + 1] : fallback;
-};
+const { flag } = makeArgs();
 const boardArg = argv.find((x) => /board\.json$/i.test(x) && !x.startsWith('--'));
-const unitId = value('unit');
-const feedbackPath = value('feedback');
+const unitId = flag('unit');
+const feedbackPath = flag('feedback');
 if (!boardArg || !unitId || !feedbackPath) {
   console.error('用法：node cli/revise-unit.mjs <board.json> --unit <id> --feedback <revision.md> [--story story.md] [--out board.direction.json]');
   process.exit(2);
 }
 const boardPath = path.resolve(boardArg);
 const projectDir = path.dirname(boardPath);
-const storyPath = path.resolve(value('story', path.join(projectDir, 'story.md')));
-const directionPath = path.resolve(value('direction', path.join(projectDir, 'board.direction.json')));
-const output = path.resolve(value('out', directionPath));
+const storyPath = path.resolve(flag('story', path.join(projectDir, 'story.md')));
+const directionPath = path.resolve(flag('direction', path.join(projectDir, 'board.direction.json')));
+const output = path.resolve(flag('out', directionPath));
 const board = JSON.parse(fs.readFileSync(boardPath, 'utf8'));
 const direction = JSON.parse(fs.readFileSync(directionPath, 'utf8'));
 const current = direction.units?.find((unit) => unit.id === unitId);
@@ -41,7 +39,7 @@ const system = [
 ].join('');
 const result = await callDirector(system, {
   model: DIRECTOR_MODEL,
-  maxTokens: Number(value('max-tokens', Math.min(DIRECTOR_MAX_OUTPUT_TOKENS, 7000))),
+  maxTokens: Number(flag('max-tokens', Math.min(DIRECTOR_MAX_OUTPUT_TOKENS, 7000))),
 });
 if (!result.ok) throw new Error(`单元导演返修失败（${result.seconds}s）：${result.error}`);
 const revisedUnit = result.direction.unit || result.direction;

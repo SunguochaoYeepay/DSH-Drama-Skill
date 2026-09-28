@@ -39,13 +39,14 @@ import { refImageLimit, withHandoffReference } from '../src/keyframe-references.
 import { writeGenerationRecord } from '../src/generation-records.mjs';
 import { auditPrompt } from '../src/draw-specialist.mjs';
 import { localStyle } from '../src/providers/comfyui.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 installCliErrorHandler();
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const argv = process.argv.slice(2);
-const flag = (n, d) => { const i = argv.indexOf(`--${n}`); return i < 0 ? d : (argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : true); };
+const { opt } = makeArgs();
 const boardArg = argv.find((x) => /board.*\.json$/i.test(x) && !x.startsWith('--'));
 if (!boardArg) {
   console.error('用法：node cli/keyframes.mjs <board.json> --direction <render.plan.json> [--units g001,g002]');
@@ -53,35 +54,35 @@ if (!boardArg) {
 }
 const BOARD_PATH = path.resolve(boardArg);
 const PROJ = path.dirname(BOARD_PATH);
-const DIRECTION_PATH = path.resolve(String(flag('direction', path.join(PROJ, 'render.plan.json'))));
+const DIRECTION_PATH = path.resolve(String(opt('direction', path.join(PROJ, 'render.plan.json'))));
 const DEFAULT_OUT = path.join(PROJ, 'keyframes_render');
 const DRY = argv.includes('--dry-run');
-const SIZE = String(flag('size', KEYFRAME_SIZE));
-const BAILIAN_SIZE = String(flag('bailian-size', BAILIAN_KEYFRAME_SIZE));
-const ONLY = String(flag('units', '')).split(',').map((s) => s.trim()).filter(Boolean);
+const SIZE = String(opt('size', KEYFRAME_SIZE));
+const BAILIAN_SIZE = String(opt('bailian-size', BAILIAN_KEYFRAME_SIZE));
+const ONLY = String(opt('units', '')).split(',').map((s) => s.trim()).filter(Boolean);
 // 落幅（fl2v 的尾帧）。提示词与首帧同构：`keyframe-prompts/<unit>.last.txt`。
 // **没有该文件的单元照旧走 i2v** —— 所以这个开关对老项目零影响，不需要迁移。
 const WITH_LAST = argv.includes('--with-last');
-const PROVIDER_SETTING = String(flag('provider', KEYFRAME_PROVIDER)).toLowerCase();
+const PROVIDER_SETTING = String(opt('provider', KEYFRAME_PROVIDER)).toLowerCase();
 const PROVIDER = PROVIDER_SETTING === 'comfyui' ? 'local' : PROVIDER_SETTING;
 if (!['huimeng', 'local', 'bailian', 'volcengine'].includes(PROVIDER)) throw new Error('--provider 只能是 huimeng / local / bailian / volcengine / comfyui');
 const LOCAL_GEN = COMFY_GEN;
 // 只在真要走本地时才解 Python —— 没配 AIH_PYTHON 但走线上通道的用户不该被这里卡住。
 const LOCAL_PY = () => requireComfyPython();
-const LOCAL_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_local_v2'))));
+const LOCAL_OUT = path.resolve(String(opt('out-dir', path.join(PROJ, 'keyframes_local_v2'))));
 // 图像模型家族：qwen21（Qwen Image 2.1，默认）/ qwen（旧 2511 链路，逃生口）。
 // 两族的采样参数完全不同 —— 21 没有蒸馏 LoRA，`FAST` 三件套只对 legacy 生效。
 const IMAGE_MODEL = (() => {
-  const v = String(flag('image-model', LOCAL_IMAGE_MODEL)).toLowerCase();
+  const v = String(opt('image-model', LOCAL_IMAGE_MODEL)).toLowerCase();
   if (!['qwen21', 'qwen'].includes(v)) throw new Error('--image-model 只能是 qwen21 / qwen');
   return v;
 })();
 const IS_QWEN21 = IMAGE_MODEL === 'qwen21';
 // 步数/CFG/LoRA：**用户显式给了才传**，否则交给 gen.py 自己按模式定。
 // 这一点在 Lightning 档尤其要命 —— 三者必须成套，错配（8 步 LoRA 配 20 步）会糊。
-const LOCAL_STEPS = flag('steps', null);
-const LOCAL_CFG = flag('cfg', null);
-const LOCAL_LORA = flag('lora', null);
+const LOCAL_STEPS = opt('steps', null);
+const LOCAL_CFG = opt('cfg', null);
+const LOCAL_LORA = opt('lora', null);
 // 🔁 关键帧默认档 = Lightning 8 步加速栈（2026-09-20 与 DramaClaw 对照实测后定，
 // 见 config.mjs 注释）。给了任一手动参数就完全交还给调用方，不做半自动叠加；
 // `--no-fast` 退回 20 步非蒸馏旧路径。
@@ -93,9 +94,9 @@ const FAST = !argv.includes('--no-fast')
 if (MANUAL_IMAGE && !(LOCAL_STEPS && LOCAL_CFG && LOCAL_LORA)) {
   console.error('⚠ 步数/CFG/LoRA 只给了部分：剩下的交给 gen.py 兜底，可能凑出未验证的蒸馏档');
 }
-const BAILIAN_MODEL = String(flag('model', KEYFRAME_IMAGE_MODEL));
-const BAILIAN_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_bailian'))));
-const VOLCENGINE_OUT = path.resolve(String(flag('out-dir', path.join(PROJ, 'keyframes_volcengine'))));
+const BAILIAN_MODEL = String(opt('model', KEYFRAME_IMAGE_MODEL));
+const BAILIAN_OUT = path.resolve(String(opt('out-dir', path.join(PROJ, 'keyframes_bailian'))));
+const VOLCENGINE_OUT = path.resolve(String(opt('out-dir', path.join(PROJ, 'keyframes_volcengine'))));
 
 const dir = JSON.parse(fs.readFileSync(DIRECTION_PATH, 'utf8'));
 const board = JSON.parse(fs.readFileSync(BOARD_PATH, 'utf8'));
@@ -110,9 +111,9 @@ const ASPECT = aspectOf(board);
 // `--style` 可显式覆盖（如 `--style none` 用于对照实验）。⚠ 上游预设是**成对**给的：
 // `style=none` 时 positive 追加与 negative **两者皆空** —— 去掉自动追加句会同时撤掉负向防线，
 // 写实剧可能退回插画风。所以默认不覆盖，覆盖只用于有意的单变量实验。
-const LOCAL_STYLE = flag('style', null) || localStyle(board.meta?.style);
+const LOCAL_STYLE = opt('style', null) || localStyle(board.meta?.style);
 const SKIP_GATE = argv.includes('--skip-gate');
-const approvedAssets = projectAssetFiles(board, BOARD_PATH, { workspace: flag('ws', null) });
+const approvedAssets = projectAssetFiles(board, BOARD_PATH, { workspace: opt('ws', null) });
 requireApproval(PROJ, 'assets', approvedAssets, { skip: SKIP_GATE });
 // 板子票（与 assets.mjs 同一条规矩）：board.json 决定场景清单与参考图来源，改了必须重新确认。
 requireApproval(PROJ, 'board', [BOARD_PATH], { skip: SKIP_GATE });
@@ -129,7 +130,7 @@ requireApproval(PROJ, 'direction', [path.join(PROJ, 'board.direction.json')], { 
 
 function refsFor(shot, unit) {
   const assetUnit = unit.keyframe_cast ? { ...unit, cast: unit.keyframe_cast } : unit;
-  const assets = unitAssets(board, BOARD_PATH, assetUnit, { workspace: flag('ws', null) });
+  const assets = unitAssets(board, BOARD_PATH, assetUnit, { workspace: opt('ws', null) });
   const people = assets.people.flatMap((person) => [
     { file: person.portrait, role: 'portrait', character: person.characterId },
     { file: person.sheet, role: 'sheet', character: person.characterId },
@@ -216,7 +217,7 @@ function localGenArgs(unit, refs, prompt, tag = '') {
   }
   // 输出尺寸：显式 --width/--height 优先，否则按 **剧目画幅** 排布默认像素
   // （edit 默认不看目标尺寸，这里必须给，否则 FluxKontextImageScale 会把输出压到 ~1MP）。
-  const LW = flag('width', null), LH = flag('height', null);
+  const LW = opt('width', null), LH = opt('height', null);
   const sizeArg = (LW && LH) ? `${LW}x${LH}` : dimensionsForAspect(LOCAL_KEYFRAME_SIZE, ASPECT);
   const [outW, outH] = sizeArg.split('x');
   a.push('--width', outW, '--height', outH);

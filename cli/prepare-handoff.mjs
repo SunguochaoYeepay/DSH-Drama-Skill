@@ -8,9 +8,10 @@ import { installCliErrorHandler } from '../src/cli-errors.mjs';
 
 installCliErrorHandler();
 import { FFMPEG } from '../src/runtime-paths.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 const argv = process.argv.slice(2);
-const flag = (name, fallback = null) => { const i = argv.indexOf(`--${name}`); return i >= 0 && argv[i + 1] ? argv[i + 1] : fallback; };
+const { flag } = makeArgs();
 const planFile = path.resolve(flag('plan', 'render.plan.json'));
 const project = path.dirname(planFile);
 const unitId = flag('unit');

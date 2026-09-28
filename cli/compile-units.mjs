@@ -6,15 +6,13 @@ import { compileGenerationPlan } from '../src/generation-plan.mjs';
 import { requireApproval } from '../src/human-gates.mjs';
 import { makePlanProvenance, sealPlan } from '../src/plan-provenance.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 installCliErrorHandler();
 
 const argv = process.argv.slice(2);
 const input = argv.find((x) => !x.startsWith('--'));
-const value = (name, fallback) => {
-  const i = argv.indexOf(`--${name}`);
-  return i >= 0 ? argv[i + 1] : fallback;
-};
+const { value } = makeArgs();
 
 if (!input) {
   console.error('用法：node cli/compile-units.mjs <board.direction.json> [--out render.plan.json] [--target 10] [--units units.json]');

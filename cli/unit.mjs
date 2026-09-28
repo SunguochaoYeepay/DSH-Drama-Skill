@@ -39,6 +39,7 @@ import { buildUnitPrompt, narrationWarnings } from '../src/h3-prompt.mjs';
 import { auditContractRules, readCinematography } from '../src/cinematography.mjs';
 import { COMFY_GEN, requireComfyPython } from '../src/runtime-paths.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { makeArgs } from './lib/argv.mjs';
 import { requireHandoff } from '../src/continuity-handoff.mjs';
 import { VIDEO_QUALITY, VIDEO_PROFILE, VIDEO_ATTENTION, VIDEO_NORMAL_SIZE, VIDEO_HIGH_SIZE, VIDEO_TIMEOUT_SECONDS } from '../src/config.mjs';
 import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
@@ -46,16 +47,10 @@ import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
 installCliErrorHandler();
 
 const argv = process.argv.slice(2);
-function flag(name, def) {
-  const i = argv.indexOf(`--${name}`);
-  if (i < 0) return def;
-  const v = argv[i + 1];
-  if (v === undefined || v.startsWith('--')) return true;
-  return v;
-}
+const { opt, value } = makeArgs();
 const boardPath = argv.find((a) => /board.*\.json$/i.test(a) && !a.startsWith('--'));
-const dirPath = flag('direction', null);
-const unitId = flag('unit', null);
+const dirPath = opt('direction', null);
+const unitId = opt('unit', null);
 if (!boardPath || !dirPath || !unitId) {
   console.error('用法：node cli/unit.mjs <board.json> --direction <dir.json> --unit u1 [--dry-run]');
   process.exit(2);
@@ -63,9 +58,9 @@ if (!boardPath || !dirPath || !unitId) {
 
 const board = JSON.parse(fs.readFileSync(boardPath, 'utf8'));
 const dir = JSON.parse(fs.readFileSync(dirPath, 'utf8'));
-const WS = flag('ws', null) || path.resolve(path.dirname(boardPath), '..', '..', '..');
-const DRY = Boolean(flag('dry-run', false));
-const EXPLICIT_STEPS = argv.includes('--steps') ? Number(flag('steps', 0)) : null;
+const WS = opt('ws', null) || path.resolve(path.dirname(boardPath), '..', '..', '..');
+const DRY = Boolean(opt('dry-run', false));
+const EXPLICIT_STEPS = argv.includes('--steps') ? Number(opt('steps', 0)) : null;
 /**
  * **尺寸跟着官方文档走，不要自己扫。**
  *
@@ -79,7 +74,7 @@ const EXPLICIT_STEPS = argv.includes('--steps') ? Number(flag('steps', 0)) : nul
  *
  * `--size 768x1344` 可以换到那个 LoRA 的原生 768p（验证通过之后再说）。
  */
-const QUALITY = String(flag('quality', VIDEO_QUALITY)).toLowerCase();
+const QUALITY = String(opt('quality', VIDEO_QUALITY)).toLowerCase();
 if (argv.includes('--size')) throw new Error('视频尺寸由 .env 的 AIH_VIDEO_NORMAL_SIZE / AIH_VIDEO_HIGH_SIZE 配置；请用 --quality normal|high 选择');
 const QUALITY_SIZES = { normal: VIDEO_NORMAL_SIZE, high: VIDEO_HIGH_SIZE };
 if (!QUALITY_SIZES[QUALITY]) {
@@ -138,7 +133,7 @@ const nameOf = (id) => {
 // ---------------------------------------------------------------- 首帧
 
 function pickKeyframe() {
-  const explicit = flag('keyframe', null);
+  const explicit = opt('keyframe', null);
   if (explicit) return path.resolve(WS, explicit);
   if (continuityHandoff?.keyframe) return continuityHandoff.keyframe;
   if (unit.keyframe) {
@@ -162,7 +157,7 @@ function pickKeyframe() {
 }
 const keyframe = pickKeyframe();
 
-const lastKeyframeArg = flag('last-keyframe', null);
+const lastKeyframeArg = opt('last-keyframe', null);
 // 没显式给 `--last-keyframe` 时，从**计划槽位 / 板子声明**里找落幅（纯函数，见 src/last-keyframe.mjs）。
 // 找不到就 null —— 该单元退回 i2v，行为与从前一字不差。
 const lastKeyframe = lastKeyframeArg
@@ -236,8 +231,8 @@ const hasFirstFrame = Boolean(keyframe);
  * 因此 fast 档按是否提供 --last-keyframe 选择 i2v/fl2v；其余档位才使用多参考图 r2v。
  */
 const PROFILE = (() => {
-  const i = argv.indexOf('--profile');
-  if (i >= 0) return argv[i + 1];
+  const explicitProfile = value('profile');
+  if (explicitProfile !== null) return explicitProfile;
   // 正式默认就是 FastVideo FastH3。`--steps` 只保留旧命令兼容：明确传入时
   // 才映射基础 H3 档位，不能让内部的默认步数把模式静默降成 r2v。
   if (EXPLICIT_STEPS !== null) {
@@ -245,7 +240,7 @@ const PROFILE = (() => {
   }
   return VIDEO_PROFILE;
 })();
-const ATTENTION = String(flag('attention', VIDEO_ATTENTION)).toLowerCase();
+const ATTENTION = String(opt('attention', VIDEO_ATTENTION)).toLowerCase();
 if (!['sage', 'vsa'].includes(ATTENTION)) {
   throw new Error(`--attention 只能是 sage / vsa，收到 ${ATTENTION}`);
 }
@@ -267,7 +262,7 @@ const promptRefs = MODE === 'r2v' ? refs : [];
  * 都必须排在 `buildUnitPrompt` 之前。** 否则提示词和时长会各说各话。
  */
 const natural = unit.shots[unit.shots.length - 1].at + unit.shots[unit.shots.length - 1].duration_s;
-const fitTo = Number(flag('fit', 0)) || 0;
+const fitTo = Number(opt('fit', 0)) || 0;
 if (fitTo > 0 && natural > fitTo) {
   const scale = fitTo / natural;
   for (const s of unit.shots) {
@@ -307,7 +302,7 @@ const prompt = buildUnitPrompt(unit, { nameOf, lineText, board, scene, hasFirstF
 
 // `generation_duration_s` 是执行预算；导演内容时长不变，后期按
 // `content_duration_s` 裁回。`--seconds` 只用于显式对照实验。
-const requestedSeconds = Number(flag('seconds', 0))
+const requestedSeconds = Number(opt('seconds', 0))
   || Number(unit.generation_duration_s)
   || (unit.shots[unit.shots.length - 1].at + unit.shots[unit.shots.length - 1].duration_s);
 // H3 只接受 17k+5 帧。必须向上取合法档，不能就近取整后短于导演内容。

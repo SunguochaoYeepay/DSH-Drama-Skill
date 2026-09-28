@@ -48,11 +48,12 @@ import { ASSET_IMAGE_MODEL, VOLCENGINE_IMAGE_MODEL, LOCAL_ASSET_FAST, LOCAL_ASSE
 import { writeGenerationRecord } from '../src/generation-records.mjs';
 import { readCinematography } from '../src/cinematography.mjs';
 import { localStyle } from '../src/providers/comfyui.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 installCliErrorHandler();
 
 const argv = process.argv.slice(2);
-const flag = (n, d) => { const i = argv.indexOf(`--${n}`); return i < 0 ? d : (argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : true); };
+const { opt } = makeArgs();
 
 const boardArg = argv.find((x) => /board.*\.json$/i.test(x) && !x.startsWith('--'));
 if (!boardArg) {
@@ -64,15 +65,15 @@ const PROJ = path.dirname(BOARD_PATH);
 const ASSET_DIR = path.join(PROJ, 'assets');
 const DRY = argv.includes('--dry-run');
 const SKIP_GATE = argv.includes('--skip-gate');
-const ONLY = String(flag('only', '')).split(',').map((s) => s.trim()).filter(Boolean);
-const N = Number(flag('n', 1)) || 1;
-// ⚠ 步数/CFG/LoRA **不能给默认值兜底**：曾经写成 `flag('steps', LOCAL_IMAGE_STEPS)`，
+const ONLY = String(opt('only', '')).split(',').map((s) => s.trim()).filter(Boolean);
+const N = Number(opt('n', 1)) || 1;
+// ⚠ 步数/CFG/LoRA **不能给默认值兜底**：曾经写成 `opt('steps', LOCAL_IMAGE_STEPS)`，
 // 那个 20 恒为真，于是永远往下发 steps=20，把 provider 里 `fast=true` 的默认整个压掉 ——
 // 资产一直在跑 20 步非蒸馏路径，而关键帧早已换成加速栈。同一处入口漏接，第二次。
 // 现在：显式给了就手动档（三件套成套），没给就走 LOCAL_ASSET_* 默认加速档。
-const STEPS = flag('steps', null);
-const CFG = flag('cfg', null);
-const LORA = flag('lora', null);
+const STEPS = opt('steps', null);
+const CFG = opt('cfg', null);
+const LORA = opt('lora', null);
 const MANUAL_IMAGE = STEPS || CFG || LORA;
 if (MANUAL_IMAGE && !(STEPS && CFG && LORA)) {
   console.error('⚠ 步数/CFG/LoRA 只给了部分：剩下的交给通道兜底，可能凑出未验证的蒸馏档');
@@ -84,16 +85,16 @@ if (MANUAL_IMAGE && !(STEPS && CFG && LORA)) {
 const NO_FAST = argv.includes('--no-fast');
 // 图像模型家族：qwen21（Qwen Image 2.1，默认）/ qwen（旧 2511 链路，逃生口）。
 const IMAGE_MODEL = (() => {
-  const v = String(flag('image-model', LOCAL_IMAGE_MODEL)).toLowerCase();
+  const v = String(opt('image-model', LOCAL_IMAGE_MODEL)).toLowerCase();
   if (!['qwen21', 'qwen'].includes(v)) throw new Error('--image-model 只能是 qwen21 / qwen');
   return v;
 })();
 const IS_QWEN21 = IMAGE_MODEL === 'qwen21';
 const WRITE = !argv.includes('--no-write');
-const WORKSPACE = flag('ws', null);
+const WORKSPACE = opt('ws', null);
 
 // `--provider local` 是历史叫法（对齐 keyframes.mjs），实际通道名是 comfyui。
-const PROVIDER_ARG = String(flag('provider', '')).toLowerCase();
+const PROVIDER_ARG = String(opt('provider', '')).toLowerCase();
 const PROVIDER_NAME = PROVIDER_ARG === 'local' ? 'comfyui' : PROVIDER_ARG;
 
 const board = JSON.parse(fs.readFileSync(BOARD_PATH, 'utf8'));

@@ -5,27 +5,25 @@ import { approve, approvalStatus, clipResultPath, planKeyframeFiles, planLastKey
 import { resolveRecordedPath } from '../src/recorded-path.mjs';
 import { projectAssetFiles } from '../src/asset-resolver.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 installCliErrorHandler();
 
 const argv = process.argv.slice(2);
 const command = argv[0];
-const value = (name, fallback = null) => {
-  const i = argv.indexOf(`--${name}`);
-  return i >= 0 && argv[i + 1] ? argv[i + 1] : fallback;
-};
-const stage = value('stage');
+const { flag } = makeArgs();
+const stage = flag('stage');
 const stages = ['story', 'board', 'direction', 'assets', 'keyframes', 'handoff', 'clip', 'final'];
-const project = path.resolve(value('project', '.'));
-const id = value('id');
+const project = path.resolve(flag('project', '.'));
+const id = flag('id');
 if (argv.includes('--variant')) throw new Error('片段不再区分轮次；请去掉 --variant，每段视频只确认当前产物');
 if (command === 'ready-assemble') {
-  const planFile = path.resolve(value('plan', path.join(project, 'render.plan.json')));
+  const planFile = path.resolve(flag('plan', path.join(project, 'render.plan.json')));
   requireAllClips(project, JSON.parse(fs.readFileSync(planFile, 'utf8')));
   console.log('✓ 计划内所有视频片段均已人工确认，可以合成');
   process.exit(0);
 }
-let files = String(value('artifacts', '')).split(',').filter(Boolean).map((f) => path.resolve(f));
+let files = String(flag('artifacts', '')).split(',').filter(Boolean).map((f) => path.resolve(f));
 if (!files.length && stage === 'story') files = [path.join(project, 'story.md')].filter(fs.existsSync);
 if (stage === 'story') {
   const story = path.join(project, 'story.md');
@@ -34,14 +32,14 @@ if (stage === 'story') {
 if (!files.length && stage === 'board') files = [path.join(project, 'board.json')].filter(fs.existsSync);
 if (!files.length && stage === 'direction') files = [path.join(project, 'board.direction.json')].filter(fs.existsSync);
 if (!files.length && stage === 'assets') {
-  const boardFile = path.resolve(value('board', path.join(project, 'board.json')));
+  const boardFile = path.resolve(flag('board', path.join(project, 'board.json')));
   if (fs.existsSync(boardFile)) {
     const board = JSON.parse(fs.readFileSync(boardFile, 'utf8'));
-    files = projectAssetFiles(board, boardFile, { workspace: value('ws', null) });
+    files = projectAssetFiles(board, boardFile, { workspace: flag('ws', null) });
   }
 }
 if (stage === 'keyframes') {
-  const planPath = path.resolve(value('plan', path.join(project, 'render.plan.json')));
+  const planPath = path.resolve(flag('plan', path.join(project, 'render.plan.json')));
   const plan = JSON.parse(fs.readFileSync(planPath, 'utf8'));
   // 首帧 + 落幅一起签：落幅决定"这一镜停在哪"，只在出片时才发现画错了等于白出一遍视频。
   const expected = [...planKeyframeFiles(project, plan), ...planLastKeyframeFiles(project, plan)];
@@ -69,7 +67,7 @@ if (!['approve', 'status'].includes(command) || !stages.includes(stage) || !file
   process.exit(2);
 }
 if (command === 'approve') {
-  const ticket = approve(project, stage, files, { id, by: value('by', '用户') });
+  const ticket = approve(project, stage, files, { id, by: flag('by', '用户') });
   console.log(`✓ 人工确认已记录：${stage}${id ? ` ${id}` : ''}（${ticket.at}）`);
 } else {
   const result = approvalStatus(project, stage, files, id);

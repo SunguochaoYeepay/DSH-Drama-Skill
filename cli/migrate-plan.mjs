@@ -3,12 +3,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { makePlanProvenance, sealPlan } from '../src/plan-provenance.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 installCliErrorHandler();
 
 const argv = process.argv.slice(2);
 const planPath = path.resolve(argv.find((x) => /\.json$/i.test(x) && !x.startsWith('--')) || '');
-const value = (name, fallback) => { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : fallback; };
+const { value } = makeArgs();
 if (!planPath || !argv.includes('--acknowledge-reviewed-migration')) {
   console.error('用法：node cli/migrate-plan.mjs <render.plan.json> --direction <direction.json> --units g005 [--board board.json] [--story story.md] --acknowledge-reviewed-migration');
   process.exit(2);

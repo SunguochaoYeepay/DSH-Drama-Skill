@@ -26,21 +26,18 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { makeArgs } from './lib/argv.mjs';
 
 // ---------------------------------------------------------------- 参数
 
 const argv = process.argv.slice(2);
-const flag = (name, dflt = null) => {
-  const i = argv.indexOf(`--${name}`);
-  return i >= 0 ? (argv[i + 1] ?? '') : dflt;
-};
-const has = (name) => argv.includes(`--${name}`);
+const { value, has } = makeArgs();
 const positional = argv.filter((a) => !a.startsWith('--')
   && !['--project', '--unit', '--comfy', '--out'].includes(argv[argv.indexOf(a) - 1]));
 
-const COMFY = (flag('comfy', 'http://127.0.0.1:8188') || 'http://127.0.0.1:8188').replace(/\/+$/, '');
-const PROJECT = flag('project');
-const UNIT = flag('unit');
+const COMFY = (value('comfy', 'http://127.0.0.1:8188') || 'http://127.0.0.1:8188').replace(/\/+$/, '');
+const PROJECT = value('project');
+const UNIT = value('unit');
 const NO_OUT = has('no-out');
 
 /** result.json 的位置：关键帧在 keyframes_local_v2/，视频在 units/，都是隐藏文件 `.<id>.result.json`。 */
@@ -73,7 +70,7 @@ if (!pid) {
 // ---------------------------------------------------------------- 取提交原文
 
 let entry;
-const historyFile = flag('history');
+const historyFile = value('history');
 if (historyFile) {
   if (!fs.existsSync(historyFile)) {
     console.error(`找不到 history 文件：${historyFile}`);
@@ -202,7 +199,7 @@ out.push('');
 out.push('> 本仓的字数自检只管「本仓下发的提示词」。进模型的是 positive 这一栏。');
 out.push('');
 
-const target = NO_OUT ? null : (flag('out') || (PROJECT ? path.join(PROJECT, 'reviews', `comfyui-payload-${id}.md`) : null));
+const target = NO_OUT ? null : (value('out') || (PROJECT ? path.join(PROJECT, 'reviews', `comfyui-payload-${id}.md`) : null));
 if (target) {
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.writeFileSync(target, out.join('\n'), 'utf8');

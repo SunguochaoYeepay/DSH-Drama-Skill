@@ -20,27 +20,25 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { requireComfyPython } from '../src/runtime-paths.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 installCliErrorHandler();
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
 const projectArg = argv.find((x) => !x.startsWith('--'));
-const value = (name, fallback = null) => {
-  const i = argv.indexOf(`--${name}`);
-  return i >= 0 && argv[i + 1] ? argv[i + 1] : fallback;
-};
+const { flag } = makeArgs();
 if (!projectArg) {
   console.error('用法：node cli/check-subjects.mjs <项目目录> [--stage keyframes|clip] [--weights <pt>]');
   process.exit(2);
 }
 const project = path.resolve(projectArg);
-const stage = String(value('stage', 'keyframes'));
-const planFile = path.resolve(value('plan', path.join(project, 'render.plan.json')));
+const stage = String(flag('stage', 'keyframes'));
+const planFile = path.resolve(flag('plan', path.join(project, 'render.plan.json')));
 
 /** 默认权重放 .tmp 下（ultralytics 会自动下载），**绝不让它落到仓库根**。 */
 const weights = path.resolve(
-  value('weights', process.env.AIH_YOLO_WEIGHTS || path.join(project, '..', '..', '.tmp', 'spatial-lab', 'weights', 'yolo11n.pt')),
+  flag('weights', process.env.AIH_YOLO_WEIGHTS || path.join(project, '..', '..', '.tmp', 'spatial-lab', 'weights', 'yolo11n.pt')),
 );
 fs.mkdirSync(path.dirname(weights), { recursive: true });
 

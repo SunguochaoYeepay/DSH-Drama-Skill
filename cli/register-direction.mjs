@@ -21,16 +21,14 @@ import path from 'node:path';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { requireApproval } from '../src/human-gates.mjs';
 import { writeAgentDirectionReceipt } from '../src/direction-provenance.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 installCliErrorHandler();
 
 const argv = process.argv.slice(2);
-const flag = (name) => {
-  const i = argv.indexOf(`--${name}`);
-  return i < 0 ? null : argv[i + 1];
-};
+const { value } = makeArgs();
 const boardArg = argv.find((x) => /board\.json$/i.test(x) && !x.startsWith('--'));
-const inputArg = flag('input');
+const inputArg = value('input');
 if (!boardArg || !inputArg) {
   console.error('用法：node cli/register-direction.mjs <board.json> --input <导演稿草稿.json> [--out board.direction.json] [--story story.md] [--authored-by <标识>]');
   process.exit(2);
@@ -38,8 +36,8 @@ if (!boardArg || !inputArg) {
 
 const boardPath = path.resolve(boardArg);
 const projectDir = path.dirname(boardPath);
-const storyPath = path.resolve(flag('story') || path.join(projectDir, 'story.md'));
-const output = path.resolve(flag('out') || path.join(projectDir, 'board.direction.json'));
+const storyPath = path.resolve(value('story') || path.join(projectDir, 'story.md'));
+const output = path.resolve(value('out') || path.join(projectDir, 'board.direction.json'));
 const inputPath = path.resolve(inputArg);
 
 if (!fs.existsSync(boardPath)) throw new Error(`找不到板子：${boardPath}`);
@@ -120,6 +118,6 @@ if (offScene.length) {
 }
 
 const receipt = writeAgentDirectionReceipt({
-  directionPath: output, boardPath, storyPath, authoredBy: flag('authored-by') || 'agent',
+  directionPath: output, boardPath, storyPath, authoredBy: value('authored-by') || 'agent',
 });
 console.log(`导演稿：${output}\n单元素数：${direction.units.length}\n来源：Agent 直写（${receipt.authored_by}）\n票据：${output}.provenance.json\n提示：登记不等于确认，进入下一阶段仍需 review-gate --stage direction 的人工票`);

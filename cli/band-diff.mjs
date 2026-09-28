@@ -18,14 +18,12 @@ import { spawnSync } from 'node:child_process';
 import { FFPROBE } from '../src/runtime-paths.mjs';
 import { verifyBandEdit } from '../src/video-diff.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 installCliErrorHandler();
 
 const argv = process.argv.slice(2);
-const value = (name, dflt = null) => {
-  const i = argv.indexOf(`--${name}`);
-  return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : dflt;
-};
+const { flag } = makeArgs();
 const files = argv.filter((a) => !a.startsWith('--') && /\.(mp4|mov|mkv|webm)$/i.test(a));
 if (files.length !== 2) {
   console.error(`用法：node cli/band-diff.mjs <原片> <处理后> --top 0.7 --bottom 0.8 [--left 0.28 --right 0.72] [--samples 12] [--json]
@@ -37,12 +35,12 @@ if (files.length !== 2) {
 }
 
 const band = {
-  top: Number(value('top', 0.7)),
-  bottom: Number(value('bottom', 0.8)),
-  left: Number(value('left', 0.28)),
-  right: Number(value('right', 0.72)),
+  top: Number(flag('top', 0.7)),
+  bottom: Number(flag('bottom', 0.8)),
+  left: Number(flag('left', 0.28)),
+  right: Number(flag('right', 0.72)),
 };
-const samples = Number(value('samples', 12));
+const samples = Number(flag('samples', 12));
 
 /** 只认第一个视频流的尺寸/帧数；读不出就报清楚（别静默按 0 处理）。 */
 function probe(file) {

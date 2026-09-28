@@ -3,10 +3,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { buildSceneDesign, buildCharacterDesign, designReceipt } from '../src/asset-designers.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 installCliErrorHandler();
 const argv = process.argv.slice(2);
-const value = (name) => { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : null; };
+const { value } = makeArgs();
 const boardPath = path.resolve(argv.find((x) => x.endsWith('.json') && !x.startsWith('--')) || '');
 const out = path.resolve(value('out') || path.join(path.dirname(boardPath), 'asset-design.json'));
 if (!boardPath || !fs.existsSync(boardPath)) throw new Error('用法：node cli/design-assets.mjs <board.json> [--out asset-design.json]');

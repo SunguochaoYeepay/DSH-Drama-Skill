@@ -18,6 +18,7 @@
  */
 
 import fs from 'node:fs';
+import { makeArgs } from './lib/argv.mjs';
 
 const OLLAMA = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
 
@@ -72,9 +73,10 @@ export async function lookLocal(file, { focus = [], extra = '', model = 'qwen3.5
 
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/').split('/').pop())) {
   const argv = process.argv.slice(2);
+  const { value } = makeArgs();
   const f = argv.find((a) => !a.startsWith('--'));
-  const model = (() => { const i = argv.indexOf('--model'); return i >= 0 ? argv[i + 1] : 'qwen3.5:27b'; })();
-  const want = (() => { const i = argv.indexOf('--want'); return i >= 0 ? argv[i + 1] : ''; })();
+  const model = value('model', 'qwen3.5:27b');
+  const want = value('want', '');
   if (!f) { console.error('用法：node cli/look-local.mjs <图> [--model qwen3.5:27b] [--want "它应该是什么"]'); process.exit(2); }
 
   const up = await ollamaUp();

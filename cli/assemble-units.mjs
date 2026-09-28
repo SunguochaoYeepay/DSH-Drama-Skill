@@ -9,12 +9,13 @@ import { isSilentSegment, SILENT_LUFS as LOUDNESS_SILENT_LUFS } from '../src/lou
 import { VIDEO_QUALITY, VIDEO_NORMAL_SIZE, VIDEO_HIGH_SIZE } from '../src/config.mjs';
 import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
 import { FFMPEG, FFPROBE } from '../src/runtime-paths.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 installCliErrorHandler();
 
 const argv = process.argv.slice(2);
 const planArg = argv.find((x) => /\.json$/i.test(x) && !x.startsWith('--'));
-const value = (name, fallback) => { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : fallback; };
+const { value } = makeArgs();
 if (!planArg) {
   console.error('用法：node cli/assemble-units.mjs <render.plan.json> [--quality normal|high] [--out final.mp4]');
   process.exit(2);

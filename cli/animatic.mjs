@@ -35,15 +35,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { FFMPEG, FFPROBE } from '../src/runtime-paths.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 const argv = process.argv.slice(2);
-function flag(name, def) {
-  const i = argv.indexOf(`--${name}`);
-  if (i < 0) return def;
-  const v = argv[i + 1];
-  if (v === undefined || v.startsWith('--')) return true;
-  return v;
-}
+const { opt } = makeArgs();
 const boardPath = argv.find((a) => !a.startsWith('--') && /\.json$/i.test(a));
 if (!boardPath || !fs.existsSync(boardPath)) {
   console.error('用法：node cli/animatic.mjs <board.json> [--direction x.json] [--out y.mp4] [--ws DIR]');
@@ -51,12 +46,12 @@ if (!boardPath || !fs.existsSync(boardPath)) {
 }
 
 const board = JSON.parse(fs.readFileSync(boardPath, 'utf8'));
-const WS = flag('ws', null) || path.resolve(path.dirname(boardPath), '..', '..', '..');
-const OUT = flag('out', null) || path.join(path.dirname(boardPath), 'out', 'animatic.mp4');
-const FPS = Number(flag('fps', 24)) || 24;
-const HOLD = Number(flag('hold', 2)) || 2;
-const WANT_AUDIO = Boolean(flag('audio', false));
-const dirPath = flag('direction', null);
+const WS = opt('ws', null) || path.resolve(path.dirname(boardPath), '..', '..', '..');
+const OUT = opt('out', null) || path.join(path.dirname(boardPath), 'out', 'animatic.mp4');
+const FPS = Number(opt('fps', 24)) || 24;
+const HOLD = Number(opt('hold', 2)) || 2;
+const WANT_AUDIO = Boolean(opt('audio', false));
+const dirPath = opt('direction', null);
 
 // 尺寸跟着片子画幅走
 const [aw, ah] = String(board.meta?.aspect || '9:16').split(':').map(Number);

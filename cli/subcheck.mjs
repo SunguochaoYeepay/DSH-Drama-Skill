@@ -30,12 +30,10 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { speechSegmentsFromSilence, pickSampleTimes, windowRect, coverageText } from '../src/subcheck.mjs';
 import { FFMPEG, FFPROBE } from '../src/runtime-paths.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 const argv = process.argv.slice(2);
-const flag = (n, d) => {
-	const i = argv.indexOf(`--${n}`);
-	return i < 0 ? d : (argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : true);
-};
+const { opt } = makeArgs();
 
 const src = argv.find((a) => !a.startsWith('--') && fs.existsSync(a));
 if (!src) {
@@ -51,12 +49,12 @@ if (!src) {
 }
 
 const srcAbs = path.resolve(src);
-const OUT = path.resolve(String(flag('out', path.join(path.dirname(srcAbs), `${path.basename(srcAbs, path.extname(srcAbs))}_subcheck.png`))));
-const FRAMES = Number(flag('frames', 6));
-const WIN = Number(flag('window', 0.55));
-const CENTER = Number(flag('center', 0.60));
-const PANEL = Number(flag('panel', 640));
-const AT = flag('at', null);
+const OUT = path.resolve(String(opt('out', path.join(path.dirname(srcAbs), `${path.basename(srcAbs, path.extname(srcAbs))}_subcheck.png`))));
+const FRAMES = Number(opt('frames', 6));
+const WIN = Number(opt('window', 0.55));
+const CENTER = Number(opt('center', 0.60));
+const PANEL = Number(opt('panel', 640));
+const AT = opt('at', null);
 
 // ---- 1. 量源视频 ----
 const probe = spawnSync(FFPROBE, ['-v', 'error', '-select_streams', 'v:0',

@@ -33,17 +33,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { FFMPEG, FFPROBE } from '../src/runtime-paths.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 // ---------------------------------------------------------------- 参数
 
 const argv = process.argv.slice(2);
-const flag = (name, dflt = null) => {
-  const i = argv.indexOf(`--${name}`);
-  return i >= 0 ? (argv[i + 1] ?? '') : dflt;
-};
-const has = (name) => argv.includes(`--${name}`);
+const { value, has } = makeArgs();
 const num = (name, dflt) => {
-  const v = Number(flag(name, String(dflt)));
+  const v = Number(value(name, String(dflt)));
   return Number.isFinite(v) ? v : dflt;
 };
 
@@ -64,8 +61,8 @@ for (let i = 0; i < argv.length; i++) {
 }
 files.push(...positional);
 
-const PROJECT = flag('project');
-const UNITS = flag('units');
+const PROJECT = value('project');
+const UNITS = value('units');
 if (PROJECT && UNITS) {
   for (const u of UNITS.split(',').map((s) => s.trim()).filter(Boolean)) {
     // 命名不统一：视频是 `units/g001.result.json`，关键帧是 `keyframes_local_v2/.g001.result.json`。
@@ -220,7 +217,7 @@ for (const file of files) {
     + `  ${mute ? '⚠ 开场静音' : late ? `⚠ 迟到 ${gap.toFixed(0)}dB` : '✓'}`);
 }
 
-const target = NO_OUT ? null : (flag('out') || (PROJECT ? path.join(PROJECT, 'reviews', 'audio-audit.md') : null));
+const target = NO_OUT ? null : (value('out') || (PROJECT ? path.join(PROJECT, 'reviews', 'audio-audit.md') : null));
 if (target) {
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.writeFileSync(target, out.join('\n'), 'utf8');

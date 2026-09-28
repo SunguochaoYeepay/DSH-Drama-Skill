@@ -24,14 +24,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { recordedPathFor, resolveRecordedPath } from '../src/recorded-path.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 installCliErrorHandler();
 
 const argv = process.argv.slice(2);
-const flag = (n, d = null) => { const i = argv.indexOf(`--${n}`); return i < 0 ? d : (argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : true); };
+const { opt } = makeArgs();
 const projectArg = argv.find((a) => !a.startsWith('--') && fs.existsSync(a) && fs.statSync(a).isDirectory());
-const unitId = flag('unit');
-const clipArg = flag('clip');
+const unitId = opt('unit');
+const clipArg = opt('clip');
 if (!projectArg || !unitId || !clipArg) {
   console.error(`用法：node cli/record-clip.mjs <项目目录> --unit g001 --clip units/g001_vsr.mp4 [--append] [--note "去字幕（VSR）"]
 
@@ -63,14 +64,14 @@ const keep = files.filter((x) => {
 const entry = {
   kind: 'video',
   local_path: shown,
-  note: typeof flag('note') === 'string' ? flag('note') : '主产物',
+  note: typeof opt('note') === 'string' ? opt('note') : '主产物',
   recorded_at: new Date().toISOString(),
 };
-data.files = flag('append') ? [...keep, entry] : [entry, ...keep];
+data.files = opt('append') ? [...keep, entry] : [entry, ...keep];
 fs.writeFileSync(resultFile, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
 
 console.log('✓ ' + path.relative(process.cwd(), resultFile));
-console.log(`  主产物 ${shown}${flag('append') ? '（追加到末尾）' : '（已前插到最前）'}`);
+console.log(`  主产物 ${shown}${opt('append') ? '（追加到末尾）' : '（已前插到最前）'}`);
 const existing = [];
 for (const [i, x] of data.files.entries()) {
   const p = pathOf(x);

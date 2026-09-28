@@ -4,13 +4,10 @@ import path from 'node:path';
 import { compileLiteral } from '../src/literal.mjs';
 import { checkBoard } from '../src/board.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 installCliErrorHandler();
-const argv = process.argv.slice(2);
-const value = (name) => {
-  const at = argv.indexOf(`--${name}`);
-  return at < 0 ? null : argv[at + 1];
-};
+const { value } = makeArgs();
 if (!value('story') || !value('brief') || !value('out')) {
   console.error('用法：node cli/init-board.mjs --story <story.md> --brief <board-brief.json> --out <项目/board.json>');
   process.exit(2);

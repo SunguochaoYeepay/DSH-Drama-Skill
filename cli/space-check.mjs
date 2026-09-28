@@ -16,6 +16,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { requireComfyPython } from '../src/runtime-paths.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
+import { makeArgs } from './lib/argv.mjs';
 import { axisWarnings, facingWarnings, gazeConsistencyWarnings, renderSpaceReport, unitChecklist } from '../src/space-check.mjs';
 
 installCliErrorHandler();
@@ -23,17 +24,14 @@ installCliErrorHandler();
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
 const projectArg = argv.find((x) => !x.startsWith('--'));
-const value = (name, fallback = null) => {
-  const i = argv.indexOf(`--${name}`);
-  return i >= 0 && argv[i + 1] ? argv[i + 1] : fallback;
-};
+const { flag } = makeArgs();
 if (!projectArg) {
   console.error('用法：node cli/space-check.mjs <项目目录> [--space space.json] [--dry]');
   process.exit(2);
 }
 const project = path.resolve(projectArg);
-const spaceFile = path.resolve(value('space', path.join(project, 'space.json')));
-const planFile = path.resolve(value('plan', path.join(project, 'render.plan.json')));
+const spaceFile = path.resolve(flag('space', path.join(project, 'space.json')));
+const planFile = path.resolve(flag('plan', path.join(project, 'render.plan.json')));
 const DRY = argv.includes('--dry');
 
 const plan = fs.existsSync(planFile) ? JSON.parse(fs.readFileSync(planFile, 'utf8')) : { units: [] };
@@ -53,7 +51,7 @@ for (const unit of units) {
 let probes = new Map();
 if (images.length) {
   const weights = path.resolve(
-    value('weights', process.env.AIH_YOLO_WEIGHTS || path.join(project, '..', '..', '.tmp', 'spatial-lab', 'weights', 'yolo11n.pt')),
+    flag('weights', process.env.AIH_YOLO_WEIGHTS || path.join(project, '..', '..', '.tmp', 'spatial-lab', 'weights', 'yolo11n.pt')),
   );
   fs.mkdirSync(path.dirname(weights), { recursive: true });
   const args = [path.join(HERE, 'lib', 'presence.py'), '--weights', weights, '--json'];

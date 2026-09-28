@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { makeArgs } from './lib/argv.mjs';
 /**
  * wait-ready.mjs — **等 ComfyUI 真的ready，再提交。**
  *
@@ -28,10 +29,10 @@
  */
 
 const argv = process.argv.slice(2);
-const flag = (n, d) => { const i = argv.indexOf(`--${n}`); return i < 0 ? d : (argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : true); };
-const TIMEOUT = Number(flag('timeout', 180)) || 180;
+const { opt } = makeArgs();
+const TIMEOUT = Number(opt('timeout', 180)) || 180;
 const QUIET = argv.includes('--quiet');
-const URL = String(flag('url', 'http://127.0.0.1:8188'));
+const URL = String(opt('url', 'http://127.0.0.1:8188'));
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 

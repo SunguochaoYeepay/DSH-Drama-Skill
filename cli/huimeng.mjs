@@ -15,6 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { HUIMENG_IMAGE_MODEL } from '../src/config.mjs';
+import { makeArgs } from './lib/argv.mjs';
 
 const BASE = process.env.HUIMENGI_BASE_URL || 'https://api.huimengi.com';
 // 外部 .env 的路径**工程不猜**（曾在默认值里写死某台机器的 E 盘路径）。
@@ -22,7 +23,7 @@ const BASE = process.env.HUIMENGI_BASE_URL || 'https://api.huimengi.com';
 // （`readEnvKey` 先看进程环境变量，而 config.mjs 已把本工程 .env 装进来了）。
 const DRAMACLAW_ENV = process.env.DRAMACLAW_ENV || '';
 const argv = process.argv.slice(2);
-const flag = (n, d) => { const i = argv.indexOf(`--${n}`); return i < 0 ? d : (argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : true); };
+const { opt } = makeArgs();
 
 /** 从某个 .env 读一个键（不落盘）。 */
 export function readEnvKey(name, envPath = DRAMACLAW_ENV) {
@@ -142,7 +143,7 @@ export function pickUrl(task) {
 // ---------------------------------------------------------------- CLI
 
 async function main() {
-  const prompt = flag('prompt', null);
+  const prompt = opt('prompt', null);
   if (!prompt) {
     console.error(`用法: node cli/huimeng.mjs --prompt "..." [选项]
 
@@ -157,12 +158,12 @@ async function main() {
   }
 
   const key = readKey();
-  const model = String(flag('model', HUIMENG_IMAGE_MODEL));
-  const ratio = String(flag('ratio', '9:16'));
-  const resolution = String(flag('resolution', '2k'));
-  const quality = flag('quality', null);
+  const model = String(opt('model', HUIMENG_IMAGE_MODEL));
+  const ratio = String(opt('ratio', '9:16'));
+  const resolution = String(opt('resolution', '2k'));
+  const quality = opt('quality', null);
   const refs = argv.reduce((a, v, i) => (v === '--ref' && argv[i + 1] ? [...a, argv[i + 1]] : a), []);
-  const out = path.resolve(String(flag('out', `huimeng-${Date.now()}.png`)));
+  const out = path.resolve(String(opt('out', `huimeng-${Date.now()}.png`)));
 
   console.log(`\n绘梦 GPT-Image-2`);
   console.log(`  model=${model}  ratio=${ratio}  resolution=${resolution}${quality ? `  quality=${quality}` : ''}`);
