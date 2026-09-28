@@ -8,6 +8,7 @@ import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { isSilentSegment, SILENT_LUFS as LOUDNESS_SILENT_LUFS } from '../src/loudness-policy.mjs';
 import { VIDEO_QUALITY, VIDEO_NORMAL_SIZE, VIDEO_HIGH_SIZE } from '../src/config.mjs';
 import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
+import { FFMPEG, FFPROBE } from '../src/runtime-paths.mjs';
 
 installCliErrorHandler();
 
@@ -56,12 +57,13 @@ for (const key of ['I', 'TP', 'LRA']) {
 
 function run(args, label) {
   // stdio：本机 Node 派生子进程对 stdin 管道过敏（EBUSY），固定 ['ignore','pipe','pipe']。
-  const result = spawnSync('ffmpeg', args, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
+  // ffmpeg 走 runtime-paths 的真身解析（winget 装的 ffmpeg 不在 PATH，裸 'ffmpeg' 在本机 ENOENT）。
+  const result = spawnSync(FFMPEG, args, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
   if (result.status !== 0) throw new Error(`${label} 失败：${String(result.stderr || '').slice(-1200)}`);
 }
 
 function hasAudioStream(input) {
-  const probe = spawnSync('ffprobe', ['-v', 'error', '-select_streams', 'a', '-show_entries',
+  const probe = spawnSync(FFPROBE, ['-v', 'error', '-select_streams', 'a', '-show_entries',
     'stream=index', '-of', 'csv=p=0', input], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   if (probe.status !== 0) return false;
   return probe.stdout.trim().length > 0;
@@ -69,7 +71,7 @@ function hasAudioStream(input) {
 
 /** 第一遍：只测量，不写文件。拿到的实测值喂给第二遍的 linear 模式。 */
 function measureLoudness(input, label) {
-  const r = spawnSync('ffmpeg', ['-v', 'info', '-i', input, '-af',
+  const r = spawnSync(FFMPEG, ['-v', 'info', '-i', input, '-af',
     `loudnorm=I=${LOUD.I}:TP=${LOUD.TP}:LRA=${LOUD.LRA}:print_format=json`, '-f', 'null', '-'],
   { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
   if (r.status !== 0) throw new Error(`${label} 响度测量失败：${String(r.stderr || '').slice(-1200)}`);

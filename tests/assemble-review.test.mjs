@@ -8,12 +8,15 @@ import { writeDirectionReceipt } from '../src/direction-provenance.mjs';
 import { makePlanProvenance, sealPlan } from '../src/plan-provenance.mjs';
 import { approve } from '../src/human-gates.mjs';
 import { DIRECTOR_MODEL } from '../src/config.mjs';
+import { FFMPEG, FFPROBE } from '../src/runtime-paths.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 
-/** 生成一段定音量正弦音轨的测试片。 */
+/** 生成一段定音量正弦音轨的测试片。
+ * ffmpeg 走 runtime-paths 的真身解析 —— 裸 'ffmpeg' 只在碰巧有 PATH 的终端可用，
+ * 本机 winget 装的 ffmpeg 不在 PATH，裸调会 ENOENT 假红（与产品代码同一条解析路径）。 */
 function makeClip(file, volume) {
-  const r = runCommand('ffmpeg', ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'testsrc2=size=320x180:rate=24',
+  const r = runCommand(FFMPEG, ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'testsrc2=size=320x180:rate=24',
     '-f', 'lavfi', '-i', `sine=frequency=440:sample_rate=44100,volume=${volume}`,
     '-t', '2', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-c:a', 'aac', file], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
@@ -21,7 +24,7 @@ function makeClip(file, volume) {
 
 /** ebur128 测综合响度（LUFS）。逐时刻行里也有 I:，只认 Summary 段的最终值。 */
 function integratedLufs(file) {
-  const r = runCommand('ffmpeg', ['-v', 'info', '-i', file, '-af', 'ebur128', '-f', 'null', '-'],
+  const r = runCommand(FFMPEG, ['-v', 'info', '-i', file, '-af', 'ebur128', '-f', 'null', '-'],
     { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
   assert.equal(r.status, 0, r.stderr);
   const summary = r.stderr.slice(r.stderr.lastIndexOf('Summary:'));
@@ -66,7 +69,7 @@ test('assembly scales clips to the project aspect and evens out loudness', () =>
   assert.equal(valid.status, 0, valid.stderr);
 
   const film = path.join(project, 'out', 'final.mp4');
-  const probed = runCommand('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries',
+  const probed = runCommand(FFPROBE, ['-v', 'error', '-select_streams', 'v:0', '-show_entries',
     'stream=width,height', '-of', 'csv=p=0', film], { encoding: 'utf8' });
   assert.equal(probed.stdout.trim(), '864,480');
   // 成片不再做机器检查：能不能用由人在终审时判断，代码不拦。

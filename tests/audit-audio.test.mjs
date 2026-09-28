@@ -16,6 +16,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { runNode, runCommand, pipesAvailable } from './helpers/spawn.mjs';
+import { FFMPEG } from '../src/runtime-paths.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const CLI = path.join(root, 'cli', 'audit-audio.mjs');
@@ -29,15 +30,17 @@ const LATE = path.join(dir, 'late.m4a');
 /** 只有画面没有音轨。 */
 const NOAUDIO = path.join(dir, 'silent.mp4');
 
-function ffmpeg(args) {
-  const r = runCommand('ffmpeg', ['-y', '-v', 'error', ...args], { encoding: 'utf8', maxBuffer: 1e8 });
+/**
+ * ffmpeg 走 runtime-paths 的真身解析 —— 裸 'ffmpeg' 只在碰巧有 PATH 的终端可用
+ * （本机 winget 装的 ffmpeg 不在 PATH，裸调会 ENOENT），与产品代码同一条解析路径。
+ * 起不来就跳过：环境不可用 ≠ 行为不在（spawn helper 的既定判据）。
+ */
+function runFfmpeg(args) {
+  const r = runCommand(FFMPEG, ['-y', '-v', 'error', ...args], { encoding: 'utf8', maxBuffer: 1e8 });
   assert.equal(r.status, 0, `造夹具失败：${r.stderr}`);
 }
 
-ffmpeg(['-f', 'lavfi', '-i', 'sine=frequency=3000:duration=3', '-c:a', 'aac', TONE]);
-ffmpeg(['-f', 'lavfi', '-i', 'sine=frequency=3000:duration=3',
-  '-af', "volume=0:enable='between(t,0,2.5)'", '-c:a', 'aac', LATE]);
-ffmpeg(['-f', 'lavfi', '-i', 'testsrc2=size=64x64:rate=10:duration=1', '-pix_fmt', 'yuv420p', NOAUDIO]);
+const ffmpegUsable = runCommand(FFMPEG, ['-version'], { encoding: 'utf8' }).status === 0;
 
 function run(file, extra = []) {
   return runNode([CLI, file, '--no-out', '--step', '0.5', ...extra], { encoding: 'utf8' });
@@ -49,7 +52,15 @@ if (!pipesAvailable()) {
   test('ffprobe 输出本机取不到 —— 跳过（受限终端，不是代码问题）', (t) => {
     t.skip('本机无法给子进程接管道：cli/audit-audio.mjs 内部的 ffprobe 拿不到输出，正常终端与 CI 仍会执行');
   });
+} else if (!ffmpegUsable) {
+  test('ffmpeg 本机不可用 —— 跳过（环境缺依赖，不是代码问题）', (t) => {
+    t.skip('本机解析不到可运行的 ffmpeg（runtime-paths 兜底也落空）：夹具造不了，正常终端与 CI 仍会执行');
+  });
 } else {
+  runFfmpeg(['-f', 'lavfi', '-i', 'sine=frequency=3000:duration=3', '-c:a', 'aac', TONE]);
+  runFfmpeg(['-f', 'lavfi', '-i', 'sine=frequency=3000:duration=3',
+    '-af', "volume=0:enable='between(t,0,2.5)'", '-c:a', 'aac', LATE]);
+  runFfmpeg(['-f', 'lavfi', '-i', 'testsrc2=size=64x64:rate=10:duration=1', '-pix_fmt', 'yuv420p', NOAUDIO]);
   test('全程有声的片段判为通过', () => {
     const r = run(TONE);
     assert.equal(r.status, 0, r.stderr);
