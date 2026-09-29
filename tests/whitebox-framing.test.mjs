@@ -111,6 +111,7 @@ test('mustMove：角色看有没有 end_pos，道具看有没有多段 waypoints
   assert.equal(mustMove(char('A', [{ start_pos: [0, 0] }])), false);
   assert.equal(mustMove(char('A', [{ start_pos: [0, 0], end_pos: [1, 1] }])), true);
   assert.equal(mustMove(prop('T', [[0, 0, 0]])), false);
+  assert.equal(mustMove(prop('T', [[0, 0, 0], [0, 0, 0]])), false);
   assert.equal(mustMove(prop('T', [[0, 0, 0], [1, 0, 0]])), true);
 });
 

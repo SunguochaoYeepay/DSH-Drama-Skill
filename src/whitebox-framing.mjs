@@ -32,7 +32,9 @@ export const DEFAULT_RULES = {
  */
 export function mustMove(asset) {
   if (asset.kind === 'prop') {
-    return !!(asset.path && Array.isArray(path_waypoints(asset)) && path_waypoints(asset).length > 1);
+    const points = path_waypoints(asset);
+    if (!Array.isArray(points) || points.length < 2) return false;
+    return points.some((point, i) => i > 0 && point.some((value, axis) => value !== points[i - 1][axis]));
   }
   return (asset.clips || []).some((c) => Array.isArray(c.end_pos));
 }
