@@ -114,6 +114,15 @@ test('角色和道具支持 RGB 身份色，同时保留旧灰度写法', () => 
     .some((e) => e.includes('color')));
 });
 
+test('座椅道具与坐下动作来自菜单并通过白膜校验', () => {
+  const sitDoc = JSON.parse(fs.readFileSync(path.join(repoRoot, 'lab', 'whitebox', 'table-sit.spatial.json'), 'utf8'));
+  const chairCount = sitDoc.entities.filter((entity) => entity.type === 'chair').length;
+  assert.equal(chairCount, 3);
+  const animations = sitDoc.entities.flatMap((entity) => entity.motions || []).map((motion) => motion.animation);
+  assert.ok(animations.includes('Sitting_Enter'));
+  assert.ok(animations.includes('Sitting_Talking_Loop'));
+});
+
 test('拒绝编造的道具类型（如 spaceship）', () => {
   const errors = validateWhitebox(broken((d) => {
     d.assets.push({ asset_id: 's1', kind: 'prop', asset_type: 'spaceship', path: { frame_range: [1, 168], waypoints: [[0, 0, 1], [1, 1, 1]] } });

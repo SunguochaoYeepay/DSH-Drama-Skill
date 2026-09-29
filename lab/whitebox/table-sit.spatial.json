@@ -1,0 +1,31 @@
+{
+  "schema": "spatial-plan/1",
+  "scene_name": "table_sit",
+  "total_frames": 144,
+  "fps": 24,
+  "stage": { "preset": "room", "size": [8, 8, 3.2] },
+  "entities": [
+    { "id": "TABLE", "kind": "prop", "type": "table", "color": [0.35, 0.35, 0.38], "position": [0, 0], "path": { "waypoints": [[0, 0, 0], [0, 0, 0]] } },
+    { "id": "SEAT_A", "kind": "prop", "type": "chair", "color": [0.48, 0.22, 0.12], "position": [0, -2.0], "facing": 0, "path": { "waypoints": [[0, -2.0, 0], [0, -2.0, 0]] } },
+    { "id": "SEAT_B", "kind": "prop", "type": "chair", "color": [0.48, 0.22, 0.12], "position": [-2.0, 0], "facing": 90, "path": { "waypoints": [[-2.0, 0, 0], [-2.0, 0, 0]] } },
+    { "id": "SEAT_C", "kind": "prop", "type": "chair", "color": [0.48, 0.22, 0.12], "position": [2.0, 0], "facing": 270, "path": { "waypoints": [[2.0, 0, 0], [2.0, 0, 0]] } },
+    { "id": "A", "kind": "character", "type": "kid", "color": [0.55, 0.18, 0.85], "position": [0, -2.0], "facing": 0,
+      "motions": [
+        { "frames": [1, 24], "from": [0, -2.0], "to": [0, -2.0], "animation": "Sitting_Enter", "facing": 0 },
+        { "frames": [25, 144], "from": [0, -2.0], "to": [0, -2.0], "animation": "Sitting_Talking_Loop", "facing": 0 }
+      ] },
+    { "id": "B", "kind": "character", "type": "male", "color": [0.12, 0.42, 0.95], "position": [-2.0, 0], "facing": 90,
+      "motions": [
+        { "frames": [1, 24], "from": [-2.0, 0], "to": [-2.0, 0], "animation": "Sitting_Enter", "facing": 90 },
+        { "frames": [25, 144], "from": [-2.0, 0], "to": [-2.0, 0], "animation": "Sitting_Idle_Loop", "facing": 90 }
+      ] },
+    { "id": "C", "kind": "character", "type": "female", "color": [0.95, 0.35, 0.12], "position": [2.0, 0], "facing": 270,
+      "motions": [
+        { "frames": [1, 24], "from": [2.0, 0], "to": [2.0, 0], "animation": "Sitting_Enter", "facing": 270 },
+        { "frames": [25, 144], "from": [2.0, 0], "to": [2.0, 0], "animation": "Sitting_Talking_Loop", "facing": 270 }
+      ] }
+  ],
+  "camera": { "type": "static", "look_at": [0, -0.2, 0.9], "keys": [{ "frame": 1, "angle": 270, "dist": 8.5, "height": 2.4, "fov": 46 }] },
+  "outputs": { "video": true, "stills": [1, 24, 72, 144], "screen_coords": true },
+  "notes": "三人分别坐在方桌三侧；先完成坐下，再保持坐姿，其中 A/C 说话。"
+}

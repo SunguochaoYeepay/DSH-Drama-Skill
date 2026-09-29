@@ -1,0 +1,277 @@
+{
+  "schema": "whitebox/1",
+  "scene_name": "table_sit",
+  "total_frames": 144,
+  "fps": 24,
+  "stage": {
+    "preset": "room",
+    "size": [
+      8,
+      8,
+      3.2
+    ]
+  },
+  "assets": [
+    {
+      "asset_id": "TABLE",
+      "kind": "prop",
+      "asset_type": "table",
+      "color": [
+        0.35,
+        0.35,
+        0.38
+      ],
+      "path": {
+        "waypoints": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "frame_range": [
+          1,
+          144
+        ]
+      }
+    },
+    {
+      "asset_id": "SEAT_A",
+      "kind": "prop",
+      "asset_type": "chair",
+      "color": [
+        0.48,
+        0.22,
+        0.12
+      ],
+      "path": {
+        "waypoints": [
+          [
+            0,
+            -2,
+            0
+          ],
+          [
+            0,
+            -2,
+            0
+          ]
+        ],
+        "frame_range": [
+          1,
+          144
+        ]
+      }
+    },
+    {
+      "asset_id": "SEAT_B",
+      "kind": "prop",
+      "asset_type": "chair",
+      "color": [
+        0.48,
+        0.22,
+        0.12
+      ],
+      "path": {
+        "waypoints": [
+          [
+            -2,
+            0,
+            0
+          ],
+          [
+            -2,
+            0,
+            0
+          ]
+        ],
+        "frame_range": [
+          1,
+          144
+        ]
+      }
+    },
+    {
+      "asset_id": "SEAT_C",
+      "kind": "prop",
+      "asset_type": "chair",
+      "color": [
+        0.48,
+        0.22,
+        0.12
+      ],
+      "path": {
+        "waypoints": [
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ]
+        ],
+        "frame_range": [
+          1,
+          144
+        ]
+      }
+    },
+    {
+      "asset_id": "A",
+      "kind": "character",
+      "asset_type": "kid",
+      "color": [
+        0.55,
+        0.18,
+        0.85
+      ],
+      "clips": [
+        {
+          "frame_range": [
+            1,
+            24
+          ],
+          "animation": "Sitting_Enter",
+          "start_pos": [
+            0,
+            -2
+          ],
+          "facing": 0,
+          "motion_curve": "ease",
+          "blend_frames": 4
+        },
+        {
+          "frame_range": [
+            25,
+            144
+          ],
+          "animation": "Sitting_Talking_Loop",
+          "start_pos": [
+            0,
+            -2
+          ],
+          "facing": 0,
+          "motion_curve": "ease",
+          "blend_frames": 4
+        }
+      ]
+    },
+    {
+      "asset_id": "B",
+      "kind": "character",
+      "asset_type": "male",
+      "color": [
+        0.12,
+        0.42,
+        0.95
+      ],
+      "clips": [
+        {
+          "frame_range": [
+            1,
+            24
+          ],
+          "animation": "Sitting_Enter",
+          "start_pos": [
+            -2,
+            0
+          ],
+          "facing": 90,
+          "motion_curve": "ease",
+          "blend_frames": 4
+        },
+        {
+          "frame_range": [
+            25,
+            144
+          ],
+          "animation": "Sitting_Idle_Loop",
+          "start_pos": [
+            -2,
+            0
+          ],
+          "facing": 90,
+          "motion_curve": "ease",
+          "blend_frames": 4
+        }
+      ]
+    },
+    {
+      "asset_id": "C",
+      "kind": "character",
+      "asset_type": "female",
+      "color": [
+        0.95,
+        0.35,
+        0.12
+      ],
+      "clips": [
+        {
+          "frame_range": [
+            1,
+            24
+          ],
+          "animation": "Sitting_Enter",
+          "start_pos": [
+            2,
+            0
+          ],
+          "facing": 270,
+          "motion_curve": "ease",
+          "blend_frames": 4
+        },
+        {
+          "frame_range": [
+            25,
+            144
+          ],
+          "animation": "Sitting_Talking_Loop",
+          "start_pos": [
+            2,
+            0
+          ],
+          "facing": 270,
+          "motion_curve": "ease",
+          "blend_frames": 4
+        }
+      ]
+    }
+  ],
+  "camera": {
+    "type": "static",
+    "look_at": [
+      0,
+      -0.2,
+      0.9
+    ],
+    "keys": [
+      {
+        "frame": 1,
+        "angle": 270,
+        "dist": 8.5,
+        "height": 2.4,
+        "fov": 46
+      }
+    ]
+  },
+  "outputs": {
+    "video": true,
+    "stills": [
+      1,
+      24,
+      72,
+      144
+    ],
+    "screen_coords": true
+  },
+  "notes": "三人分别坐在方桌三侧；先完成坐下，再保持坐姿，其中 A/C 说话。",
+  "spatial_source": "spatial-plan/1"
+}

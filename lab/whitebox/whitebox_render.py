@@ -256,6 +256,13 @@ def build_prop(asset, mat, prop_catalog=None):
         for x in (-1.2, 1.2):
             for y in (-0.6, 0.6):
                 parts.append(box("leg", (0.16, 0.16, 1.05), (x, y, 0.525), mat))
+    elif t == "chair":
+        # 可复用白膜座椅：座面 z=0.55，局部 +y 为椅背方向。
+        parts = [box("seat", (0.7, 0.7, 0.14), (0, 0, 0.55), mat),
+                 box("back", (0.7, 0.14, 0.9), (0, 0.28, 0.95), mat)]
+        for x in (-0.25, 0.25):
+            for y in (-0.25, 0.25):
+                parts.append(box("leg", (0.1, 0.1, 0.55), (x, y, 0.275), mat))
     else:  # crate
         parts = [box("crate", (0.7, 0.7, 0.7), (0, 0, 0.35), mat)]
     root = bpy.data.objects.new("P_" + asset["asset_id"], None)
