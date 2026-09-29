@@ -1,0 +1,70 @@
+{
+  "schema": "spatial-plan/1",
+  "scene_name": "table_move",
+  "total_frames": 144,
+  "fps": 24,
+  "stage": { "preset": "room", "size": [8, 8, 3.2] },
+  "entities": [
+    {
+      "id": "TABLE",
+      "kind": "prop",
+      "type": "table",
+      "color": [0.35, 0.35, 0.38],
+      "position": [0, 0],
+      "path": { "waypoints": [[0, 0, 0], [0, 0, 0]] }
+    },
+    {
+      "id": "B",
+      "kind": "character",
+      "type": "male",
+      "color": [0.12, 0.42, 0.95],
+      "position": [0, -2.2],
+      "facing": 0,
+      "motions": [{ "frames": [1, 144], "animation": "Idle_Loop", "facing": 0 }]
+    },
+    {
+      "id": "C",
+      "kind": "character",
+      "type": "female",
+      "color": [0.95, 0.35, 0.12],
+      "position": [2.2, 0],
+      "facing": 270,
+      "motions": [{ "frames": [1, 144], "animation": "Idle_Loop", "facing": 270 }]
+    },
+    {
+      "id": "A",
+      "kind": "character",
+      "type": "kid",
+      "color": [0.55, 0.18, 0.85],
+      "facing": "towards:C",
+      "relations": [],
+      "motions": [
+        {
+          "frames": [1, 48],
+          "from": "A",
+          "to": "A",
+          "animation": "Idle_Loop",
+          "facing": "towards:C"
+        },
+        {
+          "frames": [49, 144],
+          "waypoints": [[0, -3.4], [3.0, -2.0], [3.0, 0]],
+          "animation": "Walk_Loop",
+          "motion_curve": "linear",
+          "facing": "towards:C",
+          "blend_frames": 4
+        }
+      ]
+    }
+  ],
+  "relations": [
+    { "type": "behind", "subject": "A", "target": "B", "distance": 1.2 }
+  ],
+  "camera": {
+    "type": "static",
+    "look_at": [0.4, -0.5, 1.0],
+    "keys": [{ "frame": 1, "angle": 270, "dist": 8.5, "height": 2.2, "fov": 46 }]
+  },
+  "outputs": { "video": true, "stills": [1, 48, 96, 144], "screen_coords": true },
+  "notes": "空间关系范例：A 相对于 B 位于后方；A 绕过方桌后走到 C 面前并持续面向 C。"
+}

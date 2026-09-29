@@ -1,0 +1,103 @@
+{
+  "schema": "whitebox/1",
+  "scene_name": "platform_chase",
+  "total_frames": 168,
+  "fps": 24,
+  "stage": { "preset": "platform", "size": [30, 12, 5] },
+  "assets": [
+    {
+      "asset_id": "LEAD",
+      "kind": "character",
+      "asset_type": "male",
+      "color": [0.12, 0.42, 0.95],
+      "clips": [
+        {
+          "frame_range": [1, 168],
+          "animation": "Sprint_Loop",
+          "start_pos": [-5.5, -1.2],
+          "end_pos": [5.2, -1.2],
+          "facing": "auto_move",
+          "motion_curve": "ease",
+          "blend_frames": 4
+        }
+      ]
+    },
+    {
+      "asset_id": "CHASER",
+      "kind": "character",
+      "asset_type": "female",
+      "color": [0.95, 0.35, 0.12],
+      "clips": [
+        {
+          "frame_range": [1, 72],
+          "animation": "Jog_Fwd_Loop",
+          "start_pos": [-4.8, -2.0],
+          "end_pos": [-0.8, -2.0],
+          "facing": "towards:LEAD",
+          "motion_curve": "linear",
+          "blend_frames": 4
+        },
+        {
+          "frame_range": [73, 168],
+          "animation": "Sprint_Loop",
+          "start_pos": [-0.8, -1.2],
+          "end_pos": [4.4, -2.0],
+          "facing": "auto_move",
+          "motion_curve": "ease",
+          "blend_frames": 5,
+          "phase_offset": 0.18
+        }
+      ]
+    },
+    {
+      "asset_id": "CHILD",
+      "kind": "character",
+      "asset_type": "kid",
+      "color": [0.55, 0.18, 0.85],
+      "clips": [
+        {
+          "frame_range": [1, 84],
+          "animation": "Idle_Loop",
+          "start_pos": [-1.2, -2.8],
+          "facing": "towards:LEAD",
+          "blend_frames": 4
+        },
+        {
+          "frame_range": [85, 168],
+          "animation": "Jog_Fwd_Loop",
+          "start_pos": [-1.2, -2.2],
+          "end_pos": [3.4, -2.8],
+          "facing": "auto_move",
+          "motion_curve": "ease",
+          "blend_frames": 5,
+          "phase_offset": 0.32
+        }
+      ]
+    },
+    {
+      "asset_id": "TRAIN",
+      "kind": "prop",
+      "asset_type": "train",
+      "color": 0.12,
+      "path": {
+        "frame_range": [35, 130],
+        "waypoints": [[-14, 2.2, 0], [-2, 1.7, 0], [14, 1.2, 0]],
+        "motion_curve": "linear",
+        "bank": false
+      }
+    }
+  ],
+  "camera": {
+    "type": "static",
+    "look_at": [0, -0.8, 1.0],
+    "keys": [
+      { "frame": 1, "angle": 270, "dist": 12.0, "height": 3.0, "fov": 50 }
+    ]
+  },
+  "outputs": {
+    "video": true,
+    "stills": [1, 84, 168],
+    "screen_coords": true
+  },
+  "notes": "压力测试：主角冲过站台，女性分两段追赶，儿童先停后跟，一列火车在前景横穿；白膜验证多人时序、道具轨迹、跟拍和遮挡。颜色目前是灰度身份提示，不是最终角色外观。"
+}

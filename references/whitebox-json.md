@@ -94,7 +94,7 @@
   "asset_id": "jet1",
   "kind": "prop",
   "asset_type": "jet",               // 渲染器内置基本体：jet | missile | crate | car
-  "color": 0.5,                      // 可选灰度覆盖 0..1
+  "color": [0.15, 0.45, 0.95],        // 可选身份色；也兼容 0..1 灰度值
   "path": {                          // prop 用轨迹，不用 clips
     "frame_range": [1, 168],
     "waypoints": [[-6, -3, 8], [0, 0, 5], [3, 4, 1.5], [3.2, 4.5, 6]],

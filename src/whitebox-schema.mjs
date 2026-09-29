@@ -9,7 +9,7 @@ export const LOCOMOTION = new Set([
 ]);
 
 export const STAGE_PRESETS = ['room', 'valley', 'platform', 'empty'];
-export const PROP_TYPES = ['jet', 'missile', 'crate', 'car', 'train'];
+export const PROP_TYPES = ['jet', 'missile', 'crate', 'car', 'train', 'table'];
 export const CAMERA_TYPES = ['static', 'dolly-in', 'pan-follow', 'orbit'];
 export const MOTION_CURVES = ['static', 'linear', 'ease'];
 
@@ -31,6 +31,8 @@ export function loadMenu(assetsDir) {
 const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 const isPos2 = (v) => Array.isArray(v) && v.length === 2 && v.every(isNum);
 const isPos3 = (v) => Array.isArray(v) && v.length === 3 && v.every(isNum);
+const isColor = (v) => (isNum(v) && v >= 0 && v <= 1)
+  || (Array.isArray(v) && v.length === 3 && v.every((n) => isNum(n) && n >= 0 && n <= 1));
 const isFrameRange = (v, total) => Array.isArray(v) && v.length === 2
   && v.every((n) => Number.isInteger(n)) && v[0] >= 1 && v[1] <= total && v[0] <= v[1];
 
@@ -88,8 +90,8 @@ export function validateWhitebox(doc, menu = DEFAULT_MENU) {
           err(`${who}：asset_type 只能从菜单选 ${Object.keys(roles).join('|')}，收到：${a.asset_type}`);
         }
         // 同档位多人时用 color 覆盖灰度，否则画面糊成一片
-        if (a.color !== undefined && !(isNum(a.color) && a.color >= 0 && a.color <= 1)) {
-          err(`${who}：color 灰度必须 0..1`);
+        if (a.color !== undefined && !isColor(a.color)) {
+          err(`${who}：color 必须是 0..1 灰度值或 [r,g,b] 三元色值`);
         }
         if (!Array.isArray(a.clips) || a.clips.length === 0) {
           err(`${who}：character 必须有 clips`);
@@ -146,8 +148,8 @@ export function validateWhitebox(doc, menu = DEFAULT_MENU) {
             err(`${who}：path.motion_curve 必须是 ${MOTION_CURVES.join('|')}`);
           }
         }
-        if (a.color !== undefined && !(isNum(a.color) && a.color >= 0 && a.color <= 1)) {
-          err(`${who}：color 灰度必须 0..1`);
+        if (a.color !== undefined && !isColor(a.color)) {
+          err(`${who}：color 必须是 0..1 灰度值或 [r,g,b] 三元色值`);
         }
       } else {
         err(`${who}：kind 必须是 character | prop，收到：${a.kind || '缺失'}`);

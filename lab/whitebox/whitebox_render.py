@@ -73,6 +73,9 @@ def clip_pos(clip, f):
 
 def asset_pos(asset, f):
     """角色在第 f 帧的脚底 [x, y]。clip 空档 = 保持上一段末位置。"""
+    if asset.get("kind") == "prop":
+        p = path_pos(asset["path"], f)
+        return [p.x, p.y]
     clips = asset.get("clips", [])
     pos = list(clips[0]["start_pos"]) if clips else [0.0, 0.0]
     for c in clips:
@@ -121,7 +124,11 @@ def path_pos(path, f):
 def gray_mat(name, g, rough=0.8):
     m = bpy.data.materials.new(name)
     bsdf = m.node_tree.nodes.get("Principled BSDF")
-    bsdf.inputs["Base Color"].default_value = (g, g, g, 1.0)
+    if isinstance(g, (list, tuple)) and len(g) == 3:
+        rgb = tuple(float(v) for v in g)
+    else:
+        rgb = (float(g),) * 3
+    bsdf.inputs["Base Color"].default_value = (*rgb, 1.0)
     bsdf.inputs["Roughness"].default_value = rough
     return m
 
@@ -210,6 +217,12 @@ def build_prop(asset, mat):
         lit = gray_mat("M_P_%s_lamp" % asset["asset_id"], 1.0)
         for i, x in enumerate((-0.85, 0.85)):
             parts.append(box("headlight%d" % i, (0.5, 0.3, 0.35), (x, 5.45, -0.2), lit))
+    elif t == "table":
+        # 简单方桌：用于空间调度验证，不承担最终美术细节。
+        parts = [box("top", (2.8, 1.6, 0.16), (0, 0, 1.05), mat)]
+        for x in (-1.2, 1.2):
+            for y in (-0.6, 0.6):
+                parts.append(box("leg", (0.16, 0.16, 1.05), (x, y, 0.525), mat))
     else:  # crate
         parts = [box("crate", (0.7, 0.7, 0.7), (0, 0, 0.35), mat)]
     root = bpy.data.objects.new("P_" + asset["asset_id"], None)
@@ -240,7 +253,7 @@ def import_character(asset, role):
     s = role.get("scale", 1.0)
     arm.scale = (s, s, s)
 
-    # 角色默认按档位灰度（男浅/女中/儿童深）；同档位多人可用 color 覆盖，避免糊成一片
+    # 角色默认按档位灰度；color 可用 RGB 三元组给多人稳定的身份色
     mat = gray_mat("M_" + asset["asset_id"], asset.get("color", role.get("gray", 0.7)))
     for o in alive:
         if o.type == "MESH":
@@ -278,16 +291,22 @@ def import_character(asset, role):
 
 
 def keyframe_root_motion(arm, asset, assets_by_id, total):
-    """位移/朝向都打在骨架对象上（局部骨骼动画归 NLA，根运动归对象层）。
-    keyframe_insert 默认 BEZIER 插值，正好对应 ease；linear/static 由 clip_pos 的
-    曲线语义在 camera/屏幕坐标侧保证，根运动帧数少，BEZIER 足够。"""
-    for clip in asset["clips"]:
-        f0, f1 = clip["frame_range"]
-        for f, p in ((f0, clip_pos(clip, f0)), (f1, clip_pos(clip, f1))):
-            arm.location = (p[0], p[1], 0.0)
-            arm.keyframe_insert("location", frame=f)
-            arm.rotation_euler = (0, 0, facing_at(asset, assets_by_id, clip, f))
-            arm.keyframe_insert("rotation_euler", frame=f)
+    """Keep stage transforms independent from imported animation channels."""
+    root = bpy.data.objects.new("Stage_" + asset["asset_id"], None)
+    bpy.context.scene.collection.objects.link(root)
+    arm.parent = root
+    root.rotation_mode = "XYZ"
+    for f in range(1, total + 1):
+        clip = asset["clips"][0]
+        for candidate in asset["clips"]:
+            if candidate["frame_range"][0] <= f:
+                clip = candidate
+        p = asset_pos(asset, f)
+        root.location = (p[0], p[1], 0.0)
+        root.rotation_euler = (0, 0, facing_at(asset, assets_by_id, clip, f))
+        root.keyframe_insert("location", frame=f)
+        root.keyframe_insert("rotation_euler", frame=f)
+    return root
 
 
 # ---------------- 相机 ----------------
@@ -442,6 +461,11 @@ def write_screen_coords(sc, doc, out, cam, tracked):
         row = {}
         for aid, obj, zhead in tracked:
             root_w = obj.matrix_world.translation
+            forward = obj.matrix_world.to_quaternion() @ Vector((0, 1, 0))
+            row[aid] = {
+                "world_position": [round(v, 6) for v in root_w],
+                "world_forward": [round(v, 6) for v in forward],
+            }
             head_w = root_w + Vector((0, 0, zhead))
             for label, w in (("root", root_w), ("head", head_w)):
                 ndc = world_to_camera_view(sc, cam, w)
@@ -493,9 +517,9 @@ def main():
     for a in doc["assets"]:
         if a["kind"] == "character":
             arm = import_character(a, roles.get(a["asset_type"], {}))
-            keyframe_root_motion(arm, a, assets_by_id, doc["total_frames"])
+            root = keyframe_root_motion(arm, a, assets_by_id, doc["total_frames"])
             zhead = 1.7 * roles.get(a["asset_type"], {}).get("scale", 1.0)
-            tracked.append((a["asset_id"], arm, zhead))
+            tracked.append((a["asset_id"], root, zhead))
         else:
             root = build_prop(a, gray_mat("M_P_" + a["asset_id"], a.get("color", 0.5)))
             path = a["path"]

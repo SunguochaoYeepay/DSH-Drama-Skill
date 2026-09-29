@@ -101,6 +101,19 @@ test('platform 站台 + train 列车 + look_at + phase_offset + 角色 color：�
   assert.deepEqual(validateWhitebox(subwayDoc, menu), []);
 });
 
+test('角色和道具支持 RGB 身份色，同时保留旧灰度写法', () => {
+  const rgb = broken((d) => {
+    d.assets[0].color = [0.1, 0.4, 0.9];
+    d.assets.push({
+      asset_id: 'crate1', kind: 'prop', asset_type: 'crate', color: [0.9, 0.2, 0.1],
+      path: { frame_range: [1, 168], waypoints: [[0, 0, 0], [1, 1, 0]] },
+    });
+  });
+  assert.deepEqual(validateWhitebox(rgb, menu), []);
+  assert.ok(validateWhitebox(broken((d) => { d.assets[0].color = [1.2, 0, 0]; }), menu)
+    .some((e) => e.includes('color')));
+});
+
 test('拒绝编造的道具类型（如 spaceship）', () => {
   const errors = validateWhitebox(broken((d) => {
     d.assets.push({ asset_id: 's1', kind: 'prop', asset_type: 'spaceship', path: { frame_range: [1, 168], waypoints: [[0, 0, 1], [1, 1, 1]] } });

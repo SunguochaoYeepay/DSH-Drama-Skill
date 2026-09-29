@@ -1,0 +1,72 @@
+{
+  "schema": "whitebox/1",
+  "scene_name": "handhold_walk",
+  "total_frames": 144,
+  "fps": 24,
+  "stage": { "preset": "room", "size": [8, 8, 3.2] },
+  "assets": [
+    {
+      "asset_id": "MAN",
+      "kind": "character",
+      "asset_type": "male",
+      "clips": [
+        {
+          "frame_range": [1, 144],
+          "animation": "Walk_Loop",
+          "start_pos": [-0.85, 2.4],
+          "end_pos": [-0.85, 0.25],
+          "facing": "auto_move",
+          "motion_curve": "linear",
+          "blend_frames": 4
+        }
+      ]
+    },
+    {
+      "asset_id": "WOMAN",
+      "kind": "character",
+      "asset_type": "female",
+      "clips": [
+        {
+          "frame_range": [1, 144],
+          "animation": "Walk_Loop",
+          "start_pos": [0, 2.4],
+          "end_pos": [0, 0.25],
+          "facing": "auto_move",
+          "motion_curve": "linear",
+          "blend_frames": 4,
+          "phase_offset": 0.12
+        }
+      ]
+    },
+    {
+      "asset_id": "CHILD",
+      "kind": "character",
+      "asset_type": "kid",
+      "clips": [
+        {
+          "frame_range": [1, 144],
+          "animation": "Walk_Loop",
+          "start_pos": [0.85, 2.4],
+          "end_pos": [0.85, 0.25],
+          "facing": "auto_move",
+          "motion_curve": "linear",
+          "blend_frames": 4,
+          "phase_offset": 0.24
+        }
+      ]
+    }
+  ],
+  "camera": {
+    "type": "static",
+    "look_at": [0, 0.9, 1.0],
+    "keys": [
+      { "frame": 1, "angle": 270, "dist": 5.5, "height": 1.8, "fov": 42 }
+    ]
+  },
+  "outputs": {
+    "video": true,
+    "stills": [1, 72, 144],
+    "screen_coords": true
+  },
+  "notes": "三人保持横向队形同步向镜头走。白膜锁定队形、纵深和时序；手拉手目前用间距与同步走位近似，未模拟手部连接。"
+}
