@@ -59,17 +59,13 @@
     }
   ],
   "camera": {
-    "type": "pan-follow",
-    "track": "JET",
+    "type": "static",
     "framing": "山谷全景跟拍",
     "camera_side": "front",
     "readable_action": "飞机沿山谷前进，三枚导弹依次交错飞出",
     "must_show": ["JET", "MISSILE_1", "MISSILE_2", "MISSILE_3"],
-    "keys": [
-      { "frame": 1, "angle": 90, "dist": 20, "height": 9, "fov": 65 },
-      { "frame": 86, "angle": 220, "dist": 18, "height": 8, "fov": 68 },
-      { "frame": 168, "angle": 205, "dist": 20, "height": 8, "fov": 65 }
-    ]
+    "look_at": [1, 0, 4],
+    "keys": [{ "frame": 1, "angle": 90, "dist": 24, "height": 10, "fov": 65 }]
   },
   "outputs": { "video": true, "stills": [1, 58, 86, 120, 168], "screen_coords": true },
   "notes": "E2 刚体轨迹试金石：飞机沿山谷前进，三枚导弹分时段交错发射，镜头持续跟拍。"
