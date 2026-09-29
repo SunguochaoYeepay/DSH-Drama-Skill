@@ -1,3 +1,5 @@
+import { analyzeSpatialControl } from './spatial-control.mjs';
+
 /**
  * 把导演镜头编译成模型可执行的生成单元。
  *
@@ -31,6 +33,7 @@ function finalize(group, index, boundaryReason, forcedDuration = null) {
   });
   const contentSeconds = Number(shotEnd(shots[shots.length - 1]).toFixed(3));
   const director = group[0].director || {};
+  const spatialDecision = analyzeSpatialControl({ unit: director, shot: group[0].shot });
   return {
     id: `g${String(index).padStart(3, '0')}`,
     source_units: [...new Set(group.map((x) => x.sourceUnit))],
@@ -59,6 +62,9 @@ function finalize(group, index, boundaryReason, forcedDuration = null) {
     ...(director.duration_reason ? { duration_reason: director.duration_reason } : {}),
     ...(director.keyframe_start ? { keyframe_start: director.keyframe_start } : {}),
     ...(director.keyframe_cast ? { keyframe_cast: [...director.keyframe_cast] } : {}),
+    ...(director.spatial_control ? { spatial_control: structuredClone(director.spatial_control) } : {}),
+    spatial_control_decision: spatialDecision,
+    ...(director.whitebox ? { whitebox: structuredClone(director.whitebox) } : {}),
     ...(director.action_complexity ? { action_complexity: structuredClone(director.action_complexity) } : {}),
     ...(director.end_state ? { end_state: director.end_state } : {}),
     ...(director.continuity ? { continuity: structuredClone(director.continuity) } : {}),

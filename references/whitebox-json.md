@@ -152,7 +152,7 @@
 ## 流水线位置（后续步骤落地，此处仅约定）
 
 ```
-direction.json →（三判据命中）→ whitebox/<unit-id>.json（本规范，Agent 直写，票 agent_draft）
+direction.json →（空间控制判定）→ compile-whitebox-unit → whitebox/<unit-id>.json
   → 校验器（src/whitebox-schema.mjs）→ 静帧预检 → 人工确认 → 渲全片（白膜票，哈希绑 JSON）
   → H3 成片（clip 票）。改 JSON ⇒ 白膜票废 ⇒ clip 票连带废。
 ```

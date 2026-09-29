@@ -25,7 +25,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { projectAssetFiles, unitAssets } from '../src/asset-resolver.mjs';
+import { projectAssetFiles, resolveAssetPath, unitAssets } from '../src/asset-resolver.mjs';
 import { planKeyframeFiles, planLastKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
 import { referenceAdvice } from '../src/plan-checks.mjs';
 import { COMFY_GEN, NODE, requireComfyPython } from '../src/runtime-paths.mjs';
@@ -131,6 +131,12 @@ requireApproval(PROJ, 'direction', [path.join(PROJ, 'board.direction.json')], { 
 function refsFor(shot, unit) {
   const assetUnit = unit.keyframe_cast ? { ...unit, cast: unit.keyframe_cast } : unit;
   const assets = unitAssets(board, BOARD_PATH, assetUnit, { workspace: opt('ws', null) });
+  const layoutPath = unit.whitebox?.keyframe || unit.spatial_control?.whitebox_keyframe || null;
+  const layoutFile = layoutPath
+    ? resolveAssetPath(BOARD_PATH, layoutPath, opt('ws', null))
+    : null;
+  if (layoutPath && !layoutFile) throw new Error(`${unit.id}: 白膜关键帧不存在：${layoutPath}`);
+  const layoutRef = layoutFile ? { file: layoutFile, role: 'whitebox' } : null;
   const people = assets.people.flatMap((person) => [
     { file: person.portrait, role: 'portrait', character: person.characterId },
     { file: person.sheet, role: 'sheet', character: person.characterId },
@@ -140,17 +146,20 @@ function refsFor(shot, unit) {
     // 旧 qwen 家族与百炼/火山仍是 3 张。**场景占 1 位**，其余给角色。
     // 原先硬编码 `> 2` 是把 2.1 的能力当成了旧家族的 3 —— 见 src/keyframe-references.mjs 的来历。
     const capacity = refImageLimit(PROVIDER, IMAGE_MODEL);
-    if (assets.people.length + 1 > capacity) {
-      throw new Error(`${unit.id}: 参考位共 ${capacity} 个、场景占 1 个，最多只能精确锚定 ${capacity - 1} 名角色；请让导演拆分镜头`);
+    // 白膜布局图和场景主图占同一个“空间锚”槽位；白膜存在时优先它。
+    const reserved = 1;
+    if (assets.people.length + reserved > capacity) {
+      throw new Error(`${unit.id}: 参考位共 ${capacity} 个、白膜/场景占 ${reserved} 个，最多只能精确锚定 ${capacity - reserved} 名角色；请让导演拆分镜头`);
     }
     if (PROVIDER === 'bailian' || PROVIDER === 'volcengine') {
       return [
+        ...(layoutRef ? [layoutRef] : []),
         ...assets.people.map((person) => ({
           file: person.sheet || person.portrait,
           role: person.sheet ? 'sheet' : 'portrait',
           character: person.characterId,
         })),
-        { file: assets.sceneMaster, role: 'scene' },
+        ...(!layoutRef ? [{ file: assets.sceneMaster, role: 'scene' }] : []),
       ];
     }
     // 🔁 **一个角色只给一张身份参考，且优先身份图、不要肖像**（2026-09-17 after_waking）。
@@ -172,11 +181,12 @@ function refsFor(shot, unit) {
       character: person.characterId,
     }));
     return [
-      { file: assets.sceneMaster, role: 'scene' },
+      ...(layoutRef ? [layoutRef] : [{ file: assets.sceneMaster, role: 'scene' }]),
       ...anchored,
     ];
   }
   const refs = [
+    ...(layoutRef ? [layoutRef] : []),
     ...people,
     { file: assets.sceneMaster, role: 'scene' },
     ...assets.props.map((prop) => ({ file: prop.file, role: 'prop', name: prop.name })),
@@ -240,12 +250,21 @@ for (const unit of dir.units) {
     requireApproval(PROJ, 'handoff', [handoff.stable_frame], { id: unit.id, skip: SKIP_GATE });
   }
   const shot = unit.shots[0];
+  const spatialDecision = unit.spatial_control_decision;
+  const declaredWhitebox = unit.whitebox?.keyframe || unit.spatial_control?.whitebox_keyframe;
+  if (unit.spatial_control?.required && !declaredWhitebox) {
+    throw new Error(`${unit.id}: spatial_control.required=true 但没有白膜关键帧；先运行 compile-whitebox-unit、白膜静帧预检并在计划中填写 whitebox.keyframe`);
+  }
+  if (spatialDecision?.required && !declaredWhitebox && !unit.spatial_control?.required) {
+    console.log(`  ⚠ ${unit.id}: 空间分析建议白膜（${(spatialDecision.reasons || []).join('、')}），当前仍按提示词通道执行`);
+  }
   let refs = refsFor(shot, unit);
   if (handoff) refs = withHandoffReference(refs, handoff.stable_frame, PROVIDER, { imageModel: IMAGE_MODEL });
   // 参考图表：与真正挂载的图片同源（refsFor / withHandoffReference 的产物）。
   // LLM 抽卡师写提示词时的「图N=职责」编号必须对齐这一行 —— 看到的就是跑的。
   const REF_ROLE_LABEL = {
     handoff: '上一段实际稳定尾帧（继承姿态与空间状态）',
+    whitebox: '白膜空间布局参考（位置、朝向、距离和构图）',
     scene: '场景参考（环境、光线、色调）',
     portrait: '人物脸部参考',
     sheet: '人物身份参考（脸、发型、服装）',

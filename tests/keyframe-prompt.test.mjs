@@ -27,7 +27,7 @@ const PROMPT_TEXT = [
 ].join('\n');
 
 /** 造一个能跑通干跑的最小项目：板子 + 编译计划（可选：直写提示词文件）。 */
-function makeProject({ withPrompt = true, promptText = PROMPT_TEXT } = {}) {
+function makeProject({ withPrompt = true, promptText = PROMPT_TEXT, withWhitebox = false } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-keyframe-llm-'));
   const master = path.join(dir, 'room_master.png');
   const sheet = path.join(dir, 'girl_sheet.png');
@@ -40,10 +40,12 @@ function makeProject({ withPrompt = true, promptText = PROMPT_TEXT } = {}) {
     scenes: [{ id: 's_room', name: '卧室', master }],
     props: [],
   }));
+  if (withWhitebox) fs.writeFileSync(path.join(dir, 'layout.png'), 'stub');
   fs.writeFileSync(path.join(dir, 'render.plan.json'), JSON.stringify({
     units: [{
       id: 'g001',
       keyframe_start: '0秒时：女孩坐在床边',
+      ...(withWhitebox ? { whitebox: { keyframe: 'layout.png' } } : {}),
       shots: [{ framing: '中景', action: '女孩坐在床边', scene: 's_room', on_screen: ['i_girl'] }],
     }],
   }));
@@ -112,4 +114,12 @@ test('参考图表与挂载图片同源：场景主图在前当图1（本地通�
   assert.equal(images.length, 2);
   assert.ok(images[0].endsWith('room_master.png'), '图1 应是场景主图');
   assert.ok(images[1].endsWith('girl_sheet.png'), '图2 应是身份图');
+});
+
+test('白膜关键帧替换场景主图成为空间锚，并排在身份参考之前', () => {
+  const out = runCli(makeProject({ withWhitebox: true }));
+  assert.equal(out.status, 0, `白膜参考干跑应成功：${out.stderr}`);
+  assert.match(out.stdout, /图1=白膜空间布局参考（位置、朝向、距离和构图） layout\.png/);
+  assert.match(out.stdout, /图2=人物身份参考（脸、发型、服装） girl_sheet\.png/);
+  assert.doesNotMatch(out.stdout, /图[0-9]+=场景参考/);
 });
