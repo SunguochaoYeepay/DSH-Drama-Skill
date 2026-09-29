@@ -75,6 +75,9 @@ __pycache__/
 # 产物一律可重跑还原 —— 白膜 168 帧 + 对照图合计 56 MB，进仓库只是负担。
 # mp4/png/pyc 已被上面的全局规则挡住，这条补上 out/ 里的 json 等零碎。
 /lab/**/out/
+# 本机人体检测权重与 DSH 权限审计临时目录
+/yolo11n.pt
+/.dsh-acl-report/
 # 白膜资产：基础件（vendor/whitebox-assets 根 + ual/）入库，扩展包不进 git
 /vendor/whitebox-assets/ext/
 /projects/**
