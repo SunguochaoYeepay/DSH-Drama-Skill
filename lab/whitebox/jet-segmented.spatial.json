@@ -1,0 +1,284 @@
+{
+  "schema": "spatial-plan/1",
+  "scene_name": "jet_valley_segmented",
+  "total_frames": 168,
+  "fps": 24,
+  "stage": {
+    "preset": "valley",
+    "size": [
+      30,
+      18,
+      12
+    ]
+  },
+  "entities": [
+    {
+      "id": "JET",
+      "kind": "prop",
+      "type": "jet",
+      "color": [
+        0.12,
+        0.42,
+        0.95
+      ],
+      "position": [
+        -8,
+        -6
+      ],
+      "path": {
+        "frame_range": [
+          1,
+          168
+        ],
+        "waypoints": [
+          [
+            -8,
+            -6,
+            8
+          ],
+          [
+            -3,
+            -2,
+            7
+          ],
+          [
+            2,
+            1,
+            5
+          ],
+          [
+            8,
+            5,
+            6
+          ]
+        ],
+        "motion_curve": "linear",
+        "bank": true
+      }
+    },
+    {
+      "id": "MISSILE_1",
+      "kind": "prop",
+      "type": "missile",
+      "color": [
+        0.95,
+        0.25,
+        0.08
+      ],
+      "position": [
+        -4,
+        -3
+      ],
+      "path": {
+        "frame_range": [
+          30,
+          120
+        ],
+        "waypoints": [
+          [
+            -4,
+            -3,
+            5.5
+          ],
+          [
+            0,
+            0,
+            3.2
+          ],
+          [
+            6,
+            4,
+            2
+          ]
+        ],
+        "motion_curve": "linear",
+        "bank": true
+      }
+    },
+    {
+      "id": "MISSILE_2",
+      "kind": "prop",
+      "type": "missile",
+      "color": [
+        0.95,
+        0.72,
+        0.08
+      ],
+      "position": [
+        -2,
+        -1
+      ],
+      "path": {
+        "frame_range": [
+          58,
+          148
+        ],
+        "waypoints": [
+          [
+            -2,
+            -1,
+            4.5
+          ],
+          [
+            2,
+            2,
+            3.8
+          ],
+          [
+            7,
+            4,
+            3
+          ]
+        ],
+        "motion_curve": "linear",
+        "bank": true
+      }
+    },
+    {
+      "id": "MISSILE_3",
+      "kind": "prop",
+      "type": "missile",
+      "color": [
+        0.72,
+        0.2,
+        0.9
+      ],
+      "position": [
+        0,
+        1
+      ],
+      "path": {
+        "frame_range": [
+          86,
+          168
+        ],
+        "waypoints": [
+          [
+            0,
+            1,
+            3.8
+          ],
+          [
+            4,
+            3,
+            3.6
+          ],
+          [
+            7,
+            3,
+            4
+          ]
+        ],
+        "motion_curve": "linear",
+        "bank": true
+      }
+    }
+  ],
+  "camera": {
+    "type": "dolly-in",
+    "framing": "发射段收紧、编队段广角",
+    "camera_side": "front",
+    "readable_action": "飞机沿山谷前进，三枚导弹依次交错飞出",
+    "must_show": [
+      "JET",
+      "MISSILE_1",
+      "MISSILE_2",
+      "MISSILE_3"
+    ],
+    "look_at": [
+      1,
+      0,
+      4
+    ],
+    "keys": [
+      {
+        "frame": 1,
+        "angle": 90,
+        "dist": 24,
+        "height": 10,
+        "fov": 65
+      },
+      {
+        "frame": 70,
+        "angle": 90,
+        "dist": 18,
+        "height": 9,
+        "fov": 58
+      },
+      {
+        "frame": 100,
+        "angle": 90,
+        "dist": 18,
+        "height": 9,
+        "fov": 58
+      },
+      {
+        "frame": 168,
+        "angle": 90,
+        "dist": 24,
+        "height": 10,
+        "fov": 65
+      }
+    ],
+    "segments": [
+      {
+        "frame_range": [
+          1,
+          29
+        ],
+        "framing": "飞机进入近景",
+        "must_show": [
+          "JET"
+        ]
+      },
+      {
+        "frame_range": [
+          30,
+          57
+        ],
+        "framing": "第一枚导弹发射",
+        "must_show": [
+          "JET",
+          "MISSILE_1"
+        ]
+      },
+      {
+        "frame_range": [
+          58,
+          85
+        ],
+        "framing": "双导弹交错",
+        "must_show": [
+          "JET",
+          "MISSILE_1",
+          "MISSILE_2"
+        ]
+      },
+      {
+        "frame_range": [
+          86,
+          168
+        ],
+        "framing": "三枚导弹编队广角",
+        "must_show": [
+          "JET",
+          "MISSILE_1",
+          "MISSILE_2",
+          "MISSILE_3"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "video": true,
+    "stills": [
+      1,
+      58,
+      86,
+      120,
+      168
+    ],
+    "screen_coords": true
+  },
+  "notes": "E4 分段机位对照：发射时短暂收紧，中后段回到广角，避免全程近景出框。"
+}
