@@ -3,5 +3,40 @@
   "units": "meters",
   "forward_axis": "+Y",
   "ground_z": 0,
-  "assets": []
+  "assets": [
+    {
+      "asset_id": "table_basic",
+      "asset_type": "table",
+      "model": "models/table_basic.glb",
+      "size_m": [
+        2.8,
+        2.8,
+        1.4
+      ],
+      "forward_axis": "+Y",
+      "ground_z": 0,
+      "license": "project-generated",
+      "source_url": "internal://whitebox-furniture/table_basic",
+      "author": "OpenAI",
+      "retrieved_at": "2026-09-29T07:27:54.282Z",
+      "content_sha256": "29457fad998b8a521c4ab3d1edd8dbcd6e73d2b14fd9672fdb07c736280d954a"
+    },
+    {
+      "asset_id": "chair_basic",
+      "asset_type": "chair",
+      "model": "models/chair_basic.glb",
+      "size_m": [
+        0.9,
+        0.9,
+        1.2
+      ],
+      "forward_axis": "+Y",
+      "ground_z": 0,
+      "license": "project-generated",
+      "source_url": "internal://whitebox-furniture/chair_basic",
+      "author": "OpenAI",
+      "retrieved_at": "2026-09-29T07:27:54.35Z",
+      "content_sha256": "2cc972629bbdfd301e2fa8d1ded135819ced73bec7f97c703ed447d5dff312b9"
+    }
+  ]
 }

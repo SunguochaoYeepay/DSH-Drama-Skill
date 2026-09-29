@@ -5,10 +5,10 @@
   "fps": 24,
   "stage": { "preset": "room", "size": [8, 8, 3.2] },
   "entities": [
-    { "id": "TABLE", "kind": "prop", "type": "table", "color": [0.35, 0.35, 0.38], "position": [0, 0], "path": { "waypoints": [[0, 0, 0], [0, 0, 0]] } },
-    { "id": "SEAT_A", "kind": "prop", "type": "chair", "color": [0.48, 0.22, 0.12], "position": [0, -2.0], "facing": 0, "path": { "waypoints": [[0, -2.0, 0], [0, -2.0, 0]] } },
-    { "id": "SEAT_B", "kind": "prop", "type": "chair", "color": [0.48, 0.22, 0.12], "position": [-2.0, 0], "facing": 270, "path": { "waypoints": [[-2.0, 0, 0], [-2.0, 0, 0]] } },
-    { "id": "SEAT_C", "kind": "prop", "type": "chair", "color": [0.48, 0.22, 0.12], "position": [2.0, 0], "facing": 90, "path": { "waypoints": [[2.0, 0, 0], [2.0, 0, 0]] } },
+    { "id": "TABLE", "kind": "prop", "type": "table", "model_asset_id": "table_basic", "color": [0.35, 0.35, 0.38], "position": [0, 0], "path": { "waypoints": [[0, 0, 0], [0, 0, 0]] } },
+    { "id": "SEAT_A", "kind": "prop", "type": "chair", "model_asset_id": "chair_basic", "color": [0.48, 0.22, 0.12], "position": [0, -2.0], "facing": 0, "path": { "waypoints": [[0, -2.0, 0], [0, -2.0, 0]] } },
+    { "id": "SEAT_B", "kind": "prop", "type": "chair", "model_asset_id": "chair_basic", "color": [0.48, 0.22, 0.12], "position": [-2.0, 0], "facing": 270, "path": { "waypoints": [[-2.0, 0, 0], [-2.0, 0, 0]] } },
+    { "id": "SEAT_C", "kind": "prop", "type": "chair", "model_asset_id": "chair_basic", "color": [0.48, 0.22, 0.12], "position": [2.0, 0], "facing": 90, "path": { "waypoints": [[2.0, 0, 0], [2.0, 0, 0]] } },
     { "id": "A", "kind": "character", "type": "kid", "color": [0.55, 0.18, 0.85], "position": [0, -2.0], "facing": 0,
       "motions": [
         { "frames": [1, 24], "from": [0, -2.0], "to": [0, -2.0], "animation": "Sitting_Enter", "facing": 0 },
