@@ -104,6 +104,7 @@ export function readReviews(projectDir) {
   const data = JSON.parse(fs.readFileSync(file, 'utf8'));
   data.approvals ||= {};
   data.approvals.clips ||= {};
+  data.approvals.whitebox ||= {};
   return data;
 }
 
@@ -113,6 +114,9 @@ function slot(data, stage, id) {
     return entry?.artifact_hash ? entry : entry?.final;
   }
   if (stage === 'handoff') return data.approvals.handoffs?.[id];
+  // 白膜按单元确认（`approvals.whitebox.<unit id>`）：一单元一份规划 JSON，
+  // 与 clip 同粒度 —— 确认完这段白膜，才轮到这段出片。
+  if (stage === 'whitebox') return data.approvals.whitebox?.[id];
   return data.approvals[stage];
 }
 
@@ -131,8 +135,8 @@ export function requireApproval(projectDir, stage, files, { id = null, skip = fa
   }
   const status = approvalStatus(projectDir, stage, files, id);
   if (!status.ok) {
-    const labels = { story: '剧本', board: '板子（场景清单/角色/道具）', direction: '导演方案', assets: '资源', keyframes: '关键帧', final: '最终成片' };
-    const label = stage === 'clip' ? `视频片段 ${id}` : stage === 'handoff' ? `连续性交接 ${id}` : labels[stage] || stage;
+    const labels = { story: '剧本', board: '板子（场景清单/角色/道具）', direction: '导演方案', assets: '资源', keyframes: '关键帧', final: '最终成片', whitebox: '白膜预演' };
+    const label = stage === 'clip' ? `视频片段 ${id}` : stage === 'handoff' ? `连续性交接 ${id}` : stage === 'whitebox' ? `白膜预演 ${id}` : labels[stage] || stage;
     throw new Error(`人工闸门未通过：${label} ${status.reason}。`);
   }
 }
@@ -167,6 +171,10 @@ export function approve(projectDir, stage, files, { id = null, by = '用户' } =
   if (stage === 'clip') {
     if (!id) throw new Error('确认视频片段时必须提供 --id');
     data.approvals.clips[id] = ticket;
+  } else if (stage === 'whitebox') {
+    if (!id) throw new Error('确认白膜预演时必须提供 --id（一个单元一份白膜规划）');
+    data.approvals.whitebox ||= {};
+    data.approvals.whitebox[id] = ticket;
   } else if (stage === 'handoff') {
     if (!id) throw new Error('确认连续性交接时必须提供 --id');
     data.approvals.handoffs ||= {};

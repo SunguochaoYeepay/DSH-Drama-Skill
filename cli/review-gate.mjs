@@ -4,6 +4,7 @@ import path from 'node:path';
 import { approve, approvalStatus, clipResultPath, planKeyframeFiles, planLastKeyframeFiles, requireAllClips } from '../src/human-gates.mjs';
 import { resolveRecordedPath } from '../src/recorded-path.mjs';
 import { projectAssetFiles } from '../src/asset-resolver.mjs';
+import { whiteboxArtifactFiles, whiteboxPlanPath } from '../src/whitebox-gates.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { makeArgs } from './lib/argv.mjs';
 
@@ -13,7 +14,7 @@ const argv = process.argv.slice(2);
 const command = argv[0];
 const { flag } = makeArgs();
 const stage = flag('stage');
-const stages = ['story', 'board', 'direction', 'assets', 'keyframes', 'handoff', 'clip', 'final'];
+const stages = ['story', 'board', 'direction', 'assets', 'keyframes', 'whitebox', 'handoff', 'clip', 'final'];
 const project = path.resolve(flag('project', '.'));
 const id = flag('id');
 if (argv.includes('--variant')) throw new Error('片段不再区分轮次；请去掉 --variant，每段视频只确认当前产物');
@@ -49,6 +50,16 @@ if (stage === 'keyframes') {
   }
   files = expected;
 }
+// 白膜：**绑规划 JSON 的字节**（改一个坐标票就废），视频是它的渲染产物、有则在票里。
+// 路径约定只有 `src/whitebox-gates.mjs` 一个所有者，这里不自己拼。
+if (stage === 'whitebox' && id) {
+  const expected = whiteboxArtifactFiles(project, { id });
+  if (!expected.length) throw new Error(`这个单元没有白膜：找不着 ${whiteboxPlanPath(project, { id })}`);
+  if (files.length && files.some((f) => !expected.includes(f))) {
+    throw new Error('白膜确认必须绑定本单元实际的规划 JSON / 白膜视频；请省略 --artifacts 按约定自动取');
+  }
+  files = files.length ? files : expected;
+}
 if (!files.length && stage === 'clip' && id) {
   const actual = clipResultPath(project, id);
   if (actual) {
@@ -63,7 +74,7 @@ if (!files.length && stage === 'clip' && id) {
   }
 }
 if (!['approve', 'status'].includes(command) || !stages.includes(stage) || !files.length) {
-  console.error('用法：node cli/review-gate.mjs approve|status --project <dir> --stage story|direction|assets|keyframes|handoff|clip|final [--id g001] [--artifacts a,b]\n或：node cli/review-gate.mjs ready-assemble --project <dir> --plan render.plan.json');
+  console.error('用法：node cli/review-gate.mjs approve|status --project <dir> --stage story|direction|assets|keyframes|whitebox|handoff|clip|final [--id g001] [--artifacts a,b]\n或：node cli/review-gate.mjs ready-assemble --project <dir> --plan render.plan.json');
   process.exit(2);
 }
 if (command === 'approve') {

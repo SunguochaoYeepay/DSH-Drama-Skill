@@ -115,6 +115,7 @@ metadata:
 | 生成设计参谋方案（可选，产出不进提示词） | `references/scene-designer.md`、`references/character-designer.md` |
 | 立项定摄影语言、改镜头 / 光 / 风格头 | `references/cinematography.md`；题材取值参考 `references/art/<style>.md`（若存在） |
 | 生成 FastH3/H3 视频、选择时长和规格 | `references/video-h3.md` |
+| 白膜预演：写/改 whitebox/1 规划 JSON、判断这个镜头该不该走白膜 | `references/whitebox-json.md` |
 | 关键帧签署前做空间/人数核查（多人同框、换边、缺落幅） | `references/space-check.md` |
 | 人工送审、合成与终审 | `references/qa-and-review.md` |
 | **`final` 票已记录，准备收工** | `references/workflow.md` 的「收工与知识回流」 |
@@ -158,6 +159,7 @@ metadata:
 | 摄影语言契约（镜头 / 光 / 锁定风格头） | `references/cinematography.md` |
 | 分题材视觉语言（契约取值参考与契约外表演/造型语言） | `references/art/<style>.md` |
 | H3 执行参数 | `references/video-h3.md` |
+| 白膜预演（whitebox/1 规划 JSON 规范、三通道判据、菜单制资产） | `references/whitebox-json.md` |
 | 空间核查（声明对照 + 主体存在性，只核查不控制画面） | `references/space-check.md` |
 | 抽卡师：LLM 直写关键帧提示词（`keyframe-prompts/<unit>.txt`，逐字送模型） | `references/draw-specialist.md`（岗位、工作流与工程接线）+ `references/prompt-rules.md`（禁令与正向工艺）+ `references/draw-vocabulary.md`（词汇弹药） |
 | 人工送审规则 | `references/qa-and-review.md` |
@@ -209,6 +211,13 @@ node cli/record-clip.mjs <项目目录> --unit g001 --clip units/g001_vsr.mp4   
 
 # ComfyUI utility 加工（非生成：放大/修复/遮罩/姿态/深度/补帧；2026-09-24 起）
 node cli/utility.mjs <workflow.json> --video in.mp4 --out-dir out/ [--set 节点.参数=值] [--dry-run]
+
+# 白膜预演（2026-09-28 起；规范 references/whitebox-json.md，需 .env 配 AIH_BLENDER）
+node cli/whitebox.mjs validate <plan.json>            # 只校验规划表：菜单外资产/动作一律拒
+node cli/whitebox.mjs stills <plan.json>              # 静帧预检：先渲关键帧确认构图，再渲全片
+node cli/whitebox.mjs render <plan.json> [--dry-run]  # 全量：PNG 序列 + 静帧 + 屏幕坐标表 + mp4
+                                                      # 渲完自动跑取景预检（角色出框 / 贴边 / 该动的没动），不过就拒
+node cli/whitebox.mjs render <plan.json> --no-framing-check  # 明知某资产要出画时才开这个后门
 
 # 新机器 / 换机器：一键验收（依赖 + 示例契约链 + 确定性测试，不烧卡不联网）
 node cli/bootstrap.mjs                                       # 三层全验

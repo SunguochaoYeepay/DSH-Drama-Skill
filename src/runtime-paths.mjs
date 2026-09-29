@@ -39,6 +39,25 @@ export function requireComfyPython() {
   }
   return COMFY_PYTHON;
 }
+
+/**
+ * Blender 可执行文件 —— 白膜预演（cli/whitebox.mjs）专用，**本机才知道在哪，工程不猜**。
+ *
+ * 与 COMFY_PYTHON 同一条纪律：没配 `AIH_BLENDER` 时是空串，走 {@link requireBlender}
+ * 拿值，缺了它会喊人话。Blender 属可选依赖（不跑白膜的机器不需要），doctor 里按可选项报。
+ */
+export const BLENDER = process.env.AIH_BLENDER || '';
+
+/** 取 Blender 可执行文件；没配就抛出可操作的错误，而不是让 spawn 失败。 */
+export function requireBlender() {
+  if (!BLENDER) {
+    throw new Error(
+      '还没配 Blender：请安装 Blender 后在仓库根 .env 里写 AIH_BLENDER=<安装目录>/blender.exe。\n'
+      + '白膜渲染要求 Blender 4.x+（本机验证用的是 5.2 LTS）；不确定就先跑 node cli/doctor.mjs。',
+    );
+  }
+  return BLENDER;
+}
 // 生图入口走**仓内快照**（2026-09-22 收编：别人 clone 仓库即可用，不再依赖
 // `~/.agents/skills/comfy-studio/` 这台机器的私搭路径）。`AIH_GEN` 仍可覆盖。
 // ⚠ 这是 vendored snapshot：上游 comfy-studio 改了 gen.py/graphs.py/routes.py，

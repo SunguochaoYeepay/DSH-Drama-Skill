@@ -1,0 +1,52 @@
+{
+  "schema": "whitebox/1",
+  "scene_name": "subway",
+  "total_frames": 168,
+  "fps": 24,
+  "stage": { "preset": "platform", "size": [30, 12, 5] },
+  "assets": [
+    {
+      "asset_id": "TRAIN",
+      "kind": "prop",
+      "asset_type": "train",
+      "color": 0.72,
+      "path": {
+        "frame_range": [1, 168],
+        "waypoints": [[8.0, 1.2, 0.0], [5.78, 1.2, 0.0], [3.56, 1.2, 0.0], [1.33, 1.2, 0.0], [-0.89, 1.2, 0.0], [-3.11, 1.2, 0.0], [-5.33, 1.2, 0.0], [-7.56, 1.2, 0.0], [-9.78, 1.2, 0.0], [-12.0, 1.2, 0.0]],
+        "motion_curve": "linear",
+        "bank": false
+      }
+    },
+    {
+      "asset_id": "H",
+      "kind": "character",
+      "asset_type": "male",
+      "color": 0.5,
+      "clips": [
+        { "frame_range": [1, 45], "animation": "Idle_Loop", "start_pos": [0.95, -0.7], "facing": 285, "phase_offset": 0.55 },
+        { "frame_range": [46, 120], "animation": "Sprint_Loop", "start_pos": [0.95, -0.7], "end_pos": [-1.33, -1.6], "facing": "auto_move", "motion_curve": "linear", "blend_frames": 4 },
+        { "frame_range": [121, 168], "animation": "Idle_Loop", "start_pos": [-1.33, -1.6], "facing": 90, "blend_frames": 5 }
+      ]
+    },
+    { "asset_id": "P1", "kind": "character", "asset_type": "female", "color": 0.36,
+      "clips": [{ "frame_range": [1, 168], "animation": "Idle_Talking_Loop", "start_pos": [-1.15, -0.5], "facing": 258, "phase_offset": 0.0 }] },
+    { "asset_id": "P2", "kind": "character", "asset_type": "male", "color": 0.44,
+      "clips": [{ "frame_range": [1, 168], "animation": "Idle_Loop", "start_pos": [-0.95, -1.15], "facing": 330, "phase_offset": 0.37 }] },
+    { "asset_id": "P3", "kind": "character", "asset_type": "kid", "color": 0.24,
+      "clips": [{ "frame_range": [1, 168], "animation": "Idle_Loop", "start_pos": [-0.2, -0.55], "facing": 272, "phase_offset": 0.63 }] },
+    { "asset_id": "P4", "kind": "character", "asset_type": "female", "color": 0.32,
+      "clips": [{ "frame_range": [1, 168], "animation": "Idle_Talking_Loop", "start_pos": [0.15, -1.05], "facing": 245, "phase_offset": 0.22 }] }
+  ],
+  "camera": {
+    "type": "dolly-in",
+    "look_at": [-0.25, -0.5, 1.25],
+    "keys": [
+      { "frame": 1, "angle": 246, "dist": 5.2, "height": 1.65, "fov": 42 },
+      { "frame": 60, "angle": 243, "dist": 4.9, "height": 1.6, "fov": 42 },
+      { "frame": 120, "angle": 241, "dist": 4.8, "height": 1.58, "fov": 44 },
+      { "frame": 168, "angle": 238, "dist": 5.6, "height": 1.75, "fov": 42 }
+    ]
+  },
+  "outputs": { "video": true, "stills": [1, 38, 56, 78, 120, 168], "screen_coords": true },
+  "notes": "地铁站台：列车沿 -X 全程快速通过（f33 进画右缘、f83 车根出画左，约 2.9m/s，紧贴站台边缘）。画面左 4 人前后错落等车；主角 H 站人群最右端，f46 车经过时横向冲出人群向左追并逐渐靠近镜头，f121 停步目送。v2（2026-09-29）：v1 的 H 起点在视轴左侧 1.23m、且冲刺方向朝镜头纵深，导致屏幕几乎不位移并中途出画（取景预检 F1+F3）；改为从人群右侧起跑、终点偏向镜头 -y，预测屏幕 x 0.78 → 0.35。"
+}

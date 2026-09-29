@@ -16,7 +16,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { COMFY_PYTHON, COMFY_GEN, FFMPEG, BAILIAN_ENTRY } from '../src/runtime-paths.mjs';
+import { COMFY_PYTHON, COMFY_GEN, FFMPEG, BAILIAN_ENTRY, BLENDER } from '../src/runtime-paths.mjs';
 import { PROJECT_ROOT } from '../src/config.mjs';
 import { listArchived, ARCHIVE_DIRNAME } from '../src/archive.mjs';
 
@@ -72,6 +72,25 @@ const checks = [
     name: '百炼 CLI（本地依赖）',
     hint: 'npm install 后 node_modules 里应有；或 npm i -g bailian-cli；或设 AIH_BAILIAN_ENTRY',
     test: () => fileExists(BAILIAN_ENTRY),
+  }),
+  check({
+    name: 'Blender（可选项：白膜预演）',
+    required: false,
+    hint: '只有跑 cli/whitebox.mjs 才需要；装 Blender 4.x+ 后设 AIH_BLENDER 指向 blender.exe',
+    test: () => fileExists(BLENDER),
+  }),
+  check({
+    name: '白膜资产库（可选项：白膜预演）',
+    required: false,
+    hint: '默认用仓内 vendor/whitebox-assets（随仓库一起就有）；AIH_WHITEBOX_ASSETS 可指向仓外自定义库',
+    test: () => {
+      const dir = process.env.AIH_WHITEBOX_ASSETS
+        || path.join(PROJECT_ROOT, 'vendor', 'whitebox-assets');
+      const manifest = path.join(dir, 'manifest.json');
+      if (!fs.existsSync(manifest)) return { ok: false, detail: `缺 ${manifest}` };
+      const m = JSON.parse(fs.readFileSync(manifest, 'utf8'));
+      return { ok: true, detail: `${(m.animations || []).length} 条动作（${dir}）` };
+    },
   }),
   check({
     name: 'Docker（可选项：desub 去字幕）',

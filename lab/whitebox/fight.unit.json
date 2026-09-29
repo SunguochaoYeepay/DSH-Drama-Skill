@@ -1,0 +1,42 @@
+{
+  "schema": "whitebox/1",
+  "scene_name": "fight",
+  "total_frames": 168,
+  "fps": 24,
+  "stage": { "preset": "room", "size": [8, 6, 3.2] },
+  "assets": [
+    {
+      "asset_id": "A",
+      "kind": "character",
+      "asset_type": "male",
+      "clips": [
+        { "frame_range": [1, 48], "animation": "Walk_Loop", "start_pos": [-1.35, -1.15], "end_pos": [0.02, 0.2], "facing": "auto_move", "motion_curve": "ease" },
+        { "frame_range": [49, 121], "animation": "Idle_Loop", "start_pos": [0.02, 0.2], "facing": "towards:B" },
+        { "frame_range": [122, 140], "animation": "Punch_Cross", "start_pos": [0.02, 0.2], "end_pos": [0.24, 0.52], "facing": "towards:B", "blend_frames": 3 },
+        { "frame_range": [141, 168], "animation": "Idle_Loop", "start_pos": [0.02, 0.2], "facing": "towards:B", "blend_frames": 5 }
+      ]
+    },
+    {
+      "asset_id": "B",
+      "kind": "character",
+      "asset_type": "female",
+      "clips": [
+        { "frame_range": [1, 121], "animation": "Idle_Talking_Loop", "start_pos": [0.42, 1.05], "facing": "towards:A" },
+        { "frame_range": [122, 140], "animation": "Hit_Chest", "start_pos": [0.42, 1.05], "facing": "towards:A", "blend_frames": 3 },
+        { "frame_range": [141, 168], "animation": "Crouch_Idle_Loop", "start_pos": [0.55, 1.15], "facing": "towards:A", "blend_frames": 5 }
+      ]
+    }
+  ],
+  "camera": {
+    "type": "pan-follow",
+    "track": "A",
+    "keys": [
+      { "frame": 1, "angle": 240, "dist": 4.0, "height": 1.6, "fov": 35 },
+      { "frame": 122, "angle": 190, "dist": 2.8, "height": 1.4, "fov": 42 },
+      { "frame": 168, "angle": 152, "dist": 4.2, "height": 1.9, "fov": 35 }
+    ],
+    "shake": { "frame_range": [122, 140], "amp": 0.03 }
+  },
+  "outputs": { "video": true, "stills": [1, 130, 168], "screen_coords": true },
+  "notes": "复刻 lab/whitebox/fight.py 手 K 版：A 从远处走向 B，122 帧出拳，B 受击跌坐。镜头 233°→152° 一镜不过轴，击打点变焦推近 + 抖动。"
+}

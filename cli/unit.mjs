@@ -33,6 +33,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { unitAssets } from '../src/asset-resolver.mjs';
 import { clipArtifactFiles, clipResultPath, planKeyframeFiles, planLastKeyframeFiles, requireApproval, writeReviewNote } from '../src/human-gates.mjs';
+import { appendWhiteboxArtifacts, requireWhiteboxApproval, whiteboxArtifactFiles } from '../src/whitebox-gates.mjs';
 import { resolveDeclaredLastKeyframe } from '../src/last-keyframe.mjs';
 import { lastKeyframeAdvice } from '../src/plan-checks.mjs';
 import { buildUnitPrompt, narrationWarnings } from '../src/h3-prompt.mjs';
@@ -95,6 +96,9 @@ const skipGate = argv.includes('--skip-gate');
 // 少了落幅这一项，票刚签完就会报"关键帧 产物已变化" —— 这处不一致吃过一次。
 const keyframes = [...planKeyframeFiles(projectDir, dir), ...planLastKeyframeFiles(projectDir, dir)];
 requireApproval(projectDir, 'keyframes', keyframes, { skip: skipGate });
+// 白膜闸门：这个单元**声明了白膜**才设闸（没声明 = 老剧目，行为一字不变）。
+// 白膜是这一镜空间关系与时序的来源，没人工确认过就出片 = 拿没审过的走位烧 5 分钟。
+requireWhiteboxApproval(projectDir, unit, { skip: skipGate });
 const unitIndex = (dir.units || []).findIndex((u) => u.id === unitId);
 if (unitIndex > 0) {
   const previous = dir.units[unitIndex - 1];
@@ -446,6 +450,17 @@ try {
     res.files.push(lastKeyframe);
     fs.writeFileSync(resultFile, JSON.stringify(res, null, 2) + '\n', 'utf8');
     console.log(`  落幅已并入本单元产物清单（fl2v 尾帧）：${path.relative(projectDir, lastKeyframe)}`);
+  }
+  /**
+   * **白膜产物也要进产物清单**（与落幅同一条机制，追加在**末尾**）。
+   *
+   * clip 票绑的是 `files[]` 全部，所以白膜规划 JSON 或白膜视频只要变了一个字节，
+   * 这一段的人工确认就自动作废 —— 防的是「确认了 A 白膜、出的是 B 白膜的片」。
+   * 视频仍稳坐 `files[0]`（合成取的是它），追加不影响。
+   */
+  if (ok && appendWhiteboxArtifacts(projectDir, unit, res)) {
+    fs.writeFileSync(resultFile, JSON.stringify(res, null, 2) + '\n', 'utf8');
+    console.log(`  白膜已并入本单元产物清单（改白膜即作废本段 clip 票）：${whiteboxArtifactFiles(projectDir, unit).map((f) => path.relative(projectDir, f)).join('、')}`);
   }
   const rawFile = res.files && res.files[0];
   const f = typeof rawFile === 'string' ? rawFile : rawFile?.local_path || rawFile?.localPath || rawFile?.path;
