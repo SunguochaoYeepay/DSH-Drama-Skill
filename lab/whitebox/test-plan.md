@@ -96,6 +96,7 @@ A2 等用户下载完扩展包随时可做。全部实验的产物路径与结�
 | E2 jet 刚体链路 | 09-29 | ✅ 白膜与 H3 均出片；白膜取景通过，H3 保持飞机/导弹颜色与发射顺序，精确落点仍需坐标复测 | `lab/whitebox/out/whitebox/jet_valley_static/`、`lab/h3-whitebox/out/e2-jet/` |
 | K1 白膜坐标测量 | 09-29 | ✅ E1 三个时点完成检测与身份匹配；末帧漂移已被量化 | `lab/spatial/FINDINGS.md` |
 | E3 机位收紧对照 | 09-29 | ❌ 拉近到 dist=18 后 H3 主体贴边，MISSILE_3 检出率 60%；单纯拉近不采用 | `lab/spatial/FINDINGS.md` |
+| E4 分段机位对照 | 09-29 | ✅ 白膜与 H3 视觉通过；中段收紧、前后广角，飞机和三枚导弹保持可读且未明显出框 | `lab/whitebox/make-jet-segmented.mjs`、`lab/h3-whitebox/out/e2-jet-segmented/` |
 
 ### E1 结果（09-29，seed 20260928001 / strength 1.0 / 168 帧输入单变量）
 
