@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { recordedPathFor } from './recorded-path.mjs';
 
 export function generationRecordPath(projectDir, stage) {
@@ -29,10 +30,64 @@ function normalizeDetails(projectDir, details) {
   return out;
 }
 
+function sha256(file) {
+  try {
+    return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  } catch {
+    return null;
+  }
+}
+
+function absolutePath(projectDir, value) {
+  if (typeof value !== 'string' || !value) return null;
+  return path.isAbsolute(value) ? value : path.resolve(projectDir, value);
+}
+
+/**
+ * 生成记录的运行快照。
+ *
+ * 记录本身是审计数据，不应要求每个 CLI 都重复实现哈希和环境采集。
+ * 只记录现有文件；缺失文件保留在 details 里，由对应阶段决定是否报错。
+ */
+function executionSnapshot(projectDir, details) {
+  const candidates = [
+    ...(Array.isArray(details.artifacts) ? details.artifacts : []),
+    ...(typeof details.plan === 'string' ? [details.plan] : []),
+    ...(Array.isArray(details.prompt_files) ? details.prompt_files : []),
+  ];
+  const files = {};
+  for (const value of candidates) {
+    const absolute = absolutePath(projectDir, value);
+    if (!absolute || !fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) continue;
+    const display = displayPathOf(projectDir, absolute);
+    const digest = sha256(absolute);
+    if (digest) files[display] = digest;
+  }
+  const inputFingerprint = Object.entries(files)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([file, digest]) => `${file}\0${digest}`)
+    .join('\n');
+  return {
+    run_id: details.run_id || crypto.randomUUID(),
+    node: process.version,
+    platform: process.platform,
+    arch: process.arch,
+    files,
+    input_fingerprint: crypto.createHash('sha256').update(inputFingerprint).digest('hex'),
+  };
+}
+
 export function writeGenerationRecord(projectDir, stage, details) {
   const file = generationRecordPath(projectDir, stage);
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  const record = { version: 1, stage, at: new Date().toISOString(), ...normalizeDetails(projectDir, details) };
+  const normalized = normalizeDetails(projectDir, details);
+  const record = {
+    version: 1,
+    stage,
+    at: new Date().toISOString(),
+    ...normalized,
+    execution: executionSnapshot(projectDir, details),
+  };
   fs.writeFileSync(file, `${JSON.stringify(record, null, 2)}\n`, 'utf8');
   return file;
 }

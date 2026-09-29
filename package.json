@@ -4,6 +4,9 @@
   "type": "module",
   "scripts": {
     "test": "node tests/run-all.mjs",
+    "test:e2e": "node tests/asset-e2e.test.mjs",
+    "test:e2e:video": "node tests/video-e2e.test.mjs",
+    "test:smoke": "node --test tests/provider-smoke.test.mjs",
     "kanban": "node web/server.mjs",
     "doctor": "node cli/doctor.mjs",
     "bootstrap": "node cli/bootstrap.mjs",

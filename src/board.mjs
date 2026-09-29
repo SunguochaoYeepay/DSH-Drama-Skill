@@ -21,6 +21,9 @@ import { requireApproval } from './human-gates.mjs';
 import { parseScenes, sceneMenu } from './parse-scenes.mjs';
 import { compileLiteral } from './literal.mjs';
 import { COMFY_GEN, requireComfyPython } from './runtime-paths.mjs';
+import { validateSchema } from './schema-validator.mjs';
+import { ensureMarkers, markersIn, propMarkersIn } from './board-markers.mjs';
+import { parseLegacyArgs } from '../cli/lib/argv.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 /** 工程根（导演简报在那儿）。 */
@@ -46,122 +49,7 @@ const GEN = COMFY_GEN;
 
 const SHOT_MAX_S = 15; // H3 单条上限
 
-// ---------------------------------------------------------------- 参数解析
-
-function parseArgs(argv) {
-  const out = { _: [] };
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
-    if (a.startsWith('--')) out[a.slice(2)] = (argv[i + 1] && !argv[i + 1].startsWith('--')) ? argv[++i] : true;
-    else out._.push(a);
-  }
-  return out;
-}
-
-// ------------------------------------------------------- 极简 JSON Schema 校验
-
-function typeOf(v) {
-  if (v === null) return 'null';
-  if (Array.isArray(v)) return 'array';
-  if (typeof v === 'number') return Number.isInteger(v) ? 'integer' : 'number';
-  return typeof v;
-}
-
-function typeMatches(v, want) {
-  const t = typeOf(v);
-  if (want === 'number') return t === 'number' || t === 'integer';
-  return t === want;
-}
-
-function deepEqual(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
-
-function validateSchema(value, schema, ptr, errors) {
-  if (!schema || typeof schema !== 'object') return;
-  if (schema.type) {
-    const types = Array.isArray(schema.type) ? schema.type : [schema.type];
-    if (!types.some((t) => typeMatches(value, t))) {
-      errors.push(`${ptr}: 期望 ${types.join('|')}，实际 ${typeOf(value)}`);
-      return;
-    }
-  }
-  if (schema.enum && !schema.enum.some((e) => deepEqual(e, value))) {
-    errors.push(`${ptr}: 只能是 ${schema.enum.map((e) => JSON.stringify(e)).join(' / ')}，实际 ${JSON.stringify(value)}`);
-  }
-  if (typeof value === 'number') {
-    if (schema.minimum !== undefined && value < schema.minimum) errors.push(`${ptr}: ${value} 小于下限 ${schema.minimum}`);
-    if (schema.maximum !== undefined && value > schema.maximum) errors.push(`${ptr}: ${value} 超过上限 ${schema.maximum}`);
-  }
-  if (typeof value === 'string') {
-    if (schema.minLength !== undefined && value.length < schema.minLength) {
-      errors.push(`${ptr}: 太短（至少 ${schema.minLength} 字）`);
-    }
-    if (schema.pattern && !new RegExp(schema.pattern).test(value)) {
-      errors.push(`${ptr}: "${value}" 不匹配 ${schema.pattern}`);
-    }
-  }
-  if (Array.isArray(value)) {
-    if (schema.minItems !== undefined && value.length < schema.minItems) errors.push(`${ptr}: 至少 ${schema.minItems} 项`);
-    if (schema.items) value.forEach((v, i) => validateSchema(v, schema.items, `${ptr}[${i}]`, errors));
-  }
-  if (value && typeof value === 'object' && !Array.isArray(value)) {
-    for (const k of schema.required || []) if (!(k in value)) errors.push(`${ptr}: 缺字段 ${k}`);
-    if (schema.additionalProperties === false) {
-      const allowed = Object.keys(schema.properties || {});
-      for (const k of Object.keys(value)) if (!allowed.includes(k)) errors.push(`${ptr}: 不该有的字段 ${k}`);
-    }
-    for (const [k, sub] of Object.entries(schema.properties || {})) {
-      if (k in value) validateSchema(value[k], sub, `${ptr}.${k}`, errors);
-    }
-  }
-}
-
 // ------------------------------------------------------ 确定性补强（不靠模型自觉）
-
-/** 从提示词里抽出所有 {{identity_id}} 标记。 */
-function markersIn(text) {
-  const out = [];
-  const re = /\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/g;
-  let m;
-  while ((m = re.exec(text)) !== null) out.push(m[1]);
-  return out;
-}
-
-/** 从提示词里抽出所有 [[prop_id]] 标记。 */
-function propMarkersIn(text) {
-  const out = [];
-  const re = /\[\[\s*([a-z][a-z0-9_]*)\s*\]\]/g;
-  let m;
-  while ((m = re.exec(text)) !== null) out.push(m[1]);
-  return out;
-}
-
-/**
- * 把出场身份补成 {{identity_id}} 标记。
- *
- * 标记是**绑定**，不是给人读的：它告诉渲染器「这一镜用哪张身份图当参考」，
- * 渲染器拼最终提示词时会先把标记换成该身份的 appearance_details。
- * 模型经常只写名字不写标记，这里用代码兜住 —— 缺了就补在最前面。
- */
-function ensureMarkers(board) {
-  const injected = [];
-  for (const sh of board.shots || []) {
-    const already = markersIn(sh.prompt);
-    const missing = [];
-    for (const id of sh.cast || []) {
-      if (already.includes(id)) continue;
-      const ident = (board.identities || []).find((x) => x.id === id);
-      if (!ident) continue;
-      const ch = (board.characters || []).find((c) => c.id === ident.character);
-      const label = ch ? `（${ch.name}）` : '';
-      missing.push(`{{${id}}}${label}`);
-    }
-    if (missing.length) {
-      sh.prompt = `${missing.join('、')}，${sh.prompt}`;
-      injected.push(`${sh.id}: 补入身份标记 → ${missing.join('、')}`);
-    }
-  }
-  return injected;
-}
 
 // ------------------------------------------------------------ 语义规则（契约真正落地的地方）
 
@@ -1109,7 +997,7 @@ async function fromStory(input, opts) {
 function die(msg) { process.stderr.write(msg + '\n'); process.exit(1); }
 
 async function main() {
-  const args = parseArgs(process.argv.slice(2));
+  const args = parseLegacyArgs(process.argv.slice(2));
   const cmd = args._[0];
 
   // ── 🎬 导演：让 AI 导演做镜头设计 ──────────────────────────────
@@ -1243,4 +1131,4 @@ async function main() {
 const invokedDirectly = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (invokedDirectly) main().catch((e) => die('失败：' + (e && e.stack ? e.stack : e)));
 
-export { checkBoard, validateSemantics, ensureMarkers, normalizeIdentities, normalizeBeats, normalizeTimeOfDay, ageGroupOf, checkGate, parseArgs };
+export { checkBoard, validateSemantics, ensureMarkers, normalizeIdentities, normalizeBeats, normalizeTimeOfDay, ageGroupOf, checkGate, parseLegacyArgs as parseArgs };

@@ -21,6 +21,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { deriveProjectState } from './project-state.mjs';
 import { resolveRecordedPath } from './recorded-path.mjs';
 
 function readJson(file) {
@@ -400,6 +401,7 @@ export function loadProject(root, name) {
     directionUnits,
     assetPrompts: assetPromptsOf(dir, board),
     gates: gateSummary(tickets, units.map((u) => u.id)),
+    state: deriveProjectState({ board, direction, plan, tickets, assets, units, finalArtifact: finalRel }),
     assets,
     finalRel,
     files: {

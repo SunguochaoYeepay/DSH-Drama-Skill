@@ -64,3 +64,42 @@ test('归一之后，票据里带进来的 generation 块也不再含仓库内�
   assert.equal(/[A-Za-z]:\\\\/.test(raw.replace(/C:\\\\\\\\别处/g, '')), false, `记录里不该有盘符：${raw}`);
   assert.match(raw, /examples\/demo\/keyframes_render\/g001\.png/);
 });
+
+test('生成记录自动保存运行环境和输入/产物哈希', () => {
+  const { dir } = makeRepo();
+  const artifact = path.join(dir, 'keyframes_render', 'g001.png');
+  const plan = path.join(dir, 'render.plan.json');
+  fs.writeFileSync(artifact, 'image-bytes');
+  fs.writeFileSync(plan, '{"version":1}');
+  writeGenerationRecord(dir, 'keyframes', {
+    provider: 'fake',
+    artifacts: [artifact],
+    plan,
+    prompt_files: ['keyframe-prompts/g001.txt'],
+  });
+  const rec = readGenerationRecord(dir, 'keyframes');
+  assert.equal(rec.execution.node, process.version);
+  assert.equal(rec.execution.platform, process.platform);
+  assert.equal(rec.execution.arch, process.arch);
+  assert.match(rec.execution.run_id, /^[0-9a-f-]{36}$/);
+  assert.match(rec.execution.input_fingerprint, /^[0-9a-f]{64}$/);
+  assert.match(rec.execution.files['examples/demo/keyframes_render/g001.png'], /^[0-9a-f]{64}$/);
+  assert.match(rec.execution.files['examples/demo/render.plan.json'], /^[0-9a-f]{64}$/);
+  assert.equal(Object.keys(rec.execution.files).length, 2, '缺失的 prompt 不应伪造哈希');
+});
+
+test('输入指纹只由已存在文件决定，文件变化后会变化', () => {
+  const { dir } = makeRepo();
+  const artifact = path.join(dir, 'keyframes_render', 'g001.png');
+  fs.writeFileSync(artifact, 'first');
+  writeGenerationRecord(dir, 'keyframes', { run_id: 'run-a', artifacts: [artifact] });
+  const first = readGenerationRecord(dir, 'keyframes');
+  writeGenerationRecord(dir, 'keyframes', { run_id: 'run-b', artifacts: [artifact] });
+  const second = readGenerationRecord(dir, 'keyframes');
+  assert.notEqual(first.execution.run_id, second.execution.run_id);
+  assert.equal(first.execution.input_fingerprint, second.execution.input_fingerprint);
+  fs.writeFileSync(artifact, 'second');
+  writeGenerationRecord(dir, 'keyframes', { run_id: 'run-c', artifacts: [artifact] });
+  const third = readGenerationRecord(dir, 'keyframes');
+  assert.notEqual(second.execution.input_fingerprint, third.execution.input_fingerprint);
+});

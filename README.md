@@ -272,6 +272,15 @@ node cli/desub.mjs <视频>
 npm test
 ```
 
+真实 ComfyUI 通道另有可选 smoke test。默认跳过，不影响离线测试；确认本机模型环境就绪后显式运行：
+
+```powershell
+$env:AIH_RUN_SMOKE = "1"
+npm run test:smoke
+```
+
+它只生成一张 256×256 的测试图，验证 provider 调用、结果校验和产物回收，不写入任何剧目目录。
+
 递归运行 `tests/` 下全部 `*.test.mjs`（含 `tests/integration/`；`fixtures/` 是测试输入不是测试，跳过），新增文件无需维护清单。
 
 **判据是「它守护的行为今天还在不在」，不是「它还绿不绿」。** 所以这里只收行为断言：

@@ -37,6 +37,7 @@
  */
 
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import { assetPlan, refsOf } from '../src/assets.mjs';
 import { projectAssetFiles } from '../src/asset-resolver.mjs';
@@ -46,6 +47,8 @@ import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { dimensionsForAspect } from '../src/aspect.mjs';
 import { ASSET_IMAGE_MODEL, VOLCENGINE_IMAGE_MODEL, LOCAL_ASSET_FAST, LOCAL_ASSET_LORA, LOCAL_ASSET_STEPS, LOCAL_ASSET_CFG, LOCAL_ASSET_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG, LOCAL_IMAGE_MODEL, LOCAL_ASSET_STEPS_21, LOCAL_ASSET_CFG_21 } from '../src/config.mjs';
 import { writeGenerationRecord } from '../src/generation-records.mjs';
+import { runImageJob } from '../src/provider-executor.mjs';
+import { writeExecutionEvent } from '../src/execution-log.mjs';
 import { readCinematography } from '../src/cinematography.mjs';
 import { localStyle } from '../src/providers/comfyui.mjs';
 import { makeArgs } from './lib/argv.mjs';
@@ -224,9 +227,13 @@ function providerArgsFor(p, job, outDir, images) {
 
 function callProvider(p, job, outDir, images) {
   const args = providerArgsFor(p, job, outDir, images);
-  return job.mode === 'edit'
-    ? p.edit(args)
-    : p.generate(args);
+  const operation = job.mode === 'edit' ? 'edit' : 'generate';
+  const retries = Math.max(0, Number(process.env.AIH_PROVIDER_RETRIES || 0) || 0);
+  return runImageJob(p, operation, args, {
+    retries,
+    runId: executionRunId,
+    onEvent: (event) => writeExecutionEvent(PROJ, event),
+  });
 }
 
 // ---------------------------------------------------------------- 主流程
@@ -270,6 +277,8 @@ fs.mkdirSync(ASSET_DIR, { recursive: true });
 
 let failed = 0;
 const produced = [];
+const attemptsLog = [];
+const executionRunId = crypto.randomUUID();
 
 for (const job of jobs) {
   const rel = relOf(job);
@@ -298,10 +307,18 @@ for (const job of jobs) {
     continue;
   }
   const secs = Math.round((Date.now() - started) / 1000);
+  attemptsLog.push({
+    id: job.id,
+    kind: job.kind,
+    attempts: r.attempts || 1,
+    retry_errors: Array.isArray(r.retry_errors) ? r.retry_errors : [],
+  });
 
   const files = (r.files || []).filter((f) => f && fs.existsSync(f));
   if (!files.length) {
-    console.log(`    ✗ 未产出文件（exit ${r.status}）${r.stderr ? `：${String(r.stderr).split('\n')[0].slice(0, 160)}` : ''}`);
+    const retry = r.attempts > 1 ? `，已尝试 ${r.attempts} 次` : '';
+    const detail = r.error || r.stderr || r.retry_errors?.at(-1) || '';
+    console.log(`    ✗ 未产出文件（exit ${r.status}）${retry}${detail ? `：${String(detail).split('\n')[0].slice(0, 160)}` : ''}`);
     failed++;
     continue;
   }
@@ -352,6 +369,8 @@ if (failed) {
     model: p.name === 'comfyui' ? 'local-comfyui' : ASSET_IMAGE_MODEL,
     requested_provider: PROVIDER_ARG || null,
     artifacts: all,
+    attempts: attemptsLog,
+    run_id: executionRunId,
   });
 
   // 票据不代写。资源闸门要用户自己看总览再批 —— 这是 SKILL.md 的硬规矩。

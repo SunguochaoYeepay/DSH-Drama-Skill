@@ -6,7 +6,7 @@
  */
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { makeArgs } from '../cli/lib/argv.mjs';
+import { makeArgs, parseLegacyArgs } from '../cli/lib/argv.mjs';
 
 test('value：裸取——flag 缺给 fallback，值缺给 undefined', () => {
   const a = makeArgs(['--out', 'x.mp4']);
@@ -39,4 +39,10 @@ test('has：只判存在', () => {
   assert.equal(a.has('skip-gate'), true);
   assert.equal(a.has('out'), true);
   assert.equal(a.has('missing'), false);
+});
+
+test('legacy parser：保留 board.mjs 的位置参数与布尔开关语义', () => {
+  assert.deepEqual(parseLegacyArgs(['validate', 'board.json', '--strict', '--out', 'x.md']), {
+    _: ['validate', 'board.json'], strict: true, out: 'x.md',
+  });
 });

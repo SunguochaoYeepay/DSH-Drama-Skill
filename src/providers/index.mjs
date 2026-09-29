@@ -28,14 +28,26 @@
 import * as bailian from './bailian.mjs';
 import * as comfyui from './comfyui.mjs';
 import * as volcengine from './volcengine.mjs';
+import * as fake from './fake.mjs';
 import { ASSET_PROVIDER, KEYFRAME_PROVIDER } from '../config.mjs';
+import { assertImageProvider, providerCapabilities, withImageContract } from './contract.mjs';
 
-const REGISTRY = { bailian, comfyui, volcengine };
+const REGISTRY = {
+  bailian,
+  comfyui,
+  volcengine,
+  ...(process.env.AIH_ENABLE_FAKE_PROVIDER === '1' ? { fake } : {}),
+};
+const VALIDATED = Object.fromEntries(
+  Object.entries(REGISTRY).map(([name, adapter]) => [name, withImageContract(assertImageProvider(adapter, name))]),
+);
+
+for (const [name, adapter] of Object.entries(REGISTRY)) assertImageProvider(adapter, name);
 
 export function provider(name) {
-  const p = REGISTRY[name];
+  const p = VALIDATED[name];
   if (!p) throw new Error(`未知的生图通道 "${name}"，可用：${Object.keys(REGISTRY).join(' / ')}`);
-  return p;
+  return assertImageProvider(p, name);
 }
 
 /** 资产默认走线上；没有线上通道就退本地，并说清楚为什么退。 */
@@ -48,3 +60,7 @@ export function keyframeProvider() {
 }
 
 export const AVAILABLE = Object.keys(REGISTRY);
+
+export function capabilities(name) {
+  return providerCapabilities(provider(name));
+}

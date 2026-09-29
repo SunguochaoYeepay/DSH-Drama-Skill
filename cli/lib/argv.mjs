@@ -43,3 +43,14 @@ export function makeArgs(argv = process.argv.slice(2)) {
 
   return { value, flag, opt, has, argv };
 }
+
+/** Compatibility parser for the legacy object-shaped CLI in src/board.mjs. */
+export function parseLegacyArgs(argv = process.argv.slice(2)) {
+  const out = { _: [] };
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg.startsWith('--')) out[arg.slice(2)] = (argv[i + 1] && !argv[i + 1].startsWith('--')) ? argv[++i] : true;
+    else out._.push(arg);
+  }
+  return out;
+}
