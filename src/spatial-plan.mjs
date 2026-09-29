@@ -162,6 +162,7 @@ function compileEntity(entity, plan, entities) {
     kind: entity.kind,
     asset_type: entity.asset_type || entity.type,
     ...(entity.color === undefined ? {} : { color: entity.color }),
+    ...(entity.model_asset_id === undefined ? {} : { model_asset_id: entity.model_asset_id }),
   };
   if (entity.kind === 'prop') {
     const path = entity.path || {};

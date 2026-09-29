@@ -23,6 +23,7 @@ from bpy_extras.object_utils import world_to_camera_view
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 ASSETS = os.environ.get("AIH_WHITEBOX_ASSETS", os.path.join(ROOT, "vendor", "whitebox-assets"))
+PROP_ASSETS = os.path.join(ASSETS, "props")
 GLTF = os.path.join(ASSETS, "ual", "AnimationLibrary_Godot_Standard.gltf")
 
 D = math.radians
@@ -185,8 +186,36 @@ def build_stage(stage, mats):
             box("Beam%d" % i, (sx, 0.35, 0.25), (0, y, 4.05), mats["dark"])
 
 
-def build_prop(asset, mat):
+def load_prop_catalog():
+    path = os.path.join(PROP_ASSETS, "manifest.json")
+    if not os.path.exists(path):
+        return {}
+    with open(path, "r", encoding="utf-8") as fh:
+        doc = json.load(fh)
+    return {a.get("asset_id"): a for a in doc.get("assets", []) if a.get("asset_id")}
+
+
+def build_prop(asset, mat, prop_catalog=None):
     """内置基本体：只保证剪影和比例。统一让局部 +y 为前进方向。"""
+    prop_catalog = prop_catalog or {}
+    entry = prop_catalog.get(asset.get("model_asset_id")) or prop_catalog.get(asset.get("asset_type"))
+    if entry and entry.get("model"):
+        model_path = os.path.join(PROP_ASSETS, entry["model"])
+        if not os.path.exists(model_path):
+            raise RuntimeError("道具模型文件不存在: " + model_path)
+        if os.path.splitext(model_path)[1].lower() not in (".glb", ".gltf"):
+            raise RuntimeError("白膜渲染暂只支持 .glb/.gltf 道具模型: " + model_path)
+        before = set(bpy.data.objects)
+        bpy.ops.import_scene.gltf(filepath=model_path)
+        imported = [o for o in bpy.data.objects if o not in before]
+        root = bpy.data.objects.new("P_" + asset["asset_id"], None)
+        bpy.context.scene.collection.objects.link(root)
+        for obj in imported:
+            if obj.type == "MESH":
+                obj.data.materials.clear()
+                obj.data.materials.append(mat)
+            obj.parent = root
+        return root
     t = asset["asset_type"]
     parts = []
     if t == "jet":
@@ -517,6 +546,7 @@ def main():
     roles = menu.get("roles", {})
 
     assets_by_id = {a["asset_id"]: a for a in doc["assets"]}
+    prop_catalog = load_prop_catalog()
     tracked = []
     for a in doc["assets"]:
         if a["kind"] == "character":
@@ -525,7 +555,7 @@ def main():
             zhead = 1.7 * roles.get(a["asset_type"], {}).get("scale", 1.0)
             tracked.append((a["asset_id"], root, zhead))
         else:
-            root = build_prop(a, gray_mat("M_P_" + a["asset_id"], a.get("color", 0.5)))
+            root = build_prop(a, gray_mat("M_P_" + a["asset_id"], a.get("color", 0.5)), prop_catalog)
             path = a["path"]
             for f in range(path["frame_range"][0], path["frame_range"][1] + 1):
                 p = path_pos(path, f)
