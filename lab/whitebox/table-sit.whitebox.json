@@ -184,7 +184,7 @@
             -2,
             0
           ],
-          "facing": 90,
+          "facing": 270,
           "motion_curve": "ease",
           "blend_frames": 4
         },
@@ -198,7 +198,7 @@
             -2,
             0
           ],
-          "facing": 90,
+          "facing": 270,
           "motion_curve": "ease",
           "blend_frames": 4
         }
@@ -224,7 +224,7 @@
             2,
             0
           ],
-          "facing": 270,
+          "facing": 90,
           "motion_curve": "ease",
           "blend_frames": 4
         },
@@ -238,7 +238,7 @@
             2,
             0
           ],
-          "facing": 270,
+          "facing": 90,
           "motion_curve": "ease",
           "blend_frames": 4
         }

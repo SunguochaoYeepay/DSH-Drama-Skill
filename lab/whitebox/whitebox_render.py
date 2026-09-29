@@ -257,9 +257,10 @@ def build_prop(asset, mat, prop_catalog=None):
             for y in (-0.6, 0.6):
                 parts.append(box("leg", (0.16, 0.16, 1.05), (x, y, 0.525), mat))
     elif t == "chair":
-        # 可复用白膜座椅：座面 z=0.55，局部 +y 为椅背方向。
+        # 可复用白膜座椅：局部 +y 是坐下后人物面向的方向，椅背在 -y。
         parts = [box("seat", (0.7, 0.7, 0.14), (0, 0, 0.55), mat),
-                 box("back", (0.7, 0.14, 0.9), (0, 0.28, 0.95), mat)]
+                 # Low back keeps the seated actor visible in a spatial preview.
+                 box("back", (0.7, 0.14, 0.10), (0, -0.28, 0.61), mat)]
         for x in (-0.25, 0.25):
             for y in (-0.25, 0.25):
                 parts.append(box("leg", (0.1, 0.1, 0.55), (x, y, 0.275), mat))
@@ -578,8 +579,16 @@ def main():
                         yaw_rate = math.atan2(tangent.x, tangent.y) - math.atan2((p - p_prev).x, (p - p_prev).y + 1e-9)
                         roll = max(-D(45), min(D(45), yaw_rate * 18.0))
                         root.rotation_quaternion = q @ Matrix.Rotation(roll, 4, "Y").to_quaternion()
+                else:
+                    # Static props still need an authored facing (chairs, doors,
+                    # seats); a zero-length path must not erase it.
+                    root.rotation_mode = "XYZ"
+                    root.rotation_euler = (0, 0, D(float(a.get("facing", 0))))
                 root.keyframe_insert("location", frame=f)
-                root.keyframe_insert("rotation_quaternion", frame=f)
+                if root.rotation_mode == "QUATERNION":
+                    root.keyframe_insert("rotation_quaternion", frame=f)
+                else:
+                    root.keyframe_insert("rotation_euler", frame=f)
             tracked.append((a["asset_id"], root, 0.5))
 
     cam = build_camera(doc, assets_by_id, doc["total_frames"])
