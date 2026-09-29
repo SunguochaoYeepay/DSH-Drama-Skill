@@ -1,0 +1,7 @@
+{
+  "schema": "whitebox-props/1",
+  "units": "meters",
+  "forward_axis": "+Y",
+  "ground_z": 0,
+  "assets": []
+}
