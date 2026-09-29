@@ -85,13 +85,18 @@ export function compileDeepBlendScene(plan) {
   const az = key.angle * DEG;
   const cameraId = 'cam_main';
   const cameras = [{ id: cameraId, role: 'active-camera', lens: 36, transform: { location: [target[0] + key.dist * Math.cos(az), target[1] + key.dist * Math.sin(az), key.height] }, targetPoint: [target[0], target[1], target[2] ?? 1.2] }];
+  const segmentNotes = (camera.segments || []).map((segment) => {
+    const range = segment.frame_range?.join('-') || '?';
+    const show = segment.must_show?.join(',') || '未指定';
+    return `帧${range} ${segment.framing || '分段'}（必须可见：${show}）`;
+  });
   return {
     schemaVersion: 'deepblend.scene/v1',
     project: { id: id(plan.scene_name), title: plan.scene_name, goal: plan.notes || '由 spatial-plan/1 编译的白膜空间预演', units: 'metric', fps: plan.fps, frameStart: 1, frameEnd: plan.total_frames, aspectRatio: '9:16', activeCamera: cameraId },
     entities, materials, cameras,
     lights: [{ id: 'key', type: 'area', energy: 800, size: 5, transform: { location: [2, -3, 5] } }],
     animationTracks: whitebox.assets.flatMap((asset) => keyframesForAsset(asset, assets)),
-    shots: [{ id: 'shot_main', cameraId, frameRange: [1, plan.total_frames], description: [plan.camera.framing, plan.camera.readable_action, plan.notes].filter(Boolean).join('；') }],
+    shots: [{ id: 'shot_main', cameraId, frameRange: [1, plan.total_frames], description: [plan.camera.framing, plan.camera.readable_action, ...segmentNotes, plan.notes].filter(Boolean).join('；') }],
     renderProfiles: { preview: { engine: 'eevee', resolution: [640, 360], samples: 16 }, final: { engine: 'eevee', resolution: [1080, 1920], samples: 64 } },
     world: { color: [0.12, 0.12, 0.12, 1], strength: 0.5 },
   };

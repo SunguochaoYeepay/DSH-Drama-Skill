@@ -17,3 +17,14 @@ test('spatial plan compiles to a DeepBlend SceneSpec with deterministic tracks',
   assert.ok(Math.abs(finalFacing - (Math.PI / 2)) < 1e-9);
   assert.equal(scene.cameras[0].role, 'active-camera');
 });
+
+test('camera segments survive DeepBlend compilation as shot constraints', () => {
+  const segmented = JSON.parse(JSON.stringify(plan));
+  segmented.camera.segments = [
+    { frame_range: [1, 72], framing: '发射近景', must_show: ['A'] },
+    { frame_range: [73, 144], framing: '编队广角', must_show: ['A', 'B'] },
+  ];
+  const scene = compileDeepBlendScene(segmented);
+  assert.match(scene.shots[0].description, /帧1-72 发射近景/);
+  assert.match(scene.shots[0].description, /必须可见：A,B/);
+});
