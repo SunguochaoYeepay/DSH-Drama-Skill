@@ -35,6 +35,18 @@ node lab/spatial/measure-whitebox.mjs `
 
 报告沿用 `measure.py` 的口径：`set_mean_abs_du` 是不看身份的整体位置误差，`mean_abs_du` 是身份匹配后的误差，`ambiguous` 表示人物身份匹配不可靠。没有可用人体检测器时结果会明确写 `detector=unavailable`，不判为通过。
 
+刚体道具或飞机类镜头使用彩色身份轨迹测量器：
+
+```powershell
+python lab/spatial/py/measure-colored-video.py `
+  --video generated.mp4 `
+  --coords lab/whitebox/out/whitebox/jet_valley_static/coords.json `
+  --plan lab/whitebox/jet.spatial.json `
+  --out-json .tmp/e2/jet-coordinate-measurement.json
+```
+
+它输出每个主体的检出率、首末屏幕位移和相对白膜的横向误差。颜色检出率不足时，不得把该主体的坐标误差当作通过证据。
+
 ```powershell
 # 0) 离线自检（不调模型，几秒钟）
 node lab/spatial/selftest.mjs
