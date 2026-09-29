@@ -95,6 +95,17 @@ test('静止角色不做位移要求（站桩的人本来就不该动）', () =>
   assert.equal(r.assets[0].mustMove, false);
 });
 
+test('导演 must_show：被镜头挡住或出画的关键道具也要拦下', () => {
+  const c = coords((i) => ({ TABLE: i <= 4 ? 0.5 : null }));
+  const r = analyzeFraming({
+    assets: [{ asset_id: 'TABLE', kind: 'prop', asset_type: 'table', path: { waypoints: [[0, 0, 0]] } }],
+    camera: { must_show: ['TABLE'] },
+  }, c);
+  assert.equal(r.ok, false);
+  assert.equal(r.findings[0].rule, 'D1');
+  assert.equal(r.findings[0].asset, 'TABLE');
+});
+
 // ---------- mustMove 的判据 ----------
 test('mustMove：角色看有没有 end_pos，道具看有没有多段 waypoints', () => {
   assert.equal(mustMove(char('A', [{ start_pos: [0, 0] }])), false);

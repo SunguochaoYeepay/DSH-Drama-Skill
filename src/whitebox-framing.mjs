@@ -78,6 +78,7 @@ export function analyzeFraming(plan, coords, rules = {}) {
 
   const assets = [];
   const findings = [];
+  const mustShow = Array.isArray(plan.camera?.must_show) ? new Set(plan.camera.must_show) : new Set();
 
   for (const a of plan.assets) {
     const id = a.asset_id;
@@ -90,14 +91,15 @@ export function analyzeFraming(plan, coords, rules = {}) {
     const edgeCount = xs.filter((u) => u < cfg.edgeBand || u > 1 - cfg.edgeBand).length;
     const edge = xs.length ? edgeCount / xs.length : 0;
     const move = mustMove(a);
+    const required = mustShow.has(id);
 
     assets.push({ id, kind: a.kind, mustMove: move, inFrame, travel, edge, visible: xs.length, present });
 
-    if (a.kind === 'character' && inFrame < cfg.inFrameMin) {
+    if ((a.kind === 'character' || required) && inFrame < cfg.inFrameMin) {
       findings.push({
-        asset: id, rule: 'F1',
-        message: `角色 ${id} 有 ${Math.round((1 - inFrame) * 100)}% 的帧不在画面内（要求 ≤ ${Math.round((1 - cfg.inFrameMin) * 100)}%）；`
-          + '检查 look_at/机位是否没框住它，或它的轨迹是不是跑出了取景框。',
+        asset: id, rule: required ? 'D1' : 'F1',
+        message: `${required ? '导演要求必须可见的主体' : '角色'} ${id} 有 ${Math.round((1 - inFrame) * 100)}% 的帧不在画面内（要求 ≤ ${Math.round((1 - cfg.inFrameMin) * 100)}%）；`
+          + '检查机位、焦段或主体遮挡，不能只看世界坐标是否正确。',
       });
     }
     if (xs.length && edge > cfg.edgeMax) {

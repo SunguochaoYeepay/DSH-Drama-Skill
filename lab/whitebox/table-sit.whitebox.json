@@ -247,6 +247,18 @@
   ],
   "camera": {
     "type": "static",
+    "framing": "全景三人同框",
+    "camera_side": "front",
+    "readable_action": "三个人坐在各自椅子上，A/C 坐姿说话，桌椅关系清楚",
+    "must_show": [
+      "TABLE",
+      "SEAT_A",
+      "SEAT_B",
+      "SEAT_C",
+      "A",
+      "B",
+      "C"
+    ],
     "look_at": [
       0,
       -0.2,
@@ -273,5 +285,19 @@
     "screen_coords": true
   },
   "notes": "三人分别坐在方桌三侧；先完成坐下，再保持坐姿，其中 A/C 说话。",
+  "director_camera": {
+    "must_show": [
+      "TABLE",
+      "SEAT_A",
+      "SEAT_B",
+      "SEAT_C",
+      "A",
+      "B",
+      "C"
+    ],
+    "framing": "全景三人同框",
+    "camera_side": "front",
+    "readable_action": "三个人坐在各自椅子上，A/C 坐姿说话，桌椅关系清楚"
+  },
   "spatial_source": "spatial-plan/1"
 }

@@ -114,6 +114,10 @@
 "camera": {
   "type": "pan-follow",              // static | dolly-in | pan-follow | orbit
   "track": "A",                      // pan-follow / orbit 必填：注视哪个 asset_id
+  "framing": "全景三人同框",           // 导演要求的景别/构图意图（白膜说明与验收使用）
+  "camera_side": "front",             // A | B | top | front | back
+  "readable_action": "三人坐下并保持对话关系", // 这一机位必须让观众读懂的动作
+  "must_show": ["A", "B", "TABLE"], // 必须在画面中保持可见的主体
   "keys": [                          // 至少 2 个（static 可 1 个），frame 升序
     { "frame": 1,   "angle": 233, "dist": 4.5, "height": 1.6, "fov": 35 },
     { "frame": 122, "angle": 190, "dist": 2.8, "height": 1.4, "fov": 42 },

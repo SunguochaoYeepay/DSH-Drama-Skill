@@ -230,6 +230,12 @@ export function compileSpatialPlan(plan) {
     camera: plan.camera,
     outputs: plan.outputs || { video: true, stills: [1, plan.total_frames], screen_coords: true },
     notes: plan.notes || '由 spatial-plan/1 确定性编译生成',
+    director_camera: plan.director_camera || {
+      must_show: plan.camera?.must_show || [],
+      framing: plan.camera?.framing || null,
+      camera_side: plan.camera?.camera_side || null,
+      readable_action: plan.camera?.readable_action || null,
+    },
     spatial_source: 'spatial-plan/1',
   };
   for (const relation of plan.relations || []) {

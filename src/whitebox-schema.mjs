@@ -210,6 +210,16 @@ export function validateWhitebox(doc, menu = DEFAULT_MENU) {
           lastAngle = isNum(k.angle) ? k.angle : lastAngle;
         }
       }
+      if (cam.must_show !== undefined) {
+        if (!Array.isArray(cam.must_show) || !cam.must_show.every((id) => typeof id === 'string' && ids.has(id))) {
+          err('camera.must_show 必须是已声明 asset_id 的数组');
+        }
+      }
+      if (cam.framing !== undefined && typeof cam.framing !== 'string') err('camera.framing 必须是文字');
+      if (cam.camera_side !== undefined && !['A', 'B', 'top', 'front', 'back'].includes(cam.camera_side)) {
+        err('camera.camera_side 必须是 A|B|top|front|back');
+      }
+      if (cam.readable_action !== undefined && typeof cam.readable_action !== 'string') err('camera.readable_action 必须是文字');
       if (cam.shake !== undefined) {
         if (!isFrameRange(cam.shake.frame_range, T) || !(isNum(cam.shake.amp) && cam.shake.amp > 0)) {
           err('camera.shake 需要合法 frame_range 与正数 amp');

@@ -91,7 +91,7 @@ export function compileDeepBlendScene(plan) {
     entities, materials, cameras,
     lights: [{ id: 'key', type: 'area', energy: 800, size: 5, transform: { location: [2, -3, 5] } }],
     animationTracks: whitebox.assets.flatMap((asset) => keyframesForAsset(asset, assets)),
-    shots: [{ id: 'shot_main', cameraId, frameRange: [1, plan.total_frames], description: plan.notes || '' }],
+    shots: [{ id: 'shot_main', cameraId, frameRange: [1, plan.total_frames], description: [plan.camera.framing, plan.camera.readable_action, plan.notes].filter(Boolean).join('；') }],
     renderProfiles: { preview: { engine: 'eevee', resolution: [640, 360], samples: 16 }, final: { engine: 'eevee', resolution: [1080, 1920], samples: 64 } },
     world: { color: [0.12, 0.12, 0.12, 1], strength: 0.5 },
   };
