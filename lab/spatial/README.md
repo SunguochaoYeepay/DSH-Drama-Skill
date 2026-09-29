@@ -19,6 +19,22 @@
 
 ## 怎么跑
 
+### K1：白膜坐标对关键帧
+
+白膜渲染完成后，用同一帧的 `coords.json` 作为期望位置，测量实际关键帧：
+
+```powershell
+node lab/spatial/measure-whitebox.mjs `
+  --coords lab/whitebox/out/whitebox/table_sit_assets2/coords.json `
+  --frame 144 `
+  --image path/to/keyframe.png `
+  --subjects A,B,C `
+  --out-json .tmp/k1/table-sit.json `
+  --out-png .tmp/k1/table-sit.annotated.png
+```
+
+报告沿用 `measure.py` 的口径：`set_mean_abs_du` 是不看身份的整体位置误差，`mean_abs_du` 是身份匹配后的误差，`ambiguous` 表示人物身份匹配不可靠。没有可用人体检测器时结果会明确写 `detector=unavailable`，不判为通过。
+
 ```powershell
 # 0) 离线自检（不调模型，几秒钟）
 node lab/spatial/selftest.mjs
