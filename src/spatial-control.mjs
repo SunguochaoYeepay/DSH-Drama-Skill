@@ -40,7 +40,9 @@ export function analyzeSpatialControl({ unit = {}, shot = {} } = {}) {
   const cast = castOf(unit, shot);
   const text = textOf(unit, shot);
   const explicit = unit.spatial_control?.required ?? shot.spatial_control?.required;
+  const directorStage = unit.director_stage || shot.director_stage;
   const reasons = [];
+  if (directorStage) reasons.push('director_stage_explicit');
   if (cast.length >= 2) reasons.push('multi_subject');
   if (RELATION_WORDS.test(text)) reasons.push('spatial_relation');
   if (MOTION_WORDS.test(text)) reasons.push('directed_motion');
@@ -50,7 +52,7 @@ export function analyzeSpatialControl({ unit = {}, shot = {} } = {}) {
     reasons.push('high_risk_spatial_event');
   }
 
-  const required = explicit === false ? false : explicit === true
+  const required = explicit === false ? false : explicit === true || directorStage
     ? true
     // Two people with a relation or directed action need an actual layout.
     : cast.length >= 2 && reasons.some((reason) => reason !== 'multi_subject');

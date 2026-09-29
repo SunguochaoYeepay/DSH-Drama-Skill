@@ -37,6 +37,19 @@ test('导演显式关闭白膜时优先服从导演决定', () => {
   assert.equal(analyzeSpatialControl({ unit, shot: unit.shots[0] }).required, false);
 });
 
+test('导演台场景状态自动成为白膜触发源', () => {
+  const unit = {
+    id: 'u_stage',
+    director_stage: { schema: 'director-stage/1', scene_name: 'stage' },
+    keyframe_cast: ['i_a'],
+    shots: [{ on_screen: ['i_a'], action: '人物站立' }],
+  };
+  const decision = analyzeSpatialControl({ unit, shot: unit.shots[0] });
+  assert.equal(decision.required, true);
+  assert.equal(decision.mode, 'whitebox');
+  assert.ok(decision.reasons.includes('director_stage_explicit'));
+});
+
 test('两人中间的小狗作为第三个白膜实体并进入必显主体', () => {
   const unit = {
     id: 'u_dog_greeting',

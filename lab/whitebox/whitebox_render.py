@@ -148,6 +148,53 @@ def box(name, size, loc, mat):
     return o
 
 
+def build_handshake_cue(doc, assets_by_id, mats):
+    """Add a small, animated contact anchor for authored handshake beats.
+
+    The mannequin action library has a generic Interact clip, so the cue makes
+    the spatial contract visible without pretending that the clip provides a
+    precise hand pose. It is deliberately subtle and only exists during the
+    authored handshake interval.
+    """
+    cue = doc.get("handshake_cue")
+    if not cue:
+        return
+    left = assets_by_id.get(cue.get("left"))
+    right = assets_by_id.get(cue.get("right"))
+    if not left or not right:
+        return
+    f0, f1 = cue.get("frame_range", [1, doc["total_frames"]])
+    z = float(cue.get("height", 1.15))
+    mat = gray_mat("M_HandshakeContact", cue.get("color", [0.95, 0.75, 0.16]), rough=0.55)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=0.075, location=(0, 0, z))
+    anchor = bpy.context.active_object
+    anchor.name = "HandshakeContact"
+    anchor.data.materials.append(mat)
+    bpy.ops.mesh.primitive_cylinder_add(vertices=16, radius=0.035, depth=1.0, location=(0, 0, z))
+    bridge = bpy.context.active_object
+    bridge.name = "HandshakeBridge"
+    bridge.data.materials.append(mat)
+    for f in range(1, doc["total_frames"] + 1):
+        lp = Vector((*asset_pos(left, f), z))
+        rp = Vector((*asset_pos(right, f), z))
+        mid = (lp + rp) * 0.5
+        delta = rp - lp
+        anchor.location = mid
+        bridge.location = mid
+        bridge.scale = (1.0, 1.0, max(delta.length, 0.001) * 0.5)
+        bridge.rotation_mode = "QUATERNION"
+        bridge.rotation_quaternion = Vector((0, 0, 1)).rotation_difference(delta.normalized())
+        visible = f >= f0 and f <= f1
+        anchor.hide_render = not visible
+        bridge.hide_render = not visible
+        anchor.keyframe_insert("location", frame=f)
+        bridge.keyframe_insert("location", frame=f)
+        bridge.keyframe_insert("scale", frame=f)
+        bridge.keyframe_insert("rotation_quaternion", frame=f)
+        anchor.keyframe_insert("hide_render", frame=f)
+        bridge.keyframe_insert("hide_render", frame=f)
+
+
 def build_stage(stage, mats):
     preset = stage.get("preset", "empty")
     box("Floor", (60.0, 60.0, 0.1), (0, 0, -0.05), mats["floor"])
@@ -470,7 +517,8 @@ def setup_render(doc, out):
         pass
     ee = getattr(sc, "eevee", None)
     if ee is not None:
-        for attr, val in (("taa_render_samples", 64), ("use_shadows", True), ("use_raytracing", True)):
+        samples = int(os.environ.get("WB_SAMPLES", 64))
+        for attr, val in (("taa_render_samples", samples), ("use_shadows", True), ("use_raytracing", True)):
             try:
                 setattr(ee, attr, val)
             except Exception:
@@ -602,6 +650,7 @@ def main():
                     root.keyframe_insert("rotation_euler", frame=f)
             tracked.append((a["asset_id"], root, 0.5))
 
+    build_handshake_cue(doc, assets_by_id, mats)
     cam = build_camera(doc, assets_by_id, doc["total_frames"])
 
     if os.environ.get("WB_DIAG") == "1":

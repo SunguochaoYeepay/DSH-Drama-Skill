@@ -219,6 +219,8 @@ node cli/utility.mjs <workflow.json> --video in.mp4 --out-dir out/ [--set 节点
 # 白膜预演（2026-09-28 起；规范 references/whitebox-json.md，需 .env 配 AIH_BLENDER）
 node cli/whitebox.mjs validate <plan.json>            # 只校验规划表：菜单外资产/动作一律拒
 node cli/compile-spatial.mjs <spatial-plan.json> --out <whitebox.json>  # 空间关系与路径编译为白膜坐标
+node cli/compile-director-stage.mjs <director-stage.json> --out <spatial-plan.json>  # 导演台场景状态编译为现有空间计划
+node cli/compile-whitebox-unit.mjs <direction.json> --unit <id> --out <whitebox.json>  # 导演单元编译为白膜规划
 node cli/compile-deepblend.mjs <spatial-plan.json> --out <scene-spec.json>  # 编译为 DeepBlend SceneSpec
 node cli/whitebox-assets.mjs list                                      # 查看已入库的可复用道具
 node cli/whitebox-assets.mjs register --id chair_wood_01 --type chair --file <model.glb> --license CC0 --source-url <url>

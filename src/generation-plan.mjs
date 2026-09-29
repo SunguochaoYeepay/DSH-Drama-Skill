@@ -65,6 +65,7 @@ function finalize(group, index, boundaryReason, forcedDuration = null) {
     ...(director.spatial_control ? { spatial_control: structuredClone(director.spatial_control) } : {}),
     spatial_control_decision: spatialDecision,
     ...(director.whitebox ? { whitebox: structuredClone(director.whitebox) } : {}),
+    ...(director.director_stage ? { director_stage: structuredClone(director.director_stage) } : {}),
     ...(director.action_complexity ? { action_complexity: structuredClone(director.action_complexity) } : {}),
     ...(director.end_state ? { end_state: director.end_state } : {}),
     ...(director.continuity ? { continuity: structuredClone(director.continuity) } : {}),

@@ -98,6 +98,17 @@ test('场景与道具引用保留到生成单元', () => {
   assert.deepEqual(unit.props, ['red_umbrella']);
 });
 
+test('导演台状态和白膜触发判断随生成单元保留', () => {
+  const directorStage = { schema: 'director-stage/1', scene_name: 'greeting' };
+  const unit = compileGenerationPlan({ version: 2, units: [{
+    id: 'u1', director_stage: directorStage, keyframe_cast: ['a', 'b'],
+    shots: [shot(1, 0, 4, ['a', 'b'], { action: '两人走到中间' })],
+  }] }).units[0];
+  assert.equal(unit.spatial_control_decision.required, true);
+  assert.ok(unit.spatial_control_decision.reasons.includes('director_stage_explicit'));
+  assert.deepEqual(unit.director_stage, directorStage);
+});
+
 test('动作复杂度分析保留到生成单元', () => {
   const actionComplexity = {
     level: 'medium', strategy: 'single_transition',

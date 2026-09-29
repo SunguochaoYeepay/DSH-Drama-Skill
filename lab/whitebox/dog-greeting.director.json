@@ -1,0 +1,62 @@
+{
+  "schema": "director-stage/1",
+  "scene_name": "dog-greeting",
+  "total_frames": 96,
+  "fps": 24,
+  "stage": { "preset": "room", "size": [8, 8, 3.2] },
+  "objects": [
+    {
+      "id": "person_blue",
+      "type": "character",
+      "name": "蓝方",
+      "build": "male",
+      "color": "#4f8cff",
+      "position": { "x": -2.6, "y": 0, "z": 0 },
+      "facing": 90,
+      "action": "Walk_Loop",
+      "motions": [
+        { "frames": [1, 48], "from": { "x": -2.6, "y": 0, "z": 0 }, "to": { "x": -0.75, "y": 0, "z": 0 }, "animation": "Walk_Loop", "facing": 90, "motion_curve": "linear" },
+        { "frames": [49, 96], "from": { "x": -0.75, "y": 0, "z": 0 }, "to": { "x": -0.75, "y": 0, "z": 0 }, "animation": "Idle_Loop", "facing": 90, "motion_curve": "static" }
+      ]
+    },
+    {
+      "id": "person_orange",
+      "type": "character",
+      "name": "橙方",
+      "build": "female",
+      "color": "#ff6b6b",
+      "position": { "x": 2.6, "y": 0, "z": 0 },
+      "facing": 270,
+      "action": "Walk_Loop",
+      "motions": [
+        { "frames": [1, 48], "from": { "x": 2.6, "y": 0, "z": 0 }, "to": { "x": 0.75, "y": 0, "z": 0 }, "animation": "Walk_Loop", "facing": 270, "motion_curve": "linear" },
+        { "frames": [49, 96], "from": { "x": 0.75, "y": 0, "z": 0 }, "to": { "x": 0.75, "y": 0, "z": 0 }, "animation": "Idle_Loop", "facing": 270, "motion_curve": "static" }
+      ]
+    },
+    {
+      "id": "dog",
+      "type": "prop",
+      "name": "小狗",
+      "asset_type": "dog",
+      "color": "#f4b942",
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "path": { "frame_range": [1, 96], "waypoints": [[0, 0, 0], [0, 0, 0]], "motion_curve": "linear" }
+    },
+    {
+      "id": "camera_front",
+      "type": "camera",
+      "name": "正面全景",
+      "position": { "x": 0, "y": 1.8, "z": -7.5 },
+      "target": { "x": 0, "y": 1, "z": 0 },
+      "fov": 48,
+      "camera_type": "static",
+      "framing": "两人从左右入镜走到中间，小狗位于中间",
+      "camera_side": "front",
+      "readable_action": "两人走到中间后面对面，小狗看着两人",
+      "must_show": ["person_blue", "person_orange", "dog"]
+    }
+  ],
+  "active_camera_id": "camera_front",
+  "outputs": { "video": true, "stills": [1, 48, 96], "screen_coords": true },
+  "notes": "导演台状态示例：颜色用于身份辨识，运动段编译为现有白膜轨迹。"
+}
