@@ -1,0 +1,493 @@
+{
+  "schemaVersion": "deepblend.scene/v1",
+  "project": {
+    "id": "table_move",
+    "title": "table_move",
+    "goal": "空间关系范例：A 相对于 B 位于后方；A 绕过方桌后走到 C 面前并持续面向 C。",
+    "units": "metric",
+    "fps": 24,
+    "frameStart": 1,
+    "frameEnd": 144,
+    "aspectRatio": "9:16",
+    "activeCamera": "cam_main"
+  },
+  "entities": [
+    {
+      "id": "TABLE",
+      "type": "generator",
+      "generator": {
+        "shape": "rounded_box",
+        "size": [
+          2.8,
+          1.6,
+          1.1
+        ],
+        "bevel": 0.04
+      },
+      "materialId": "mat_TABLE",
+      "transform": {
+        "location": [
+          0,
+          0,
+          0.55
+        ],
+        "rotationEuler": [
+          0,
+          0,
+          0
+        ]
+      },
+      "tags": [
+        "prop",
+        "table",
+        "whitebox"
+      ]
+    },
+    {
+      "id": "B",
+      "type": "generator",
+      "generator": {
+        "shape": "rounded_box",
+        "size": [
+          0.45,
+          0.35,
+          1.8
+        ],
+        "bevel": 0.08
+      },
+      "materialId": "mat_B",
+      "transform": {
+        "location": [
+          0,
+          -2.2,
+          0.875
+        ],
+        "rotationEuler": [
+          0,
+          0,
+          0
+        ]
+      },
+      "tags": [
+        "character",
+        "male",
+        "whitebox"
+      ]
+    },
+    {
+      "id": "C",
+      "type": "generator",
+      "generator": {
+        "shape": "rounded_box",
+        "size": [
+          0.45,
+          0.35,
+          1.7
+        ],
+        "bevel": 0.08
+      },
+      "materialId": "mat_C",
+      "transform": {
+        "location": [
+          2.2,
+          0,
+          0.875
+        ],
+        "rotationEuler": [
+          0,
+          0,
+          0
+        ]
+      },
+      "tags": [
+        "character",
+        "female",
+        "whitebox"
+      ]
+    },
+    {
+      "id": "A",
+      "type": "generator",
+      "generator": {
+        "shape": "rounded_box",
+        "size": [
+          0.45,
+          0.35,
+          1.25
+        ],
+        "bevel": 0.08
+      },
+      "materialId": "mat_A",
+      "transform": {
+        "location": [
+          0,
+          -3.4,
+          0.625
+        ],
+        "rotationEuler": [
+          0,
+          0,
+          0
+        ]
+      },
+      "tags": [
+        "character",
+        "kid",
+        "whitebox"
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "id": "mat_TABLE",
+      "shader": "principled",
+      "parameters": {
+        "baseColor": [
+          0.35,
+          0.35,
+          0.38,
+          1
+        ],
+        "roughness": 0.8
+      }
+    },
+    {
+      "id": "mat_B",
+      "shader": "principled",
+      "parameters": {
+        "baseColor": [
+          0.12,
+          0.42,
+          0.95,
+          1
+        ],
+        "roughness": 0.8
+      }
+    },
+    {
+      "id": "mat_C",
+      "shader": "principled",
+      "parameters": {
+        "baseColor": [
+          0.95,
+          0.35,
+          0.12,
+          1
+        ],
+        "roughness": 0.8
+      }
+    },
+    {
+      "id": "mat_A",
+      "shader": "principled",
+      "parameters": {
+        "baseColor": [
+          0.55,
+          0.18,
+          0.85,
+          1
+        ],
+        "roughness": 0.8
+      }
+    }
+  ],
+  "cameras": [
+    {
+      "id": "cam_main",
+      "role": "active-camera",
+      "lens": 36,
+      "transform": {
+        "location": [
+          0.39999999999999847,
+          -9,
+          2.2
+        ]
+      },
+      "targetPoint": [
+        0.4,
+        -0.5,
+        1
+      ]
+    }
+  ],
+  "lights": [
+    {
+      "id": "key",
+      "type": "area",
+      "energy": 800,
+      "size": 5,
+      "transform": {
+        "location": [
+          2,
+          -3,
+          5
+        ]
+      }
+    }
+  ],
+  "animationTracks": [
+    {
+      "id": "B_loc_x_0",
+      "targetEntityId": "B",
+      "property": "location.x",
+      "keyframes": [
+        {
+          "frame": 1,
+          "value": 0
+        },
+        {
+          "frame": 144,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "B_loc_y_0",
+      "targetEntityId": "B",
+      "property": "location.y",
+      "keyframes": [
+        {
+          "frame": 1,
+          "value": -2.2
+        },
+        {
+          "frame": 144,
+          "value": -2.2
+        }
+      ]
+    },
+    {
+      "id": "B_rot_z_0",
+      "targetEntityId": "B",
+      "property": "rotationEuler.z",
+      "keyframes": [
+        {
+          "frame": 1,
+          "value": 0
+        },
+        {
+          "frame": 144,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "C_loc_x_0",
+      "targetEntityId": "C",
+      "property": "location.x",
+      "keyframes": [
+        {
+          "frame": 1,
+          "value": 2.2
+        },
+        {
+          "frame": 144,
+          "value": 2.2
+        }
+      ]
+    },
+    {
+      "id": "C_loc_y_0",
+      "targetEntityId": "C",
+      "property": "location.y",
+      "keyframes": [
+        {
+          "frame": 1,
+          "value": 0
+        },
+        {
+          "frame": 144,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "C_rot_z_0",
+      "targetEntityId": "C",
+      "property": "rotationEuler.z",
+      "keyframes": [
+        {
+          "frame": 1,
+          "value": 4.71238898038469
+        },
+        {
+          "frame": 144,
+          "value": 4.71238898038469
+        }
+      ]
+    },
+    {
+      "id": "A_loc_x_0",
+      "targetEntityId": "A",
+      "property": "location.x",
+      "keyframes": [
+        {
+          "frame": 1,
+          "value": 0
+        },
+        {
+          "frame": 48,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "A_loc_y_0",
+      "targetEntityId": "A",
+      "property": "location.y",
+      "keyframes": [
+        {
+          "frame": 1,
+          "value": -3.4
+        },
+        {
+          "frame": 48,
+          "value": -3.4
+        }
+      ]
+    },
+    {
+      "id": "A_rot_z_0",
+      "targetEntityId": "A",
+      "property": "rotationEuler.z",
+      "keyframes": [
+        {
+          "frame": 1,
+          "value": -0.5743048301747018
+        },
+        {
+          "frame": 48,
+          "value": -0.5743048301747018
+        }
+      ]
+    },
+    {
+      "id": "A_loc_x_1",
+      "targetEntityId": "A",
+      "property": "location.x",
+      "keyframes": [
+        {
+          "frame": 49,
+          "value": 0
+        },
+        {
+          "frame": 96,
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "A_loc_y_1",
+      "targetEntityId": "A",
+      "property": "location.y",
+      "keyframes": [
+        {
+          "frame": 49,
+          "value": -3.4
+        },
+        {
+          "frame": 96,
+          "value": -2
+        }
+      ]
+    },
+    {
+      "id": "A_rot_z_1",
+      "targetEntityId": "A",
+      "property": "rotationEuler.z",
+      "keyframes": [
+        {
+          "frame": 49,
+          "value": -0.5743048301747018
+        },
+        {
+          "frame": 96,
+          "value": 0.3805063771123648
+        }
+      ]
+    },
+    {
+      "id": "A_loc_x_2",
+      "targetEntityId": "A",
+      "property": "location.x",
+      "keyframes": [
+        {
+          "frame": 97,
+          "value": 3
+        },
+        {
+          "frame": 144,
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "A_loc_y_2",
+      "targetEntityId": "A",
+      "property": "location.y",
+      "keyframes": [
+        {
+          "frame": 97,
+          "value": -2
+        },
+        {
+          "frame": 144,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "A_rot_z_2",
+      "targetEntityId": "A",
+      "property": "rotationEuler.z",
+      "keyframes": [
+        {
+          "frame": 97,
+          "value": 0.3805063771123648
+        },
+        {
+          "frame": 144,
+          "value": 1.5707963267948966
+        }
+      ]
+    }
+  ],
+  "shots": [
+    {
+      "id": "shot_main",
+      "cameraId": "cam_main",
+      "frameRange": [
+        1,
+        144
+      ],
+      "description": "空间关系范例：A 相对于 B 位于后方；A 绕过方桌后走到 C 面前并持续面向 C。"
+    }
+  ],
+  "renderProfiles": {
+    "preview": {
+      "engine": "eevee",
+      "resolution": [
+        640,
+        360
+      ],
+      "samples": 16
+    },
+    "final": {
+      "engine": "eevee",
+      "resolution": [
+        1080,
+        1920
+      ],
+      "samples": 64
+    }
+  },
+  "world": {
+    "color": [
+      0.12,
+      0.12,
+      0.12,
+      1
+    ],
+    "strength": 0.5
+  }
+}
