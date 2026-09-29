@@ -217,6 +217,8 @@ node cli/utility.mjs <workflow.json> --video in.mp4 --out-dir out/ [--set 节点
 # 白膜预演（2026-09-28 起；规范 references/whitebox-json.md，需 .env 配 AIH_BLENDER）
 node cli/whitebox.mjs validate <plan.json>            # 只校验规划表：菜单外资产/动作一律拒
 node cli/compile-spatial.mjs <spatial-plan.json> --out <whitebox.json>  # 空间关系与路径编译为白膜坐标
+node cli/whitebox-assets.mjs list                                      # 查看已入库的可复用道具
+node cli/whitebox-assets.mjs register --id chair_wood_01 --type chair --file <model.glb> --license CC0 --source-url <url>
 node cli/whitebox.mjs stills <plan.json>              # 静帧预检：先渲关键帧确认构图，再渲全片
 node cli/whitebox.mjs render <plan.json> [--dry-run]  # 全量：PNG 序列 + 静帧 + 屏幕坐标表 + mp4
                                                       # 渲完自动跑取景预检（角色出框 / 贴边 / 该动的没动），不过就拒

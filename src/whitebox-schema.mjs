@@ -22,9 +22,17 @@ const DEFAULT_MENU = {
 export function loadMenu(assetsDir) {
   const file = path.join(assetsDir, 'manifest.json');
   const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const propFile = path.join(assetsDir, 'props', 'manifest.json');
+  let propManifest = { assets: [] };
+  if (fs.existsSync(propFile)) propManifest = JSON.parse(fs.readFileSync(propFile, 'utf8'));
+  const propTypes = new Set(PROP_TYPES);
+  for (const asset of propManifest.assets || []) {
+    if (asset && typeof asset.asset_type === 'string') propTypes.add(asset.asset_type);
+  }
   return {
     roles: manifest.roles || DEFAULT_MENU.roles,
     animations: new Set(manifest.animations || []),
+    props: propTypes,
   };
 }
 
@@ -128,8 +136,9 @@ export function validateWhitebox(doc, menu = DEFAULT_MENU) {
           }
         }
       } else if (a.kind === 'prop') {
-        if (!PROP_TYPES.includes(a.asset_type)) {
-          err(`${who}：prop asset_type 必须是内置基本体 ${PROP_TYPES.join('|')}，收到：${a.asset_type}`);
+        const propTypes = menu.props instanceof Set ? menu.props : new Set(PROP_TYPES);
+        if (!propTypes.has(a.asset_type)) {
+          err(`${who}：prop asset_type 必须来自内置基本体或已入库道具 ${[...propTypes].join('|')}，收到：${a.asset_type}`);
         }
         const p = a.path;
         if (!p || typeof p !== 'object') {
