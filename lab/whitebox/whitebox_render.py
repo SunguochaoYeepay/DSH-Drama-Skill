@@ -39,6 +39,10 @@ def parse_args():
     stills_only = "--stills-only" in argv
     if "--out" in argv:
         out = argv[argv.index("--out") + 1]
+        # Blender may change its process working directory; keep relative
+        # outputs anchored to the repository instead of the host directory.
+        if not os.path.isabs(out):
+            out = os.path.join(ROOT, out)
     doc = json.load(open(plan, "r", encoding="utf-8"))
     if out is None:
         out = os.path.join(ROOT, "lab", "whitebox", "out", "render", doc.get("scene_name", "unnamed"))
