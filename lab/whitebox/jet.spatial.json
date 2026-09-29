@@ -1,0 +1,76 @@
+{
+  "schema": "spatial-plan/1",
+  "scene_name": "jet_valley",
+  "total_frames": 168,
+  "fps": 24,
+  "stage": { "preset": "valley", "size": [30, 18, 12] },
+  "entities": [
+    {
+      "id": "JET",
+      "kind": "prop",
+      "type": "jet",
+      "color": [0.12, 0.42, 0.95],
+      "position": [-8, -6],
+      "path": {
+        "frame_range": [1, 168],
+        "waypoints": [[-8, -6, 8], [-3, -2, 7], [2, 1, 5], [8, 5, 6]],
+        "motion_curve": "linear",
+        "bank": true
+      }
+    },
+    {
+      "id": "MISSILE_1",
+      "kind": "prop",
+      "type": "missile",
+      "color": [0.95, 0.25, 0.08],
+      "position": [-4, -3],
+      "path": {
+        "frame_range": [30, 120],
+        "waypoints": [[-4, -3, 5.5], [0, 0, 3.2], [6, 4, 2.0]],
+        "motion_curve": "linear",
+        "bank": true
+      }
+    },
+    {
+      "id": "MISSILE_2",
+      "kind": "prop",
+      "type": "missile",
+      "color": [0.95, 0.72, 0.08],
+      "position": [-2, -1],
+      "path": {
+        "frame_range": [58, 148],
+        "waypoints": [[-2, -1, 4.5], [2, 2, 3.8], [7, 4, 3.0]],
+        "motion_curve": "linear",
+        "bank": true
+      }
+    },
+    {
+      "id": "MISSILE_3",
+      "kind": "prop",
+      "type": "missile",
+      "color": [0.72, 0.2, 0.9],
+      "position": [0, 1],
+      "path": {
+        "frame_range": [86, 168],
+        "waypoints": [[0, 1, 3.8], [5, 4, 3.6], [10, 7, 3.5]],
+        "motion_curve": "linear",
+        "bank": true
+      }
+    }
+  ],
+  "camera": {
+    "type": "pan-follow",
+    "track": "JET",
+    "framing": "山谷全景跟拍",
+    "camera_side": "front",
+    "readable_action": "飞机沿山谷前进，三枚导弹依次交错飞出",
+    "must_show": ["JET", "MISSILE_1", "MISSILE_2", "MISSILE_3"],
+    "keys": [
+      { "frame": 1, "angle": 90, "dist": 20, "height": 9, "fov": 65 },
+      { "frame": 86, "angle": 220, "dist": 18, "height": 8, "fov": 68 },
+      { "frame": 168, "angle": 205, "dist": 20, "height": 8, "fov": 65 }
+    ]
+  },
+  "outputs": { "video": true, "stills": [1, 58, 86, 120, 168], "screen_coords": true },
+  "notes": "E2 刚体轨迹试金石：飞机沿山谷前进，三枚导弹分时段交错发射，镜头持续跟拍。"
+}
