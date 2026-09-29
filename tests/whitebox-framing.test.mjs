@@ -106,6 +106,17 @@ test('导演 must_show：被镜头挡住或出画的关键道具也要拦下', (
   assert.equal(r.findings[0].asset, 'TABLE');
 });
 
+test('分段 must_show：只在该时间段内核查主体可见性', () => {
+  const c = coords((i) => ({ H: i <= 5 ? 0.5 : null, TRAIN: null }));
+  const r = analyzeFraming({
+    assets: [char('H', [{ start_pos: [0, 0] }])],
+    camera: { segments: [{ frame_range: [1, 5], must_show: ['H'] }, { frame_range: [6, N], must_show: ['H'] }] },
+  }, c);
+  assert.ok(r.segments[0].findings.length === 0);
+  assert.equal(r.segments[1].findings[0].rule, 'S1');
+  assert.equal(r.ok, false);
+});
+
 // ---------- mustMove 的判据 ----------
 test('mustMove：角色看有没有 end_pos，道具看有没有多段 waypoints', () => {
   assert.equal(mustMove(char('A', [{ start_pos: [0, 0] }])), false);

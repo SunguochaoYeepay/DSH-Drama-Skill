@@ -123,6 +123,10 @@
     { "frame": 122, "angle": 190, "dist": 2.8, "height": 1.4, "fov": 42 },
     { "frame": 168, "angle": 152, "dist": 3.5, "height": 1.8, "fov": 35 }
   ],
+  "segments": [                      // 可选：按时间段声明不同的可读主体
+    { "frame_range": [1, 84], "framing": "发射近景", "must_show": ["A"] },
+    { "frame_range": [85, 168], "framing": "编队广角", "must_show": ["A", "B"] }
+  ],
   "shake": { "frame_range": [122, 168], "amp": 0.03 }   // 可选，指数衰减抖动
 }
 ```
@@ -131,6 +135,7 @@
 - 机位由「注视点 + 方位角 + 距离 + 高度 + 焦距」逐帧反推（fight.py 的 `cam_at` 模式）。
 - 四种类型差别只在注视点：`static`=固定点、`dolly-in`=固定点+dist 插值、
   `pan-follow`=track 对象、`orbit`=track 对象+angle 必须单调变化。
+- `segments` 只声明时间段的验收约束，不会默默改变相机轨迹；每段的 `must_show` 由取景预检单独核查，适合“发射近景 → 编队广角”这类分段镜头设计。
 
 ### 边界校验（渲染器硬性拒绝）
 

@@ -215,6 +215,28 @@ export function validateWhitebox(doc, menu = DEFAULT_MENU) {
           err('camera.must_show 必须是已声明 asset_id 的数组');
         }
       }
+      if (cam.segments !== undefined) {
+        if (!Array.isArray(cam.segments) || cam.segments.length === 0) {
+          err('camera.segments 必须是非空数组');
+        } else {
+          let lastSegmentEnd = 0;
+          for (const segment of cam.segments) {
+            const range = segment?.frame_range;
+            if (!isFrameRange(range, T) || range[0] <= lastSegmentEnd) {
+              err('camera segment：frame_range 必须升序且互不重叠');
+            } else {
+              lastSegmentEnd = range[1];
+            }
+            if (segment.must_show !== undefined && (!Array.isArray(segment.must_show)
+              || !segment.must_show.every((id) => typeof id === 'string' && ids.has(id)))) {
+              err(`camera segment@${range?.[0] ?? '?'}：must_show 必须是已声明 asset_id 的数组`);
+            }
+            if (segment.framing !== undefined && typeof segment.framing !== 'string') {
+              err('camera segment：framing 必须是文字');
+            }
+          }
+        }
+      }
       if (cam.framing !== undefined && typeof cam.framing !== 'string') err('camera.framing 必须是文字');
       if (cam.camera_side !== undefined && !['A', 'B', 'top', 'front', 'back'].includes(cam.camera_side)) {
         err('camera.camera_side 必须是 A|B|top|front|back');

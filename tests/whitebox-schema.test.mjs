@@ -140,3 +140,16 @@ test('拒绝编造的 stage 预设（如 airport）与非法 look_at / phase_off
   assert.ok(validateWhitebox(broken((d) => { d.assets[0].color = 1.4; }), menu)
     .some((e) => e.includes('color')));
 });
+
+test('camera segments allow distinct time-window must_show constraints', () => {
+  const errors = validateWhitebox(broken((d) => {
+    d.camera.segments = [
+      { frame_range: [1, 84], framing: '发射近景', must_show: ['A'] },
+      { frame_range: [85, 168], framing: '编队广角', must_show: ['A'] },
+    ];
+  }), menu);
+  assert.deepEqual(errors, []);
+  assert.ok(validateWhitebox(broken((d) => {
+    d.camera.segments = [{ frame_range: [1, 100], must_show: ['A'] }, { frame_range: [90, 168] }];
+  }), menu).some((e) => e.includes('升序')));
+});

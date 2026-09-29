@@ -81,6 +81,7 @@ export function analyzeFraming(plan, coords, rules = {}) {
   const assets = [];
   const findings = [];
   const mustShow = Array.isArray(plan.camera?.must_show) ? new Set(plan.camera.must_show) : new Set();
+  const segments = Array.isArray(plan.camera?.segments) ? plan.camera.segments : [];
 
   for (const a of plan.assets) {
     const id = a.asset_id;
@@ -120,7 +121,26 @@ export function analyzeFraming(plan, coords, rules = {}) {
     }
   }
 
-  return { ok: findings.length === 0, skipped: null, assets, findings };
+  // A shot may have different readable subjects in different time windows.
+  // Check segment visibility separately so a wide framing cannot hide a near-shot failure.
+  const segmentReports = [];
+  for (const segment of segments) {
+    const [start, end] = segment.frame_range;
+    const segmentFrames = Object.fromEntries(Object.entries(frames).filter(([f]) => Number(f) >= start && Number(f) <= end));
+    const segmentMustShow = new Set(segment.must_show || []);
+    const segmentFindings = [];
+    for (const id of segmentMustShow) {
+      const visible = Object.values(segmentFrames).filter((row) => row?.[id]?.root_visible === true).length;
+      const total = Object.keys(segmentFrames).length;
+      if (total && visible / total < cfg.inFrameMin) {
+        segmentFindings.push({ asset: id, rule: 'S1', message: `时间段 ${start}-${end} 的主体 ${id} 只有 ${Math.round((visible / total) * 100)}% 在框内` });
+      }
+    }
+    segmentReports.push({ frame_range: segment.frame_range, framing: segment.framing || null, must_show: [...segmentMustShow], findings: segmentFindings });
+    findings.push(...segmentFindings);
+  }
+
+  return { ok: findings.length === 0, skipped: null, assets, segments: segmentReports, findings };
 }
 
 const pct = (v) => `${Math.round(v * 100)}%`;

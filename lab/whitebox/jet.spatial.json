@@ -65,7 +65,13 @@
     "readable_action": "飞机沿山谷前进，三枚导弹依次交错飞出",
     "must_show": ["JET", "MISSILE_1", "MISSILE_2", "MISSILE_3"],
     "look_at": [1, 0, 4],
-    "keys": [{ "frame": 1, "angle": 90, "dist": 24, "height": 10, "fov": 65 }]
+    "keys": [{ "frame": 1, "angle": 90, "dist": 24, "height": 10, "fov": 65 }],
+    "segments": [
+      { "frame_range": [1, 29], "framing": "飞机进入近景", "must_show": ["JET"] },
+      { "frame_range": [30, 57], "framing": "第一枚导弹发射", "must_show": ["JET", "MISSILE_1"] },
+      { "frame_range": [58, 85], "framing": "双导弹交错", "must_show": ["JET", "MISSILE_1", "MISSILE_2"] },
+      { "frame_range": [86, 168], "framing": "三枚导弹编队广角", "must_show": ["JET", "MISSILE_1", "MISSILE_2", "MISSILE_3"] }
+    ]
   },
   "outputs": { "video": true, "stills": [1, 58, 86, 120, 168], "screen_coords": true },
   "notes": "E2 刚体轨迹试金石：飞机沿山谷前进，三枚导弹分时段交错发射，镜头持续跟拍。"
