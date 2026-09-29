@@ -31,6 +31,10 @@ function castOf(unit, shot) {
   ])];
 }
 
+function propIdsOf(unit, shot) {
+  return [...new Set([...(unit?.props || []), ...(shot?.props || [])])];
+}
+
 /** Return a deterministic routing decision for the draw/whitebox hand-off. */
 export function analyzeSpatialControl({ unit = {}, shot = {} } = {}) {
   const cast = castOf(unit, shot);
@@ -111,17 +115,38 @@ export function buildSpatialPlanForUnit({ unit, shot = unit?.shots?.[0] || {}, b
   const control = unit.spatial_control || {};
   const totalFrames = durationFrames(unit, shot, fps);
   const cast = decision.cast;
+  const propIds = propIdsOf(unit, shot);
+  const dogProp = propIds.find((id) => {
+    const prop = (board.props || []).find((item) => item.id === id);
+    return /dog|puppy|小狗|狗/u.test(`${id} ${prop?.name || ''} ${prop?.asset_type || ''}`);
+  });
+  const dogRequested = /小狗|小犬|幼犬|puppy|dog/u.test(textOf(unit, shot)) || control.layout === 'face_to_face_with_center_dog';
   const assumptions = [];
   if (cast.length === 2 && control.distance_m === undefined) assumptions.push('distance_m=2');
-  const entities = Array.isArray(control.entities) && control.entities.length
+  let entities = Array.isArray(control.entities) && control.entities.length
     ? structuredClone(control.entities)
     : cast.map((id, index) => defaultEntity(id, index, board, totalFrames, control));
+  if (dogRequested && !control.entities) {
+    if (cast.length !== 2) throw new Error('“两人中间小狗”自动布局需要恰好两名人物');
+    const dogId = dogProp || control.dog_id || 'DOG';
+    entities.push({
+      id: dogId,
+      kind: 'prop',
+      type: 'dog',
+      asset_type: 'dog',
+      color: [0.72, 0.48, 0.22],
+      position: [0, 0],
+      facing: 0,
+      path: { waypoints: [[0, 0, 0], [0, 0, 0]], frame_range: [1, totalFrames] },
+    });
+  }
+  const mustShow = entities.map((entity) => entity.id);
   const camera = control.camera || {
     type: 'static',
     framing: `${shot.framing || '全景'} ${cast.length}人同框`,
     camera_side: 'front',
     readable_action: shot.action || unit.keyframe_start || '人物关系清楚',
-    must_show: cast,
+    must_show: mustShow,
     look_at: [0, 0, 1],
     keys: [{ frame: 1, angle: 180, dist: 6.5, height: 1.7, fov: 45 }],
   };
@@ -136,6 +161,6 @@ export function buildSpatialPlanForUnit({ unit, shot = unit?.shots?.[0] || {}, b
     camera,
     outputs: { video: true, stills: [1, totalFrames], screen_coords: true },
     notes: `由导演单元 ${unit.id || 'unknown'} 的空间控制生成；${decision.reasons.join('、') || '显式白膜要求'}`,
-    spatial_control: { ...decision, assumptions },
+    spatial_control: { ...decision, assumptions, ...(dogRequested ? { center_dog: true } : {}) },
   };
 }

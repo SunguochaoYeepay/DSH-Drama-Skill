@@ -264,6 +264,17 @@ def build_prop(asset, mat, prop_catalog=None):
         for x in (-0.25, 0.25):
             for y in (-0.25, 0.25):
                 parts.append(box("leg", (0.1, 0.1, 0.55), (x, y, 0.275), mat))
+    elif t == "dog":
+        # 低模小狗：只锁轮廓、位置和朝向，毛色与细节交给成片层。
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, location=(0, 0, 0.38))
+        body = bpy.context.active_object
+        body.scale = (0.32, 0.52, 0.28)
+        body.data.materials.append(mat)
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, location=(0, 0.48, 0.55))
+        head = bpy.context.active_object
+        head.scale = (0.25, 0.28, 0.24)
+        head.data.materials.append(mat)
+        parts = [body, head, box("tail", (0.10, 0.42, 0.10), (0, -0.56, 0.58), mat)]
     else:  # crate
         parts = [box("crate", (0.7, 0.7, 0.7), (0, 0, 0.35), mat)]
     root = bpy.data.objects.new("P_" + asset["asset_id"], None)

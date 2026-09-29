@@ -9,7 +9,7 @@ export const LOCOMOTION = new Set([
 ]);
 
 export const STAGE_PRESETS = ['room', 'valley', 'platform', 'empty'];
-export const PROP_TYPES = ['jet', 'missile', 'crate', 'car', 'train', 'table', 'chair'];
+export const PROP_TYPES = ['jet', 'missile', 'crate', 'car', 'train', 'table', 'chair', 'dog'];
 export const CAMERA_TYPES = ['static', 'dolly-in', 'pan-follow', 'orbit'];
 export const MOTION_CURVES = ['static', 'linear', 'ease'];
 

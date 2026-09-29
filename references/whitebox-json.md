@@ -93,7 +93,7 @@
 {
   "asset_id": "jet1",
   "kind": "prop",
-  "asset_type": "jet",               // 渲染器内置基本体：jet | missile | crate | car
+  "asset_type": "jet",               // 渲染器内置基本体：jet | missile | crate | car | dog
   "color": [0.15, 0.45, 0.95],        // 可选身份色；也兼容 0..1 灰度值
   "path": {                          // prop 用轨迹，不用 clips
     "frame_range": [1, 168],

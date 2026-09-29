@@ -36,3 +36,21 @@ test('导演显式关闭白膜时优先服从导演决定', () => {
   const unit = { spatial_control: { required: false }, keyframe_cast: ['i_a', 'i_b'], shots: [{ on_screen: ['i_a', 'i_b'], action: '两个人面对面站立' }] };
   assert.equal(analyzeSpatialControl({ unit, shot: unit.shots[0] }).required, false);
 });
+
+test('两人中间的小狗作为第三个白膜实体并进入必显主体', () => {
+  const unit = {
+    id: 'u_dog_greeting',
+    keyframe_cast: ['i_a', 'i_b'],
+    props: ['p_dog'],
+    keyframe_start: '两个人面对面站立，中间是一只小狗，小狗看着两个人握手',
+    shots: [{ framing: '全景', duration_s: 4, on_screen: ['i_a', 'i_b'], props: ['p_dog'], action: '两个人面对面站立，中间是一只小狗，小狗看着两个人握手' }],
+  };
+  const board = { props: [{ id: 'p_dog', name: '小狗', asset_type: 'dog' }] };
+  const plan = buildSpatialPlanForUnit({ unit, shot: unit.shots[0], board });
+  assert.equal(plan.entities.length, 3);
+  assert.deepEqual(plan.entities[2].position, [0, 0]);
+  assert.equal(plan.entities[2].asset_type, 'dog');
+  assert.ok(plan.camera.must_show.includes('p_dog'));
+  const whitebox = compileSpatialPlan(plan);
+  assert.deepEqual(validateWhitebox(whitebox, menu), []);
+});
