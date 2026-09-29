@@ -121,11 +121,15 @@ export function buildSpatialPlanForUnit({ unit, shot = unit?.shots?.[0] || {}, b
     return /dog|puppy|小狗|狗/u.test(`${id} ${prop?.name || ''} ${prop?.asset_type || ''}`);
   });
   const dogRequested = /小狗|小犬|幼犬|puppy|dog/u.test(textOf(unit, shot)) || control.layout === 'face_to_face_with_center_dog';
+  const layoutControl = {
+    ...control,
+    animation: control.animation || (/握手/u.test(textOf(unit, shot)) ? 'Interact' : 'Idle_Talking_Loop'),
+  };
   const assumptions = [];
   if (cast.length === 2 && control.distance_m === undefined) assumptions.push('distance_m=2');
   let entities = Array.isArray(control.entities) && control.entities.length
     ? structuredClone(control.entities)
-    : cast.map((id, index) => defaultEntity(id, index, board, totalFrames, control));
+    : cast.map((id, index) => defaultEntity(id, index, board, totalFrames, layoutControl));
   if (dogRequested && !control.entities) {
     if (cast.length !== 2) throw new Error('“两人中间小狗”自动布局需要恰好两名人物');
     const dogId = dogProp || control.dog_id || 'DOG';
@@ -137,6 +141,7 @@ export function buildSpatialPlanForUnit({ unit, shot = unit?.shots?.[0] || {}, b
       color: [0.72, 0.48, 0.22],
       position: [0, 0],
       facing: 0,
+      look_at: cast,
       path: { waypoints: [[0, 0, 0], [0, 0, 0]], frame_range: [1, totalFrames] },
     });
   }
@@ -148,7 +153,8 @@ export function buildSpatialPlanForUnit({ unit, shot = unit?.shots?.[0] || {}, b
     readable_action: shot.action || unit.keyframe_start || '人物关系清楚',
     must_show: mustShow,
     look_at: [0, 0, 1],
-    keys: [{ frame: 1, angle: 180, dist: 6.5, height: 1.7, fov: 45 }],
+    // 白膜约定：270° 是 front 预设，避免只看 coords.json 却渲出空帧。
+    keys: [{ frame: 1, angle: 270, dist: 6.5, height: 1.7, fov: 45 }],
   };
   return {
     schema: 'spatial-plan/1',

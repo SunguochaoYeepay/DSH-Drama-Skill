@@ -50,7 +50,10 @@ test('两人中间的小狗作为第三个白膜实体并进入必显主体', ()
   assert.equal(plan.entities.length, 3);
   assert.deepEqual(plan.entities[2].position, [0, 0]);
   assert.equal(plan.entities[2].asset_type, 'dog');
+  assert.equal(plan.entities[0].motions[0].animation, 'Interact');
+  assert.equal(plan.entities[1].motions[0].animation, 'Interact');
   assert.ok(plan.camera.must_show.includes('p_dog'));
+  assert.equal(plan.camera.keys[0].angle, 270);
   const whitebox = compileSpatialPlan(plan);
   assert.deepEqual(validateWhitebox(whitebox, menu), []);
 });
