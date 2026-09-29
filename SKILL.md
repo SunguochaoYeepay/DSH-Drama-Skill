@@ -117,6 +117,7 @@ metadata:
 | 生成 FastH3/H3 视频、选择时长和规格 | `references/video-h3.md` |
 | 白膜预演：写/改 whitebox/1 规划 JSON、判断这个镜头该不该走白膜 | `references/whitebox-json.md` |
 | 白膜缺少桌椅等世界物体、查找或沉淀可复用模型 | `skills/whitebox-asset-library/SKILL.md` |
+| 使用 DSH / DeepBlend Studio 执行白膜场景、资产、预览和渲染 | `skills/deepblend-whitebox/SKILL.md` |
 | 关键帧签署前做空间/人数核查（多人同框、换边、缺落幅） | `references/space-check.md` |
 | 人工送审、合成与终审 | `references/qa-and-review.md` |
 | **`final` 票已记录，准备收工** | `references/workflow.md` 的「收工与知识回流」 |
@@ -162,6 +163,7 @@ metadata:
 | H3 执行参数 | `references/video-h3.md` |
 | 白膜预演（whitebox/1 规划 JSON 规范、三通道判据、菜单制资产） | `references/whitebox-json.md` |
 | 白膜道具资源库（查找、许可证、入库元数据、座位锚点） | `skills/whitebox-asset-library/SKILL.md` |
+| DeepBlend 白膜执行器（SceneSpec、revision、预览复核和长渲染） | `skills/deepblend-whitebox/SKILL.md` |
 | 空间核查（声明对照 + 主体存在性，只核查不控制画面） | `references/space-check.md` |
 | 抽卡师：LLM 直写关键帧提示词（`keyframe-prompts/<unit>.txt`，逐字送模型） | `references/draw-specialist.md`（岗位、工作流与工程接线）+ `references/prompt-rules.md`（禁令与正向工艺）+ `references/draw-vocabulary.md`（词汇弹药） |
 | 人工送审规则 | `references/qa-and-review.md` |
