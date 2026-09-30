@@ -56,6 +56,18 @@ test('T1 白膜票按单元登记，绑的是规划 JSON 的字节', () => {
   assert.equal(approvalStatus(dir, 'whitebox', [planFile], 'g001').ok, true);
 });
 
+test('T1b 计划里声明了 `{ plan, keyframe }` 对象时，按声明的 plan 找白膜（别当字符串 resolve）', () => {
+  const { dir, planFile, videoFile } = makeProject();
+  // 真实的剧目里单元 id 与场景名不相同（`g001` → `units/u_restaurant_inside.whitebox.json`），
+  // 默认约定拼不出来 —— 计划声明才是白膜位置的所有者。
+  const unit = { id: 'g001', whitebox: { keyframe: 'units/x-whitebox/still_f0001.png', plan: 'units/g001.whitebox.json' } };
+  assert.equal(whiteboxPlanPath(dir, unit), planFile);
+  assert.deepEqual(whiteboxArtifactFiles(dir, unit), [planFile, videoFile], '规划 JSON 在前、白膜视频在后');
+  assert.equal(hasWhitebox(dir, unit), true);
+  // 字符串老写法照样认
+  assert.equal(whiteboxPlanPath(dir, { id: 'g001', whitebox: 'units/g001.whitebox.json' }), planFile);
+});
+
 test('T2 改一个坐标，白膜票自动作废', () => {
   const { dir, planFile } = makeProject();
   approve(dir, 'whitebox', [planFile], { id: 'g001' });

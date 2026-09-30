@@ -23,7 +23,14 @@ export const WHITEBOX_STAGE = 'whitebox';
 /** 单元的默认白膜规划文件名：`<剧目>/units/<单元 id>.whitebox.json`。 */
 export function whiteboxPlanPath(projectDir, unit) {
   const declared = unit?.whitebox;
-  if (declared) return path.resolve(projectDir, declared);
+  // 计划里声明的白膜是**对象** `{ plan, keyframe }`（`cli/compile-whitebox-unit.mjs` 的产物，
+  // 与 `cli/keyframes.mjs` 读的 `unit.whitebox?.keyframe` 同一份形状）。老写法是路径字符串，
+  // 两种都要认 —— 只认字符串会在出片第一步就把整条链打断：
+  // `TypeError: The "paths[1]" argument must be of type string. Received an instance of Object`
+  // （2026-09-30 glass_restaurant 实测：g001/g002 两段一起卡死，`--skip-gate` 也绕不过，
+  // 因为异常发生在"有没有白膜"这一步之前）。
+  const declaredPlan = typeof declared === 'string' ? declared : declared?.plan;
+  if (declaredPlan) return path.resolve(projectDir, declaredPlan);
   return path.join(projectDir, 'units', `${unit?.id}.whitebox.json`);
 }
 

@@ -53,8 +53,13 @@ if (stage === 'keyframes') {
 // 白膜：**绑规划 JSON 的字节**（改一个坐标票就废），视频是它的渲染产物、有则在票里。
 // 路径约定只有 `src/whitebox-gates.mjs` 一个所有者，这里不自己拼。
 if (stage === 'whitebox' && id) {
-  const expected = whiteboxArtifactFiles(project, { id });
-  if (!expected.length) throw new Error(`这个单元没有白膜：找不着 ${whiteboxPlanPath(project, { id })}`);
+  // 白膜规划在哪只有计划知道：`unit.whitebox.plan`（`units/<场景>.whitebox.json`，单元 id ≠ 场景名）。
+  // 只按约定拼 `units/<id>.whitebox.json` 会找不到 —— 于是"这个单元没有白膜"，票根本签不上。
+  const planPath = path.resolve(flag('plan', path.join(project, 'render.plan.json')));
+  const plan = fs.existsSync(planPath) ? JSON.parse(fs.readFileSync(planPath, 'utf8')) : {};
+  const unit = (plan.units || []).find((u) => u.id === id) || { id };
+  const expected = whiteboxArtifactFiles(project, unit);
+  if (!expected.length) throw new Error(`这个单元没有白膜：找不着 ${whiteboxPlanPath(project, unit)}`);
   if (files.length && files.some((f) => !expected.includes(f))) {
     throw new Error('白膜确认必须绑定本单元实际的规划 JSON / 白膜视频；请省略 --artifacts 按约定自动取');
   }
