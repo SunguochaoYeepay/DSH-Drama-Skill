@@ -25,6 +25,8 @@
  *   --last-keyframe <png> 可选尾帧；FastH3 收到后走 fl2v，否则走 i2v
  *   --steps <n>      旧兼容参数；4/8/其他映射 draft/balanced/final，优先使用 --profile
  *   --quality <档位> normal=常规（默认）/ high=高质量；尺寸取自 .env
+ *   --face-refine     生成后调用 H3 人脸修复（默认关闭，约需额外 1-2 分钟）
+ *   --no-face-refine  显式关闭人脸修复
  *   --dry-run        只打印提示词，不生成
  */
 
@@ -61,6 +63,11 @@ const board = JSON.parse(fs.readFileSync(boardPath, 'utf8'));
 const dir = JSON.parse(fs.readFileSync(dirPath, 'utf8'));
 const WS = opt('ws', null) || path.resolve(path.dirname(boardPath), '..', '..', '..');
 const DRY = Boolean(opt('dry-run', false));
+// Refinement is opt-in because it is expensive. A planner may set
+// `face_refine: true` on an individual unit; CLI/env overrides remain explicit.
+const unitForDecision = (dir.units || []).find((u) => u.id === unitId);
+const FACE_REFINE = !argv.includes('--no-face-refine')
+  && (argv.includes('--face-refine') || process.env.AIH_FACE_REFINE === '1' || unitForDecision?.face_refine === true);
 const EXPLICIT_STEPS = argv.includes('--steps') ? Number(opt('steps', 0)) : null;
 /**
  * **尺寸跟着官方文档走，不要自己扫。**
@@ -321,6 +328,7 @@ const GEN = COMFY_GEN;
 const PY = () => requireComfyPython();
 
 console.log(`\n单元 ${unit.id}　${unit.shots.length} 镜　${seconds.toFixed(1)}s　${PROFILE} / ${MODE} / ${QUALITY} / ${ATTENTION}`);
+if (FACE_REFINE) console.log('  人脸修复决策：启用（请在生成完成后运行 cli/utility.mjs 修复该片段）');
 if (unit.why) console.log(`  导演的理由：${unit.why}`);
 console.log(`  首帧：${keyframe || '（没有！要用 t2v）'}`);
 console.log('─'.repeat(70));

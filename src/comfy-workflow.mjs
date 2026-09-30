@@ -56,10 +56,24 @@ export async function uiWorkflowToApi(file, { baseUrl = comfyUrl(), outputTypes 
     if (n.widgets_values && !Array.isArray(n.widgets_values) && typeof n.widgets_values === 'object') {
       for (const [k, v] of Object.entries(n.widgets_values)) if (k !== 'videopreview') inputs[k] = v;
     }
+    // UI widget order can differ between node versions. Prefer the widget
+    // names recorded on the canvas, then use positional values only for old
+    // workflows that lack those names.
+    const namedWidgets = {};
+    for (const item of n.inputs || []) {
+      if (item.widget?.name && widgets.length && !(item.widget.name in namedWidgets)) {
+        namedWidgets[item.widget.name] = widgets.shift();
+      }
+    }
     for (const [name, def] of defs) {
       const linked = wire[name] != null && links[wire[name]];
       if (linked) inputs[name] = [String(links[wire[name]][0]), links[wire[name]][1]];
-      else if (!(name in inputs) && widgets.length) inputs[name] = widgets.shift();
+      else if (!(name in inputs) && (name in namedWidgets || widgets.length)) {
+        const value = name in namedWidgets ? namedWidgets[name] : widgets.shift();
+        inputs[name] = typeof value === 'string'
+          ? value.replace(/\\\\/g, '\\').replace(/^MiniMax H3\\/i, 'h3\\')
+          : value;
+      }
       else if (!(name in inputs) && Array.isArray(def) && def.length && typeof def[0] === 'string'
         && !['INT', 'FLOAT', 'STRING', 'BOOLEAN', 'IMAGE', 'VIDEO', 'AUDIO'].includes(def[0])) inputs[name] = def[0];
     }
