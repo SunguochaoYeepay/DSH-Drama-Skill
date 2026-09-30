@@ -298,7 +298,7 @@ test('签署 final：必须显式绑定 out/final.mp4；没有成片时 400 且�
     assert.match((await missing.json()).error, /还没有成片/);
     assert.equal(sp.calls.length, 0);
 
-    // 成片就位 → 起 review-gate，并把产物显式绑上（final 阶段没有默认产物）
+    // 成片就位 → 起 review-gate，并把产物显式绑上（显式优先，不依赖 final 的默认）
     fs.mkdirSync(path.join(p.dir, 'out'), { recursive: true });
     fs.writeFileSync(path.join(p.dir, 'out', 'final.mp4'), Buffer.from([0, 0, 0, 0x18]));
     const pending = post();

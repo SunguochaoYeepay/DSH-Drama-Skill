@@ -39,6 +39,10 @@ if (!files.length && stage === 'assets') {
     files = projectAssetFiles(board, boardFile, { workspace: flag('ws', null) });
   }
 }
+// 成片就在约定位置（`out/final.mp4`）时给个默认：story/board/direction/assets 都有默认，
+// 唯独 final 要手传 `--artifacts`，于是 `status --stage final` 直接报用法、忘了带参数看起来像"票丢了"。
+// 显式 `--artifacts` 仍然优先（看板那条路就这么用，见 web/server.mjs），默认只是补位。
+if (!files.length && stage === 'final') files = [path.join(project, 'out', 'final.mp4')].filter(fs.existsSync);
 if (stage === 'keyframes') {
   const planPath = path.resolve(flag('plan', path.join(project, 'render.plan.json')));
   const plan = JSON.parse(fs.readFileSync(planPath, 'utf8'));

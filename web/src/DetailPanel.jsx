@@ -616,8 +616,8 @@ function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine, onRefr
  * 成片页：看一眼 → 满意就签成片票。
  *
  * 与关键帧/片段同一套口径：看板**不写任何 approvals 文件**，点「签署」只是把用户明确的
- * 「通过」转交给唯一所有者 `cli/review-gate.mjs`（这里还会带上 `--artifacts out/final.mp4`，
- * 因为 review-gate 对 final 没有默认产物）。两步确认，避免误点。
+ * 「通过」转交给唯一所有者 `cli/review-gate.mjs`（这里还会带上 `--artifacts out/final.mp4`：
+ * 显式绑定，不依赖 review-gate 对 final 的默认）。两步确认，避免误点。
  */
 function FinalView({ snapshot, project, onOpen, onRefresh }) {
   const [confirmSign, setConfirmSign] = useState(false);

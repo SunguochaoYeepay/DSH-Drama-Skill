@@ -536,7 +536,8 @@ async function handleAction(req, res, roots, route, trash, regen) {
       args.push('--id', unit);
     }
     if (stage === 'final') {
-      // 成片票必须显式绑定产物（review-gate 对 final 没有默认产物）
+      // 成片票显式绑定产物：final 现在也有 out/final.mp4 的默认，但看板不依赖约定 ——
+      // 约定换了（--out 改了落点）这里立刻就能发现，而不是签出一张绑空气的票
       const finalFile = finalArtifactPath(projectDir);
       if (!fs.existsSync(finalFile)) {
         return sendJson(res, { error: '还没有成片（约定路径 out/final.mp4），先合成再来签' }, 400);
