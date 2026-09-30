@@ -63,6 +63,10 @@ const ONLY = String(opt('units', '')).split(',').map((s) => s.trim()).filter(Boo
 // 落幅（fl2v 的尾帧）。提示词与首帧同构：`keyframe-prompts/<unit>.last.txt`。
 // **没有该文件的单元照旧走 i2v** —— 所以这个开关对老项目零影响，不需要迁移。
 const WITH_LAST = argv.includes('--with-last');
+// 只跑落幅那一遍。首帧槽位里已经有人看过的那张时，重抽首帧会让已签的关键帧票失效 ——
+// 补一张落幅不该连坐首帧（2026-09-30 glass_restaurant g002 实测：为了拿落幅把首帧重抽了两次）。
+const LAST_ONLY = argv.includes('--last-only');
+if (LAST_ONLY && !WITH_LAST) throw new Error('--last-only 只与 --with-last 搭配使用（它只跳过首帧那一遍）');
 const PROVIDER_SETTING = String(opt('provider', KEYFRAME_PROVIDER)).toLowerCase();
 const PROVIDER = PROVIDER_SETTING === 'comfyui' ? 'local' : PROVIDER_SETTING;
 if (!['huimeng', 'local', 'bailian', 'volcengine'].includes(PROVIDER)) throw new Error('--provider 只能是 huimeng / local / bailian / volcengine / comfyui');
@@ -331,6 +335,10 @@ for (const unit of dir.units) {
     }
     continue;
   }
+  if (LAST_ONLY) {
+    console.log('    ⏭ --last-only：跳过首帧生成（首帧已就位），只跑落幅');
+    continue;
+  }
 
   let r;
   let got = false;
@@ -438,7 +446,18 @@ if (WITH_LAST && !DRY) {
         continue;
       }
       const lastPrompt = fs.readFileSync(lastPromptFile, 'utf8').trim();
-      const lastRefs = refsFor(unit.shots?.[0] || {}, unit);
+      // 落幅是**首帧的后一帧**，所以首帧自己必须是图1。
+      //
+      // 为什么不能不挂首帧：`refsFor()` 只给"白膜 + 身份图"，落幅就无从知道首帧的
+      // 机位与构图，只能照着文字把这一镜重拍一遍 —— 2026-09-30 glass_restaurant
+      // g002 实测两次：一次把室内两人换成两个男性，一次把固定中广角改成侧向机位。
+      // 文字把落幅写得越准，它越容易"拍成一个新镜头"（白膜静帧只有 320×180，
+      // 压不住重拍）。挂上首帧之后，落幅才是"同一镜往后走一步"。
+      const firstSlot = unit.keyframe ? path.resolve(PROJ, unit.keyframe) : null;
+      const shotRefs = refsFor(unit.shots?.[0] || {}, unit);
+      const lastRefs = firstSlot && fs.existsSync(firstSlot)
+        ? [{ file: firstSlot, role: 'first-keyframe' }, ...shotRefs]
+        : shotRefs;
       const draft = path.join(LOCAL_OUT, `${unit.id}_last.png`);
       const slot = path.resolve(PROJ, unit.last_keyframe);
       fs.mkdirSync(path.dirname(draft), { recursive: true });
