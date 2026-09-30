@@ -136,4 +136,4 @@ test('T5 review-gate 认 --stage whitebox；缺 --id 直接拒', (t) => {
   assert.match(noId.stderr, /--id/);
 });
 
-console.log('whitebox-gates: 5/5 passed');
+console.log('whitebox-gates: 6/6 passed');
