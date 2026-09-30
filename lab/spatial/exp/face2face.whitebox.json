@@ -1,0 +1,130 @@
+{
+  "schema": "whitebox/1",
+  "scene_name": "face2face",
+  "total_frames": 24,
+  "fps": 24,
+  "stage": {
+    "preset": "room",
+    "size": [
+      8,
+      8,
+      3.2
+    ]
+  },
+  "assets": [
+    {
+      "asset_id": "TABLE",
+      "kind": "prop",
+      "asset_type": "table",
+      "color": [
+        0.35,
+        0.35,
+        0.38
+      ],
+      "path": {
+        "waypoints": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "frame_range": [
+          1,
+          24
+        ]
+      }
+    },
+    {
+      "asset_id": "MAN",
+      "kind": "character",
+      "asset_type": "male",
+      "color": [
+        0.12,
+        0.42,
+        0.95
+      ],
+      "clips": [
+        {
+          "frame_range": [
+            1,
+            24
+          ],
+          "animation": "Idle_Loop",
+          "start_pos": [
+            1.2,
+            0
+          ],
+          "facing": 90,
+          "motion_curve": "ease",
+          "blend_frames": 4
+        }
+      ]
+    },
+    {
+      "asset_id": "WOMAN",
+      "kind": "character",
+      "asset_type": "female",
+      "color": [
+        0.95,
+        0.35,
+        0.12
+      ],
+      "clips": [
+        {
+          "frame_range": [
+            1,
+            24
+          ],
+          "animation": "Idle_Loop",
+          "start_pos": [
+            -1.2,
+            0
+          ],
+          "facing": 270,
+          "motion_curve": "ease",
+          "blend_frames": 4
+        }
+      ]
+    }
+  ],
+  "camera": {
+    "type": "static",
+    "framing": "两人隔桌面对面同框，中景",
+    "camera_side": "front",
+    "readable_action": "两个人隔着长桌面对面站立，桌子在两人中间",
+    "must_show": [
+      "TABLE",
+      "MAN",
+      "WOMAN"
+    ],
+    "look_at": [
+      0,
+      0,
+      1.0
+    ],
+    "keys": [
+      {
+        "frame": 1,
+        "angle": 270,
+        "dist": 5.0,
+        "height": 1.5,
+        "fov": 46
+      }
+    ]
+  },
+  "outputs": {
+    "video": false,
+    "stills": [
+      1
+    ],
+    "screen_coords": true
+  },
+  "notes": "实验一（静态构图）用白膜首帧：两人隔着长桌面对面站立；MAN 在 +x 侧朝 -x（facing 90），WOMAN 在 -x 侧朝 +x（facing 270），桌子在中间。",
+  "spatial_source": "spatial-plan/1"
+}

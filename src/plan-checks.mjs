@@ -40,7 +40,7 @@ export function lastKeyframeAdvice({ unitId, hasLastKeyframe, planDeclaresSlot, 
     return `⚠ ${unitId} 计划声明了落幅槽位，但缺 keyframe-prompts/${unitId}.last.txt → 落幅不会生成，本镜退回 i2v（构图不受端帧约束）。`;
   }
   if (hasLastPromptFile) {
-    return `⚠ ${unitId} 有 keyframe-prompts/${unitId}.last.txt，但落幅文件还没生成/没落到计划槽位 → 本镜会退回 i2v。先跑 keyframes --with-last。`;
+    return `⚠ ${unitId} 有 keyframe-prompts/${unitId}.last.txt，但落幅文件还没生成/没落到计划槽位 → 本镜会退回 i2v。下一次运行 keyframes 会自动生成落幅，也可显式使用 --with-last。`;
   }
   // 这条项目本来就不用落幅：只报一句事实，不制造噪音。
   return `ℹ ${unitId} 本镜没有落幅，走 i2v：构图**不受端帧约束**（模型可自行改机位）。落点重要的镜头建议补 keyframe-prompts/${unitId}.last.txt。`;

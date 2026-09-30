@@ -108,6 +108,10 @@ console.log('单镜核查条目');
 
   const bad = unitChecklist({ id: 'g001' }, space, { present: true, n_person: 1 });
   check('人数不一致 → count_ok=false', bad.auto.count_ok === false);
+  const filtered = unitChecklist({ id: 'g001' }, space, { present: true, n_person: 7, n_person_effective: 2 });
+  check('清晰度过滤后的主体数用于核对', filtered.auto.count_ok === true && filtered.auto.detected_effective === 2);
+  const unavailable = unitChecklist({ id: 'g001' }, space, { present: null, n_person: null, error: '坏权重' });
+  check('检测器不可用 → 人数不可判定', unavailable.auto.count_ok === null && /坏权重/.test(unavailable.auto.detector_error));
   const empty = unitChecklist({ id: 'g001' }, space, { present: false, n_person: 0 });
   check('画面里没人 → present=false', empty.auto.present === false);
 

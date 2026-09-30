@@ -4,7 +4,7 @@
  *
  * 为什么要有它：三种"祈祷式"空间手段——线框示意图、真实空间照+人形标记、
  * 提示词强制声明（后者实测让出人率从 83% 掉到 67%）——全部失败。
- * 所以"画里有没有人"只能事后核查。检测器在 32 张真实成片关键帧上 100% 可用。
+ * 所以"画里有没有人"只能事后核查。检测器是否可用按每次运行结果判定；坏权重、缺依赖和第三方日志污染均按不可用处理。
  *
  * 用法：
  *   node cli/check-subjects.mjs <项目目录>                  # 检查计划里所有关键帧 + 落幅
@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { requireComfyPython } from '../src/runtime-paths.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { makeArgs } from './lib/argv.mjs';
+import { parsePresenceJson, summarizePresence } from '../src/presence-check.mjs';
 
 installCliErrorHandler();
 
@@ -35,6 +36,13 @@ if (!projectArg) {
 const project = path.resolve(projectArg);
 const stage = String(flag('stage', 'keyframes'));
 const planFile = path.resolve(flag('plan', path.join(project, 'render.plan.json')));
+const expected = flag('expected', null);
+const minSharpness = Number(flag('min-sharpness', expected != null ? 60 : 0));
+if (!Number.isFinite(minSharpness) || minSharpness < 0) throw new Error('--min-sharpness 必须是非负数字');
+const expectedCount = expected == null ? null : Number(expected);
+if (expected != null && (!Number.isInteger(expectedCount) || expectedCount < 0)) {
+  throw new Error('--expected 必须是非负整数');
+}
 
 /** 默认权重放 .tmp 下（ultralytics 会自动下载），**绝不让它落到仓库根**。 */
 const weights = path.resolve(
@@ -69,7 +77,7 @@ if (!targets.length) {
   process.exit(0);
 }
 
-const args = [path.join(HERE, 'lib', 'presence.py'), '--weights', weights, '--json'];
+const args = [path.join(HERE, 'lib', 'presence.py'), '--weights', weights, '--json', '--min-sharpness', String(minSharpness)];
 for (const t of targets) args.push('--image', t);
 // cwd 设成权重目录：ultralytics 首次会自动下载权重，落到那里而不是仓库根
 const r = spawnSync(requireComfyPython(), args, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, cwd: path.dirname(weights), stdio: ['ignore', 'pipe', 'pipe'] });
@@ -77,16 +85,35 @@ if (r.status === 2 || (!r.stdout && r.stderr)) {
   console.error(`检测器不可用：${String(r.stderr || '').slice(-400)}`);
   process.exit(2);
 }
-const data = JSON.parse(r.stdout);
-const s = data.summary;
+let data;
+try {
+  data = parsePresenceJson(r.stdout);
+} catch (err) {
+  console.error(`检测器不可用：${err.message}。${String(r.stderr || '').slice(-300)}`);
+  process.exit(2);
+}
+const s = summarizePresence(data.results, expectedCount);
+if (s.detector_unavailable.length) {
+  const unavailable = s.detector_unavailable;
+  console.error(`检测器不可用：${unavailable.length}/${s.checked} 张未完成检测，不能判定通过。`);
+  for (const item of unavailable) console.error(`  · ${path.relative(project, item.image)}：${item.error || '未知检测错误'}`);
+  process.exit(2);
+}
 console.log(`检查 ${s.checked} 张（stage=${stage}）　检测器可用 ${s.detector_ok} 张　出人率 ${s.present_rate == null ? '—' : `${(s.present_rate * 100).toFixed(0)}%`}`);
 for (const item of data.results) {
   const flag = item.present ? '  ✓' : item.present === false ? '  ✗' : '  ?';
-  console.log(`${flag} n=${item.n_person ?? '—'} ${path.relative(project, item.image)}`);
+  const count = item.n_person_effective ?? item.n_person;
+  const raw = item.n_person_effective != null && item.n_person_effective !== item.n_person ? `（原始 ${item.n_person}）` : '';
+  console.log(`${flag} n=${count ?? '—'}${raw} ${path.relative(project, item.image)}`);
 }
 if (s.missing_subject.length) {
   console.error(`\n✗ ${s.missing_subject.length} 张图里没有检出主体 —— 这是最严重的空间失败，请人工确认是不是真空场景：`);
-  for (const m of s.missing_subject) console.error(`  · ${path.relative(project, m)}`);
+  for (const m of s.missing_subject) console.error(`  · ${path.relative(project, m.image)}`);
   process.exit(1);
+}
+if (expectedCount != null) {
+  for (const item of s.count_mismatches) {
+    console.warn(`⚠ 主体数量与声明不一致：声明 ${expectedCount}，检测到 ${item.n_person_effective ?? item.n_person}（原始 ${item.n_person}）：${path.relative(project, item.image)}`);
+  }
 }
 console.log('\n✓ 全部图里都检出了主体。');

@@ -6,7 +6,7 @@
  *   node cli/space-check.mjs <项目目录>            # 打印 + 写 reviews/space-check.md
  *   node cli/space-check.mjs <项目目录> --dry      # 只打印，不写文件
  *
- * 自动只判两件：**画里有没有人、人数对不对**（本地检测器，32 张真实成片关键帧上 100% 可用）。
+ * 自动只判两件：**画里有没有人、人数对不对**（本地检测器；不可用时明确标为不可判定）。
  * 「两人是否相向 / 桌子是否在两人之间」这类**列成待人工确认** —— 不假装机器能判。
  */
 
@@ -18,6 +18,7 @@ import { requireComfyPython } from '../src/runtime-paths.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { makeArgs } from './lib/argv.mjs';
 import { axisWarnings, facingWarnings, gazeConsistencyWarnings, renderSpaceReport, unitChecklist } from '../src/space-check.mjs';
+import { parsePresenceJson } from '../src/presence-check.mjs';
 
 installCliErrorHandler();
 
@@ -26,7 +27,7 @@ const argv = process.argv.slice(2);
 const projectArg = argv.find((x) => !x.startsWith('--'));
 const { flag } = makeArgs();
 if (!projectArg) {
-  console.error('用法：node cli/space-check.mjs <项目目录> [--space space.json] [--dry]');
+  console.error('用法：node cli/space-check.mjs <项目目录> [--space space.json] [--dry] [--min-sharpness 60]');
   process.exit(2);
 }
 const project = path.resolve(projectArg);
@@ -49,20 +50,30 @@ for (const unit of units) {
 }
 
 let probes = new Map();
+let detectorError = null;
 if (images.length) {
   const weights = path.resolve(
     flag('weights', process.env.AIH_YOLO_WEIGHTS || path.join(project, '..', '..', '.tmp', 'spatial-lab', 'weights', 'yolo11n.pt')),
   );
   fs.mkdirSync(path.dirname(weights), { recursive: true });
-  const args = [path.join(HERE, 'lib', 'presence.py'), '--weights', weights, '--json'];
+  const minSharpness = Number(flag('min-sharpness', 60));
+  if (!Number.isFinite(minSharpness) || minSharpness < 0) throw new Error('--min-sharpness 必须是非负数字');
+  const args = [path.join(HERE, 'lib', 'presence.py'), '--weights', weights, '--json', '--min-sharpness', String(minSharpness)];
   for (const i of images) args.push('--image', i.path);
   const r = spawnSync(requireComfyPython(), args, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, cwd: path.dirname(weights) });
-  if (r.stdout) {
-    const data = JSON.parse(r.stdout);
+  if (r.status === 2 || (!r.stdout && r.stderr)) {
+    detectorError = String(r.stderr || '检测器进程不可用').slice(-400);
+  } else if (r.stdout) {
+    let data;
+    try { data = parsePresenceJson(r.stdout); } catch (err) { detectorError = `${err.message}；${String(r.stderr || '').slice(-300)}`; }
+    if (detectorError) {
+      for (const i of images) probes.set(i.unit.id, { present: null, n_person: null, error: detectorError });
+    } else {
     const byPath = new Map(data.results.map((x) => [path.resolve(x.image), x]));
     for (const i of images) probes.set(i.unit.id, byPath.get(path.resolve(i.path)) || null);
+    }
   } else {
-    console.error(`⚠ 检测器没跑起来，自动判定一栏会是空：${String(r.stderr || '').slice(-200)}`);
+    detectorError = String(r.stderr || '检测器没跑起来').slice(-400);
   }
 }
 
@@ -77,7 +88,10 @@ const checklists = units.map((unit) => {
   return v ? { ...c, verified: v } : c;
 });
 
-const report = renderSpaceReport({ project: path.relative(path.resolve(HERE, '..'), project), checklists, warnings });
+const reportBody = renderSpaceReport({ project: path.relative(path.resolve(HERE, '..'), project), checklists, warnings });
+const report = detectorError
+  ? `> ⚠ 检测器不可用，自动人数结论均为“不可判定”：${detectorError}\n\n${reportBody}`
+  : reportBody;
 console.log(report);
 
 if (!DRY) {

@@ -4,7 +4,7 @@
 来历（lab/spatial 三轮实验逼出来的）：三种"祈祷式"手段全部失败——
 线框示意图、真实空间照+人形标记、提示词强制声明（后者甚至让出人率从 83% 掉到 67%）。
 所以"画里有没有人"只能**事后核查**，不能靠提示词祈祷。
-检测器在 32 张真实成片关键帧上 100% 可用，所以这个信号是可信的。
+检测器是否可用由每次运行结果决定；坏权重或缺依赖必须按不可判定处理。
 
 用法：
   python presence.py --image a.png --image b.png [--weights ...] [--json]
@@ -43,21 +43,47 @@ def detect(image_path: Path, weights: str, conf: float):
         return None, f"检测失败: {exc}"
 
 
-def check_one(path: Path, weights: str, conf: float) -> dict:
+def sharpness_for_crop(im, box):
+    # 不依赖 OpenCV：灰度一阶差分的方差足以过滤明显运动模糊的远景路人。
+    x1, y1, x2, y2 = [max(0, int(v)) for v in box]
+    crop = im.crop((x1, y1, x2, y2)).convert("L")
+    if crop.width < 3 or crop.height < 3:
+        return 0.0
+    px = list(crop.getdata())
+    diffs = []
+    w, h = crop.size
+    for y in range(h):
+        row = y * w
+        for x in range(w - 1):
+            diffs.append(px[row + x + 1] - px[row + x])
+    if not diffs:
+        return 0.0
+    mean = sum(diffs) / len(diffs)
+    return sum((d - mean) ** 2 for d in diffs) / len(diffs)
+
+
+def check_one(path: Path, weights: str, conf: float, min_sharpness: float) -> dict:
     try:
         with Image.open(path) as im:
             w, h = im.size
+            image = im.copy()
     except Exception as exc:
         return {"image": str(path), "n_person": None, "present": None, "error": f"打不开图: {exc}"}
     boxes, err = detect(path, weights, conf)
     if boxes is None:
         return {"image": str(path), "n_person": None, "present": None, "error": err}
     biggest = 0.0
+    sharpness = []
     for x1, y1, x2, y2 in boxes:
         biggest = max(biggest, (y2 - y1) / h)
+        sharpness.append(round(sharpness_for_crop(image, (x1, y1, x2, y2)), 1))
+    effective = sum(v >= min_sharpness for v in sharpness) if min_sharpness > 0 else len(boxes)
     return {
         "image": str(path),
         "n_person": len(boxes),
+        "n_person_effective": effective,
+        "sharpness": sharpness,
+        "min_sharpness": min_sharpness,
         "present": len(boxes) > 0,
         "largest_height_ratio": round(biggest, 4),
     }
@@ -70,6 +96,7 @@ def main() -> int:
     ap.add_argument("--pattern", default="*.png")
     ap.add_argument("--weights", default="yolo11n.pt")
     ap.add_argument("--conf", type=float, default=0.25)
+    ap.add_argument("--min-sharpness", type=float, default=0.0)
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
@@ -80,7 +107,7 @@ def main() -> int:
         print(json.dumps({"error": "没有输入（--image 或 --dir）"}, ensure_ascii=False))
         return 2
 
-    results = [check_one(p, args.weights, args.conf) for p in targets]
+    results = [check_one(p, args.weights, args.conf, args.min_sharpness) for p in targets]
     ok = [r for r in results if r.get("present") is not None]
     missing = [r["image"] for r in ok if not r["present"]]
     summary = {

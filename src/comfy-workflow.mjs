@@ -31,6 +31,43 @@ export function loadWorkflow(file) {
   return graph;
 }
 
+// Convert a LiteGraph UI workflow to the API prompt format. Only the subgraph
+// feeding a video output is submitted, so muted experimental branches stay out.
+export async function uiWorkflowToApi(file, { baseUrl = comfyUrl(), outputTypes = ['VHS_VideoCombine', 'SaveVideo'] } = {}) {
+  const ui = JSON.parse(fs.readFileSync(file, 'utf8'));
+  if (!Array.isArray(ui.nodes)) return ui;
+  const info = await fetch(`${baseUrl}/object_info`).then(async (r) => {
+    if (!r.ok) throw new Error(`无法读取 ComfyUI 节点定义（HTTP ${r.status}）`);
+    return r.json();
+  });
+  const links = Object.fromEntries((ui.links || []).map((l) => [l[0], [l[1], l[2]]]));
+  const byId = Object.fromEntries(ui.nodes.map((n) => [n.id, n]));
+  const output = ui.nodes.find((n) => outputTypes.includes(n.type));
+  if (!output) throw new Error('UI 工作流没有 VHS_VideoCombine/SaveVideo 输出节点');
+  const needed = new Set(); const stack = [output.id];
+  while (stack.length) { const id = stack.pop(); if (needed.has(id) || !byId[id]) continue; needed.add(id); for (const i of byId[id].inputs || []) if (i.link != null && links[i.link]) stack.push(links[i.link][0]); }
+  const graph = {};
+  for (const n of ui.nodes) {
+    if (!needed.has(n.id)) continue;
+    const spec = info[n.type]; if (!spec) throw new Error(`ComfyUI 未安装节点：${n.type}`);
+    const defs = [...Object.entries(spec.input?.required || {}), ...Object.entries(spec.input?.optional || {})];
+    const widgets = Array.isArray(n.widgets_values) ? [...n.widgets_values] : [];
+    const inputs = {}; const wire = Object.fromEntries((n.inputs || []).map((i) => [i.name, i.link]));
+    if (n.widgets_values && !Array.isArray(n.widgets_values) && typeof n.widgets_values === 'object') {
+      for (const [k, v] of Object.entries(n.widgets_values)) if (k !== 'videopreview') inputs[k] = v;
+    }
+    for (const [name, def] of defs) {
+      const linked = wire[name] != null && links[wire[name]];
+      if (linked) inputs[name] = [String(links[wire[name]][0]), links[wire[name]][1]];
+      else if (!(name in inputs) && widgets.length) inputs[name] = widgets.shift();
+      else if (!(name in inputs) && Array.isArray(def) && def.length && typeof def[0] === 'string'
+        && !['INT', 'FLOAT', 'STRING', 'BOOLEAN', 'IMAGE', 'VIDEO', 'AUDIO'].includes(def[0])) inputs[name] = def[0];
+    }
+    graph[String(n.id)] = { class_type: n.type, inputs };
+  }
+  return graph;
+}
+
 /** `true/false/null/数字` 还原成字面量，其余按字符串 —— 免得 --set 出来的全是字符串。 */
 export function coerce(value) {
   const s = String(value);
@@ -67,6 +104,10 @@ export function patchVideoInputs(graph, fileName) {
   for (const [id, node] of Object.entries(graph)) {
     if (node.class_type === 'LoadVideo' && node.inputs && 'file' in node.inputs) {
       node.inputs.file = fileName;
+      patched.push(id);
+    }
+    if (node.class_type === 'VHS_LoadVideoPath' && node.inputs && 'video' in node.inputs) {
+      node.inputs.video = fileName;
       patched.push(id);
     }
   }

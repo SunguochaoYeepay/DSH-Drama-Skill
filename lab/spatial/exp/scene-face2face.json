@@ -1,0 +1,59 @@
+{
+  "id": "exp1-face2face-static",
+  "purpose": "实验一（静态构图）：两人隔着餐桌面对面站着。三臂对照：纯文字 / 文字+白膜首帧 / 文字+白膜首帧+两张身份图；每组 3 次，量左右位置、桌子是否在中间、人数、多余主体",
+  "aspect": "16:9",
+  "style": "realistic",
+  "scene": {
+    "id": "s_restaurant_inside",
+    "name": "临街餐厅内",
+    "master": "projects/glass_restaurant/assets/s_restaurant_inside_master.png",
+    "lighting": "室内暖色吊灯，窗外冷色街景",
+    "environment": "写实临街餐厅内部：一面整面透明落地玻璃窗，窗前是摆着餐具的餐桌与椅子，暖色吊灯照在桌面上，窗外街道清晰可见，室内是浅色地板"
+  },
+  "identities": [
+    {
+      "id": "i_man_restaurant",
+      "name": "男士",
+      "sheet": "projects/glass_restaurant/assets/i_man_restaurant_sheet.png",
+      "appearance": "东亚男性，约三十岁，干净短发，浅色衬衫与深色长裤"
+    },
+    {
+      "id": "i_woman_a_restaurant",
+      "name": "女士",
+      "sheet": "projects/glass_restaurant/assets/i_woman_a_restaurant_sheet.png",
+      "appearance": "东亚女性，约二十八岁，中长发，暖色针织上衣"
+    }
+  ],
+  "whitebox": {
+    "scene": "lab/spatial/exp/face2face.whitebox.json",
+    "still": "lab/spatial/exp/out/face2face/still_f0001.png"
+  },
+  "shots": [
+    {
+      "id": "f2f_front",
+      "landmark": "两人隔着餐桌面对面站着",
+      "shot_size": "中景",
+      "camera_side": "A",
+      "camera_text": "机位在餐桌侧面，与两人视线齐平，中景，长桌横在画面中间",
+      "prompt_extra": "画面里只有这两个人",
+      "subjects": [
+        {
+          "id": "i_man_restaurant",
+          "u": 0.7,
+          "v": 0.58,
+          "depth": "near",
+          "facing": "screen_left",
+          "note": "站在长桌右侧，身体朝画面左，面对女士"
+        },
+        {
+          "id": "i_woman_a_restaurant",
+          "u": 0.3,
+          "v": 0.58,
+          "depth": "near",
+          "facing": "screen_right",
+          "note": "站在长桌左侧，身体朝画面右，面对男士"
+        }
+      ]
+    }
+  ]
+}

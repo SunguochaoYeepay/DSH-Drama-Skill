@@ -22,6 +22,7 @@ import {
   patchVideoInputs,
   runGraph,
   setInput,
+  uiWorkflowToApi,
   uploadVideo,
 } from '../src/comfy-workflow.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
@@ -44,7 +45,11 @@ const outDir = path.resolve(flag('out-dir', '.tmp/utility-out'));
 const timeoutMs = Number(flag('timeout', 1800)) * 1000;
 const DRY = has('dry-run');
 
-const graph = loadWorkflow(path.resolve(workflowFile));
+const workflowPath = path.resolve(workflowFile);
+const graph = await uiWorkflowToApi(workflowPath).then((g) => {
+  if (Array.isArray(g.nodes)) throw new Error('工作流转换失败：仍是 UI 格式');
+  return g;
+});
 
 // 先加节点（有些输入是 forceInput，必须先有源节点才能接）
 for (const spec of flagAll('add-node')) {
@@ -73,9 +78,10 @@ if (video) {
     const patched = patchVideoInputs(graph, path.basename(video));
     console.log(`  干跑：不跑；假装已上传，写入 LoadVideo 节点：${patched.join(', ')}`);
   } else {
-    const uploaded = await uploadVideo(path.resolve(video));
+    const usesPathLoader = Object.values(graph).some((n) => n.class_type === 'VHS_LoadVideoPath');
+    const uploaded = usesPathLoader ? path.resolve(video) : await uploadVideo(path.resolve(video));
     const patched = patchVideoInputs(graph, uploaded);
-    console.log(`  视频已上传为 ${uploaded}；写入 LoadVideo 节点：${patched.join(', ')}`);
+    console.log(`  视频已准备；写入视频输入节点：${patched.join(', ')}`);
   }
 }
 

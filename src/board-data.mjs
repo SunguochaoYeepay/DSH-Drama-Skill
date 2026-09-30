@@ -23,6 +23,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { deriveProjectState } from './project-state.mjs';
 import { resolveRecordedPath } from './recorded-path.mjs';
+import { whiteboxPlanPath, whiteboxVideoPath } from './whitebox-gates.mjs';
 
 function readJson(file) {
   try {
@@ -255,6 +256,53 @@ export function videoPromptOf(dir, unitId) {
     ?? trimOrNull(readText(path.join(dir, 'units', `${unitId}.prompt.txt`)));
 }
 
+/** 实际存在、且解析后的物理路径留在剧目内，才交给媒体服务。 */
+function existingProjectRel(dir, file) {
+  if (!file) return null;
+  const absolute = path.resolve(dir, file);
+  const rel = path.relative(dir, absolute);
+  if (!rel || rel.startsWith('..') || path.isAbsolute(rel) || !fs.existsSync(absolute)) return null;
+  return relInside(dir, absolute);
+}
+
+/**
+ * 白膜首帧：优先使用 render.plan.json 单元声明的 keyframe；老记录没有声明时，
+ * 按白膜计划旁边的 `<plan-stem>-whitebox/still_f*.png` 找第一张静帧。
+ * 只返回项目内真实存在的文件，避免看板渲染 404。
+ */
+export function whiteboxKeyframeOf(dir, unit) {
+  const declared = typeof unit?.whitebox === 'object' ? unit.whitebox?.keyframe : null;
+  const planPath = whiteboxPlanPath(dir, unit);
+  const candidates = [];
+  if (declared) candidates.push(declared);
+  const stem = path.basename(planPath).replace(/\.whitebox\.json$/i, '');
+  const inferredDir = path.join(path.dirname(planPath), `${stem}-whitebox`);
+  if (existingProjectRel(dir, planPath)) {
+    try {
+      for (const name of fs.readdirSync(inferredDir).sort()) {
+        if (/^still_.*\.(png|jpe?g|webp)$/i.test(name)) candidates.push(path.join(inferredDir, name));
+      }
+    } catch { /* 白膜静帧尚未生成 */ }
+  }
+  for (const candidate of candidates) {
+    const rel = existingProjectRel(dir, candidate);
+    if (rel) return rel;
+  }
+  return null;
+}
+
+/** 白膜规划文件的项目内相对路径；规划不存在时返回 null。 */
+export function whiteboxPlanOf(dir, unit) {
+  return existingProjectRel(dir, whiteboxPlanPath(dir, unit));
+}
+
+/** 白膜视频的项目内相对路径；计划或视频不存在时返回 null。 */
+export function whiteboxVideoOf(dir, unit) {
+  if (!whiteboxPlanOf(dir, unit)) return null;
+  const videoPath = whiteboxVideoPath(dir, unit);
+  return existingProjectRel(dir, videoPath);
+}
+
 /**
  * 场景图 / 角色图的**生成提示词**：`asset-design.json` 的 `designs[].prompt`。
  * 只收带提示词的条目 —— 老文件里没写 prompt 的设计不占位。
@@ -330,6 +378,11 @@ export function loadProject(root, name) {
       : null,
     keyframePrompt: keyframePromptOf(dir, u.id),
     videoPrompt: videoPromptOf(dir, u.id),
+    whitebox: {
+      plan: whiteboxPlanOf(dir, u),
+      keyframe: whiteboxKeyframeOf(dir, u),
+      video: whiteboxVideoOf(dir, u),
+    },
   }));
 
   // 导演单元：**行号就地解成台词正文**（导演稿的 lines 只有行号，原文在剧本里）。
@@ -382,6 +435,8 @@ export function loadProject(root, name) {
   for (const u of units) {
     if (u.keyframe) assets.push({ key: `kf:${u.id}`, tab: 2, group: '关键帧', label: u.id, path: u.keyframe });
     if (u.clip) assets.push({ key: `clip:${u.id}`, tab: 2, group: '视频片段', label: u.id, path: u.clip });
+    if (u.whitebox?.keyframe) assets.push({ key: `wb-kf:${u.id}`, tab: 2, group: '白膜首帧', label: u.id, path: u.whitebox.keyframe });
+    if (u.whitebox?.video) assets.push({ key: `wb-video:${u.id}`, tab: 2, group: '白膜视频', label: u.id, path: u.whitebox.video });
   }
   const finalRel = fs.existsSync(path.join(dir, 'out', 'final.mp4')) ? 'out/final.mp4' : null;
   if (finalRel) assets.push({ key: 'final', tab: 2, group: '成片', label: 'final.mp4', path: finalRel });

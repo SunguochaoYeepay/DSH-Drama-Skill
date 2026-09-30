@@ -202,7 +202,7 @@ export function gazeConsistencyWarnings(unit, space = {}) {
  *
  * @param {object} unit 计划单元
  * @param {object} space 旁挂声明
- * @param {{n_person: number|null, present: boolean|null}|null} probe 该镜主图的人检测结果
+ * @param {{n_person: number|null, n_person_effective?: number|null, present: boolean|null, error?: string}|null} probe 该镜主图的人检测结果
  */
 export function unitChecklist(unit, space = {}, probe = null) {
   const decl = space.units?.[unit.id] || null;
@@ -218,8 +218,12 @@ export function unitChecklist(unit, space = {}, probe = null) {
   const auto = {
     present: probe ? probe.present : null,
     detected: probe ? probe.n_person : null,
+    detected_effective: probe ? (probe.n_person_effective ?? probe.n_person) : null,
     expected: declaredCount,
-    count_ok: probe && declaredCount != null ? probe.n_person === declaredCount : null,
+    count_ok: probe && probe.present != null && declaredCount != null
+      ? (probe.n_person_effective ?? probe.n_person) === declaredCount
+      : null,
+    detector_error: probe?.error || null,
   };
 
   const human = [];
@@ -285,8 +289,10 @@ export function renderSpaceReport({ project, checklists, warnings }) {
     L.push(`- 机位侧：**${c.declared.camera_side}**`);
     if (c.declared.subjects.length) L.push(`- 主体：${c.declared.subjects.join('；')}`);
     L.push(
-      `- 自动：检出 ${c.auto.detected ?? '—'} 人` +
+      `- 自动：检出 ${c.auto.detected_effective ?? c.auto.detected ?? '—'} 人` +
         (c.auto.expected != null ? `（声明 ${c.auto.expected} 人${c.auto.count_ok === true ? ' ✓' : c.auto.count_ok === false ? ' ✗ 不一致' : ''}）` : '') +
+        (c.auto.detected_effective != null && c.auto.detected_effective !== c.auto.detected ? `（原始框 ${c.auto.detected}，已按清晰度过滤）` : '') +
+        (c.auto.detector_error ? `　**不可判定：${c.auto.detector_error}**` : '') +
         (c.auto.present === false ? '　**画面里没人 ✗**' : ''),
     );
     if (c.shots?.length) {

@@ -55,3 +55,9 @@ export function resolveDeclaredLastKeyframe({
 
   return null;
 }
+
+/** 是否应在关键帧流程中自动生成这个单元的落幅。 */
+export function shouldGenerateLastKeyframe(unit = {}, projectDir = '.') {
+  if (!unit.last_keyframe || !unit.id) return false;
+  return fs.existsSync(path.join(path.resolve(projectDir), 'keyframe-prompts', `${unit.id}.last.txt`));
+}

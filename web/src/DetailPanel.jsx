@@ -461,6 +461,7 @@ function ClipRefs({ snapshot, unit, onOpen }) {
 /** 单元内部的分组页签（用户 2026-09-23：单元详情里按 tab 分组）。 */
 const UNIT_TABS = [
   { key: 'info', label: '基本信息' },
+  { key: 'whitebox', label: '白膜' },
   { key: 'keyframe', label: '关键帧' },
   { key: 'clip', label: '视频' },
 ];
@@ -491,6 +492,11 @@ function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine, onRefr
             {t.label}
             {t.key === 'keyframe' ? (
               <span className={unit.keyframe ? 'text-[10px] text-ok' : 'text-[10px] text-warn'}>{unit.keyframe ? '已出' : '未出'}</span>
+            ) : null}
+            {t.key === 'whitebox' ? (
+              <span className={unit.whitebox?.keyframe || unit.whitebox?.video ? 'text-[10px] text-ok' : 'text-[10px] text-warn'}>
+                {unit.whitebox?.keyframe || unit.whitebox?.video ? '可预览' : '未出'}
+              </span>
             ) : null}
             {t.key === 'clip' ? (
               <span className={unit.clip ? 'text-[10px] text-ok' : 'text-[10px] text-warn'}>{unit.clip ? '已出' : '未出'}</span>
@@ -534,6 +540,26 @@ function UnitView({ snapshot, project, board, unitId, onOpen, onJumpLine, onRefr
             missing={`还没有 keyframe-prompts/${unitId}.txt（直写制：这个文件逐字送模型，改它就是改下一张图）`}
           />
           <RegenButton onClick={() => setRegenKind('keyframe')} />
+        </>
+      )}
+
+      {sub === 'whitebox' && (
+        <>
+          <Section title="白膜规划" right={unit.whitebox?.plan ? '已生成' : '未生成'}>
+            <Box className={unit.whitebox?.plan ? 'text-ink-300' : 'text-ink-500'}>
+              {unit.whitebox?.plan || '这个单元还没有白膜规划'}
+            </Box>
+          </Section>
+          <Section title="白膜关键帧" right={unit.whitebox?.keyframe ? '点击放大' : '未生成'}>
+            {unit.whitebox?.keyframe
+              ? <Thumb project={project} rel={unit.whitebox.keyframe} label={`${unitId} 白膜关键帧`} onOpen={onOpen} big />
+              : <Box className="text-ink-500">这个单元还没有白膜关键帧</Box>}
+          </Section>
+          <Section title="白膜视频" right={unit.whitebox?.video ? '点击播放' : '未生成'}>
+            {unit.whitebox?.video
+              ? <Thumb project={project} rel={unit.whitebox.video} label={`${unitId} 白膜视频`} onOpen={onOpen} big />
+              : <Box className="text-ink-500">这个单元还没有白膜视频</Box>}
+          </Section>
         </>
       )}
 

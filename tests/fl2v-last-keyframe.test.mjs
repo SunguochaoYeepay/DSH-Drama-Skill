@@ -15,7 +15,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { flfPlan } from '../src/orchestrate.mjs';
 import { compileGenerationPlan } from '../src/generation-plan.mjs';
-import { resolveDeclaredLastKeyframe } from '../src/last-keyframe.mjs';
+import { resolveDeclaredLastKeyframe, shouldGenerateLastKeyframe } from '../src/last-keyframe.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let pass = 0;
@@ -93,6 +93,18 @@ console.log('fl2v 落幅：schema 承认这个字段');{
   check('shots[].last_keyframe 在 schema 里', Boolean(shotProps.last_keyframe), Object.keys(shotProps).filter((k) => /last/.test(k)).join(','));
   check('类型是 string|null', JSON.stringify(shotProps.last_keyframe?.type) === '["string","null"]', JSON.stringify(shotProps.last_keyframe?.type));
   check('描述里说明它与 last_frame 的区别', /last_frame/.test(String(shotProps.last_keyframe?.description || '')));
+}
+
+console.log('fl2v 落幅：有直写落幅就自动生成');
+{
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-last-auto-'));
+  fs.mkdirSync(path.join(dir, 'keyframe-prompts'), { recursive: true });
+  const unit = { id: 'g001', last_keyframe: 'keyframes_render/g001_last.png' };
+  check('有槽位 + last.txt → 自动生成', shouldGenerateLastKeyframe(unit, dir) === false, '缺文件时不误触发');
+  fs.writeFileSync(path.join(dir, 'keyframe-prompts', 'g001.last.txt'), '落幅');
+  check('直写文件存在 → 自动生成', shouldGenerateLastKeyframe(unit, dir) === true);
+  check('无槽位 → 不自动生成', shouldGenerateLastKeyframe({ id: 'g002' }, dir) === false);
+  fs.rmSync(dir, { recursive: true, force: true });
 }
 
 console.log(`\n结果：${pass} 通过 / ${fail} 失败`);

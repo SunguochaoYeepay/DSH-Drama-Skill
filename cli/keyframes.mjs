@@ -32,6 +32,7 @@ import { COMFY_GEN, NODE, requireComfyPython } from '../src/runtime-paths.mjs';
 import * as bailian from '../src/providers/bailian.mjs';
 import * as volcengine from '../src/providers/volcengine.mjs';
 import { allowedChangesList, bindHandoffKeyframe, requireHandoff } from '../src/continuity-handoff.mjs';
+import { shouldGenerateLastKeyframe } from '../src/last-keyframe.mjs';
 import { installCliErrorHandler } from '../src/cli-errors.mjs';
 import { KEYFRAME_PROVIDER, KEYFRAME_IMAGE_MODEL, HUIMENG_IMAGE_MODEL, KEYFRAME_SIZE, BAILIAN_KEYFRAME_SIZE, LOCAL_IMAGE_STEPS, LOCAL_IMAGE_CFG, LOCAL_KEYFRAME_FAST, LOCAL_KEYFRAME_SIZE, LOCAL_KEYFRAME_LORA, LOCAL_KEYFRAME_STEPS, LOCAL_KEYFRAME_CFG, LOCAL_IMAGE_MODEL, LOCAL_KEYFRAME_STEPS_21, LOCAL_KEYFRAME_CFG_21 } from '../src/config.mjs';
 import { aspectOf, dimensionsForAspect } from '../src/aspect.mjs';
@@ -61,12 +62,12 @@ const SIZE = String(opt('size', KEYFRAME_SIZE));
 const BAILIAN_SIZE = String(opt('bailian-size', BAILIAN_KEYFRAME_SIZE));
 const ONLY = String(opt('units', '')).split(',').map((s) => s.trim()).filter(Boolean);
 // 落幅（fl2v 的尾帧）。提示词与首帧同构：`keyframe-prompts/<unit>.last.txt`。
-// **没有该文件的单元照旧走 i2v** —— 所以这个开关对老项目零影响，不需要迁移。
-const WITH_LAST = argv.includes('--with-last');
+// 有落幅直写文件的单元自动生成；`--with-last` 保留为显式重跑入口。
+const WITH_LAST_FLAG = argv.includes('--with-last');
 // 只跑落幅那一遍。首帧槽位里已经有人看过的那张时，重抽首帧会让已签的关键帧票失效 ——
 // 补一张落幅不该连坐首帧（2026-09-30 glass_restaurant g002 实测：为了拿落幅把首帧重抽了两次）。
 const LAST_ONLY = argv.includes('--last-only');
-if (LAST_ONLY && !WITH_LAST) throw new Error('--last-only 只与 --with-last 搭配使用（它只跳过首帧那一遍）');
+if (LAST_ONLY && !WITH_LAST_FLAG) throw new Error('--last-only 只与 --with-last 搭配使用（它只跳过首帧那一遍）');
 const PROVIDER_SETTING = String(opt('provider', KEYFRAME_PROVIDER)).toLowerCase();
 const PROVIDER = PROVIDER_SETTING === 'comfyui' ? 'local' : PROVIDER_SETTING;
 if (!['huimeng', 'local', 'bailian', 'volcengine'].includes(PROVIDER)) throw new Error('--provider 只能是 huimeng / local / bailian / volcengine / comfyui');
@@ -105,6 +106,7 @@ const VOLCENGINE_OUT = path.resolve(String(opt('out-dir', path.join(PROJ, 'keyfr
 const dir = JSON.parse(fs.readFileSync(DIRECTION_PATH, 'utf8'));
 const board = JSON.parse(fs.readFileSync(BOARD_PATH, 'utf8'));
 const ASPECT = aspectOf(board);
+const WITH_LAST = WITH_LAST_FLAG || (dir.units || []).some((unit) => shouldGenerateLastKeyframe(unit, PROJ));
 /**
  * 关键帧走 gen.py 的 `edit` 分支 —— 而 edit 过去把 negative **硬编码成空串**且不接受
  * `--style`，等于成片每一帧都拿不到 `realistic` 那套负向词（「CG感，卡通，动漫」），
@@ -430,7 +432,7 @@ for (const unit of dir.units) {
 //
 // 约定与首帧完全一致：提示词是 **LLM 直写文件** `keyframe-prompts/<unit>.last.txt`，
 // 逐字送模型；缺文件就跳过该单元（它继续走 i2v），**不是错误**。
-if (WITH_LAST && !DRY) {
+if (WITH_LAST) {
   if (PROVIDER !== 'local') {
     console.log(`\n落幅：当前只实现了本地通道（--provider local）；本次通道是 ${PROVIDER}，跳过。`);
   } else {
@@ -446,6 +448,10 @@ if (WITH_LAST && !DRY) {
         continue;
       }
       const lastPrompt = fs.readFileSync(lastPromptFile, 'utf8').trim();
+      if (DRY) {
+        console.log(`  落幅【${unit.id}】将自动生成：检测到 keyframe-prompts/${unit.id}.last.txt，完成后视频自动走 fl2v`);
+        continue;
+      }
       // 落幅是**首帧的后一帧**，所以首帧自己必须是图1。
       //
       // 为什么不能不挂首帧：`refsFor()` 只给"白膜 + 身份图"，落幅就无从知道首帧的

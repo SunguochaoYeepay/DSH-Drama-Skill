@@ -3,7 +3,7 @@ import test from 'node:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { listProjects, loadProject, lineTextOf, relInside } from '../src/board-data.mjs';
+import { listProjects, loadProject, lineTextOf, relInside, whiteboxKeyframeOf, whiteboxPlanOf, whiteboxVideoOf } from '../src/board-data.mjs';
 import { startServer } from '../web/server.mjs';
 
 /**
@@ -47,9 +47,15 @@ fs.writeFileSync(path.join(PROJ, 'render.plan.json'), JSON.stringify({
   units: [{ id: 'g001', source_units: ['u1'], content_duration_s: 5.2, generation_duration_s: 5.17,
     scene: 'sc1', cast: ['su_wan'], audience_knows: '观众已知门开着', why: '同一段连续时空',
     keyframe: 'keyframes_render/g001.png',
+    whitebox: { plan: 'units/g001.whitebox.json', keyframe: 'units/g001-whitebox/still_f0001.png' },
     shots: [{ source: { unit: 'g001', shot: 's01' } }, { source: { unit: 'g001', shot: 's02' } }] }],
   totals: { content_duration_s: 5.2 },
 }));
+fs.writeFileSync(path.join(PROJ, 'units', 'g001.whitebox.json'), JSON.stringify({ scene_name: 'g001_whitebox' }));
+fs.mkdirSync(path.join(PROJ, 'units', 'g001-whitebox'), { recursive: true });
+fs.writeFileSync(path.join(PROJ, 'units', 'g001-whitebox', 'still_f0001.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+fs.mkdirSync(path.join(PROJ, 'units', 'out', 'whitebox', 'g001_whitebox'), { recursive: true });
+fs.writeFileSync(path.join(PROJ, 'units', 'out', 'whitebox', 'g001_whitebox', 'g001_whitebox.mp4'), Buffer.from([0x00, 0x00, 0x00, 0x18]));
 fs.writeFileSync(path.join(PROJ, 'review.approvals.json'), JSON.stringify({
   approvals: { direction: { artifact_hash: 'h1' }, clips: { g001: { artifact_hash: 'h2' } } },
 }));
@@ -177,6 +183,11 @@ test('loadProject：单元/关键帧/片段/票/资产一次给齐', () => {
   assert.equal(snap.units[0].scene, 'sc1');
   assert.deepEqual(snap.units[0].cast, ['su_wan']);
   assert.equal(snap.units[0].generationDuration, 5.17);
+  assert.deepEqual(snap.units[0].whitebox, {
+    plan: 'units/g001.whitebox.json',
+    keyframe: 'units/g001-whitebox/still_f0001.png',
+    video: 'units/out/whitebox/g001_whitebox/g001_whitebox.mp4',
+  });
   // 文件就位标记
   assert.deepEqual(snap.files, {
     'story.md': true, 'board.direction.json': true, 'render.plan.json': true, 'review.approvals.json': true,
@@ -186,6 +197,7 @@ test('loadProject：单元/关键帧/片段/票/资产一次给齐', () => {
   for (const k of ['portrait:su_wan', 'sheet:su_wan_default', 'scene:sc1', 'kf:g001', 'clip:g001', 'final']) {
     assert.ok(keys.includes(k), `缺资产 ${k}`);
   }
+  for (const k of ['wb-kf:g001', 'wb-video:g001']) assert.ok(keys.includes(k), `缺白膜资产 ${k}`);
   assert.equal(snap.finalRel, 'out/final.mp4');
 });
 
@@ -194,6 +206,17 @@ test('relInside：项目外绝对路径返回 null（服务端喂不了）', () 
   assert.equal(relInside(PROJ, path.join(PROJ, 'assets', 'a.png')), 'assets/a.png');
   assert.equal(relInside(PROJ, 'E:/other/x.png'), null);
   assert.equal(relInside(PROJ, ''), null);
+});
+
+test('白膜读取：计划存在但产物缺失时不返回假链接', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aih-whitebox-'));
+  fs.mkdirSync(path.join(dir, 'units'), { recursive: true });
+  const unit = { id: 'g002', whitebox: { plan: 'units/g002.whitebox.json', keyframe: 'units/g002-whitebox/still_f0001.png' } };
+  fs.writeFileSync(path.join(dir, 'units', 'g002.whitebox.json'), JSON.stringify({ scene_name: 'g002_whitebox' }));
+  assert.equal(whiteboxPlanOf(dir, unit), 'units/g002.whitebox.json');
+  assert.equal(whiteboxKeyframeOf(dir, unit), null);
+  assert.equal(whiteboxVideoOf(dir, unit), null);
+  fs.rmSync(dir, { recursive: true, force: true });
 });
 
 test('lineTextOf：去「说话人（提示）：」前缀，取不到行给 null', () => {
