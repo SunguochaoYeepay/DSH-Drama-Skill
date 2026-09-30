@@ -2,6 +2,34 @@
 
 记录工程级行为变化。具体剧目的抽卡结果、耗时和逐帧评价留在对应项目目录，不写入这里。
 
+## 2026-09-30 - 第二部真剧跑通全链路上挖出的四处缺陷：白膜声明形状、落幅看不见首帧、送审命令少绑产物
+
+`glass_restaurant` 是第一部走完「导演台 → spatial-plan → whitebox → 关键帧/落幅 → fl2v → 合成 →
+终审」全链的剧（9.023s，11 张人工票全由人签）。它在出片第一步连着断两次，逐条修掉：
+
+- **`src/whitebox-gates.mjs`：白膜声明是对象，代码当路径字符串。** `render.plan.json` 的
+  `units[].whitebox` 是 `{ plan, keyframe }`（`cli/compile-whitebox-unit.mjs` 的产物），而
+  `whiteboxPlanPath()` 直接 `path.resolve(projectDir, declared)` →
+  `TypeError: The "paths[1]" argument must be of type string. Received an instance of Object`，
+  **两个单元一起卡死，`--skip-gate` 也绕不过**（异常发生在「有没有白膜」这一步之前）。现在两种
+  形状都认。测试补 `T1b`（对象形状按 `plan` 找；字符串老写法仍认）。
+- **`cli/review-gate.mjs`：白膜票按约定拼路径，永远找不到。** 单元 id ≠ 场景名
+  （`g002` → `units/u_girl_at_window.whitebox.json`），于是报「这个单元没有白膜」、票根本签不上。
+  现在先读计划拿 `unit.whitebox.plan`。**连带查出的历史真相**：该剧 `review.approvals.json` 的
+  `whitebox` 一直是 `{}` —— 白膜闸门从未真正执行过，之前是「找不到 → 不设闸」静默放过的。
+- **`cli/keyframes.mjs`：落幅看不见首帧，只能照文字「重拍一镜」。** 首帧那遍用
+  `withHandoffReference()` 挂了上一段稳定尾帧（4 张参考图），落幅那遍裸调 `refsFor()`
+  （3 张：白膜 + 身份图）。实测两次分别坏在「室内两人变成两个男性」和「固定中广角改成侧向机位」，
+  且文字写得越准越容易被拍成新镜头（白膜静帧只有 320×180，压不住重拍）。现在**首帧作为图1
+  前插进落幅参考**，落幅从「另一个镜头」变成「同一机位往前走一步」。新增 `--last-only`：只跑
+  落幅那一遍，不连坐重抽首帧（重抽首帧会让已签的关键帧票失效）。
+- **`cli/unit.mjs`：clip 送审清单印的确认命令少绑产物。** 自动生成的 `reviews/clip-*.md` 写死
+  `--artifacts "<主产物>"`，而票绑的是这一段**当前的全部**产物（fl2v 单元 = 视频 + 落幅 + 白膜
+  规划），照它签会在合成时被 `requireAllClips` 判「产物已变化」。现在打印不带 `--artifacts` 的命令。
+- 文档：`references/workflow.md` 补「落幅必须挂首帧当图1」与 `--last-only`；
+  `references/whitebox-json.md` 补「计划里的 `unit.whitebox` 是对象、不是字符串」。
+- 测试：`npm test` 92/92。
+
 ## 2026-09-28 - 外部体检后的两类收编：ffmpeg 解析与 argv 解析各归一个所有者
 
 一次工程体检发现「测试不遵守产品自己的规则」：测试裸调 `'ffmpeg'` 而产品代码走

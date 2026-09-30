@@ -30,6 +30,13 @@
 
 三样从同一份坐标长出来，「关键帧和白膜视频对不上」在发生前被消灭。
 
+**计划里怎么引用它**：`render.plan.json` 的 `units[].whitebox` 是**对象** `{ plan, keyframe }`
+（`plan` 指向 `<剧目>/units/<场景>.whitebox.json`，`keyframe` 指向静帧），**不是路径字符串** ——
+单元 id 与场景名通常不同（`g002` → `units/u_girl_at_window.whitebox.json`），所以白膜规划在哪
+只有计划知道。`src/whitebox-gates.mjs` 的 `whiteboxPlanPath()` 两种形状都认（老写法兼容），
+但新写的消费者请按对象读：当成字符串 `path.resolve` 会在出片第一步抛
+`The "paths[1]" argument must be of type string`，两段单元一起卡死。
+
 ## Schema
 
 ```jsonc
