@@ -486,7 +486,10 @@ try {
       `# 视频片段 ${unit.id} 人工审阅`, '',
       '机器技术检查通过后，请完整观看并检查：人物一致性、动作是否飞掉、台词是否说完、切镜是否自然、画面是否出现错误文字。', '',
       `视频：${f}`, `八帧总览：${sheet}`, '',
-      `确认命令：node cli/review-gate.mjs approve --project "${projectDir}" --stage clip --id ${unit.id} --artifacts "${f}"`,
+      // 不带 --artifacts：票要绑这一段**当前的全部**产物（视频 + 落幅 + 白膜规划，见
+      // clipArtifactFiles），只传主产物会在合成时被 requireAllClips 判"产物已变化"。
+      `确认命令：node cli/review-gate.mjs approve --project "${projectDir}" --stage clip --id ${unit.id}`,
+      `（省略 --artifacts，按 ${path.basename(clipResultPath(projectDir, unit.id) || '')} 里记录的全部产物登记）`,
     ]);
     console.log(`等待人工审阅：${note}`);
   }
